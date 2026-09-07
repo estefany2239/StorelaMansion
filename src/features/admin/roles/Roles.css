@@ -1,0 +1,1193 @@
+/* =========================================================
+   ROLES - STORE LA MANSIÓN
+   ========================================================= */
+
+.roles-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.roles-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.roles-title h2 {
+  margin: 0;
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--admin-text);
+}
+
+.roles-title p {
+  margin: 14px 0 0;
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+  font-size: 15px;
+  color: var(--admin-text-secondary);
+}
+
+/* =========================================================
+   ACCIONES DEL ENCABEZADO
+   ========================================================= */
+
+.roles-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* =========================================================
+   BUSCADOR
+   ========================================================= */
+
+.roles-search {
+  width: 265px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #d8dce2;
+  border-radius: 9px;
+  color: #718096;
+}
+
+.roles-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+  font-size: 14px;
+  color: #333333;
+}
+
+.roles-search input::placeholder {
+  color: #a5acb8;
+}
+
+.roles-search:focus-within {
+  border-color: var(--admin-gold);
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+/* =========================================================
+   FILTRO DE ESTADO
+   ========================================================= */
+
+.roles-filter {
+  width: 145px;
+  height: 45px;
+  padding: 0 38px 0 14px;
+  box-sizing: border-box;
+  border: 1px solid #d8dce2;
+  border-radius: 9px;
+  background-color: #ffffff;
+  color: #626d7d;
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 50%,
+      #70798a 50%
+    ),
+    linear-gradient(
+      135deg,
+      #70798a 50%,
+      transparent 50%
+    );
+
+  background-position:
+    calc(100% - 17px) 19px,
+    calc(100% - 12px) 19px;
+
+  background-size:
+    5px 5px,
+    5px 5px;
+
+  background-repeat: no-repeat;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.roles-filter:hover {
+  border-color: var(--admin-gold);
+  color: var(--admin-gold-dark);
+  background-color:
+    rgba(201, 162, 39, 0.03);
+}
+
+.roles-filter:focus {
+  border-color: var(--admin-gold);
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+.roles-filter option {
+  background: #ffffff;
+  color: #333333;
+  font-size: 13px;
+}
+
+/* =========================================================
+   BOTÓN AGREGAR ROL
+   ========================================================= */
+
+.roles-add-button {
+  height: 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 9px;
+  background: var(--admin-gold);
+  color: #111111;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.roles-add-button:hover {
+  background: var(--admin-gold-dark);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   CONTENEDOR DE TABLA
+   ========================================================= */
+
+.roles-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border:
+    1px solid
+    rgba(201, 162, 39, 0.14);
+  border-radius: 15px;
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.roles-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+.roles-table th {
+  height: 44px;
+  padding: 0 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #667085;
+  border-bottom:
+    1px solid #e2e2e2;
+  white-space: nowrap;
+}
+
+.roles-table td {
+  height: 76px;
+  padding: 0 16px;
+  vertical-align: middle;
+  border-bottom:
+    1px solid #e8e8e8;
+  font-size: 14px;
+}
+
+.roles-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.roles-table tbody tr:hover {
+  background:
+    rgba(201, 162, 39, 0.025);
+}
+
+/* =========================================================
+   ID ROL
+   ========================================================= */
+
+.rol-id {
+  color: var(--admin-gold);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   NOMBRE
+   ========================================================= */
+
+.rol-nombre {
+  color: #111111;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   DESCRIPCIÓN
+   ========================================================= */
+
+.rol-descripcion {
+  max-width: 330px;
+  color: #738096;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   PERMISOS
+   ========================================================= */
+
+.rol-permisos-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  min-height: 25px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background:
+    rgba(201, 162, 39, 0.10);
+  color: var(--admin-gold-dark);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* =========================================================
+   USUARIOS
+   ========================================================= */
+
+.rol-usuarios {
+  color: #111111;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   ESTADO - SWITCH
+   ========================================================= */
+
+.switch-estado {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Ocultamos el checkbox original */
+
+.switch-estado input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Interruptor */
+
+.slider {
+  position: relative;
+  display: block;
+  width: 48px;
+  height: 25px;
+  border-radius: 30px;
+  background: #8c96a6;
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Círculo blanco */
+
+.slider::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+
+  width: 19px;
+  height: 19px;
+
+  background: #ffffff;
+  border-radius: 50%;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.20);
+
+  transition:
+    transform 0.25s ease;
+}
+
+/* Switch activo */
+
+.switch-estado input:checked + .slider {
+  background: #20c9ad;
+  box-shadow:
+    0 0 0 2px rgba(32, 201, 173, 0.08);
+}
+
+/* Mover círculo cuando está activo */
+
+.switch-estado
+  input:checked
+  + .slider::before {
+  transform: translateX(23px);
+}
+
+/* Texto del estado */
+
+.estado-texto {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.4px;
+}
+
+/* Texto ACTIVO */
+
+.estado-texto.activo {
+  color: #20c9ad;
+}
+
+/* Texto INACTIVO */
+
+.estado-texto.inactivo {
+  color: #8b95a5;
+}
+
+/* Efecto al enfocar con teclado */
+
+.switch-estado
+  input:focus-visible
+  + .slider {
+  box-shadow:
+    0 0 0 3px
+    rgba(32, 201, 173, 0.20);
+}
+
+/* =========================================================
+   DETALLE - ESTADO
+   ========================================================= */
+
+.estado-detalle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 65px;
+  height: 25px;
+  padding: 0 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.estado-detalle.activo {
+  background: #dff5e8;
+  color: #1dc26a;
+}
+
+.estado-detalle.inactivo {
+  background: #fde5e5;
+  color: #e53935;
+}
+
+/* =========================================================
+   ACCIONES DE LA TABLA
+   ========================================================= */
+
+.rol-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rol-actions button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #70798a;
+  border-radius: 7px;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.rol-actions button:hover {
+  color: var(--admin-gold);
+  background:
+    rgba(201, 162, 39, 0.08);
+}
+
+/* =========================================================
+   SIN RESULTADOS
+   ========================================================= */
+
+.roles-empty {
+  height: 100px !important;
+  text-align: center;
+  color: var(--admin-text-secondary);
+}
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.rol-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 25px;
+  box-sizing: border-box;
+
+  background:
+    rgba(0, 0, 0, 0.48);
+
+  backdrop-filter:
+    blur(3px);
+}
+
+.rol-modal {
+  width: 100%;
+  max-width: 768px;
+  max-height:
+    calc(100vh - 50px);
+
+  overflow-y: auto;
+
+  background: #ffffff;
+  border-radius: 18px;
+
+  box-shadow:
+    0 25px 70px
+    rgba(0, 0, 0, 0.25);
+}
+
+/* =========================================================
+   HEADER DEL MODAL
+   ========================================================= */
+
+.rol-modal-header {
+  min-height: 86px;
+  padding: 0 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom:
+    1px solid #e2e2e2;
+}
+
+.rol-modal-header h3 {
+  margin: 0;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 25px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.rol-modal-close {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #697386;
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+.rol-modal-close:hover {
+  background: #f3f3f3;
+}
+
+/* =========================================================
+   BODY DEL MODAL
+   ========================================================= */
+
+.rol-modal-body {
+  padding: 30px;
+}
+
+/* =========================================================
+   FORMULARIO
+   ========================================================= */
+
+.rol-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.rol-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rol-form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #667085;
+}
+
+.rol-form-group input,
+.rol-form-group select,
+.rol-form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background: #ffffff;
+  font-size: 14px;
+  color: #222222;
+}
+
+.rol-form-group input,
+.rol-form-group select {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.rol-form-group textarea {
+  min-height: 100px;
+  padding: 14px;
+  resize: vertical;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+}
+
+.rol-form-group input::placeholder,
+.rol-form-group textarea::placeholder {
+  color: #a5acb8;
+}
+
+.rol-form-group input:focus,
+.rol-form-group select:focus,
+.rol-form-group textarea:focus {
+  border-color: var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+.rol-form-group input:disabled {
+  background: #f5f5f5;
+  color: #777777;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   PERMISOS
+   ========================================================= */
+
+.rol-permisos-section {
+  margin-top: 20px;
+  padding-top: 22px;
+
+  border-top:
+    1px solid #e5e5e5;
+}
+
+.rol-permisos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 15px;
+}
+
+.rol-permisos-header h4 {
+  margin: 0;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.rol-permisos-header span {
+  font-size: 12px;
+  color: #697386;
+}
+
+.rol-permisos-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.rol-permiso-item {
+  min-height: 45px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  padding: 0 13px;
+  box-sizing: border-box;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.rol-permiso-item:hover {
+  border-color: var(--admin-gold);
+
+  background:
+    rgba(201, 162, 39, 0.04);
+}
+
+.rol-permiso-item input {
+  width: 16px;
+  height: 16px;
+
+  accent-color: var(--admin-gold);
+  cursor: pointer;
+}
+
+.rol-permiso-item span {
+  color: #333333;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   FOOTER MODAL
+   ========================================================= */
+
+.rol-modal-footer {
+  min-height: 96px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 14px;
+  padding: 0 30px;
+
+  border-top:
+    1px solid #e2e2e2;
+}
+
+/* =========================================================
+   CANCELAR
+   ========================================================= */
+
+.rol-cancel-button {
+  height: 48px;
+  padding: 0 24px;
+
+  border:
+    1px solid #dedede;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #697386;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.rol-cancel-button:hover {
+  background: #f7f7f7;
+}
+
+/* =========================================================
+   CREAR / GUARDAR
+   ========================================================= */
+
+.rol-create-button {
+  height: 48px;
+  padding: 0 24px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: var(--admin-gold);
+  color: #111111;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.rol-create-button:hover {
+  background: var(--admin-gold-dark);
+}
+
+/* =========================================================
+   DETALLE DEL ROL
+   ========================================================= */
+
+.rol-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+
+  border-bottom:
+    1px solid #e5e5e5;
+}
+
+.rol-detail-icon {
+  width: 60px;
+  height: 60px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background:
+    rgba(201, 162, 39, 0.10);
+
+  color: var(--admin-gold-dark);
+}
+
+.rol-detail-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #222222;
+}
+
+.rol-detail-header p {
+  margin: 7px 0 0;
+
+  font-size: 12px;
+  color: var(--admin-gold-dark);
+  font-weight: 600;
+}
+
+/* =========================================================
+   INFORMACIÓN DEL DETALLE
+   ========================================================= */
+
+.rol-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.rol-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rol-info-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #667085;
+}
+
+.rol-info-value {
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 14px;
+  box-sizing: border-box;
+
+  background: #f7f7f7;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+  color: #222222;
+}
+
+.rol-info-full {
+  grid-column: 1 / -1;
+}
+
+/* =========================================================
+   PERMISOS DEL DETALLE
+   ========================================================= */
+
+.rol-detail-permisos {
+  margin-top: 25px;
+}
+
+.rol-detail-permisos-title {
+  margin: 0 0 15px;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.rol-detail-permisos-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rol-detail-permiso {
+  padding: 7px 11px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(201, 162, 39, 0.10);
+
+  color: var(--admin-gold-dark);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .roles-search,
+[data-theme="dark"] .roles-filter {
+  background: var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.20);
+}
+
+[data-theme="dark"] .roles-search input {
+  color: var(--admin-text);
+}
+
+[data-theme="dark"] .roles-search input::placeholder {
+  color: #888888;
+}
+
+[data-theme="dark"] .roles-filter option {
+  background: #181818;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .roles-table-container {
+  background: var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.18);
+}
+
+[data-theme="dark"] .roles-table th {
+  color: var(--admin-text-secondary);
+
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .roles-table td {
+  border-color:
+    rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .roles-table tbody tr:hover {
+  background:
+    rgba(212, 175, 55, 0.04);
+}
+
+[data-theme="dark"] .rol-nombre,
+[data-theme="dark"] .rol-usuarios {
+  color: var(--admin-text);
+}
+
+[data-theme="dark"] .rol-descripcion {
+  color: var(--admin-text-secondary);
+}
+
+[data-theme="dark"] .rol-permiso-item {
+  background: #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .rol-permiso-item span {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .rol-modal {
+  background: #1e1e1e;
+}
+
+[data-theme="dark"] .rol-modal-header {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .rol-modal-header h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .rol-modal-close {
+  color: #b0b0b0;
+}
+
+[data-theme="dark"] .rol-modal-close:hover {
+  background: #292929;
+}
+
+[data-theme="dark"] .rol-form-group label,
+[data-theme="dark"] .rol-info-group label {
+  color: #b0b0b0;
+}
+
+[data-theme="dark"] .rol-form-group input,
+[data-theme="dark"] .rol-form-group select,
+[data-theme="dark"] .rol-form-group textarea {
+  background: #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color: #ffffff;
+}
+
+[data-theme="dark"] .rol-form-group input:disabled {
+  background: #222222;
+  color: #888888;
+}
+
+[data-theme="dark"] .rol-info-value {
+  background: #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color: #ffffff;
+}
+
+[data-theme="dark"] .rol-detail-header {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .rol-detail-header h3,
+[data-theme="dark"] .rol-detail-permisos-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .rol-modal-footer {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .rol-cancel-button {
+  background: transparent;
+
+  border-color:
+    rgba(255, 255, 255, 0.18);
+
+  color: #b0b0b0;
+}
+
+[data-theme="dark"] .rol-cancel-button:hover {
+  background: #292929;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .roles-header {
+    flex-direction: column;
+  }
+
+  .roles-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 900px) {
+  .roles-actions {
+    flex-wrap: wrap;
+  }
+
+  .roles-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .roles-table {
+    min-width: 1050px;
+  }
+
+  .rol-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .rol-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rol-info-full {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .roles-title h2 {
+    font-size: 32px;
+  }
+
+  .roles-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .roles-search,
+  .roles-filter,
+  .roles-add-button {
+    width: 100%;
+  }
+
+  .rol-permisos-list {
+    grid-template-columns: 1fr;
+  }
+
+  .rol-modal-overlay {
+    padding: 12px;
+  }
+
+  .rol-modal {
+    max-height:
+      calc(100vh - 24px);
+  }
+
+  .rol-modal-header {
+    min-height: 70px;
+    padding: 0 20px;
+  }
+
+  .rol-modal-body {
+    padding: 22px 20px;
+  }
+
+  .rol-modal-footer {
+    min-height: 82px;
+    padding: 0 20px;
+  }
+}

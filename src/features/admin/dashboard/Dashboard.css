@@ -1,0 +1,704 @@
+/* =========================================================
+   DASHBOARD - STORE LA MANSIÓN
+   ========================================================= */
+
+.dashboard-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.dashboard-header {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 25px;
+
+  margin-bottom: 30px;
+}
+
+.dashboard-title h2 {
+  margin: 0;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1.2;
+
+  color: var(--admin-text);
+}
+
+.dashboard-title p {
+  margin: 14px 0 0;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 15px;
+
+  color: var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   INDICADORES
+   ========================================================= */
+
+.dashboard-indicators {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 16px;
+
+  margin-bottom: 20px;
+}
+
+.dashboard-indicator {
+  min-height: 125px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    rgba(201, 162, 39, 0.14);
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-indicator-icon {
+  width: 46px;
+
+  height: 46px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background:
+    rgba(201, 162, 39, 0.10);
+
+  color: var(--admin-gold);
+}
+
+.dashboard-indicator-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.dashboard-indicator-info span {
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.8px;
+
+  color: #667085;
+
+  text-transform: uppercase;
+}
+
+.dashboard-indicator-info strong {
+  font-size: 22px;
+
+  font-weight: 600;
+
+  color: #111111;
+}
+
+.dashboard-indicator-info small {
+  font-size: 12px;
+
+  color: #8a94a6;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.dashboard-grid {
+  display: grid;
+
+  grid-template-columns:
+    1.4fr 1fr;
+
+  gap: 18px;
+
+  margin-bottom: 18px;
+}
+
+.dashboard-grid-bottom {
+  margin-bottom: 0;
+}
+
+
+/* =========================================================
+   PANELES
+   ========================================================= */
+
+.dashboard-panel {
+  min-width: 0;
+
+  padding: 22px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    rgba(201, 162, 39, 0.14);
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+/* =========================================================
+   HEADER DE LOS PANELES
+   ========================================================= */
+
+.dashboard-panel-header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 22px;
+}
+
+.dashboard-panel-header h3 {
+  margin: 0;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 20px;
+
+  font-weight: 500;
+
+  color: #1a1a1a;
+}
+
+.dashboard-panel-header p {
+  margin: 6px 0 0;
+
+  font-size: 12px;
+
+  color: #8a94a6;
+
+  line-height: 1.4;
+}
+
+.dashboard-panel-icon {
+  flex-shrink: 0;
+
+  color: var(--admin-gold);
+}
+
+
+/* =========================================================
+   GRÁFICO DE VENTAS
+   ========================================================= */
+
+.dashboard-chart {
+  height: 245px;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  padding-top: 10px;
+}
+
+.dashboard-chart-values {
+  width: 100%;
+
+  height: 100%;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: space-around;
+
+  gap: 15px;
+}
+
+.dashboard-bar-column {
+  height: 100%;
+
+  flex: 1;
+
+  max-width: 65px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 7px;
+}
+
+.dashboard-bar-value {
+  min-height: 16px;
+
+  font-size: 10px;
+
+  color: #7b8493;
+
+  white-space: nowrap;
+}
+
+.dashboard-bar-area {
+  width: 100%;
+
+  height: 175px;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: center;
+}
+
+.dashboard-bar {
+  width: 32px;
+
+  min-height: 8px;
+
+  background:
+    var(--admin-gold);
+
+  border-radius:
+    6px 6px 2px 2px;
+
+  transition:
+    opacity 0.2s ease;
+}
+
+.dashboard-bar:hover {
+  opacity: 0.75;
+}
+
+.dashboard-bar-column > span {
+  font-size: 11px;
+
+  color: #667085;
+}
+
+
+/* =========================================================
+   PRODUCTOS MÁS VENDIDOS
+   ========================================================= */
+
+.dashboard-products {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 17px;
+}
+
+.dashboard-product {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.dashboard-product-number {
+  width: 27px;
+
+  height: 27px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 7px;
+
+  background:
+    rgba(201, 162, 39, 0.10);
+
+  color: var(--admin-gold-dark);
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.dashboard-product-info {
+  width: 100%;
+}
+
+.dashboard-product-top {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 7px;
+}
+
+.dashboard-product-top span {
+  font-size: 13px;
+
+  color: #555f70;
+}
+
+.dashboard-product-top strong {
+  font-size: 13px;
+
+  color: #222222;
+}
+
+.dashboard-progress {
+  width: 100%;
+
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 10px;
+
+  background: #eeeeee;
+}
+
+.dashboard-progress div {
+  height: 100%;
+
+  border-radius: 10px;
+
+  background:
+    var(--admin-gold);
+}
+
+
+/* =========================================================
+   MÉTODOS DE PAGO
+   ========================================================= */
+
+.dashboard-payments {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.dashboard-payment {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.dashboard-payment-info {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+.dashboard-payment-info span {
+  font-size: 13px;
+
+  color: #555f70;
+}
+
+.dashboard-payment-info strong {
+  font-size: 13px;
+
+  color: #222222;
+}
+
+.dashboard-payment-bar {
+  width: 100%;
+
+  height: 8px;
+
+  overflow: hidden;
+
+  border-radius: 10px;
+
+  background: #eeeeee;
+}
+
+.dashboard-payment-bar div {
+  height: 100%;
+
+  border-radius: 10px;
+
+  background:
+    var(--admin-gold);
+}
+
+
+/* =========================================================
+   INVENTARIO
+   ========================================================= */
+
+.dashboard-inventory {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.dashboard-inventory-item {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 13px;
+
+  border:
+    1px solid #eeeeee;
+
+  border-radius: 9px;
+}
+
+.dashboard-inventory-item > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.dashboard-inventory-item strong {
+  min-width: 30px;
+
+  font-size: 17px;
+
+  color: #222222;
+}
+
+.dashboard-inventory-item span {
+  font-size: 12px;
+
+  color: #697386;
+}
+
+
+/* =========================================================
+   ESTADOS DE INVENTARIO
+   ========================================================= */
+
+.dashboard-inventory-item b {
+  padding: 5px 9px;
+
+  border-radius: 15px;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.inventory-ok {
+  background: #dff5e8;
+
+  color: #0ca653;
+}
+
+.inventory-warning {
+  background: #fff2d9;
+
+  color: #b37a00;
+}
+
+.inventory-danger {
+  background: #fde5e5;
+
+  color: #e53935;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .dashboard-indicator,
+[data-theme="dark"] .dashboard-panel {
+  background: var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.18);
+}
+
+[data-theme="dark"] .dashboard-indicator-info strong,
+[data-theme="dark"] .dashboard-product-top strong,
+[data-theme="dark"] .dashboard-inventory-item strong {
+  color: var(--admin-text);
+}
+
+[data-theme="dark"] .dashboard-indicator-info span,
+[data-theme="dark"] .dashboard-product-top span,
+[data-theme="dark"] .dashboard-payment-info span,
+[data-theme="dark"] .dashboard-inventory-item span,
+[data-theme="dark"] .dashboard-bar-column > span {
+  color: var(--admin-text-secondary);
+}
+
+[data-theme="dark"] .dashboard-panel-header h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .dashboard-panel-header p,
+[data-theme="dark"] .dashboard-indicator-info small {
+  color: var(--admin-text-secondary);
+}
+
+[data-theme="dark"] .dashboard-progress,
+[data-theme="dark"] .dashboard-payment-bar {
+  background: #333333;
+}
+
+[data-theme="dark"] .dashboard-inventory-item {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .inventory-ok {
+  background: rgba(12, 166, 83, 0.15);
+
+  color: #5fd38a;
+}
+
+[data-theme="dark"] .inventory-warning {
+  background: rgba(179, 122, 0, 0.15);
+
+  color: #e8b84d;
+}
+
+[data-theme="dark"] .inventory-danger {
+  background: rgba(229, 57, 53, 0.15);
+
+  color: #ff6b6b;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .dashboard-indicators {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+}
+
+
+@media (max-width: 900px) {
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .dashboard-title h2 {
+    font-size: 32px;
+  }
+
+  .dashboard-indicators {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-panel {
+    padding: 18px;
+  }
+
+  .dashboard-chart {
+    height: 220px;
+  }
+
+  .dashboard-bar-area {
+    height: 155px;
+  }
+
+  .dashboard-bar {
+    width: 25px;
+  }
+
+  .dashboard-inventory-item {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+}

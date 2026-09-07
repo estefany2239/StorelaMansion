@@ -1,0 +1,105 @@
+.footer {
+  background-color: var(--white, #ffffff);
+  color: var(--ink-soft, #4a4a4a);
+  padding-top: 50px;
+  margin-top: 0;
+  border-top: 1px solid var(--border-soft, rgba(26, 26, 26, 0.1));
+  font-family: inherit;
+  width: 100%;
+}
+
+.footer-container {
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+  padding: 0 20px 40px 20px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+}
+
+/* Marca / Logo */
+.footer-logo {
+  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-size: 1.6rem;
+  color: var(--ink, #1a1a1a);
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.footer-tagline {
+  color: var(--gold-dark, #a5831c);
+  font-size: 0.85rem;
+  margin: 2px 0 15px 0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.footer-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ink-soft, #4a4a4a);
+  max-width: 320px;
+}
+
+/* Encabezados de secciones */
+.footer-links h4,
+.footer-contact h4 {
+  color: var(--ink, #1a1a1a);
+  font-size: 1.05rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-family: var(--font-display, serif);
+}
+
+.footer-links ul,
+.footer-contact ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li,
+.footer-contact li {
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.footer-links a {
+  color: var(--ink-soft, #4a4a4a);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: var(--gold-dark, #a5831c);
+}
+
+.footer-contact span {
+  color: var(--ink, #1a1a1a);
+  font-weight: 600;
+}
+
+/* Pie de Footer (Copyright) en blanco continuo con línea tenue */
+.footer-bottom {
+  border-top: 1px solid var(--border-soft, rgba(26, 26, 26, 0.08));
+  padding: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-soft, #4a4a4a);
+  background-color: var(--white, #ffffff);
+}
+
+/* Adaptabilidad a dispositivos móviles */
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    text-align: center;
+  }
+
+  .footer-description {
+    margin: 0 auto;
+  }
+}

@@ -1,0 +1,177 @@
+/* ==========================================
+   FRANJA PRINCIPAL BEIGE (Ocupa el 100% del ancho)
+   ========================================== */
+.categories-section {
+  width: 100%;
+  background-color: var(--cream, #f5ead6) !important;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .categories-section {
+  background-color: #1e1d1b !important;
+}
+
+/* ==========================================
+   CONTENEDOR INTERNO CENTRADO
+   ========================================== */
+.categories {
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+  padding: 80px 20px;
+}
+
+.categories__title {
+  text-align: center;
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: 2.2rem;
+  color: var(--ink, #1a1a1a);
+  margin-bottom: 40px;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .categories__title {
+  color: #f0f0f0;
+}
+
+/* Grilla horizontal tipo tarjetas cuadradas redondeadas */
+.categories__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 50px;
+}
+
+/* Tarjeta individual */
+.categories__item {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
+  border: none;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.categories__item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.categories__item-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  transition: background 0.3s ease;
+}
+
+.categories__item:hover .categories__item-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.categories__item-name {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Banners promocionales inferiores (Mujer / Hombre) con tamaño ajustado */
+.categories__banners {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.categories__banner {
+  position: relative;
+  min-height: 380px;
+  border-radius: 16px;
+  overflow: hidden;
+  background-size: 110%; /* 👈 Sube al 85% para que se vea más grande pero conserve buen margen */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cream, #f5ead6);
+  display: flex;
+  align-items: flex-end;
+  padding: 36px;
+}
+
+.categories__banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.65) 100%);
+}
+
+.categories__banner-content {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+}
+
+.categories__banner-eyebrow {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold, #c9a227);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.categories__banner h3 {
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: 1.8rem;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+.categories__banner button {
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  border: 1.5px solid var(--gold, #c9a227);
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+.categories__banner button svg {
+  stroke: #ffffff;
+}
+
+.categories__banner button:hover {
+  background-color: var(--gold, #c9a227);
+  color: #ffffff;
+  border-color: var(--gold, #c9a227);
+}
+
+/* Adaptabilidad móvil */
+@media (max-width: 768px) {
+  .categories__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .categories__banner {
+    background-size: 85%; /* Ligeramente más grande en móviles para lucir bien */
+  }
+}

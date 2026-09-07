@@ -1,0 +1,70 @@
+.men-collection {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f6f1eb; /* Fondo crema armonizado */
+  padding: 40px 20px 80px 20px;
+  box-sizing: border-box;
+}
+
+.men-collection__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.men-collection__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink, #1a1a1a);
+  cursor: pointer;
+  margin-bottom: 30px;
+  transition: opacity 0.2s ease;
+}
+
+.men-collection__back:hover {
+  opacity: 0.7;
+}
+
+.men-collection__header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.men-collection__eyebrow {
+  display: block;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold, #c9a227);
+  margin-bottom: 8px;
+}
+
+.men-collection__title {
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--ink, #1a1a1a);
+  margin: 0;
+}
+
+.men-collection__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+  gap: 24px;
+  justify-items: center;
+}
+
+.men-collection__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-family: var(--font-body, "Inter", sans-serif);
+  color: #666;
+  padding: 40px;
+}

@@ -1,0 +1,91 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--cream);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.navbar__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.navbar__logo-text {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.navbar__logo-text small {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  color: var(--gold-dark);
+  margin-top: 2px;
+}
+
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex: 1;
+}
+
+.navbar__links a {
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.navbar__links a:hover {
+  color: var(--gold-dark);
+}
+
+/* Botón Iniciar Sesión estilo outline */
+.navbar__button,
+.btn-login {
+  background-color: transparent;
+  color: var(--gold-dark, #a5831c);
+  border: 1.5px solid var(--gold, #c9a227);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navbar__button:hover,
+.btn-login:hover {
+  background-color: var(--gold, #c9a227);
+  color: var(--white, #ffffff);
+}
+
+@media (max-width: 768px) {
+  .navbar__links {
+    display: none;
+  }
+}

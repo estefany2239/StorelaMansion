@@ -1,0 +1,134 @@
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Oscurecedor sobre la imagen de fondo */
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55); /* Capa oscura para legibilidad */
+  z-index: 1;
+}
+
+.hero__container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+  padding: 60px 20px;
+}
+
+.hero__content {
+  max-width: 540px;
+  color: #ffffff;
+}
+
+.hero__eyebrow {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold, #c9a227);
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.hero__title {
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.hero__title span {
+  color: var(--gold, #c9a227);
+  font-style: italic;
+}
+
+.hero__description {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 32px;
+}
+
+/* --- BOTONES COMPLETAMENTE REDONDOS --- */
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 1. Botón Comprar ahora (Relleno dorado / Letra negra) */
+.hero .btn-primary {
+  border-radius: 999px !important;
+  background-color: var(--gold, #c9a227) !important;
+  color: #000000 !important;
+  border: 1.5px solid var(--gold, #c9a227) !important;
+  padding: 12px 28px !important;
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.hero .btn-primary svg {
+  stroke: #000000 !important;
+}
+
+.hero .btn-primary:hover {
+  background-color: var(--gold-dark, #a5831c) !important;
+  border-color: var(--gold-dark, #a5831c) !important;
+  transform: translateY(-2px);
+}
+
+/* 2. Botón Ver colección (Borde visible / Letra blanca) */
+.hero .btn-outline {
+  border-radius: 999px !important;
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #ffffff !important;
+  padding: 12px 28px !important;
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease !important;
+}
+
+.hero .btn-outline svg {
+  stroke: #ffffff !important;
+}
+
+.hero .btn-outline:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+.hero .btn-outline:hover svg {
+  stroke: #000000 !important;
+}

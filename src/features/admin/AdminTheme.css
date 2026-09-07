@@ -1,0 +1,1132 @@
+/* =========================================================
+   STORE LA MANSIÓN - TEMA OSCURO DEL PANEL ADMINISTRATIVO
+   Este archivo solo cambia apariencia. No modifica lógica.
+   ========================================================= */
+
+.admin-container.admin-dark {
+  --admin-bg: #0b0b0b;
+  --admin-card: #171717;
+  --admin-sidebar: #090909;
+  --admin-text: #ffffff;
+  --admin-text-secondary: #bdbdbd;
+  --admin-text-muted: #858585;
+  --admin-gold: #d4af37;
+  --admin-gold-light: #e7c75c;
+  --admin-gold-dark: #a98718;
+  --admin-border: rgba(212, 175, 55, 0.16);
+  --admin-hover: rgba(212, 175, 55, 0.08);
+
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+}
+
+/* ---------- ESTRUCTURA ---------- */
+
+.admin-container.admin-dark .admin-sidebar,
+.admin-container.admin-dark .admin-sidebar-bottom {
+  background: #090909 !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+
+.admin-container.admin-dark .admin-main,
+.admin-container.admin-dark .admin-content {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .admin-logo {
+  border-color: rgba(255,255,255,.09) !important;
+}
+
+.admin-container.admin-dark .admin-logo h2,
+.admin-container.admin-dark .admin-user-data strong {
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .admin-logo span,
+.admin-container.admin-dark .admin-link.active,
+.admin-container.admin-dark .admin-profile-link:hover {
+  color: #d4af37 !important;
+}
+
+.admin-container.admin-dark .admin-link,
+.admin-container.admin-dark .admin-profile-link {
+  color: #bdbdbd !important;
+}
+
+.admin-container.admin-dark .admin-link:hover,
+.admin-container.admin-dark .admin-profile-link:hover {
+  background: rgba(212,175,55,.08) !important;
+}
+
+.admin-container.admin-dark .admin-link.active {
+  background: rgba(212,175,55,.12) !important;
+  border-left-color: #d4af37 !important;
+}
+
+.admin-container.admin-dark .admin-user-data span,
+.admin-container.admin-dark .menu-title {
+  color: #858585 !important;
+}
+
+.admin-container.admin-dark .admin-user-avatar,
+.admin-container.admin-dark .admin-logo-icon {
+  background: rgba(212,175,55,.10) !important;
+  border-color: rgba(212,175,55,.25) !important;
+  color: #d4af37 !important;
+}
+
+.admin-container.admin-dark .admin-bottom-button {
+  background: #151515 !important;
+  color: #bdbdbd !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+.admin-container.admin-dark .admin-bottom-button:hover {
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
+  border-color: rgba(212,175,55,.35) !important;
+}
+
+/* ---------- PÁGINAS ---------- */
+
+.admin-container.admin-dark .dashboard-page,
+.admin-container.admin-dark .roles-page,
+.admin-container.admin-dark .usuarios-page,
+.admin-container.admin-dark .productos-page,
+.admin-container.admin-dark .ventas-page,
+.admin-container.admin-dark .clientes-page,
+.admin-container.admin-dark .pedidos-page,
+.admin-container.admin-dark .domicilios-page,
+.admin-container.admin-dark .perfil-page {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+/* ---------- TÍTULOS ---------- */
+
+.admin-container.admin-dark .dashboard-title h2,
+.admin-container.admin-dark .roles-title h2,
+.admin-container.admin-dark .usuarios-title h2,
+.admin-container.admin-dark .productos-title h2,
+.admin-container.admin-dark .ventas-title h2,
+.admin-container.admin-dark .clientes-title h2,
+.admin-container.admin-dark .pedidos-title h2,
+.admin-container.admin-dark .domicilios-title h2,
+.admin-container.admin-dark .perfil-header h1 {
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .dashboard-title p,
+.admin-container.admin-dark .roles-title p,
+.admin-container.admin-dark .usuarios-title p,
+.admin-container.admin-dark .productos-title p,
+.admin-container.admin-dark .ventas-title p,
+.admin-container.admin-dark .clientes-title p,
+.admin-container.admin-dark .pedidos-title p,
+.admin-container.admin-dark .domicilios-title p,
+.admin-container.admin-dark .perfil-header p {
+  color: #a9a9a9 !important;
+}
+
+/* ---------- BUSCADORES ---------- */
+
+.admin-container.admin-dark .dashboard-page input,
+.admin-container.admin-dark .roles-search,
+.admin-container.admin-dark .roles-search input,
+.admin-container.admin-dark .usuarios-search,
+.admin-container.admin-dark .usuarios-search input,
+.admin-container.admin-dark .productos-search,
+.admin-container.admin-dark .productos-search input,
+.admin-container.admin-dark .ventas-search,
+.admin-container.admin-dark .ventas-search input,
+.admin-container.admin-dark .clientes-search,
+.admin-container.admin-dark .clientes-search input,
+.admin-container.admin-dark .pedidos-search,
+.admin-container.admin-dark .pedidos-search input,
+.admin-container.admin-dark .domicilios-search,
+.admin-container.admin-dark .domicilios-search input,
+.admin-container.admin-dark .productos-page input,
+.admin-container.admin-dark .productos-page select,
+.admin-container.admin-dark .roles-page input,
+.admin-container.admin-dark .roles-page select,
+.admin-container.admin-dark .usuarios-page input,
+.admin-container.admin-dark .usuarios-page select,
+.admin-container.admin-dark .ventas-page input,
+.admin-container.admin-dark .ventas-page select,
+.admin-container.admin-dark .clientes-page input,
+.admin-container.admin-dark .clientes-page select,
+.admin-container.admin-dark .pedidos-page input,
+.admin-container.admin-dark .pedidos-page select,
+.admin-container.admin-dark .domicilios-page input,
+.admin-container.admin-dark .domicilios-page select {
+  background: #171717 !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.13) !important;
+}
+
+.admin-container.admin-dark input::placeholder {
+  color: #777777 !important;
+}
+
+.admin-container.admin-dark .roles-search svg,
+.admin-container.admin-dark .usuarios-search svg,
+.admin-container.admin-dark .productos-search svg,
+.admin-container.admin-dark .ventas-search svg,
+.admin-container.admin-dark .clientes-search svg,
+.admin-container.admin-dark .pedidos-search svg,
+.admin-container.admin-dark .domicilios-search svg {
+  color: #bdbdbd !important;
+}
+
+/* ---------- BOTONES PRINCIPALES ---------- */
+
+.admin-container.admin-dark .roles-add-button,
+.admin-container.admin-dark .usuarios-add-button,
+.admin-container.admin-dark .productos-add-button,
+.admin-container.admin-dark .ventas-add-button,
+.admin-container.admin-dark .clientes-add-button,
+.admin-container.admin-dark .pedidos-add-button,
+.admin-container.admin-dark .domicilios-add-button,
+.admin-container.admin-dark .rol-create-button,
+.admin-container.admin-dark .producto-create-button,
+.admin-container.admin-dark .venta-create-button,
+.admin-container.admin-dark .cliente-create-button,
+.admin-container.admin-dark .pedido-create-button,
+.admin-container.admin-dark .domicilio-create-button,
+.admin-container.admin-dark .perfil-edit-button {
+  background: #d4af37 !important;
+  color: #111111 !important;
+}
+
+.admin-container.admin-dark .roles-add-button:hover,
+.admin-container.admin-dark .usuarios-add-button:hover,
+.admin-container.admin-dark .productos-add-button:hover,
+.admin-container.admin-dark .ventas-add-button:hover,
+.admin-container.admin-dark .clientes-add-button:hover,
+.admin-container.admin-dark .pedidos-add-button:hover,
+.admin-container.admin-dark .domicilios-add-button:hover,
+.admin-container.admin-dark .rol-create-button:hover,
+.admin-container.admin-dark .producto-create-button:hover,
+.admin-container.admin-dark .venta-create-button:hover,
+.admin-container.admin-dark .cliente-create-button:hover,
+.admin-container.admin-dark .pedido-create-button:hover,
+.admin-container.admin-dark .domicilio-create-button:hover,
+.admin-container.admin-dark .perfil-edit-button:hover {
+  background: #e7c75c !important;
+}
+
+/* ---------- TARJETAS / PANELES ---------- */
+
+.admin-container.admin-dark .dashboard-indicator,
+.admin-container.admin-dark .dashboard-panel,
+.admin-container.admin-dark .dashboard-sales-panel,
+.admin-container.admin-dark .dashboard-products,
+.admin-container.admin-dark .dashboard-payments,
+.admin-container.admin-dark .dashboard-inventory,
+.admin-container.admin-dark .roles-table-container,
+.admin-container.admin-dark .usuarios-table-container,
+.admin-container.admin-dark .productos-table-container,
+.admin-container.admin-dark .ventas-table-container,
+.admin-container.admin-dark .clientes-table-container,
+.admin-container.admin-dark .pedidos-table-container,
+.admin-container.admin-dark .domicilios-table-container,
+.admin-container.admin-dark .roles-filters-panel,
+.admin-container.admin-dark .productos-filters-panel,
+.admin-container.admin-dark .ventas-filters-panel,
+.admin-container.admin-dark .pedidos-filters-panel,
+.admin-container.admin-dark .domicilios-filters-panel,
+.admin-container.admin-dark .perfil-user-card,
+.admin-container.admin-dark .perfil-account-card {
+  background: #171717 !important;
+  color: #ffffff !important;
+  border-color: rgba(212,175,55,.14) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,.30) !important;
+}
+
+/* ---------- DASHBOARD ---------- */
+
+.admin-container.admin-dark .dashboard-indicator-info span,
+.admin-container.admin-dark .dashboard-indicator-info small,
+.admin-container.admin-dark .dashboard-panel-header span {
+  color: #9b9b9b !important;
+}
+
+.admin-container.admin-dark .dashboard-indicator-info strong,
+.admin-container.admin-dark .dashboard-panel-header h3,
+.admin-container.admin-dark .dashboard-product-info strong {
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .dashboard-indicator-icon,
+.admin-container.admin-dark .dashboard-panel-icon {
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
+}
+
+/* ---------- TABLAS ---------- */
+
+.admin-container.admin-dark table,
+.admin-container.admin-dark .roles-table,
+.admin-container.admin-dark .usuarios-table,
+.admin-container.admin-dark .productos-table,
+.admin-container.admin-dark .ventas-table,
+.admin-container.admin-dark .clientes-table,
+.admin-container.admin-dark .pedidos-table,
+.admin-container.admin-dark .domicilios-table {
+  color: #eeeeee !important;
+}
+
+.admin-container.admin-dark th {
+  background: #202020 !important;
+  color: #d4af37 !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+
+.admin-container.admin-dark td {
+  background: #171717 !important;
+  color: #eeeeee !important;
+  border-color: rgba(255,255,255,.08) !important;
+}
+
+.admin-container.admin-dark tbody tr:hover td {
+  background: #222222 !important;
+}
+
+/* Textos específicos de las tablas */
+.admin-container.admin-dark .cliente-nombre,
+.admin-container.admin-dark .cliente-id,
+.admin-container.admin-dark .cliente-correo,
+.admin-container.admin-dark .cliente-telefono,
+.admin-container.admin-dark .cliente-fecha,
+.admin-container.admin-dark .usuario-nombre,
+.admin-container.admin-dark .usuario-id,
+.admin-container.admin-dark .usuario-correo,
+.admin-container.admin-dark .usuario-telefono,
+.admin-container.admin-dark .usuario-fecha,
+.admin-container.admin-dark .producto-nombre,
+.admin-container.admin-dark .producto-id,
+.admin-container.admin-dark .producto-price,
+.admin-container.admin-dark .venta-cliente,
+.admin-container.admin-dark .venta-fecha,
+.admin-container.admin-dark .pedido-cliente,
+.admin-container.admin-dark .pedido-fecha,
+.admin-container.admin-dark .domicilio-cliente,
+.admin-container.admin-dark .domicilio-fecha {
+  color: #f1f1f1 !important;
+}
+
+/* IDs y precios en dorado */
+.admin-container.admin-dark .cliente-id,
+.admin-container.admin-dark .usuario-id,
+.admin-container.admin-dark .producto-id,
+.admin-container.admin-dark .venta-id,
+.admin-container.admin-dark .pedido-id,
+.admin-container.admin-dark .domicilio-id,
+.admin-container.admin-dark .producto-price,
+.admin-container.admin-dark .venta-total,
+.admin-container.admin-dark .pedido-total {
+  color: #d4af37 !important;
+}
+
+/* ---------- FILTROS ---------- */
+
+.admin-container.admin-dark .roles-filter,
+.admin-container.admin-dark .productos-filter-group,
+.admin-container.admin-dark .ventas-filter-group,
+.admin-container.admin-dark .pedidos-filter-group,
+.admin-container.admin-dark .domicilios-filter-group {
+  color: #d0d0d0 !important;
+}
+
+.admin-container.admin-dark label {
+  color: #b7b7b7 !important;
+}
+
+/* ---------- MODALES ---------- */
+
+.admin-container.admin-dark .rol-modal,
+.admin-container.admin-dark .producto-modal,
+.admin-container.admin-dark .venta-modal,
+.admin-container.admin-dark .cliente-modal,
+.admin-container.admin-dark .pedido-modal,
+.admin-container.admin-dark .domicilio-modal {
+  background: #171717 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(212,175,55,.16) !important;
+  box-shadow: 0 25px 80px rgba(0,0,0,.65) !important;
+}
+
+.admin-container.admin-dark .rol-modal-header,
+.admin-container.admin-dark .producto-modal-header,
+.admin-container.admin-dark .venta-modal-header,
+.admin-container.admin-dark .cliente-modal-header,
+.admin-container.admin-dark .pedido-modal-header,
+.admin-container.admin-dark .domicilio-modal-header,
+.admin-container.admin-dark .rol-modal-footer,
+.admin-container.admin-dark .producto-modal-footer,
+.admin-container.admin-dark .venta-modal-footer,
+.admin-container.admin-dark .cliente-modal-footer,
+.admin-container.admin-dark .pedido-modal-footer,
+.admin-container.admin-dark .domicilio-modal-footer {
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+.admin-container.admin-dark .rol-modal-header h3,
+.admin-container.admin-dark .producto-modal-header h3,
+.admin-container.admin-dark .venta-modal-header h3,
+.admin-container.admin-dark .cliente-modal-header h3,
+.admin-container.admin-dark .pedido-modal-header h3,
+.admin-container.admin-dark .domicilio-modal-header h3 {
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .rol-modal-close,
+.admin-container.admin-dark .producto-modal-close,
+.admin-container.admin-dark .venta-modal-close,
+.admin-container.admin-dark .cliente-modal-close,
+.admin-container.admin-dark .pedido-modal-close,
+.admin-container.admin-dark .domicilio-modal-close {
+  color: #aaaaaa !important;
+}
+
+.admin-container.admin-dark .rol-modal-close:hover,
+.admin-container.admin-dark .producto-modal-close:hover,
+.admin-container.admin-dark .venta-modal-close:hover,
+.admin-container.admin-dark .cliente-modal-close:hover,
+.admin-container.admin-dark .pedido-modal-close:hover,
+.admin-container.admin-dark .domicilio-modal-close:hover {
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
+}
+
+/* ---------- CAMPOS DENTRO DE MODALES ---------- */
+
+.admin-container.admin-dark .rol-info-value,
+.admin-container.admin-dark .producto-info-value,
+.admin-container.admin-dark .venta-info-value,
+.admin-container.admin-dark .cliente-info-value,
+.admin-container.admin-dark .pedido-info-value,
+.admin-container.admin-dark .domicilio-info-value,
+.admin-container.admin-dark .rol-form-group input,
+.admin-container.admin-dark .rol-form-group select,
+.admin-container.admin-dark .rol-form-group textarea,
+.admin-container.admin-dark .producto-form-group input,
+.admin-container.admin-dark .producto-form-group select,
+.admin-container.admin-dark .producto-form-group textarea,
+.admin-container.admin-dark .venta-form-group input,
+.admin-container.admin-dark .venta-form-group select,
+.admin-container.admin-dark .venta-form-group textarea,
+.admin-container.admin-dark .cliente-form-group input,
+.admin-container.admin-dark .cliente-form-group select,
+.admin-container.admin-dark .pedido-form-group input,
+.admin-container.admin-dark .pedido-form-group select,
+.admin-container.admin-dark .pedido-form-group textarea,
+.admin-container.admin-dark .domicilio-form-group input,
+.admin-container.admin-dark .domicilio-form-group select,
+.admin-container.admin-dark .domicilio-form-group textarea {
+  background: #111111 !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.13) !important;
+}
+
+/* ---------- PERFIL ---------- */
+
+.admin-container.admin-dark .perfil-page {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .perfil-user-card,
+.admin-container.admin-dark .perfil-account-card {
+  background: #171717 !important;
+}
+
+.admin-container.admin-dark .perfil-avatar {
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
+  border-color: rgba(212,175,55,.25) !important;
+}
+
+.admin-container.admin-dark .perfil-user-card h2,
+.admin-container.admin-dark .perfil-account-header h2 {
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .perfil-email,
+.admin-container.admin-dark .perfil-role {
+  color: #aaaaaa !important;
+}
+
+.admin-container.admin-dark .perfil-input {
+  background: #111111 !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.13) !important;
+}
+
+.admin-container.admin-dark .perfil-line {
+  background: rgba(255,255,255,.10) !important;
+}
+
+/* ---------- ESTADOS: CONSERVAR VERDE Y ROJO ---------- */
+
+.admin-container.admin-dark .cliente-estado.activo,
+.admin-container.admin-dark .producto-estado.activo,
+.admin-container.admin-dark .rol-estado.activo,
+.admin-container.admin-dark .usuario-estado.activo,
+.admin-container.admin-dark .venta-status.activo,
+.admin-container.admin-dark .pedido-status.activo,
+.admin-container.admin-dark .domicilio-status.activo {
+  background: #173d29 !important;
+  color: #4ade80 !important;
+}
+
+.admin-container.admin-dark .cliente-estado.inactivo,
+.admin-container.admin-dark .producto-estado.inactivo,
+.admin-container.admin-dark .rol-estado.inactivo,
+.admin-container.admin-dark .usuario-estado.inactivo {
+  background: #421d1d !important;
+  color: #ff6b6b !important;
+}
+
+/* ---------- ALERTAS DE STOCK / REGLAS ---------- */
+
+.admin-container.admin-dark .productos-stock-alert,
+.admin-container.admin-dark .producto-form-alert,
+.admin-container.admin-dark .producto-detail-warning,
+.admin-container.admin-dark .venta-closed-info,
+.admin-container.admin-dark .pedido-delivered-info,
+.admin-container.admin-dark .domicilio-delivered-info {
+  color: #ff6b6b !important;
+  background: rgba(229,57,53,.10) !important;
+  border-color: rgba(229,57,53,.25) !important;
+}
+
+/* ---------- BOTONES SECUNDARIOS ---------- */
+
+.admin-container.admin-dark .rol-cancel-button,
+.admin-container.admin-dark .producto-cancel-button,
+.admin-container.admin-dark .venta-cancel-button,
+.admin-container.admin-dark .cliente-cancel-button,
+.admin-container.admin-dark .pedido-cancel-button,
+.admin-container.admin-dark .domicilio-cancel-button {
+  background: transparent !important;
+  color: #bdbdbd !important;
+  border-color: rgba(255,255,255,.15) !important;
+}
+
+.admin-container.admin-dark .rol-cancel-button:hover,
+.admin-container.admin-dark .producto-cancel-button:hover,
+.admin-container.admin-dark .venta-cancel-button:hover,
+.admin-container.admin-dark .cliente-cancel-button:hover,
+.admin-container.admin-dark .pedido-cancel-button:hover,
+.admin-container.admin-dark .domicilio-cancel-button:hover {
+  background: rgba(255,255,255,.06) !important;
+  color: #ffffff !important;
+}
+
+/* ---------- OVERLAYS ---------- */
+
+.admin-container.admin-dark .rol-modal-overlay,
+.admin-container.admin-dark .producto-modal-overlay,
+.admin-container.admin-dark .venta-modal-overlay,
+.admin-container.admin-dark .cliente-modal-overlay,
+.admin-container.admin-dark .pedido-modal-overlay,
+.admin-container.admin-dark .domicilio-modal-overlay {
+  background: rgba(0,0,0,.78) !important;
+}
+
+/* ---------- BARRAS / SCROLL ---------- */
+
+.admin-container.admin-dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-container.admin-dark ::-webkit-scrollbar-track {
+  background: #0b0b0b;
+}
+
+.admin-container.admin-dark ::-webkit-scrollbar-thumb {
+  background: #3b3b3b;
+  border-radius: 10px;
+}
+
+.admin-container.admin-dark ::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* =========================================================
+   CORRECCIONES FINALES
+   1. El modo claro conserva el diseño original.
+   2. El modo oscuro pinta TODO el panel.
+   3. El contenido no se sale por culpa de width + margin.
+   4. Domicilios ya no queda cortado horizontalmente.
+   ========================================================= */
+
+/* ---------- ESTRUCTURA EN MODO CLARO ---------- */
+.admin-container:not(.admin-dark),
+.admin-container:not(.admin-dark) .admin-main,
+.admin-container:not(.admin-dark) .admin-content {
+  background: #f5ead6 !important;
+  color: #1a1a1a !important;
+}
+
+.admin-container:not(.admin-dark) .admin-sidebar,
+.admin-container:not(.admin-dark) .admin-sidebar-bottom {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+}
+
+.admin-container:not(.admin-dark) .admin-logo h2,
+.admin-container:not(.admin-dark) .admin-user-data strong {
+  color: #1a1a1a !important;
+}
+
+.admin-container:not(.admin-dark) .admin-logo span,
+.admin-container:not(.admin-dark) .admin-link.active,
+.admin-container:not(.admin-dark) .admin-link:hover,
+.admin-container:not(.admin-dark) .admin-profile-link:hover {
+  color: #c9a227 !important;
+}
+
+.admin-container:not(.admin-dark) .admin-link,
+.admin-container:not(.admin-dark) .admin-profile-link {
+  color: #444444 !important;
+}
+
+/* ---------- ESTRUCTURA EN MODO OSCURO ---------- */
+.admin-container.admin-dark,
+.admin-container.admin-dark .admin-main,
+.admin-container.admin-dark .admin-content {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .admin-sidebar,
+.admin-container.admin-dark .admin-sidebar-bottom {
+  background: #090909 !important;
+}
+
+/* ---------- DOMICILIOS: NO CORTAR COLUMNAS ---------- */
+.admin-container .domicilios-table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.admin-container .domicilios-table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.admin-container .domicilios-table th,
+.admin-container .domicilios-table td {
+  box-sizing: border-box;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.admin-container .domicilios-table th {
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.admin-container .domicilios-table td {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.admin-container .domicilios-table th:nth-child(1),
+.admin-container .domicilios-table td:nth-child(1) { width: 10%; }
+.admin-container .domicilios-table th:nth-child(2),
+.admin-container .domicilios-table td:nth-child(2) { width: 9%; }
+.admin-container .domicilios-table th:nth-child(3),
+.admin-container .domicilios-table td:nth-child(3) { width: 9%; }
+.admin-container .domicilios-table th:nth-child(4),
+.admin-container .domicilios-table td:nth-child(4) { width: 14%; }
+.admin-container .domicilios-table th:nth-child(5),
+.admin-container .domicilios-table td:nth-child(5) { width: 17%; }
+.admin-container .domicilios-table th:nth-child(6),
+.admin-container .domicilios-table td:nth-child(6) { width: 10%; }
+.admin-container .domicilios-table th:nth-child(7),
+.admin-container .domicilios-table td:nth-child(7) { width: 11%; }
+.admin-container .domicilios-table th:nth-child(8),
+.admin-container .domicilios-table td:nth-child(8) { width: 11%; }
+.admin-container .domicilios-table th:nth-child(9),
+.admin-container .domicilios-table td:nth-child(9) { width: 9%; }
+
+.admin-container .domicilio-id,
+.admin-container .domicilio-id-relacion,
+.admin-container .domicilio-fecha,
+.admin-container .domicilio-estado {
+  white-space: nowrap;
+}
+
+.admin-container .domicilio-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.admin-container .domicilio-actions button {
+  flex: 0 0 auto;
+}
+
+/* ---------- DOMICILIOS EN DARK ---------- */
+.admin-container.admin-dark .domicilios-table-container {
+  background: #171717 !important;
+  border-color: rgba(212,175,55,.16) !important;
+}
+
+.admin-container.admin-dark .domicilios-table th {
+  color: #bdbdbd !important;
+  border-bottom-color: rgba(255,255,255,.10) !important;
+}
+
+.admin-container.admin-dark .domicilios-table td {
+  border-bottom-color: rgba(255,255,255,.08) !important;
+}
+
+.admin-container.admin-dark .domicilio-cliente {
+  color: #ffffff !important;
+}
+
+.admin-container.admin-dark .domicilio-id,
+.admin-container.admin-dark .domicilio-id-relacion,
+.admin-container.admin-dark .domicilio-direccion,
+.admin-container.admin-dark .domicilio-ciudad,
+.admin-container.admin-dark .domicilio-fecha {
+  color: #bdbdbd !important;
+}
+
+/* ---------- EVITAR DESBORDAMIENTO DEL PANEL ---------- */
+.admin-container,
+.admin-container .admin-main,
+.admin-container .admin-content {
+  min-width: 0;
+  max-width: 100vw;
+}
+
+.admin-container .admin-content {
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   CORRECCIÓN FINAL - ESTILO DARK UNIFICADO + ACCIONES
+   ========================================================= */
+
+/* ---------- DARK: TODOS LOS TEXTOS HEREDADOS ---------- */
+.admin-container.admin-dark .roles-page table td,
+.admin-container.admin-dark .usuarios-page table td,
+.admin-container.admin-dark .productos-page table td,
+.admin-container.admin-dark .ventas-page table td,
+.admin-container.admin-dark .clientes-page table td,
+.admin-container.admin-dark .pedidos-page table td,
+.admin-container.admin-dark .domicilios-page table td {
+  color: #e7e7e7 !important;
+}
+
+/* Textos que en los CSS originales tenían negro fijo */
+.admin-container.admin-dark .rol-nombre,
+.admin-container.admin-dark .rol-descripcion,
+.admin-container.admin-dark .rol-usuarios,
+.admin-container.admin-dark .usuario-rol,
+.admin-container.admin-dark .producto-categoria,
+.admin-container.admin-dark .producto-marca,
+.admin-container.admin-dark .producto-talla,
+.admin-container.admin-dark .producto-color,
+.admin-container.admin-dark .producto-stock,
+.admin-container.admin-dark .venta-metodo,
+.admin-container.admin-dark .pedido-metodo,
+.admin-container.admin-dark .pedido-direccion,
+.admin-container.admin-dark .domicilio-direccion,
+.admin-container.admin-dark .domicilio-ciudad,
+.admin-container.admin-dark .domicilio-id-relacion {
+  color: #aeb7c6 !important;
+}
+
+.admin-container.admin-dark .rol-nombre,
+.admin-container.admin-dark .usuario-nombre,
+.admin-container.admin-dark .producto-nombre,
+.admin-container.admin-dark .cliente-nombre,
+.admin-container.admin-dark .venta-cliente,
+.admin-container.admin-dark .pedido-cliente,
+.admin-container.admin-dark .domicilio-cliente {
+  color: #ffffff !important;
+}
+
+/* ---------- DARK: PANELES DEL DASHBOARD ---------- */
+.admin-container.admin-dark .dashboard-page .dashboard-panel,
+.admin-container.admin-dark .dashboard-page .dashboard-card,
+.admin-container.admin-dark .dashboard-page .dashboard-indicator,
+.admin-container.admin-dark .dashboard-page .dashboard-sales-panel,
+.admin-container.admin-dark .dashboard-page .dashboard-products,
+.admin-container.admin-dark .dashboard-page .dashboard-payments,
+.admin-container.admin-dark .dashboard-page .dashboard-inventory {
+  background: #171717 !important;
+  color: #ffffff !important;
+  border-color: rgba(212,175,55,.18) !important;
+}
+
+.admin-container.admin-dark .dashboard-page .dashboard-payment-name,
+.admin-container.admin-dark .dashboard-page .dashboard-payment-value,
+.admin-container.admin-dark .dashboard-page .dashboard-inventory-label,
+.admin-container.admin-dark .dashboard-page .dashboard-inventory-value,
+.admin-container.admin-dark .dashboard-page .dashboard-product-info span,
+.admin-container.admin-dark .dashboard-page .dashboard-chart-label,
+.admin-container.admin-dark .dashboard-page .dashboard-chart-value {
+  color: #aeb7c6 !important;
+}
+
+.admin-container.admin-dark .dashboard-page strong,
+.admin-container.admin-dark .dashboard-page h3,
+.admin-container.admin-dark .dashboard-page h4 {
+  color: #ffffff !important;
+}
+
+/* No quitar los colores de estado del dashboard */
+.admin-container.admin-dark .dashboard-page .disponible,
+.admin-container.admin-dark .dashboard-page .stock-bajo,
+.admin-container.admin-dark .dashboard-page .agotado {
+  color: inherit !important;
+}
+
+/* ---------- DARK: MODALES ---------- */
+.admin-container.admin-dark .rol-modal,
+.admin-container.admin-dark .usuario-modal,
+.admin-container.admin-dark .producto-modal,
+.admin-container.admin-dark .venta-modal,
+.admin-container.admin-dark .cliente-modal,
+.admin-container.admin-dark .pedido-modal,
+.admin-container.admin-dark .domicilio-modal {
+  background: #1b1b1b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(212,175,55,.18) !important;
+}
+
+.admin-container.admin-dark .rol-modal h2,
+.admin-container.admin-dark .rol-modal h3,
+.admin-container.admin-dark .usuario-modal h2,
+.admin-container.admin-dark .usuario-modal h3,
+.admin-container.admin-dark .producto-modal h2,
+.admin-container.admin-dark .producto-modal h3,
+.admin-container.admin-dark .venta-modal h2,
+.admin-container.admin-dark .venta-modal h3,
+.admin-container.admin-dark .cliente-modal h2,
+.admin-container.admin-dark .cliente-modal h3,
+.admin-container.admin-dark .pedido-modal h2,
+.admin-container.admin-dark .pedido-modal h3,
+.admin-container.admin-dark .domicilio-modal h2,
+.admin-container.admin-dark .domicilio-modal h3 {
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   ACCIONES - MISMO COMPORTAMIENTO EN LIGHT Y DARK
+   1 = OJO / VER     -> AMARILLO
+   2 = LÁPIZ / EDITAR -> AZUL
+   3 = PAPELERA       -> ROJO
+   ========================================================= */
+
+.admin-container .cliente-actions button,
+.admin-container .domicilio-actions button,
+.admin-container .pedido-actions button,
+.admin-container .producto-actions button,
+.admin-container .rol-actions button,
+.admin-container .usuario-actions button {
+  color: #718096 !important;
+  background: transparent !important;
+  border: none !important;
+  transition: color .18s ease, background .18s ease, transform .18s ease !important;
+}
+
+.admin-container .cliente-actions button:hover,
+.admin-container .domicilio-actions button:hover,
+.admin-container .pedido-actions button:hover,
+.admin-container .producto-actions button:hover,
+.admin-container .rol-actions button:hover,
+.admin-container .usuario-actions button:hover {
+  transform: translateY(-1px);
+}
+
+/* OJO */
+.admin-container .cliente-actions button:first-child:hover,
+.admin-container .domicilio-actions button:first-child:hover,
+.admin-container .pedido-actions button:first-child:hover,
+.admin-container .producto-actions button:first-child:hover,
+.admin-container .rol-actions button:first-child:hover,
+.admin-container .usuario-actions button:first-child:hover {
+  color: #d4af37 !important;
+  background: rgba(212,175,55,.10) !important;
+}
+
+/* LÁPIZ */
+.admin-container .cliente-actions button:nth-child(2):hover,
+.admin-container .domicilio-actions button:nth-child(2):hover,
+.admin-container .pedido-actions button:nth-child(2):hover,
+.admin-container .producto-actions button:nth-child(2):hover,
+.admin-container .rol-actions button:nth-child(2):hover,
+.admin-container .usuario-actions button:nth-child(2):hover {
+  color: #3b82f6 !important;
+  background: rgba(59,130,246,.10) !important;
+}
+
+/* PAPELERA */
+.admin-container .cliente-actions button:nth-child(3):hover,
+.admin-container .domicilio-actions button:nth-child(3):hover,
+.admin-container .pedido-actions button:nth-child(3):hover,
+.admin-container .producto-actions button:nth-child(3):hover,
+.admin-container .rol-actions button:nth-child(3):hover,
+.admin-container .usuario-actions button:nth-child(3):hover {
+  color: #ef4444 !important;
+  background: rgba(239,68,68,.10) !important;
+}
+
+/* Si algún módulo usa la papelera como último botón */
+.admin-container .cliente-actions button:last-child:hover,
+.admin-container .domicilio-actions button:last-child:hover,
+.admin-container .pedido-actions button:last-child:hover,
+.admin-container .producto-actions button:last-child:hover,
+.admin-container .rol-actions button:last-child:hover,
+.admin-container .usuario-actions button:last-child:hover {
+  color: #ef4444 !important;
+  background: rgba(239,68,68,.10) !important;
+}
+
+/* Pero si solo existen OJO + LÁPIZ, el segundo sigue siendo azul */
+.admin-container .cliente-actions button:nth-child(2):hover,
+.admin-container .domicilio-actions button:nth-child(2):hover,
+.admin-container .pedido-actions button:nth-child(2):hover,
+.admin-container .producto-actions button:nth-child(2):hover,
+.admin-container .rol-actions button:nth-child(2):hover,
+.admin-container .usuario-actions button:nth-child(2):hover {
+  color: #3b82f6 !important;
+  background: rgba(59,130,246,.10) !important;
+}
+
+/* Estados deshabilitados: no se colorean */
+.admin-container .cliente-actions button.disabled:hover,
+.admin-container .domicilio-actions button.disabled:hover,
+.admin-container .pedido-actions button.disabled:hover,
+.admin-container .producto-actions button.disabled:hover,
+.admin-container .rol-actions button.disabled:hover,
+.admin-container .usuario-actions button.disabled:hover {
+  color: #70798a !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+/* ---------- DARK: BORDES Y SEPARADORES UNIFICADOS ---------- */
+.admin-container.admin-dark .roles-table-container,
+.admin-container.admin-dark .usuarios-table-container,
+.admin-container.admin-dark .productos-table-container,
+.admin-container.admin-dark .ventas-table-container,
+.admin-container.admin-dark .clientes-table-container,
+.admin-container.admin-dark .pedidos-table-container,
+.admin-container.admin-dark .domicilios-table-container {
+  background: #171717 !important;
+  border-color: rgba(212,175,55,.18) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.28) !important;
+}
+
+.admin-container.admin-dark table thead,
+.admin-container.admin-dark table thead tr,
+.admin-container.admin-dark table th {
+  background: #202020 !important;
+}
+
+.admin-container.admin-dark table th {
+  color: #d4af37 !important;
+}
+
+.admin-container.admin-dark table tbody tr,
+.admin-container.admin-dark table tbody td {
+  background: #171717 !important;
+}
+
+.admin-container.admin-dark table tbody tr:hover td {
+  background: #1f1f1f !important;
+}
+
+/* ---------- DARK: CONTROLES ---------- */
+.admin-container.admin-dark .roles-filter,
+.admin-container.admin-dark .roles-filter-button,
+.admin-container.admin-dark .productos-filter-button,
+.admin-container.admin-dark .ventas-filter-button,
+.admin-container.admin-dark .clientes-filter-button,
+.admin-container.admin-dark .pedidos-filter-button,
+.admin-container.admin-dark .domicilios-filter-button {
+  background: #171717 !important;
+  color: #d0d0d0 !important;
+  border-color: rgba(255,255,255,.13) !important;
+}
+
+.admin-container.admin-dark .roles-filter:hover,
+.admin-container.admin-dark .roles-filter-button:hover,
+.admin-container.admin-dark .productos-filter-button:hover,
+.admin-container.admin-dark .ventas-filter-button:hover,
+.admin-container.admin-dark .clientes-filter-button:hover,
+.admin-container.admin-dark .pedidos-filter-button:hover,
+.admin-container.admin-dark .domicilios-filter-button:hover {
+  color: #d4af37 !important;
+  border-color: #d4af37 !important;
+  background: rgba(212,175,55,.08) !important;
+}
+
+/* =========================================================
+   ESTADOS - ESTILO UNIFICADO LIGHT + DARK
+   Todos los estados usan la misma pastilla blanca,
+   cambiando únicamente el color según su significado.
+   ========================================================= */
+
+.admin-container .cliente-estado,
+.admin-container .producto-estado,
+.admin-container .rol-estado,
+.admin-container .usuario-estado,
+.admin-container .domicilio-estado,
+.admin-container .pedido-estado,
+.admin-container .venta-estado {
+  background: #ffffff !important;
+  border: 1px solid currentColor !important;
+  border-radius: 999px !important;
+  padding: 7px 14px !important;
+  min-width: 72px;
+  box-sizing: border-box;
+  text-align: center;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* VERDE - Activo / Entregado / Completada */
+.admin-container .cliente-estado.activo,
+.admin-container .producto-estado.activo,
+.admin-container .rol-estado.activo,
+.admin-container .usuario-estado.activo,
+.admin-container .domicilio-estado.entregado,
+.admin-container .pedido-estado.entregado,
+.admin-container .venta-estado.completada {
+  color: #0ca653 !important;
+  background: #ffffff !important;
+  border-color: #0ca653 !important;
+}
+
+/* ROJO - Inactivo / Anulada */
+.admin-container .cliente-estado.inactivo,
+.admin-container .producto-estado.inactivo,
+.admin-container .rol-estado.inactivo,
+.admin-container .usuario-estado.inactivo,
+.admin-container .venta-estado.anulada {
+  color: #e53935 !important;
+  background: #ffffff !important;
+  border-color: #e53935 !important;
+}
+
+/* AZUL - En camino / Despachado */
+.admin-container .domicilio-estado.camino,
+.admin-container .pedido-estado.despachado {
+  color: #2563eb !important;
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+/* AMARILLO/DORADO - Pendiente / Registrado */
+.admin-container .domicilio-estado.pendiente,
+.admin-container .pedido-estado.registrado {
+  color: #c58a00 !important;
+  background: #ffffff !important;
+  border-color: #c58a00 !important;
+}
+
+/* MORADO - En preparación / Cerrada */
+.admin-container .pedido-estado.preparacion,
+.admin-container .venta-estado.cerrada {
+  color: #7652b8 !important;
+  background: #ffffff !important;
+  border-color: #7652b8 !important;
+}
+
+/* DARK: los estados conservan exactamente el mismo estilo */
+.admin-container.admin-dark .cliente-estado,
+.admin-container.admin-dark .producto-estado,
+.admin-container.admin-dark .rol-estado,
+.admin-container.admin-dark .usuario-estado,
+.admin-container.admin-dark .domicilio-estado,
+.admin-container.admin-dark .pedido-estado,
+.admin-container.admin-dark .venta-estado,
+.admin-container.admin-dark .cliente-estado.activo,
+.admin-container.admin-dark .cliente-estado.inactivo,
+.admin-container.admin-dark .producto-estado.activo,
+.admin-container.admin-dark .producto-estado.inactivo,
+.admin-container.admin-dark .rol-estado.activo,
+.admin-container.admin-dark .rol-estado.inactivo,
+.admin-container.admin-dark .usuario-estado.activo,
+.admin-container.admin-dark .usuario-estado.inactivo,
+.admin-container.admin-dark .domicilio-estado.entregado,
+.admin-container.admin-dark .domicilio-estado.camino,
+.admin-container.admin-dark .domicilio-estado.pendiente,
+.admin-container.admin-dark .pedido-estado.entregado,
+.admin-container.admin-dark .pedido-estado.despachado,
+.admin-container.admin-dark .pedido-estado.registrado,
+.admin-container.admin-dark .pedido-estado.preparacion,
+.admin-container.admin-dark .venta-estado.completada,
+.admin-container.admin-dark .venta-estado.cerrada,
+.admin-container.admin-dark .venta-estado.anulada {
+  background: #ffffff !important;
+}
+
+/* =========================================================
+   ACCIONES - HOVER UNIFICADO EN TODOS LOS MÓDULOS
+   Ojo = amarillo | Lápiz = azul | Papelera = rojo
+   ========================================================= */
+
+.admin-container .cliente-actions button:first-child:hover,
+.admin-container .domicilio-actions button:first-child:hover,
+.admin-container .pedido-actions button:first-child:hover,
+.admin-container .producto-actions button:first-child:hover,
+.admin-container .rol-actions button:first-child:hover,
+.admin-container .usuario-actions button:first-child:hover {
+  color: #d4af37 !important;
+  background: rgba(212, 175, 55, 0.10) !important;
+}
+
+.admin-container .cliente-actions button:nth-child(2):hover,
+.admin-container .domicilio-actions button:nth-child(2):hover,
+.admin-container .pedido-actions button:nth-child(2):hover,
+.admin-container .producto-actions button:nth-child(2):hover,
+.admin-container .rol-actions button:nth-child(2):hover,
+.admin-container .usuario-actions button:nth-child(2):hover {
+  color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.10) !important;
+}
+
+.admin-container .cliente-actions button:nth-child(3):hover,
+.admin-container .domicilio-actions button:nth-child(3):hover,
+.admin-container .pedido-actions button:nth-child(3):hover,
+.admin-container .producto-actions button:nth-child(3):hover,
+.admin-container .rol-actions button:nth-child(3):hover,
+.admin-container .usuario-actions button:nth-child(3):hover,
+.admin-container .cliente-actions button:last-child:hover,
+.admin-container .domicilio-actions button:last-child:hover,
+.admin-container .pedido-actions button:last-child:hover,
+.admin-container .producto-actions button:last-child:hover,
+.admin-container .rol-actions button:last-child:hover,
+.admin-container .usuario-actions button:last-child:hover {
+  color: #e53935 !important;
+  background: rgba(229, 57, 53, 0.10) !important;
+}
+
+/* Si un módulo solo tiene OJO + LÁPIZ, el segundo sigue siendo azul */
+.admin-container .cliente-actions button:nth-child(2):last-child:hover,
+.admin-container .domicilio-actions button:nth-child(2):last-child:hover,
+.admin-container .pedido-actions button:nth-child(2):last-child:hover,
+.admin-container .producto-actions button:nth-child(2):last-child:hover,
+.admin-container .rol-actions button:nth-child(2):last-child:hover,
+.admin-container .usuario-actions button:nth-child(2):last-child:hover {
+  color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.10) !important;
+}

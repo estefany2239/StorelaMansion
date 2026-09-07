@@ -1,0 +1,28 @@
+/* ==========================================
+   PALETA EXACTA DE TU DISEÑO
+   ========================================== */
+
+/* 1. MODO CLARO (Colores Beige/Crema de la imagen) */
+:root {
+  --bg-main: #f5ead6;          /* Cream claro del fondo base */
+  --bg-card: #ebdcc3;          /* Beige más cálido para secciones/tarjetas */
+  --white: #ffffff;            /* Blanco puro para intercalar secciones */
+  --ink: #1a1a1a;              /* Texto oscuro de alto contraste */
+  --ink-soft: #555555;         /* Texto secundario */
+  --border-soft: rgba(26, 26, 26, 0.08);
+  --gold: #c9a227;
+  --gold-dark: #a5831c;
+}
+
+/* 2. MODO OSCURO (Conmutación con data-theme="dark") */
+:root[data-theme="dark"],
+[data-theme="dark"] {
+  --bg-main: #121212;          /* Fondo negro elegante */
+  --bg-card: #1e1d1b;          /* Superficie oscura para tarjetas */
+  --white: #121212;            /* Blanco se convierte en negro en dark mode */
+  --ink: #f0f0f0;              /* Texto claro */
+  --ink-soft: #b0b0b0;
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --gold: #d4af37;
+  --gold-dark: #e5c158;
+}

@@ -1,0 +1,88 @@
+/* ==========================================
+   HEADER ACTIONS FIX COMPLETO
+   ========================================== */
+
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+/* 1. Botón toggle de tema (Sol / Luna) */
+.header-actions__theme-toggle,
+.header-actions button:has(.sun-icon, .moon-icon),
+button.theme-toggle {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease !important;
+}
+
+.header-actions__theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 2. Botón Iniciar Sesión (Cápsula Dorada) */
+.header-actions__login,
+.header-actions button:not(.header-actions__theme-toggle) {
+  background-color: var(--gold, #c9a227) !important;
+  color: #000000 !important; /* Texto negro para contraste */
+  border: none !important;
+  outline: none !important;
+  padding: 10px 24px !important;
+  border-radius: 999px !important; /* Forma redondeada de píldora */
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+.header-actions__login:hover {
+  filter: brightness(0.9) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 3. Botón de Cuenta (Usuario logueado - Borde dorado) */
+.header-actions__account {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border: 1.5px solid var(--gold, #c9a227) !important;
+  padding: 9px 20px !important;
+  border-radius: 999px !important;
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+/* ==========================================
+   MANTENER ESTILOS EN MODO CLARO (BEIGE)
+   ========================================== */
+
+:root:not([data-theme="dark"]) .header-actions__theme-toggle {
+  color: #1a1a1a !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions__theme-toggle:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions__account {
+  color: #1a1a1a !important;
+  border-color: var(--gold-dark, #a5831c) !important;
+}

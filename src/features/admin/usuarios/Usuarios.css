@@ -1,0 +1,669 @@
+/* =========================================================
+   USUARIOS - STORE LA MANSIÓN
+   ========================================================= */
+
+.usuarios-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.usuarios-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+
+.usuarios-title h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--admin-text);
+}
+
+
+.usuarios-title p {
+  margin: 14px 0 0;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 15px;
+  color: var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.usuarios-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+
+/* =========================================================
+   BUSCADOR
+   ========================================================= */
+
+.usuarios-search {
+  width: 265px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #d8dce2;
+  border-radius: 9px;
+  color: #718096;
+}
+
+
+.usuarios-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 14px;
+  color: #333333;
+}
+
+
+.usuarios-search input::placeholder {
+  color: #a5acb8;
+}
+
+
+.usuarios-search:focus-within {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+}
+
+
+/* =========================================================
+   BOTÓN AGREGAR
+   ========================================================= */
+
+.usuarios-add-button {
+  height: 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 9px;
+  background: var(--admin-gold);
+  color: #111111;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+.usuarios-add-button:hover {
+  background: var(--admin-gold-dark);
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.usuarios-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid rgba(201, 162, 39, 0.14);
+  border-radius: 15px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+
+.usuarios-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+
+.usuarios-table th {
+  height: 44px;
+  padding: 0 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #667085;
+  border-bottom: 1px solid #e2e2e2;
+  white-space: nowrap;
+}
+
+
+.usuarios-table td {
+  min-height: 76px;
+  padding: 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 14px;
+}
+
+
+.usuarios-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+.usuarios-table tbody tr:hover {
+  background: rgba(201, 162, 39, 0.025);
+}
+
+
+/* =========================================================
+   CELDA: ID
+   ========================================================= */
+
+.usuario-id {
+  color: var(--admin-gold);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   CELDA: NOMBRE
+   ========================================================= */
+
+.usuario-nombre {
+  display: block;
+  max-width: 180px;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   CELDA: CORREO
+   ========================================================= */
+
+.usuario-correo {
+  color: #738096;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   CELDA: ROL
+   ========================================================= */
+
+.usuario-rol {
+  color: #111111;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   CELDA: TELÉFONO
+   ========================================================= */
+
+.usuario-telefono {
+  color: #738096;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   CELDA: ESTADO (SWITCH & BADGE)
+   ========================================================= */
+
+.switch-usuario-estado {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+
+.switch-usuario-estado input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+
+.slider-usuario {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  background-color: #cbd5e1;
+  border-radius: 22px;
+  transition: background-color 0.3s ease;
+}
+
+
+.slider-usuario::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+
+.switch-usuario-estado input:checked + .slider-usuario {
+  background-color: #16a34a;
+}
+
+
+.switch-usuario-estado input:checked + .slider-usuario::before {
+  transform: translateX(18px);
+}
+
+
+.estado-usuario-texto {
+  font-size: 11px;
+  font-weight: 400; /* Cambiado de 600 a 400 para que la letra sea más suave */
+  letter-spacing: 0.5px;
+}
+
+.estado-usuario-texto.activo {
+  color: #15803d; /* Un verde un punto más sutil pero legible */
+}
+
+.estado-usuario-texto.inactivo {
+  color: #494747; /* Un rojo un poco más suave */
+}
+
+/* =========================================================
+   CELDA: FECHA
+   ========================================================= */
+
+.usuario-fecha {
+  color: #738096;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   ACCIONES DE FILA (VER / EDITAR)
+   ========================================================= */
+
+.usuarios-table .usuario-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.usuarios-table .usuario-actions button {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+.usuarios-table .usuario-actions button:hover {
+  background: rgba(201, 162, 39, 0.1);
+  border-color: var(--admin-gold);
+  color: var(--admin-gold-dark, #b89120);
+}
+
+
+/* =========================================================
+   ESTADO VACÍO DE LA TABLA
+   ========================================================= */
+
+.usuarios-empty {
+  text-align: center;
+  padding: 40px !important;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+
+/* =========================================================
+   MODALES (AGREGAR, EDITAR Y DETALLE)
+   ========================================================= */
+
+.usuario-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+
+.usuario-modal {
+  width: 100%;
+  max-width: 580px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.25s ease;
+}
+
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.usuario-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.usuario-modal-header h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: #111111;
+}
+
+
+.usuario-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+
+.usuario-modal-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+
+.usuario-modal-body {
+  padding: 24px;
+  max-height: 75vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+
+.usuario-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+
+/* =========================================================
+   FORMULARIO EN MODAL
+   ========================================================= */
+
+.usuario-form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+
+.usuario-form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+
+.usuario-form-row .usuario-form-group {
+  margin-bottom: 0;
+}
+
+
+.usuario-form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: #64748b;
+}
+
+
+.usuario-form-group input,
+.usuario-form-group select {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  color: #1e293b;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+
+.usuario-form-group input:focus,
+.usuario-form-group select:focus {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+
+.usuario-form-group input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   BOTONES DE MODAL
+   ========================================================= */
+
+.usuario-cancel-button {
+  height: 40px;
+  padding: 0 18px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+
+.usuario-cancel-button:hover {
+  background: #f1f5f9;
+}
+
+
+.usuario-create-button {
+  height: 40px;
+  padding: 0 20px;
+  background: var(--admin-gold);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+
+.usuario-create-button:hover {
+  background: var(--admin-gold-dark);
+}
+
+
+/* =========================================================
+   VISTA DE DETALLES
+   ========================================================= */
+
+.usuario-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.usuario-detail-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(201, 162, 39, 0.15);
+  color: var(--admin-gold-dark, #b89120);
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.usuario-detail-header div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+
+.usuario-detail-header strong {
+  font-size: 18px;
+  color: #111111;
+}
+
+
+.usuario-detail-header span {
+  font-size: 14px;
+  color: #64748b;
+}
+
+
+.usuario-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+
+.usuario-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+
+.usuario-info-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: #64748b;
+}
+
+
+.usuario-info-value {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+
+.usuario-info-full {
+  grid-column: span 2;
+}
+
+
+.usuario-estado {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.usuario-estado.activo {
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+
+.usuario-estado.inactivo {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+

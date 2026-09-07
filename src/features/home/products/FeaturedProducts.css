@@ -1,0 +1,155 @@
+/* ==========================================
+   ESTRUCTURA DE LA SECCIÓN
+   ========================================== */
+
+.featured {
+  background: var(--cream); /* Fondo beige de la sección */
+  padding: 60px 24px; /* Reducido ligeramente de 80px a 60px */
+  transition: background-color 0.3s ease;
+}
+
+.featured__inner {
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+}
+
+.featured__header {
+  text-align: center;
+  margin-bottom: 36px; /* Reducido de 48px para compactar */
+}
+
+.featured__eyebrow {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 11.5px; /* Ligeramente más pequeño */
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--gold-dark);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.featured__title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 32px); /* Un poco más estilizado y ajustado */
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+}
+
+.featured__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px; /* Reducido de 28px a 20px para tarjetas más estilizadas */
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .featured__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .featured__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   TARJETA MÁS COMPACTA
+   ========================================== */
+
+.product-card {
+  background-color: #ffffff !important;
+  border-radius: 12px !important; /* Bordes un poco más refinados (12px) */
+  overflow: hidden !important;
+  padding: 0 0 12px 0 !important; /* Padding inferior ajustado */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  max-width: 280px; /* Evita que crezcan demasiado si hay pocos elementos */
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Imagen con altura reducida (Antes 280px -> Ahora 210px) */
+.product-card__image-wrapper,
+.product-card__image-container {
+  position: relative;
+  width: 100%;
+  height: 210px; /* Disminuido para que la tarjeta sea más baja y estilizada */
+  border-radius: 0 !important;
+  overflow: hidden;
+}
+
+.product-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Información del producto */
+.product-card__info,
+.product-card__content {
+  padding: 12px 14px 0 14px; /* Padding interno más ajustado */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+}
+
+.product-card__name,
+.product-card__title {
+  font-size: 0.9rem; /* Tipografía sutilmente más pequeña */
+  font-weight: 500;
+}
+
+.product-card__price {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* Botón "Ver producto" más sutil y proporcional */
+.product-card__button,
+.product-card__btn {
+  width: 100%;
+  padding: 8px 0 !important; /* Reducido de 10px a 8px */
+  border-radius: 999px !important;
+  border: none !important;
+  background-color: var(--gold, #c9a227) !important;
+  color: #000000 !important;
+  font-size: 0.85rem; /* Letra un poco más pequeña */
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px; /* Margen superior reducido */
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.product-card__button:hover,
+.product-card__btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   SOPORTE MODO OSCURO ([data-theme="dark"])
+   ========================================== */
+
+[data-theme="dark"] .featured {
+  background: #1e1d1b;
+}
+
+[data-theme="dark"] .product-card {
+  background-color: #262421 !important;
+}
+
+[data-theme="dark"] .featured__title,
+[data-theme="dark"] .product-card__name {
+  color: #f0f0f0;
+}
+
+[data-theme="dark"] .product-card__button {
+  background-color: var(--gold) !important;
+  color: #000000 !important;
+}

@@ -1,0 +1,438 @@
+/* Contenedor principal */
+
+.login-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-size: cover;
+  background-position: center;
+  transition: background 0.3s ease;
+}
+
+/* --- MODO CLARO --- */
+
+[data-theme="light"] .login-page {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
+    url("../../assets/img/img.png") center/cover no-repeat;
+}
+
+[data-theme="light"] .login-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #1a1a1a;
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .login__header h2 {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .login__header p,
+[data-theme="light"] .form-group label,
+[data-theme="light"] .demo-title,
+[data-theme="light"] .demo-item span {
+  color: #666666;
+}
+
+[data-theme="light"] .input-with-icon input {
+  background: #f9f9f9;
+  border: 1.5px solid rgba(145, 121, 43, 0.6);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .demo-item {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .demo-item strong {
+  color: #1a1a1a;
+}
+
+/* Enlaces / botones del modo claro */
+
+[data-theme="light"] .forgot-link,
+[data-theme="light"] .register-redirect a,
+[data-theme="light"] .form-options a {
+  color: #1a1a1a !important;
+}
+
+
+/* --- MODO OSCURO --- */
+
+[data-theme="dark"] .login-page {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+    url("../../assets/img/img.png") center/cover no-repeat;
+}
+
+[data-theme="dark"] .login-card {
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .login__header h2 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .login__header p,
+[data-theme="dark"] .form-group label,
+[data-theme="dark"] .demo-title,
+[data-theme="dark"] .demo-item span {
+  color: #b0b0b0;
+}
+
+[data-theme="dark"] .input-with-icon input {
+  background: rgba(17, 17, 17, 0.85);
+  border: 1.5px solid rgba(201, 162, 39, 0.65);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .demo-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .demo-item strong {
+  color: #ffffff;
+}
+
+/* Enlaces / botones del modo oscuro */
+
+[data-theme="dark"] .forgot-link,
+[data-theme="dark"] .register-redirect a,
+[data-theme="dark"] .form-options a {
+  color: #ffffff !important;
+}
+
+
+/* --- ESTRUCTURA GENERAL DE LA TARJETA --- */
+
+.login-container {
+  width: 100%;
+  max-width: 440px;
+  z-index: 5;
+}
+
+.login-card {
+  border-radius: 20px;
+  padding: 36px;
+  backdrop-filter: blur(12px);
+}
+
+
+/* --- BOTÓN VOLVER --- */
+
+.login__back-btn {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  background: transparent !important;
+  border: none !important;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 10;
+  color: #ffffff !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+  transition: color 0.3s ease;
+}
+
+.login__back-btn:hover {
+  color: var(--gold, #c9a227) !important;
+}
+
+
+/* --- ENCABEZADO --- */
+
+.login__header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login__icon-wrapper {
+  width: 44px;
+  height: 44px;
+  background: rgba(201, 162, 39, 0.1);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.login__gold-icon {
+  color: var(--gold, #c9a227);
+}
+
+.login__header h2 {
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+
+/* --- FORMULARIO --- */
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+
+/* --- INPUTS --- */
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #888;
+}
+
+.input-with-icon input {
+  width: 100%;
+  border-radius: 10px;
+  padding: 12px 14px 12px 42px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.input-with-icon input:focus {
+  border-color: var(--gold, #c9a227);
+}
+
+
+/* --- MOSTRAR / OCULTAR CONTRASEÑA --- */
+
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  background: transparent !important;
+  border: none !important;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggle-password:hover {
+  color: var(--gold, #c9a227);
+}
+
+
+/* =========================================================
+   ENLACES DE LOGIN
+   ========================================================= */
+
+/* Contenedor de "Olvidaste tu contraseña" */
+
+.form-options {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+
+/* "¿Olvidaste tu contraseña?" */
+
+.forgot-link {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  padding: 0 !important;
+  margin: 0;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.82rem;
+  font-weight: 400;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition:
+    color 0.3s ease,
+    opacity 0.2s ease;
+}
+
+
+/* Evita el estilo gris del navegador */
+
+.forgot-link:focus,
+.forgot-link:active {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+
+/* Hover */
+
+.forgot-link:hover {
+  color: var(--gold, #c9a227) !important;
+  text-decoration: underline;
+}
+
+
+/* --- CREAR CUENTA --- */
+
+.register-redirect {
+  text-align: center;
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.register-redirect .forgot-link {
+  display: inline !important;
+  width: auto;
+  vertical-align: baseline;
+}
+
+
+/* --- ENLACES GENERALES --- */
+
+.register-redirect a,
+.form-options a {
+  text-decoration: none;
+  transition:
+    color 0.3s ease,
+    opacity 0.2s ease;
+}
+
+.register-redirect a:hover,
+.form-options a:hover {
+  color: var(--gold, #c9a227) !important;
+  text-decoration: underline;
+}
+
+
+/* --- BOTÓN INICIAR SESIÓN --- */
+
+.login__submit-btn {
+  background: var(--gold, #c9a227);
+  color: #111111;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition:
+    opacity 0.3s ease,
+    transform 0.2s ease;
+  margin-top: 6px;
+}
+
+.login__submit-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   CREDENCIALES DE DEMO
+   ========================================================= */
+
+.demo-credentials {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(201, 162, 39, 0.2);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.demo-title {
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.demo-item {
+  border-radius: 8px;
+  padding: 8px 12px;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.demo-item:hover {
+  background: rgba(201, 162, 39, 0.08);
+  border-color: rgba(201, 162, 39, 0.3);
+}
+
+.demo-item strong {
+  font-size: 0.8rem;
+}
+
+.demo-item span {
+  font-size: 0.75rem;
+}
+
+
+/* =========================================================
+   AUTOFILL
+   ========================================================= */
+
+/* Modo oscuro */
+
+[data-theme="dark"] .input-with-icon input:-webkit-autofill,
+[data-theme="dark"] .input-with-icon input:-webkit-autofill:hover,
+[data-theme="dark"] .input-with-icon input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #121212 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+}
+
+
+/* Modo claro */
+
+[data-theme="light"] .input-with-icon input:-webkit-autofill,
+[data-theme="light"] .input-with-icon input:-webkit-autofill:hover,
+[data-theme="light"] .input-with-icon input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #f9f9f9 inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  caret-color: #1a1a1a;
+}

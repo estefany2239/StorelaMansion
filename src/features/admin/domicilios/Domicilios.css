@@ -1,0 +1,1152 @@
+/* =========================================================
+   DOMICILIOS - STORE LA MANSIÓN
+   ========================================================= */
+
+.domicilios-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.domicilios-header {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 25px;
+
+  margin-bottom: 30px;
+}
+
+
+.domicilios-title h2 {
+  margin: 0;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 38px;
+  font-weight: 400;
+
+  line-height: 1.2;
+
+  color:
+    var(--admin-text);
+}
+
+
+.domicilios-title p {
+  margin: 14px 0 0;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 15px;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.domicilios-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   BUSCADOR
+   ========================================================= */
+
+.domicilios-search {
+  width: 265px;
+
+  height: 45px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 13px;
+
+  box-sizing: border-box;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid #d8dce2;
+
+  border-radius: 9px;
+
+  color:
+    #718096;
+}
+
+
+.domicilios-search input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 14px;
+
+  color:
+    #333333;
+}
+
+
+.domicilios-search input::placeholder {
+  color:
+    #a5acb8;
+}
+
+
+.domicilios-search:focus-within {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+
+/* =========================================================
+   FILTROS
+   ========================================================= */
+
+.domicilios-filter-button {
+  height: 45px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 15px;
+
+  border:
+    1px solid #d8dce2;
+
+  border-radius: 9px;
+
+  background:
+    #ffffff;
+
+  color:
+    #626d7d;
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+
+.domicilios-filter-button.active,
+.domicilios-filter-button:hover {
+  border-color:
+    var(--admin-gold);
+
+  color:
+    var(--admin-gold-dark);
+
+  background:
+    rgba(201, 162, 39, 0.06);
+}
+
+
+.domicilios-add-button {
+  height: 45px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 20px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background:
+    var(--admin-gold);
+
+  color:
+    #111111;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.domicilios-add-button:hover {
+  background:
+    var(--admin-gold-dark);
+}
+
+
+/* =========================================================
+   PANEL DE FILTROS
+   ========================================================= */
+
+.domicilios-filters-panel {
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 15px;
+
+  margin-bottom: 18px;
+
+  padding: 18px;
+
+  background:
+    rgba(255, 255, 255, 0.55);
+
+  border:
+    1px solid
+    rgba(201, 162, 39, 0.18);
+
+  border-radius: 12px;
+}
+
+
+.domicilios-filter-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.domicilios-filter-group label {
+  font-size: 10px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+}
+
+
+.domicilios-filter-group select {
+  height: 42px;
+
+  min-width: 190px;
+
+  padding: 0 12px;
+
+  border:
+    1px solid #d8dce2;
+
+  border-radius: 8px;
+
+  background:
+    #ffffff;
+
+  outline: none;
+
+  color:
+    #555555;
+
+  font-size: 13px;
+}
+
+
+.domicilios-clear-filter {
+  height: 42px;
+
+  padding: 0 15px;
+
+  border: none;
+
+  background: transparent;
+
+  color:
+    var(--admin-gold-dark);
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.domicilios-table-container {
+  width: 100%;
+
+  overflow-x: auto;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    rgba(201, 162, 39, 0.14);
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+.domicilios-table {
+  width: 100%;
+
+  min-width: 1100px;
+
+  border-collapse: collapse;
+}
+
+
+.domicilios-table th {
+  height: 44px;
+
+  padding: 0 16px;
+
+  text-align: left;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+
+  border-bottom:
+    1px solid #e2e2e2;
+
+  white-space: nowrap;
+}
+
+
+.domicilios-table td {
+  height: 76px;
+
+  padding: 0 16px;
+
+  vertical-align: middle;
+
+  border-bottom:
+    1px solid #e8e8e8;
+
+  font-size: 14px;
+}
+
+
+.domicilios-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   DATOS
+   ========================================================= */
+
+.domicilio-id {
+  color:
+    var(--admin-gold);
+
+  font-size: 13px;
+}
+
+
+.domicilio-id-relacion {
+  color:
+    #738096;
+
+  font-size: 13px;
+}
+
+
+.domicilio-cliente {
+  color:
+    #111111;
+
+  font-size: 15px;
+
+  font-weight: 500;
+}
+
+
+.domicilio-direccion,
+.domicilio-ciudad,
+.domicilio-fecha {
+  color:
+    #738096;
+
+  font-size: 14px;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   ESTADOS
+   ========================================================= */
+
+.domicilio-estado {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 82px;
+
+  min-height: 26px;
+
+  padding: 0 11px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
+.domicilio-estado.entregado {
+  background:
+    #dff5e8;
+
+  color:
+    #0ca653;
+}
+
+
+.domicilio-estado.camino {
+  background:
+    #e1ebff;
+
+  color:
+    #2867d8;
+}
+
+
+.domicilio-estado.pendiente {
+  background:
+    #fff2d2;
+
+  color:
+    #c68a00;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.domicilio-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+
+.domicilio-actions button {
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background:
+    transparent;
+
+  color:
+    #70798a;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+}
+
+
+.domicilio-actions button:hover {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(201, 162, 39, 0.08);
+}
+
+
+.domicilio-actions button:last-child:hover {
+  color:
+    #e53935;
+
+  background:
+    rgba(229, 57, 53, 0.08);
+}
+
+
+.domicilio-actions button.disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   VACÍO
+   ========================================================= */
+
+.domicilios-empty {
+  height: 100px !important;
+
+  text-align: center;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.domicilio-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 5000;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 25px;
+
+  box-sizing: border-box;
+
+  background:
+    rgba(0, 0, 0, 0.48);
+
+  backdrop-filter:
+    blur(3px);
+}
+
+
+.domicilio-modal {
+  width: 100%;
+
+  max-width: 768px;
+
+  max-height:
+    calc(100vh - 50px);
+
+  overflow-y: auto;
+
+  background:
+    #ffffff;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 25px 70px
+    rgba(0, 0, 0, 0.25);
+}
+
+
+/* =========================================================
+   HEADER MODAL
+   ========================================================= */
+
+.domicilio-modal-header {
+  min-height: 86px;
+
+  padding: 0 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  border-bottom:
+    1px solid #e2e2e2;
+}
+
+
+.domicilio-modal-header h3 {
+  margin: 0;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 25px;
+
+  font-weight: 500;
+
+  color:
+    #1a1a1a;
+}
+
+
+.domicilio-modal-close {
+  width: 36px;
+
+  height: 36px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  color:
+    #697386;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+
+.domicilio-modal-close:hover {
+  background:
+    #f3f3f3;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.domicilio-modal-body {
+  padding:
+    30px;
+}
+
+
+/* =========================================================
+   FORMULARIO
+   ========================================================= */
+
+.domicilio-form-row {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+
+.domicilio-form-group,
+.domicilio-info-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.domicilio-form-group label,
+.domicilio-info-group label {
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+}
+
+
+.domicilio-form-group input,
+.domicilio-form-group select {
+  width: 100%;
+
+  height: 48px;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background:
+    #ffffff;
+
+  font-size: 14px;
+
+  color:
+    #222222;
+}
+
+
+.domicilio-form-group input:focus,
+.domicilio-form-group select:focus {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+
+.domicilio-form-group input:disabled,
+.domicilio-form-group input:read-only {
+  background:
+    #f5f5f5;
+
+  color:
+    #777777;
+}
+
+
+/* =========================================================
+   DETALLE
+   ========================================================= */
+
+.domicilio-info-value {
+  min-height: 48px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  background:
+    #f7f7f7;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  color:
+    #222222;
+}
+
+
+/* =========================================================
+   REGLA DE NEGOCIO
+   ========================================================= */
+
+.domicilio-delivered-info {
+  margin-top: 20px;
+
+  padding: 13px 15px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(12, 166, 83, 0.08);
+
+  color:
+    #0b9150;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.domicilio-modal-footer {
+  min-height: 96px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 14px;
+
+  padding: 0 30px;
+
+  border-top:
+    1px solid #e2e2e2;
+}
+
+
+.domicilio-cancel-button {
+  height: 48px;
+
+  padding: 0 24px;
+
+  border:
+    1px solid #dedede;
+
+  border-radius: 9px;
+
+  background:
+    #ffffff;
+
+  color:
+    #697386;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.domicilio-cancel-button:hover {
+  background:
+    #f7f7f7;
+}
+
+
+.domicilio-create-button {
+  height: 48px;
+
+  padding: 0 24px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background:
+    var(--admin-gold);
+
+  color:
+    #111111;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.domicilio-create-button:hover {
+  background:
+    var(--admin-gold-dark);
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .domicilios-search,
+[data-theme="dark"] .domicilios-filter-button {
+  background:
+    var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.20);
+}
+
+
+[data-theme="dark"] .domicilios-search input {
+  color:
+    var(--admin-text);
+}
+
+
+[data-theme="dark"] .domicilios-filters-panel {
+  background:
+    var(--admin-card);
+}
+
+
+[data-theme="dark"] .domicilios-filter-group select {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .domicilios-table-container {
+  background:
+    var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.18);
+}
+
+
+[data-theme="dark"] .domicilios-table th {
+  color:
+    var(--admin-text-secondary);
+
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .domicilios-table td {
+  border-color:
+    rgba(255, 255, 255, 0.08);
+}
+
+
+[data-theme="dark"] .domicilio-cliente {
+  color:
+    var(--admin-text);
+}
+
+
+[data-theme="dark"] .domicilio-direccion,
+[data-theme="dark"] .domicilio-ciudad,
+[data-theme="dark"] .domicilio-fecha,
+[data-theme="dark"] .domicilio-id-relacion {
+  color:
+    var(--admin-text-secondary);
+}
+
+
+[data-theme="dark"] .domicilio-modal {
+  background:
+    #1e1e1e;
+}
+
+
+[data-theme="dark"] .domicilio-modal-header {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .domicilio-modal-header h3 {
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .domicilio-form-group label,
+[data-theme="dark"] .domicilio-info-group label {
+  color:
+    #b0b0b0;
+}
+
+
+[data-theme="dark"] .domicilio-form-group input,
+[data-theme="dark"] .domicilio-form-group select {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .domicilio-info-value {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .domicilio-modal-footer {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .domicilio-cancel-button {
+  background:
+    transparent;
+
+  border-color:
+    rgba(255, 255, 255, 0.18);
+
+  color:
+    #b0b0b0;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .domicilios-header {
+    flex-direction: column;
+  }
+
+  .domicilios-actions {
+    width: 100%;
+
+    justify-content: flex-end;
+  }
+
+}
+
+
+@media (max-width: 850px) {
+
+  .domicilios-actions {
+    flex-wrap: wrap;
+  }
+
+  .domicilios-search {
+    flex: 1;
+
+    min-width: 220px;
+  }
+
+  .domicilios-filters-panel {
+    flex-wrap: wrap;
+  }
+
+  .domicilio-form-row {
+    grid-template-columns:
+      1fr;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .domicilios-title h2 {
+    font-size: 32px;
+  }
+
+  .domicilios-actions {
+    width: 100%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .domicilios-search,
+  .domicilios-filter-button,
+  .domicilios-add-button {
+    width: 100%;
+  }
+
+  .domicilios-filters-panel {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .domicilio-modal-overlay {
+    padding: 12px;
+  }
+
+  .domicilio-modal {
+    max-height:
+      calc(100vh - 24px);
+  }
+
+  .domicilio-modal-header {
+    min-height: 70px;
+
+    padding: 0 20px;
+  }
+
+  .domicilio-modal-body {
+    padding: 22px 20px;
+  }
+
+  .domicilio-modal-footer {
+    min-height: 82px;
+
+    padding: 0 20px;
+  }
+
+}

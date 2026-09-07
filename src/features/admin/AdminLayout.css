@@ -1,0 +1,530 @@
+/* =========================================================
+   ADMIN LAYOUT - STORE LA MANSIÓN
+   CSS COMPLETO
+   ========================================================= */
+
+/* =========================================================
+   VARIABLES MODO CLARO
+   ========================================================= */
+:root {
+  --admin-bg: #f7f7f7;
+  --admin-card: #ffffff;
+  --admin-sidebar: #ffffff;
+  --admin-text: #171717;
+  --admin-text-secondary: #555555;
+  --admin-text-muted: #777777;
+  --admin-gold: #c49a20;
+  --admin-gold-light: #d7af32;
+  --admin-gold-dark: #9d7910;
+  --admin-border: #e5e5e5;
+  --admin-hover: #f8f5ed;
+}
+
+/* =========================================================
+   CONTENEDOR GENERAL
+   ========================================================= */
+.admin-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: var(--font-body, "Inter", sans-serif);
+  overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* =========================================================
+   MODO OSCURO GLOBAL
+   ========================================================= */
+.admin-container.admin-dark {
+  --admin-bg: #0b0b0b;
+  --admin-card: #171717;
+  --admin-sidebar: #090909;
+  --admin-text: #ffffff;
+  --admin-text-secondary: #d0d0d0;
+  --admin-text-muted: #909090;
+  --admin-gold: #d4af37;
+  --admin-gold-light: #e7c75c;
+  --admin-gold-dark: #a98718;
+  --admin-border: rgba(255, 255, 255, 0.10);
+  --admin-hover: rgba(212, 175, 55, 0.09);
+  background: #0b0b0b;
+  color: #ffffff;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 220px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--admin-sidebar);
+  border-right: 1px solid var(--admin-border);
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 1000;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+.admin-logo {
+  height: 105px;
+  min-height: 105px;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  border-bottom: 1px solid var(--admin-border);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.admin-logo-icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(196, 154, 32, 0.12);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-gold);
+  flex-shrink: 0;
+}
+
+.admin-logo h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--admin-text);
+  white-space: nowrap;
+}
+
+.admin-logo span {
+  margin-top: 4px;
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--admin-gold);
+  white-space: nowrap;
+}
+
+/* =========================================================
+   MENÚ PRINCIPAL
+   ========================================================= */
+.admin-menu {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 11px 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.menu-title {
+  display: block;
+  padding: 0 10px;
+  margin-bottom: 4px;
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+/* =========================================================
+   OPCIONES DEL MENÚ
+   ========================================================= */
+.admin-link {
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 11px;
+  margin: 0 0 1px 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-link svg {
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.admin-link:hover {
+  background: var(--admin-hover);
+  color: var(--admin-gold);
+}
+
+/* =========================================================
+   OPCIÓN ACTIVA
+   ========================================================= */
+.admin-link.active {
+  background: rgba(196, 154, 32, 0.12);
+  color: var(--admin-gold);
+  font-weight: 700;
+  border-left: 3px solid var(--admin-gold);
+  padding-left: 8px;
+}
+
+.admin-container.admin-dark .admin-link.active {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--admin-gold-light);
+  border-left-color: var(--admin-gold);
+}
+
+/* =========================================================
+   PARTE INFERIOR DEL SIDEBAR
+   ========================================================= */
+.admin-sidebar-bottom {
+  width: 100%;
+  padding: 8px 13px 11px;
+  border-top: 1px solid var(--admin-border);
+  background: var(--admin-sidebar);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   PERFIL
+   ========================================================= */
+.admin-profile-link {
+  width: 100%;
+  height: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 9px;
+  margin: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-profile-link:hover {
+  background: var(--admin-hover);
+  color: var(--admin-gold);
+}
+
+.admin-profile-link svg {
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   SEPARADOR ENTRE PERFIL Y USUARIO
+   ========================================================= */
+.admin-profile-divider {
+  width: calc(100% - 4px);
+  height: 1px;
+  margin: 7px auto 8px;
+  background: var(--admin-border);
+}
+
+/* =========================================================
+   USUARIO INFERIOR
+   ========================================================= */
+.admin-user-info {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px 7px;
+  box-sizing: border-box;
+}
+
+.admin-user-avatar {
+  width: 35px;
+  height: 35px;
+  min-width: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(196, 154, 32, 0.12);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-gold);
+}
+
+.admin-user-data {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.admin-user-data strong {
+  display: block;
+  max-width: 135px;
+  color: var(--admin-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-user-data span {
+  display: block;
+  color: var(--admin-text-muted);
+  font-size: 9px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   BOTONES INFERIORES
+   ========================================================= */
+.admin-bottom-actions {
+  width: 100%;
+  display: flex;
+  gap: 7px;
+}
+
+.admin-bottom-button {
+  flex: 1;
+  height: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: var(--admin-card);
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-bottom-button:hover {
+  background: var(--admin-hover);
+  border-color: var(--admin-gold);
+  color: var(--admin-gold);
+}
+
+/* =========================================================
+   CERRAR SESIÓN
+   ========================================================= */
+.logout-icon-button:hover {
+  color: #e53935;
+  border-color: rgba(229, 57, 53, 0.45);
+  background: rgba(229, 57, 53, 0.08);
+}
+
+/* =========================================================
+   CONTENIDO PRINCIPAL
+   ========================================================= */
+.admin-main {
+  width: calc(100% - 220px);
+  min-height: 100vh;
+  margin-left: 220px;
+  background: var(--admin-bg);
+  box-sizing: border-box;
+  overflow-x: hidden;
+  transition: background 0.3s ease;
+}
+
+.admin-content {
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px;
+  box-sizing: border-box;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* =========================================================
+   DARK - CONTENIDO GENERAL
+   ========================================================= */
+.admin-container.admin-dark .admin-main,
+.admin-container.admin-dark .admin-content {
+  background: #0b0b0b;
+  color: #ffffff;
+}
+
+/* =========================================================
+   TARJETAS / CONTENEDORES GENÉRICOS EN DARK
+   ========================================================= */
+.admin-container.admin-dark .card,
+.admin-container.admin-dark .modal,
+.admin-container.admin-dark .table-container {
+  background: #171717;
+  color: #ffffff;
+  border-color: #333333;
+}
+
+/* =========================================================
+   INPUTS GENERALES EN DARK
+   ========================================================= */
+.admin-container.admin-dark input,
+.admin-container.admin-dark select,
+.admin-container.admin-dark textarea {
+  background-color: #171717;
+  color: #ffffff;
+  border-color: #3a3a3a;
+}
+
+.admin-container.admin-dark input::placeholder,
+.admin-container.admin-dark textarea::placeholder {
+  color: #8a8a8a;
+}
+
+/* =========================================================
+   TEXTOS GENERALES EN DARK
+   ========================================================= */
+.admin-container.admin-dark h1,
+.admin-container.admin-dark h2,
+.admin-container.admin-dark h3,
+.admin-container.admin-dark h4,
+.admin-container.admin-dark h5,
+.admin-container.admin-dark h6 {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark p {
+  color: #b7b7b7;
+}
+
+/* =========================================================
+   TABLAS GENERALES EN DARK
+   ========================================================= */
+.admin-container.admin-dark table {
+  color: #ffffff;
+  border-color: #333333;
+}
+
+.admin-container.admin-dark th {
+  background: #202020;
+  color: #d4af37;
+  border-color: #333333;
+}
+
+.admin-container.admin-dark td {
+  background: #171717;
+  color: #eeeeee;
+  border-color: #2e2e2e;
+}
+
+.admin-container.admin-dark tbody tr:hover td {
+  background: #1e1e1e;
+}
+
+/* =========================================================
+   ORGANIZACIÓN DEL MENÚ LATERAL
+   ========================================================= */
+.admin-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-link,
+.admin-link.active {
+  height: 36px;
+  min-height: 36px;
+}
+
+.admin-profile-link {
+  height: 32px;
+  min-height: 32px;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 1000px) {
+  .admin-sidebar {
+    width: 210px;
+  }
+
+  .admin-main {
+    width: calc(100% - 210px);
+    margin-left: 210px;
+  }
+
+  .admin-content {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 800px) {
+  .admin-sidebar {
+    width: 195px;
+  }
+
+  .admin-main {
+    width: calc(100% - 195px);
+    margin-left: 195px;
+  }
+
+  .admin-content {
+    padding: 20px;
+  }
+
+  .admin-logo {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .admin-menu {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .admin-sidebar-bottom {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-sidebar {
+    width: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .admin-main {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .admin-content {
+    padding: 16px;
+  }
+}

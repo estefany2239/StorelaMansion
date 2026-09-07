@@ -1,0 +1,117 @@
+.women-collection {
+  width: 100%;
+  background-color: var(--bg-main, #f5ead6);
+  /* Un espacio limpio y natural de 24px arriba */
+  padding: 24px 24px 80px 24px; 
+  min-height: 85vh;
+  position: relative;
+  z-index: 1;
+}
+
+.women-collection__inner {
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+}
+
+/* Botón Volver al inicio */
+.women-collection__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--ink, #1a1a1a);
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 32px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.women-collection__back:hover {
+  color: var(--gold-dark, #a5831c);
+  transform: translateX(-4px);
+}
+
+/* Header de la sección */
+.women-collection__header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.women-collection__eyebrow {
+  display: block;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--gold-dark, #a5831c);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.women-collection__title {
+  font-family: var(--font-display, "Playfair Display", serif);
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 500;
+  color: var(--ink, #1a1a1a);
+  margin: 0 0 12px 0;
+}
+
+.women-collection__subtitle {
+  font-family: var(--font-body, "Inter", sans-serif);
+  color: #666666;
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Grilla de productos */
+.women-collection__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.women-collection__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #888;
+  padding: 40px 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .women-collection__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .women-collection__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   SOPORTE MODO OSCURO ([data-theme="dark"])
+   ========================================== */
+
+[data-theme="dark"] .women-collection {
+  background-color: #1e1d1b !important;
+}
+
+[data-theme="dark"] .women-collection__back,
+[data-theme="dark"] .women-collection__title {
+  color: #f0f0f0 !important;
+}
+
+[data-theme="dark"] .women-collection__eyebrow {
+  color: var(--gold, #d4af37) !important;
+}
+
+[data-theme="dark"] .women-collection__subtitle {
+  color: #aaaaaa !important;
+}
