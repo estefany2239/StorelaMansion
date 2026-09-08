@@ -38,60 +38,6 @@ input {
 
 
 /* ============================================================
-   VARIABLES DARK (Ajustadas al estilo de referencia)
-============================================================ */
-
-.store-dashboard-container.dark-theme {
-  --bg-color: #000000;
-  --surface-color: #000000;
-  --surface-secondary: #0a0a0a;
-
-  --text-primary: #ffffff;
-  --text-secondary: #d1d1d1;
-  --text-muted: #888888;
-
-  --gold: #d4af37;
-  --gold-light: #e7c75c;
-  --gold-dark: #a98718;
-
-  --border-color: rgba(212, 175, 55, 0.25);
-
-  --navbar-bg: #000000;
-  --search-bg: #121212;
-  --dropdown-bg: #080808;
-
-  --shadow-color: rgba(0, 0, 0, 0.9);
-}
-
-
-/* ============================================================
-   VARIABLES LIGHT
-============================================================ */
-
-.store-dashboard-container.light-theme {
-  --bg-color: #f4ead5;
-  --surface-color: #f8efdd;
-  --surface-secondary: #eee1c6;
-
-  --text-primary: #171717;
-  --text-secondary: #454545;
-  --text-muted: #777777;
-
-  --gold: #c49a20;
-  --gold-light: #d7af32;
-  --gold-dark: #9d7910;
-
-  --border-color: rgba(180, 139, 24, 0.4);
-
-  --navbar-bg: #f4ead5;
-  --search-bg: #f8efdd;
-  --dropdown-bg: #f8efdd;
-
-  --shadow-color: rgba(0, 0, 0, 0.15);
-}
-
-
-/* ============================================================
    CONTENEDOR PRINCIPAL
 ============================================================ */
 
@@ -734,43 +680,6 @@ input {
 
 
 /* ============================================================
-   FORZADO GLOBAL DARK MODE (FULL BLACK)
-============================================================ */
-
-.dark-theme,
-.dark-theme body {
-  background-color: #000000 !important;
-}
-
-.dark-theme .store-dashboard-container,
-.dark-theme .main-content,
-.dark-theme .hero-section,
-.dark-theme .categories-section,
-.dark-theme .top-navbar {
-  background-color: #000000 !important;
-}
-
-.dark-theme .categories-section h3,
-.dark-theme .categories-header-row h3 {
-  color: #ffffff !important;
-}
-
-
-/* ============================================================
-   LIGHT MODE
-============================================================ */
-
-.light-theme .main-content,
-.light-theme .categories-section {
-  background-color: #f4ead5;
-}
-
-.light-theme .top-navbar {
-  background-color: #f4ead5;
-}
-
-
-/* ============================================================
    RESPONSIVE - TABLET
 ============================================================ */
 
@@ -980,5 +889,296 @@ input {
 
   .categories-header-row h3 {
     font-size: 26px;
+  }
+}
+
+
+/* ============================================================
+   CARRITO Y CHECKOUT
+============================================================ */
+
+/* Layout de dos columnas: productos + resumen */
+.cart-checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 26px;
+  align-items: start;
+}
+
+/* Resumen del pedido */
+.order-summary-card {
+  position: sticky;
+  top: 110px;
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.order-summary-card h3 {
+  margin: 0 0 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.summary-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--border-color);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-highlight-price {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.checkout-main-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--gold);
+  color: #000000;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.checkout-main-btn:hover {
+  background-color: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(212, 175, 55, 0.25);
+}
+
+/* Controles de cantidad dentro del carrito */
+.cart-item-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qty-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.remove-btn-cart {
+  background: transparent;
+  color: #e85d5d;
+  border: 1px solid rgba(232, 93, 93, 0.35);
+}
+
+.remove-btn-cart:hover {
+  background: rgba(232, 93, 93, 0.12);
+  color: #ff6969;
+}
+
+/* Formulario de checkout */
+.checkout-container-wrapper {
+  max-width: 760px;
+}
+
+.checkout-form-card {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.checkout-field-group {
+  margin-bottom: 22px;
+}
+
+.checkout-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.checkout-label svg {
+  color: var(--gold);
+}
+
+.checkout-text-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.checkout-text-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.checkout-text-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+  background-color: var(--bg-main);
+}
+
+/* Métodos de pago */
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.payment-option-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.payment-option-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.payment-option-card.selected {
+  border: 2px solid var(--gold);
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.payment-extra-box {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-main);
+  transition: background-color 0.35s ease, border-color 0.35s ease;
+}
+
+.payment-instructions {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.payment-extra-box .checkout-text-input {
+  height: 44px;
+}
+
+.card-split-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Botón confirmar pago */
+.checkout-submit-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px 18px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--gold);
+  color: #000000;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.checkout-submit-btn:hover {
+  background-color: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(212, 175, 55, 0.25);
+}
+
+/* Responsive: apilar resumen debajo de los productos */
+@media (max-width: 900px) {
+  .cart-checkout-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .order-summary-card {
+    position: static;
   }
 }

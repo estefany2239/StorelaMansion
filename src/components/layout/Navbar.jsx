@@ -1,17 +1,8 @@
-import { useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import HeaderActions from "./HeaderActions";
 import "./Navbar.css";
 
-export default function Navbar({ isLoggedIn, userName, onLoginClick, onAccountClick }) {
-  const [isDark, setIsDark] = useState(false);
-
-  // Al hacer clic conmuta la clase dark-mode en el body
-  const toggleTheme = () => {
-    setIsDark((prev) => !prev);
-    document.body.classList.toggle("dark-mode");
-  };
-
+export default function Navbar({ isLoggedIn, userName, onLoginClick, onAccountClick, theme, onToggleTheme }) {
   return (
     <header className="navbar">
       <div className="navbar__inner">
@@ -33,8 +24,8 @@ export default function Navbar({ isLoggedIn, userName, onLoginClick, onAccountCl
           userName={userName}
           onLoginClick={onLoginClick}
           onAccountClick={onAccountClick}
-          isDark={isDark}
-          onToggleTheme={toggleTheme}
+          theme={theme}
+          onToggleTheme={onToggleTheme}
         />
       </div>
     </header>

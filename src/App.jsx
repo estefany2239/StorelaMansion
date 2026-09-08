@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Navbar from "./components/layout/Navbar";
 import Hero from "./features/home/Hero";
@@ -48,6 +48,29 @@ export default function App() {
   // ==========================================
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+
+  // ==========================================
+  // TEMA GLOBAL (dark/light)
+  // ==========================================
+
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("storemansion-theme") || "light"
+  );
+
+
+  // Sincroniza el tema con el atributo data-theme del <html>
+  // y con localStorage para que Home y vista cliente compartan
+  // el mismo estado.
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("storemansion-theme", theme);
+  }, [theme]);
+
+
+  const toggleTheme = () =>
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
 
 
   // ==========================================
@@ -184,6 +207,10 @@ export default function App() {
           onNavigate={(view) =>
             setCurrentView(view)
           }
+
+          theme={theme}
+
+          onToggleTheme={toggleTheme}
         />
 
       )}
@@ -290,6 +317,10 @@ export default function App() {
           }
 
           onLogout={handleLogout}
+
+          theme={theme}
+
+          onToggleTheme={toggleTheme}
 
         />
 

@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
 import "./HeaderActions.css";
 
@@ -7,23 +6,14 @@ export default function HeaderActions({
   userName = "",
   onLoginClick,
   onAccountClick,
+  theme,
+  onToggleTheme,
 }) {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("storemansion-theme") || "light"
-  );
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("storemansion-theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
-
   return (
     <div className="header-actions">
       <button
         className="header-actions__theme-toggle"
-        onClick={toggleTheme}
+        onClick={onToggleTheme}
         aria-label={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
         title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
       >

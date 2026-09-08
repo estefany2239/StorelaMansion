@@ -514,6 +514,62 @@ export default function Pedidos() {
 
 
   // =====================================================
+  // AVANZAR ESTADO
+  // =====================================================
+
+  const avanzarEstado = (id) => {
+
+    setPedidos((actuales) =>
+
+      actuales.map((pedido) => {
+
+        if (pedido.id !== id) {
+
+          return pedido;
+
+        }
+
+
+        if (pedido.estado === "Registrado") {
+
+          return {
+            ...pedido,
+            estado: "En preparación"
+          };
+
+        }
+
+
+        if (pedido.estado === "En preparación") {
+
+          return {
+            ...pedido,
+            estado: "Despachado"
+          };
+
+        }
+
+
+        if (pedido.estado === "Despachado") {
+
+          return {
+            ...pedido,
+            estado: "Entregado"
+          };
+
+        }
+
+
+        return pedido;
+
+      })
+
+    );
+
+  };
+
+
+  // =====================================================
   // VER DETALLE
   // =====================================================
 
@@ -741,6 +797,10 @@ export default function Pedidos() {
                 Entregado
               </option>
 
+              <option value="Cancelado">
+                Cancelado
+              </option>
+
             </select>
 
           </div>
@@ -882,7 +942,17 @@ export default function Pedidos() {
 
                           ? "pedido-estado preparacion"
 
+                          : pedido.estado ===
+                            "Cancelado"
+
+                          ? "pedido-estado cancelado"
+
                           : "pedido-estado registrado"
+                      }
+                      onClick={() =>
+                        avanzarEstado(
+                          pedido.id
+                        )
                       }
                     >
 
@@ -1090,6 +1160,10 @@ export default function Pedidos() {
 
                     <option value="Entregado">
                       Entregado
+                    </option>
+
+                    <option value="Cancelado">
+                      Cancelado
                     </option>
 
                   </select>
@@ -1500,6 +1574,9 @@ export default function Pedidos() {
                           : pedidoSeleccionado.estado ===
                             "En preparación"
                           ? "pedido-estado preparacion"
+                          : pedidoSeleccionado.estado ===
+                            "Cancelado"
+                          ? "pedido-estado cancelado"
                           : "pedido-estado registrado"
                       }
                     >

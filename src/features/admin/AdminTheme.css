@@ -695,7 +695,6 @@
   color: #ffffff !important;
 }
 
-.admin-container.admin-dark .domicilio-id,
 .admin-container.admin-dark .domicilio-id-relacion,
 .admin-container.admin-dark .domicilio-direccion,
 .admin-container.admin-dark .domicilio-ciudad,
@@ -1015,12 +1014,14 @@
   border-color: #0ca653 !important;
 }
 
-/* ROJO - Inactivo / Anulada */
+/* ROJO - Inactivo / Anulada / Cancelado */
 .admin-container .cliente-estado.inactivo,
 .admin-container .producto-estado.inactivo,
 .admin-container .rol-estado.inactivo,
 .admin-container .usuario-estado.inactivo,
-.admin-container .venta-estado.anulada {
+.admin-container .venta-estado.anulada,
+.admin-container .domicilio-estado.cancelado,
+.admin-container .pedido-estado.cancelado {
   color: #e53935 !important;
   background: #ffffff !important;
   border-color: #e53935 !important;
@@ -1050,33 +1051,84 @@
   border-color: #7652b8 !important;
 }
 
-/* DARK: los estados conservan exactamente el mismo estilo */
+/* DARK: los estados usan fondo y borde tintados del color */
 .admin-container.admin-dark .cliente-estado,
 .admin-container.admin-dark .producto-estado,
 .admin-container.admin-dark .rol-estado,
 .admin-container.admin-dark .usuario-estado,
 .admin-container.admin-dark .domicilio-estado,
 .admin-container.admin-dark .pedido-estado,
-.admin-container.admin-dark .venta-estado,
+.admin-container.admin-dark .venta-estado {
+  background: transparent !important;
+}
+
+/* VERDE - Activo / Entregado / Completada */
 .admin-container.admin-dark .cliente-estado.activo,
-.admin-container.admin-dark .cliente-estado.inactivo,
 .admin-container.admin-dark .producto-estado.activo,
-.admin-container.admin-dark .producto-estado.inactivo,
 .admin-container.admin-dark .rol-estado.activo,
-.admin-container.admin-dark .rol-estado.inactivo,
 .admin-container.admin-dark .usuario-estado.activo,
-.admin-container.admin-dark .usuario-estado.inactivo,
 .admin-container.admin-dark .domicilio-estado.entregado,
-.admin-container.admin-dark .domicilio-estado.camino,
-.admin-container.admin-dark .domicilio-estado.pendiente,
 .admin-container.admin-dark .pedido-estado.entregado,
-.admin-container.admin-dark .pedido-estado.despachado,
-.admin-container.admin-dark .pedido-estado.registrado,
+.admin-container.admin-dark .venta-estado.completada {
+  color: #0ca653 !important;
+  background: rgba(12,166,83,.14) !important;
+  border-color: rgba(12,166,83,.40) !important;
+}
+
+/* ROJO - Inactivo / Anulada / Cancelado */
+.admin-container.admin-dark .cliente-estado.inactivo,
+.admin-container.admin-dark .producto-estado.inactivo,
+.admin-container.admin-dark .rol-estado.inactivo,
+.admin-container.admin-dark .usuario-estado.inactivo,
+.admin-container.admin-dark .venta-estado.anulada,
+.admin-container.admin-dark .domicilio-estado.cancelado,
+.admin-container.admin-dark .pedido-estado.cancelado {
+  color: #e53935 !important;
+  background: rgba(229,57,53,.14) !important;
+  border-color: rgba(229,57,53,.40) !important;
+}
+
+/* AZUL - En camino / Despachado */
+.admin-container.admin-dark .domicilio-estado.camino,
+.admin-container.admin-dark .pedido-estado.despachado {
+  color: #2563eb !important;
+  background: rgba(37,99,235,.14) !important;
+  border-color: rgba(37,99,235,.40) !important;
+}
+
+/* DORADO - Pendiente / Registrado */
+.admin-container.admin-dark .domicilio-estado.pendiente,
+.admin-container.admin-dark .pedido-estado.registrado {
+  color: #c58a00 !important;
+  background: rgba(197,138,0,.14) !important;
+  border-color: rgba(197,138,0,.40) !important;
+}
+
+/* MORADO - En preparación / Cerrada */
 .admin-container.admin-dark .pedido-estado.preparacion,
-.admin-container.admin-dark .venta-estado.completada,
-.admin-container.admin-dark .venta-estado.cerrada,
-.admin-container.admin-dark .venta-estado.anulada {
-  background: #ffffff !important;
+.admin-container.admin-dark .venta-estado.cerrada {
+  color: #7652b8 !important;
+  background: rgba(118,82,184,.14) !important;
+  border-color: rgba(118,82,184,.40) !important;
+}
+
+/* Cursor según el estado: los estados clicables avanzan de estado */
+.admin-container .domicilio-estado.pendiente,
+.admin-container .domicilio-estado.camino,
+.admin-container .pedido-estado.registrado,
+.admin-container .pedido-estado.preparacion,
+.admin-container .pedido-estado.despachado,
+.admin-container .venta-estado.completada {
+  cursor: pointer;
+}
+
+.admin-container .domicilio-estado.entregado,
+.admin-container .domicilio-estado.cancelado,
+.admin-container .pedido-estado.entregado,
+.admin-container .pedido-estado.cancelado,
+.admin-container .venta-estado.cerrada,
+.admin-container .venta-estado.anulada {
+  cursor: not-allowed;
 }
 
 /* =========================================================

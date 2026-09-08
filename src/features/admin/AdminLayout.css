@@ -196,6 +196,41 @@
 }
 
 /* =========================================================
+   ACORDEÓN GESTIÓN DE PRODUCTOS
+   ========================================================= */
+.admin-link.admin-accordion-toggle {
+  padding-right: 8px;
+}
+
+.admin-accordion-arrow {
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.admin-link.admin-accordion-toggle.open .admin-accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.admin-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 4px 0;
+  padding: 3px 0 3px 13px;
+  border-left: 1px solid var(--admin-border);
+}
+
+.admin-link.admin-submenu-link {
+  height: 30px;
+  min-height: 30px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* =========================================================
    PARTE INFERIOR DEL SIDEBAR
    ========================================================= */
 .admin-sidebar-bottom {

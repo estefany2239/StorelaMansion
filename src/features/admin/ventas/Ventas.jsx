@@ -326,6 +326,42 @@ export default function Ventas() {
 
 
   // =========================================================
+  // AVANZAR ESTADO
+  // =========================================================
+
+  const avanzarEstado = (id) => {
+
+    setVentas((actuales) =>
+
+      actuales.map((venta) => {
+
+        if (venta.id !== id) {
+
+          return venta;
+
+        }
+
+
+        if (venta.estado === "Completada") {
+
+          return {
+            ...venta,
+            estado: "Cerrada"
+          };
+
+        }
+
+
+        return venta;
+
+      })
+
+    );
+
+  };
+
+
+  // =========================================================
   // VER DETALLE
   // =========================================================
 
@@ -669,6 +705,11 @@ export default function Ventas() {
                             "Anulada"
                           ? "venta-estado anulada"
                           : "venta-estado completada"
+                      }
+                      onClick={() =>
+                        avanzarEstado(
+                          venta.id
+                        )
                       }
                     >
 

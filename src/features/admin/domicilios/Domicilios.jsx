@@ -573,6 +573,52 @@ export default function Domicilios() {
 
 
   // =====================================================
+  // AVANZAR ESTADO
+  // =====================================================
+
+  const avanzarEstado = (id) => {
+
+    setDomicilios((actuales) =>
+
+      actuales.map((domicilio) => {
+
+        if (domicilio.id !== id) {
+
+          return domicilio;
+
+        }
+
+
+        if (domicilio.estado === "Pendiente") {
+
+          return {
+            ...domicilio,
+            estado: "En camino"
+          };
+
+        }
+
+
+        if (domicilio.estado === "En camino") {
+
+          return {
+            ...domicilio,
+            estado: "Entregado"
+          };
+
+        }
+
+
+        return domicilio;
+
+      })
+
+    );
+
+  };
+
+
+  // =====================================================
   // VER DETALLE
   // =====================================================
 
@@ -798,6 +844,10 @@ export default function Domicilios() {
                 Entregado
               </option>
 
+              <option value="Cancelado">
+                Cancelado
+              </option>
+
             </select>
 
           </div>
@@ -948,7 +998,17 @@ export default function Domicilios() {
 
                           ? "domicilio-estado camino"
 
+                          : domicilio.estado ===
+                            "Cancelado"
+
+                          ? "domicilio-estado cancelado"
+
                           : "domicilio-estado pendiente"
+                      }
+                      onClick={() =>
+                        avanzarEstado(
+                          domicilio.id
+                        )
                       }
                     >
 
@@ -1151,6 +1211,10 @@ export default function Domicilios() {
 
                     <option value="Entregado">
                       Entregado
+                    </option>
+
+                    <option value="Cancelado">
+                      Cancelado
                     </option>
 
                   </select>
@@ -1485,6 +1549,11 @@ export default function Domicilios() {
                             "En camino"
 
                           ? "domicilio-estado camino"
+
+                          : domicilioSeleccionado.estado ===
+                            "Cancelado"
+
+                          ? "domicilio-estado cancelado"
 
                           : "domicilio-estado pendiente"
                       }

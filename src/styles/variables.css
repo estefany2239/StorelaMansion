@@ -1,28 +1,82 @@
 /* ==========================================
-   PALETA EXACTA DE TU DISEÑO
+   VARIABLES GLOBALES — FUENTE ÚNICA DE TEMA
+   (se conmuta con data-theme="dark" en <html>)
    ========================================== */
 
-/* 1. MODO CLARO (Colores Beige/Crema de la imagen) */
+/* 1. MODO CLARO (Colores Beige/Crema) */
 :root {
+  /* Fondos y superficies */
   --bg-main: #f5ead6;          /* Cream claro del fondo base */
   --bg-card: #ebdcc3;          /* Beige más cálido para secciones/tarjetas */
+  --bg-header: #f5ead6;
+  --card-bg: #ffffff;           /* Superficie de tarjetas */
   --white: #ffffff;            /* Blanco puro para intercalar secciones */
+
+  /* Texto */
   --ink: #1a1a1a;              /* Texto oscuro de alto contraste */
   --ink-soft: #555555;         /* Texto secundario */
+  --text-main: #1a1a1a;
+
+  /* Bordes */
   --border-soft: rgba(26, 26, 26, 0.08);
+
+  /* Acentos */
   --gold: #c9a227;
   --gold-dark: #a5831c;
+  --gold-light: #d7af32;
+
+  /* Layout y tipografía */
+  --max-width: 1280px;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", sans-serif;
+
+  /* Alias heredados (vistas de cliente / StoreDashboard) */
+  --bg-color: var(--bg-main);
+  --surface-color: var(--card-bg);
+  --surface-secondary: var(--bg-card);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: #777777;
+  --border-color: rgba(180, 139, 24, 0.4);
+  --navbar-bg: var(--bg-main);
+  --search-bg: var(--card-bg);
+  --dropdown-bg: var(--card-bg);
+  --shadow-color: rgba(0, 0, 0, 0.15);
 }
 
 /* 2. MODO OSCURO (Conmutación con data-theme="dark") */
 :root[data-theme="dark"],
 [data-theme="dark"] {
+  /* Fondos y superficies */
   --bg-main: #121212;          /* Fondo negro elegante */
   --bg-card: #1e1d1b;          /* Superficie oscura para tarjetas */
+  --bg-header: #121212;
+  --card-bg: #1a1a1a;
   --white: #121212;            /* Blanco se convierte en negro en dark mode */
+
+  /* Texto */
   --ink: #f0f0f0;              /* Texto claro */
   --ink-soft: #b0b0b0;
+  --text-main: #f0f0f0;
+
+  /* Bordes */
   --border-soft: rgba(255, 255, 255, 0.12);
+
+  /* Acentos */
   --gold: #d4af37;
   --gold-dark: #e5c158;
+  --gold-light: #e7c75c;
+
+  /* Alias heredados (vistas de cliente / StoreDashboard) */
+  --bg-color: var(--bg-main);
+  --surface-color: var(--card-bg);
+  --surface-secondary: var(--bg-card);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: #888888;
+  --border-color: rgba(212, 175, 55, 0.25);
+  --navbar-bg: var(--bg-main);
+  --search-bg: var(--card-bg);
+  --dropdown-bg: var(--card-bg);
+  --shadow-color: rgba(0, 0, 0, 0.9);
 }

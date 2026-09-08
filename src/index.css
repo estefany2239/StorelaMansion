@@ -9,17 +9,6 @@
   box-sizing: border-box;
 }
 
-:root {
-  --bg-main: #f5ead6;
-  --bg-header: #f5ead6;
-  --text-main: #1a1a1a;
-  --card-bg: #ffffff;
-  --gold: #c9a227;
-  --max-width: 1280px;
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-body: "Inter", sans-serif;
-}
-
 /* ==========================================
    2. ESTRUCTURA PRINCIPAL Y FULL-WIDTH
    ========================================== */
@@ -81,7 +70,7 @@ header,
   width: 100% !important;
   background-color: var(--bg-header) !important;
   color: var(--text-main) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border-soft);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -528,61 +517,4 @@ div[class*="view"] {
   .categories__banner {
     background-size: 85%;
   }
-}
-
-/* ==========================================
-   9. MÓDULO OSCURO FORZADO (SIEMPRE AL FINAL)
-   ========================================== */
-[data-theme="dark"] {
-  --bg-main: #121212 !important;
-  --bg-header: #121212 !important;
-  --text-main: #f0f0f0 !important;
-  --card-bg: #1a1a1a !important;
-}
-
-[data-theme="dark"] html,
-[data-theme="dark"] body,
-[data-theme="dark"] #root,
-[data-theme="dark"] .app-container,
-[data-theme="dark"] main,
-[data-theme="dark"] section,
-[data-theme="dark"] .gender-selector-wrapper,
-[data-theme="dark"] .category-catalog-section,
-[data-theme="dark"] div[class*="category"],
-[data-theme="dark"] div[class*="catalog"],
-[data-theme="dark"] div[class*="view"] {
-  background-color: #121212 !important;
-  color: #f0f0f0 !important;
-}
-
-[data-theme="dark"] .header-wrapper,
-[data-theme="dark"] header,
-[data-theme="dark"] .header {
-  background-color: #121212 !important;
-  color: #f0f0f0 !important;
-  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-[data-theme="dark"] .product-card,
-[data-theme="dark"] .product-card__image-wrap,
-[data-theme="dark"] .product-card__body {
-  background-color: #1a1a1a !important;
-  color: #f0f0f0 !important;
-}
-
-[data-theme="dark"] .product-card__name,
-[data-theme="dark"] .product-card__price {
-  color: #f0f0f0 !important;
-}
-
-[data-theme="dark"] .categories__banner {
-  background-color: #121212 !important;
-}
-
-[data-theme="dark"] .category-catalog-section,
-[data-theme="dark"] .gender-selector-wrapper,
-[data-theme="dark"] div[class*="category"],
-[data-theme="dark"] div[class*="catalog"] {
-  background-color: #121212 !important;
-  color: #f0f0f0 !important;
 }

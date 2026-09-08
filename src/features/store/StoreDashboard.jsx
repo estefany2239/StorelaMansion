@@ -28,8 +28,7 @@ import CategoryProductsView from "../categories/CategoryProductsView";
 // Importación de la imagen para el banner principal
 import bannerImage from "../../assets/img/web.png";
 
-const StoreDashboard = () => {
-  const [darkMode, setDarkMode] = useState(true);
+const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -49,10 +48,6 @@ const StoreDashboard = () => {
   const [favorites, setFavorites] = useState(() => {
     return JSON.parse(localStorage.getItem('favorites')) || [];
   });
-
-  const toggleTheme = () => {
-    setDarkMode((prev) => !prev);
-  };
 
   const handleAddToCart = (product) => {
     setCart(prevCart => {
@@ -116,8 +111,9 @@ const StoreDashboard = () => {
   ];
 
   const handleLogout = () => {
-    alert("¡Sesión cerrada con éxito!");
+    alert("Sesión cerrada");
     setShowProfileMenu(false);
+    onLogout();
   };
 
   const handleCategoryClick = (category) => {
@@ -157,7 +153,7 @@ const StoreDashboard = () => {
   };
 
   return (
-    <div className={`store-dashboard-container ${darkMode ? "dark-theme" : "light-theme"}`}>
+    <div className="store-dashboard-container">
       
       {/* ================= NAVBAR ================= */}
       <header className="top-navbar">
@@ -179,8 +175,8 @@ const StoreDashboard = () => {
         </div>
 
         <div className="nav-right-actions">
-          <button className="icon-btn theme-button" onClick={toggleTheme}>
-            {darkMode ? <Sun size={21} /> : <Moon size={21} />}
+          <button className="icon-btn theme-button" onClick={onToggleTheme}>
+            {theme === "dark" ? <Sun size={21} /> : <Moon size={21} />}
           </button>
 
           <button className="icon-btn" title="Favoritos" onClick={() => setCurrentView("favorites")}>

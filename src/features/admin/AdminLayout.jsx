@@ -10,13 +10,22 @@ import {
   Truck,
   LogOut,
   Store,
-  Moon
+  Moon,
+  ChevronDown,
+  Tags,
+  BadgeCheck,
+  Ruler,
+  Palette
 } from "lucide-react";
 
 import Dashboard from "./dashboard/Dashboard";
 import Roles from "./roles/Roles";
 import Usuarios from "./usuarios/Usuarios";
 import Productos from "./productos/Productos";
+import Categorias from "./categorias/Categorias";
+import Marcas from "./marcas/Marcas";
+import Tallas from "./tallas/Tallas";
+import Colores from "./colores/Colores";
 import Ventas from "./ventas/Ventas";
 import Clientes from "./clientes/Clientes";
 import Pedidos from "./pedidos/Pedidos";
@@ -31,6 +40,9 @@ export default function AdminLayout({ user, onLogout }) {
   const [adminView, setAdminView] = useState("dashboard");
 
   const [darkMode, setDarkMode] = useState(true);
+
+  const [gestionProductosAbierto, setGestionProductosAbierto] =
+    useState(false);
 
 
   /* =====================================================
@@ -54,11 +66,6 @@ export default function AdminLayout({ user, onLogout }) {
       icono: Users
     },
     {
-      nombre: "Productos",
-      vista: "productos",
-      icono: Package
-    },
-    {
       nombre: "Ventas",
       vista: "ventas",
       icono: ShoppingCart
@@ -77,6 +84,38 @@ export default function AdminLayout({ user, onLogout }) {
       nombre: "Domicilios",
       vista: "domicilios",
       icono: Truck
+    }
+  ];
+
+  /* =====================================================
+     SUBMENÚ GESTIÓN DE PRODUCTOS
+     ===================================================== */
+
+  const menuProductos = [
+    {
+      nombre: "Productos",
+      vista: "productos",
+      icono: Package
+    },
+    {
+      nombre: "Categorías",
+      vista: "categorias",
+      icono: Tags
+    },
+    {
+      nombre: "Marcas",
+      vista: "marcas",
+      icono: BadgeCheck
+    },
+    {
+      nombre: "Tallas",
+      vista: "tallas",
+      icono: Ruler
+    },
+    {
+      nombre: "Colores",
+      vista: "colores",
+      icono: Palette
     }
   ];
 
@@ -135,6 +174,18 @@ export default function AdminLayout({ user, onLogout }) {
 
       case "productos":
         return <Productos />;
+
+      case "categorias":
+        return <Categorias />;
+
+      case "marcas":
+        return <Marcas />;
+
+      case "tallas":
+        return <Tallas />;
+
+      case "colores":
+        return <Colores />;
 
       case "ventas":
         return <Ventas />;
@@ -247,6 +298,84 @@ export default function AdminLayout({ user, onLogout }) {
             );
 
           })}
+
+
+          {/* =================================================
+              ACORDEÓN GESTIÓN DE PRODUCTOS
+              ================================================= */}
+
+          <div className="admin-menu-accordion">
+
+            <button
+              type="button"
+              className={
+                gestionProductosAbierto
+                  ? "admin-link admin-accordion-toggle open"
+                  : "admin-link admin-accordion-toggle"
+              }
+              onClick={() =>
+                setGestionProductosAbierto(
+                  (actual) => !actual
+                )
+              }
+            >
+
+              <Package size={19} />
+
+              <span>
+                Gestión de Productos
+              </span>
+
+              <ChevronDown
+                size={17}
+                className="admin-accordion-arrow"
+              />
+
+            </button>
+
+            {gestionProductosAbierto && (
+
+              <div className="admin-submenu">
+
+                {menuProductos.map((item) => {
+
+                  const Icon = item.icono;
+
+                  const activo =
+                    adminView === item.vista;
+
+                  return (
+
+                    <button
+                      key={item.vista}
+                      type="button"
+                      className={
+                        activo
+                          ? "admin-link admin-submenu-link active"
+                          : "admin-link admin-submenu-link"
+                      }
+                      onClick={() =>
+                        setAdminView(item.vista)
+                      }
+                    >
+
+                      <Icon size={16} />
+
+                      <span>
+                        {item.nombre}
+                      </span>
+
+                    </button>
+
+                  );
+
+                })}
+
+              </div>
+
+            )}
+
+          </div>
 
         </nav>
 

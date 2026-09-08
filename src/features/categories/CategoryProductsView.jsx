@@ -9,14 +9,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
   
-  const [favoritesList, setFavoritesList] = useState([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Cargar favoritos iniciales desde el localStorage al montar
-  useEffect(() => {
-    const storedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
-    setFavoritesList(storedFavs);
-  }, []);
 
   // Detector automático del tema oscuro
   useEffect(() => {
@@ -38,41 +31,9 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   }, []);
 
   // ==========================================
-  // MANEJADORES ROBUSTOS (CON NORMALIZACIÓN DE ID)
-  // ==========================================
-  const handleAddToCart = (product) => {
-    const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
-    const productIndex = existingCart.findIndex(item => String(item.id) === String(product.id));
-    
-    if (productIndex > -1) {
-      existingCart[productIndex].quantity = (existingCart[productIndex].quantity || 1) + 1;
-    } else {
-      existingCart.push({ ...product, quantity: 1 });
-    }
-
-    localStorage.setItem('cart', JSON.stringify(existingCart));
-    window.dispatchEvent(new Event('cartUpdated')); 
-    console.log("Agregado al carrito:", product.name);
-  };
-
-  const handleLikeToggle = (product) => {
-    const existingFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    const isFav = existingFavorites.some(item => String(item.id) === String(product.id));
-    
-    let updatedFavorites;
-    if (isFav) {
-      updatedFavorites = existingFavorites.filter(item => String(item.id) !== String(product.id));
-    } else {
-      updatedFavorites = [...existingFavorites, product];
-    }
-
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-    setFavoritesList(updatedFavorites); 
-    
-    if (toggleLike) toggleLike(product);
-    
-    window.dispatchEvent(new Event('favoritesUpdated')); 
-  };
+  // (El carrito y los favoritos se manejan arriba:
+  //  StoreDashboard pasa addToCart / toggleLike
+  //  que actualizan el estado y el localStorage)
   // ==========================================
 
   // DETECCIÓN INDEPENDIENTE PARA CADA CATEGORÍA
@@ -292,7 +253,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
             <main className="catalog__products-grid">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(product => {
-                  const isLiked = favoritesList.some(item => String(item.id) === String(product.id));
+                  const isLiked = (likedProducts || []).some(item => String(item.id) === String(product.id));
 
                   return (
                     <div key={product.id} className="catalog__product-card">
@@ -306,7 +267,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                         <button 
                           type="button"
                           className={`product__like-btn ${isLiked ? 'active' : ''}`}
-                          onClick={() => handleLikeToggle(product)}
+                          onClick={() => toggleLike(product)}
                           title={isLiked ? "Quitar de favoritos" : "Añadir a favoritos"}
                         >
                           <Heart size={16} fill={isLiked ? "#c9a227" : "none"} />
@@ -325,7 +286,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                           <button 
                             type="button"
                             className="product__add-btn"
-                            onClick={() => handleAddToCart(product)}
+                            onClick={() => addToCart(product)}
                           >
                             <ShoppingBag size={16} /> Comprar
                           </button>

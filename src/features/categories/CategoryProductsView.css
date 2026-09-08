@@ -20,8 +20,8 @@ body.dark .category-catalog-section,
 .dark-mode .category-catalog-section,
 .dark .category-catalog-section,
 .category-catalog-section.dark-mode-active {
-  background-color: #121212 !important;
-  color: #f0f0f0 !important;
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
 }
 
 .category-catalog-container {
@@ -94,7 +94,7 @@ body.dark-mode .catalog__sidebar,
 body.dark .catalog__sidebar,
 .dark-mode .catalog__sidebar,
 .dark-mode-active .catalog__sidebar {
-  background: #1a1a1a !important;
+  background: var(--card-bg) !important;
 }
 
 .sidebar__title {
@@ -230,7 +230,7 @@ body.dark-mode .catalog__product-card,
 body.dark .catalog__product-card,
 .dark-mode .catalog__product-card,
 .dark-mode-active .catalog__product-card {
-  background-color: #1a1a1a !important;
+  background-color: var(--card-bg) !important;
 }
 
 .catalog__product-card:hover {
