@@ -204,7 +204,7 @@
   border-radius: 9px;
 
   background:
-    var(--admin-gold);
+    var(--admin-cta-gold);
 
   color: #111111;
 
@@ -226,7 +226,7 @@
 
 .ventas-add-button:hover {
   background:
-    var(--admin-gold-dark);
+    var(--admin-cta-gold-dark);
 
   transform:
     translateY(-1px);
@@ -1115,7 +1115,7 @@
   border-radius: 9px;
 
   background:
-    var(--admin-gold);
+    var(--admin-cta-gold);
 
   color:
     #111111;
@@ -1135,7 +1135,7 @@
 
 .venta-create-button:hover {
   background:
-    var(--admin-gold-dark);
+    var(--admin-cta-gold-dark);
 }
 
 
@@ -1149,7 +1149,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(212, 175, 55, 0.20);
+    rgba(194, 168, 120, 0.20);
 }
 
 
@@ -1183,7 +1183,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(212, 175, 55, 0.18);
+    rgba(194, 168, 120, 0.18);
 }
 
 
@@ -1294,7 +1294,7 @@
 
 [data-theme="dark"] .venta-total-box {
   background:
-    rgba(212, 175, 55, 0.10);
+    rgba(194, 168, 120, 0.10);
 }
 
 
@@ -1315,7 +1315,7 @@
 
 [data-theme="dark"] .venta-form-info {
   background:
-    rgba(212, 175, 55, 0.10);
+    rgba(194, 168, 120, 0.10);
 
   color:
     #b0b0b0;

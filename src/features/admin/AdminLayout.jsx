@@ -44,6 +44,9 @@ export default function AdminLayout({ user, onLogout }) {
   const [gestionProductosAbierto, setGestionProductosAbierto] =
     useState(false);
 
+  const [gestionVentasAbierto, setGestionVentasAbierto] =
+    useState(false);
+
 
   /* =====================================================
      MENÚ PRINCIPAL
@@ -64,26 +67,6 @@ export default function AdminLayout({ user, onLogout }) {
       nombre: "Usuarios",
       vista: "usuarios",
       icono: Users
-    },
-    {
-      nombre: "Ventas",
-      vista: "ventas",
-      icono: ShoppingCart
-    },
-    {
-      nombre: "Clientes",
-      vista: "clientes",
-      icono: UserRound
-    },
-    {
-      nombre: "Pedidos",
-      vista: "pedidos",
-      icono: ShoppingCart
-    },
-    {
-      nombre: "Domicilios",
-      vista: "domicilios",
-      icono: Truck
     }
   ];
 
@@ -116,6 +99,33 @@ export default function AdminLayout({ user, onLogout }) {
       nombre: "Colores",
       vista: "colores",
       icono: Palette
+    }
+  ];
+
+  /* =====================================================
+     SUBMENÚ GESTIÓN DE VENTAS
+     ===================================================== */
+
+  const menuVentas = [
+    {
+      nombre: "Ventas",
+      vista: "ventas",
+      icono: ShoppingCart
+    },
+    {
+      nombre: "Clientes",
+      vista: "clientes",
+      icono: UserRound
+    },
+    {
+      nombre: "Pedidos",
+      vista: "pedidos",
+      icono: ShoppingCart
+    },
+    {
+      nombre: "Domicilios",
+      vista: "domicilios",
+      icono: Truck
     }
   ];
 
@@ -338,6 +348,84 @@ export default function AdminLayout({ user, onLogout }) {
               <div className="admin-submenu">
 
                 {menuProductos.map((item) => {
+
+                  const Icon = item.icono;
+
+                  const activo =
+                    adminView === item.vista;
+
+                  return (
+
+                    <button
+                      key={item.vista}
+                      type="button"
+                      className={
+                        activo
+                          ? "admin-link admin-submenu-link active"
+                          : "admin-link admin-submenu-link"
+                      }
+                      onClick={() =>
+                        setAdminView(item.vista)
+                      }
+                    >
+
+                      <Icon size={16} />
+
+                      <span>
+                        {item.nombre}
+                      </span>
+
+                    </button>
+
+                  );
+
+                })}
+
+              </div>
+
+            )}
+
+          </div>
+
+
+          {/* =================================================
+              ACORDEÓN GESTIÓN DE VENTAS
+              ================================================= */}
+
+          <div className="admin-menu-accordion">
+
+            <button
+              type="button"
+              className={
+                gestionVentasAbierto
+                  ? "admin-link admin-accordion-toggle open"
+                  : "admin-link admin-accordion-toggle"
+              }
+              onClick={() =>
+                setGestionVentasAbierto(
+                  (actual) => !actual
+                )
+              }
+            >
+
+              <ShoppingCart size={19} />
+
+              <span>
+                Gestión de Ventas
+              </span>
+
+              <ChevronDown
+                size={17}
+                className="admin-accordion-arrow"
+              />
+
+            </button>
+
+            {gestionVentasAbierto && (
+
+              <div className="admin-submenu">
+
+                {menuVentas.map((item) => {
 
                   const Icon = item.icono;
 

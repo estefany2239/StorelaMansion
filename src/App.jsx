@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+import SplashScreen from "./components/splash/SplashScreen";
+
 import Navbar from "./components/layout/Navbar";
 import Hero from "./features/home/Hero";
 import Categories from "./features/categories/Categories";
@@ -27,6 +29,32 @@ export default function App() {
   // ==========================================
 
   const [currentView, setCurrentView] = useState("home");
+
+
+  // ==========================================
+  // SPLASH SCREEN
+  // ==========================================
+
+  const [mostrarSplash, setMostrarSplash] = useState(true);
+
+  const [splashSaliendo, setSplashSaliendo] = useState(false);
+
+  useEffect(() => {
+
+    const salir = setTimeout(() => {
+      setSplashSaliendo(true);
+    }, 2200);
+
+    const retirar = setTimeout(() => {
+      setMostrarSplash(false);
+    }, 2800);
+
+    return () => {
+      clearTimeout(salir);
+      clearTimeout(retirar);
+    };
+
+  }, []);
 
 
   // ==========================================
@@ -189,6 +217,19 @@ export default function App() {
   return (
 
     <div className="app-container">
+
+
+      {/* ======================================
+          SPLASH SCREEN
+      ====================================== */}
+
+      {mostrarSplash && (
+
+        <SplashScreen
+          saliendo={splashSaliendo}
+        />
+
+      )}
 
 
       {/* ======================================

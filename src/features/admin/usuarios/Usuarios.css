@@ -106,7 +106,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-gold);
+  background: var(--admin-cta-gold);
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -115,7 +115,7 @@
 
 
 .usuarios-add-button:hover {
-  background: var(--admin-gold-dark);
+  background: var(--admin-cta-gold-dark);
 }
 
 
@@ -547,7 +547,7 @@
 .usuario-create-button {
   height: 40px;
   padding: 0 20px;
-  background: var(--admin-gold);
+  background: var(--admin-cta-gold);
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -559,7 +559,7 @@
 
 
 .usuario-create-button:hover {
-  background: var(--admin-gold-dark);
+  background: var(--admin-cta-gold-dark);
 }
 
 

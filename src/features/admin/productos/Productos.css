@@ -140,7 +140,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-gold);
+  background: var(--admin-cta-gold);
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -148,7 +148,7 @@
 }
 
 .productos-add-button:hover {
-  background: var(--admin-gold-dark);
+  background: var(--admin-cta-gold-dark);
 }
 
 /* =========================================================
@@ -828,7 +828,7 @@
   padding: 0 24px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-gold);
+  background: var(--admin-cta-gold);
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -836,7 +836,7 @@
 }
 
 .producto-create-button:hover {
-  background: var(--admin-gold-dark);
+  background: var(--admin-cta-gold-dark);
 }
 
 /* =========================================================
@@ -855,7 +855,7 @@ html[data-theme="dark"] .productos-filter-button,
 body[data-theme="dark"] .productos-filter-button {
   background: var(--admin-card);
   border-color:
-    rgba(212, 175, 55, 0.20);
+    rgba(194, 168, 120, 0.20);
 }
 
 html[data-theme="dark"] .productos-search input,
@@ -894,7 +894,7 @@ html[data-theme="dark"] .productos-table-container,
 body[data-theme="dark"] .productos-table-container {
   background: var(--admin-card);
   border-color:
-    rgba(212, 175, 55, 0.18);
+    rgba(194, 168, 120, 0.18);
 }
 
 html[data-theme="dark"] .productos-table th,
@@ -913,7 +913,7 @@ body[data-theme="dark"] .productos-table td {
 html[data-theme="dark"] .productos-table tbody tr:hover,
 body[data-theme="dark"] .productos-table tbody tr:hover {
   background:
-    rgba(212, 175, 55, 0.04);
+    rgba(194, 168, 120, 0.04);
 }
 
 html[data-theme="dark"] .producto-nombre,

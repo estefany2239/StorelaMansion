@@ -1023,7 +1023,292 @@ export const allProducts = [
     color: 'Dorado', 
     price: '$280.000', 
     image: new URL("../assets/img/dera.png", import.meta.url).href 
-  }
+  },
+//-----------------
+//Seccion hombre 
+
+{ 
+    id: 1, 
+    name: 'Camiseta ', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/001.png", import.meta.url).href 
+  },{ 
+    id: 2, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/002.png", import.meta.url).href 
+  },{ 
+    id: 3, 
+    name: 'Camiseta ', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/003.png", import.meta.url).href 
+  },{ 
+    id: 4, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/004.png", import.meta.url).href 
+  },{ 
+    id: 5, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/005.png", import.meta.url).href 
+
+  },{ 
+    id: 6, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/006.png", import.meta.url).href 
+
+  },{ 
+    id: 7, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/007.png", import.meta.url).href 
+
+  },{ 
+    id: 8, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/008.png", import.meta.url).href 
+
+  },{ 
+    id: 9, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/009.png", import.meta.url).href 
+
+  },{ 
+    id: 10, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/010.png", import.meta.url).href 
+
+  },{ 
+    id: 11, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/011.png", import.meta.url).href 
+
+  },{ 
+    id: 12, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/012.png", import.meta.url).href 
+
+  },{ 
+    id: 13, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/013.png", import.meta.url).href 
+
+  },{ 
+    id: 14, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/014.png", import.meta.url).href 
+
+  },{ 
+    id: 15, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/015.png", import.meta.url).href 
+
+  },{ 
+    id: 16, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/016.png", import.meta.url).href 
+
+  },{ 
+    id: 17, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/017.png", import.meta.url).href 
+
+  },{ 
+    id: 18, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/018.png", import.meta.url).href 
+
+  },
+  { 
+    id: 19, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/019.png", import.meta.url).href 
+
+  },{ 
+    id: 20, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'L', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 21, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 22, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 23, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 24, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 25, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 26, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 27, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  { 
+    id: 28, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/020.png", import.meta.url).href 
+  },
+  
+
+   
+
+
 ];
 
 // 5. Función de filtrado flexible (Garantiza que las gorras aparezcan al presionar su categoría o género)

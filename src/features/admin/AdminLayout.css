@@ -13,11 +13,14 @@
   --admin-text: #171717;
   --admin-text-secondary: #555555;
   --admin-text-muted: #777777;
-  --admin-gold: #c49a20;
-  --admin-gold-light: #d7af32;
-  --admin-gold-dark: #9d7910;
+  --admin-gold: #b39763;
+  --admin-gold-light: #c4ac7e;
+  --admin-gold-dark: #8f7645;
+  --admin-cta-gold: #d4af37;
+  --admin-cta-gold-light: #e7c75c;
+  --admin-cta-gold-dark: #a98718;
   --admin-border: #e5e5e5;
-  --admin-hover: #f8f5ed;
+  --admin-hover: #f2ece0;
 }
 
 /* =========================================================
@@ -44,11 +47,14 @@
   --admin-text: #ffffff;
   --admin-text-secondary: #d0d0d0;
   --admin-text-muted: #909090;
-  --admin-gold: #d4af37;
-  --admin-gold-light: #e7c75c;
-  --admin-gold-dark: #a98718;
+  --admin-gold: #c2a878;
+  --admin-gold-light: #d4bc94;
+  --admin-gold-dark: #9c8358;
+  --admin-cta-gold: #d4af37;
+  --admin-cta-gold-light: #e7c75c;
+  --admin-cta-gold-dark: #a98718;
   --admin-border: rgba(255, 255, 255, 0.10);
-  --admin-hover: rgba(212, 175, 55, 0.09);
+  --admin-hover: rgba(194, 168, 120, 0.09);
   background: #0b0b0b;
   color: #ffffff;
 }
@@ -96,7 +102,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: rgba(196, 154, 32, 0.12);
+  background: rgba(179, 151, 99, 0.12);
   border: 1px solid var(--admin-border);
   color: var(--admin-gold);
   flex-shrink: 0;
@@ -182,7 +188,7 @@
    OPCIÓN ACTIVA
    ========================================================= */
 .admin-link.active {
-  background: rgba(196, 154, 32, 0.12);
+  background: rgba(179, 151, 99, 0.12);
   color: var(--admin-gold);
   font-weight: 700;
   border-left: 3px solid var(--admin-gold);
@@ -190,7 +196,7 @@
 }
 
 .admin-container.admin-dark .admin-link.active {
-  background: rgba(212, 175, 55, 0.12);
+  background: rgba(194, 168, 120, 0.12);
   color: var(--admin-gold-light);
   border-left-color: var(--admin-gold);
 }
@@ -306,7 +312,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(196, 154, 32, 0.12);
+  background: rgba(179, 151, 99, 0.12);
   border: 1px solid var(--admin-border);
   color: var(--admin-gold);
 }
@@ -464,7 +470,7 @@
 
 .admin-container.admin-dark th {
   background: #202020;
-  color: #d4af37;
+  color: #c2a878;
   border-color: #333333;
 }
 

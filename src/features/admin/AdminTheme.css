@@ -10,11 +10,11 @@
   --admin-text: #ffffff;
   --admin-text-secondary: #bdbdbd;
   --admin-text-muted: #858585;
-  --admin-gold: #d4af37;
-  --admin-gold-light: #e7c75c;
-  --admin-gold-dark: #a98718;
-  --admin-border: rgba(212, 175, 55, 0.16);
-  --admin-hover: rgba(212, 175, 55, 0.08);
+  --admin-gold: #c2a878;
+  --admin-gold-light: #d4bc94;
+  --admin-gold-dark: #9c8358;
+  --admin-border: rgba(194, 168, 120, 0.16);
+  --admin-hover: rgba(194, 168, 120, 0.08);
 
   background: #0b0b0b !important;
   color: #ffffff !important;
@@ -46,7 +46,7 @@
 .admin-container.admin-dark .admin-logo span,
 .admin-container.admin-dark .admin-link.active,
 .admin-container.admin-dark .admin-profile-link:hover {
-  color: #d4af37 !important;
+  color: #c2a878 !important;
 }
 
 .admin-container.admin-dark .admin-link,
@@ -56,12 +56,12 @@
 
 .admin-container.admin-dark .admin-link:hover,
 .admin-container.admin-dark .admin-profile-link:hover {
-  background: rgba(212,175,55,.08) !important;
+  background: rgba(194,168,120,.08) !important;
 }
 
 .admin-container.admin-dark .admin-link.active {
-  background: rgba(212,175,55,.12) !important;
-  border-left-color: #d4af37 !important;
+  background: rgba(194,168,120,.12) !important;
+  border-left-color: #c2a878 !important;
 }
 
 .admin-container.admin-dark .admin-user-data span,
@@ -71,9 +71,9 @@
 
 .admin-container.admin-dark .admin-user-avatar,
 .admin-container.admin-dark .admin-logo-icon {
-  background: rgba(212,175,55,.10) !important;
-  border-color: rgba(212,175,55,.25) !important;
-  color: #d4af37 !important;
+  background: rgba(194,168,120,.10) !important;
+  border-color: rgba(194,168,120,.25) !important;
+  color: #c2a878 !important;
 }
 
 .admin-container.admin-dark .admin-bottom-button {
@@ -83,9 +83,9 @@
 }
 
 .admin-container.admin-dark .admin-bottom-button:hover {
-  background: rgba(212,175,55,.10) !important;
-  color: #d4af37 !important;
-  border-color: rgba(212,175,55,.35) !important;
+  background: rgba(194,168,120,.10) !important;
+  color: #c2a878 !important;
+  border-color: rgba(194,168,120,.35) !important;
 }
 
 /* ---------- PÁGINAS ---------- */
@@ -195,7 +195,7 @@
 .admin-container.admin-dark .pedido-create-button,
 .admin-container.admin-dark .domicilio-create-button,
 .admin-container.admin-dark .perfil-edit-button {
-  background: #d4af37 !important;
+  background: #c2a878 !important;
   color: #111111 !important;
 }
 
@@ -213,7 +213,7 @@
 .admin-container.admin-dark .pedido-create-button:hover,
 .admin-container.admin-dark .domicilio-create-button:hover,
 .admin-container.admin-dark .perfil-edit-button:hover {
-  background: #e7c75c !important;
+  background: #d4bc94 !important;
 }
 
 /* ---------- TARJETAS / PANELES ---------- */
@@ -240,7 +240,7 @@
 .admin-container.admin-dark .perfil-account-card {
   background: #171717 !important;
   color: #ffffff !important;
-  border-color: rgba(212,175,55,.14) !important;
+  border-color: rgba(194,168,120,.14) !important;
   box-shadow: 0 8px 28px rgba(0,0,0,.30) !important;
 }
 
@@ -260,8 +260,8 @@
 
 .admin-container.admin-dark .dashboard-indicator-icon,
 .admin-container.admin-dark .dashboard-panel-icon {
-  background: rgba(212,175,55,.10) !important;
-  color: #d4af37 !important;
+  background: rgba(194,168,120,.10) !important;
+  color: #c2a878 !important;
 }
 
 /* ---------- TABLAS ---------- */
@@ -279,7 +279,7 @@
 
 .admin-container.admin-dark th {
   background: #202020 !important;
-  color: #d4af37 !important;
+  color: #c2a878 !important;
   border-color: rgba(255,255,255,.09) !important;
 }
 
@@ -326,7 +326,7 @@
 .admin-container.admin-dark .producto-price,
 .admin-container.admin-dark .venta-total,
 .admin-container.admin-dark .pedido-total {
-  color: #d4af37 !important;
+  color: #c2a878 !important;
 }
 
 /* ---------- FILTROS ---------- */
@@ -353,7 +353,7 @@
 .admin-container.admin-dark .domicilio-modal {
   background: #171717 !important;
   color: #ffffff !important;
-  border: 1px solid rgba(212,175,55,.16) !important;
+  border: 1px solid rgba(194,168,120,.16) !important;
   box-shadow: 0 25px 80px rgba(0,0,0,.65) !important;
 }
 
@@ -396,8 +396,8 @@
 .admin-container.admin-dark .cliente-modal-close:hover,
 .admin-container.admin-dark .pedido-modal-close:hover,
 .admin-container.admin-dark .domicilio-modal-close:hover {
-  background: rgba(212,175,55,.10) !important;
-  color: #d4af37 !important;
+  background: rgba(194,168,120,.10) !important;
+  color: #c2a878 !important;
 }
 
 /* ---------- CAMPOS DENTRO DE MODALES ---------- */
@@ -443,9 +443,9 @@
 }
 
 .admin-container.admin-dark .perfil-avatar {
-  background: rgba(212,175,55,.10) !important;
-  color: #d4af37 !important;
-  border-color: rgba(212,175,55,.25) !important;
+  background: rgba(194,168,120,.10) !important;
+  color: #c2a878 !important;
+  border-color: rgba(194,168,120,.25) !important;
 }
 
 .admin-container.admin-dark .perfil-user-card h2,
@@ -553,7 +553,7 @@
 }
 
 .admin-container.admin-dark ::-webkit-scrollbar-thumb:hover {
-  background: #d4af37;
+  background: #c2a878;
 }
 
 /* =========================================================
@@ -679,7 +679,7 @@
 /* ---------- DOMICILIOS EN DARK ---------- */
 .admin-container.admin-dark .domicilios-table-container {
   background: #171717 !important;
-  border-color: rgba(212,175,55,.16) !important;
+  border-color: rgba(194,168,120,.16) !important;
 }
 
 .admin-container.admin-dark .domicilios-table th {
@@ -768,7 +768,7 @@
 .admin-container.admin-dark .dashboard-page .dashboard-inventory {
   background: #171717 !important;
   color: #ffffff !important;
-  border-color: rgba(212,175,55,.18) !important;
+  border-color: rgba(194,168,120,.18) !important;
 }
 
 .admin-container.admin-dark .dashboard-page .dashboard-payment-name,
@@ -804,7 +804,7 @@
 .admin-container.admin-dark .domicilio-modal {
   background: #1b1b1b !important;
   color: #ffffff !important;
-  border: 1px solid rgba(212,175,55,.18) !important;
+  border: 1px solid rgba(194,168,120,.18) !important;
 }
 
 .admin-container.admin-dark .rol-modal h2,
@@ -859,8 +859,8 @@
 .admin-container .producto-actions button:first-child:hover,
 .admin-container .rol-actions button:first-child:hover,
 .admin-container .usuario-actions button:first-child:hover {
-  color: #d4af37 !important;
-  background: rgba(212,175,55,.10) !important;
+  color: #c2a878 !important;
+  background: rgba(194,168,120,.10) !important;
 }
 
 /* LÁPIZ */
@@ -928,7 +928,7 @@
 .admin-container.admin-dark .pedidos-table-container,
 .admin-container.admin-dark .domicilios-table-container {
   background: #171717 !important;
-  border-color: rgba(212,175,55,.18) !important;
+  border-color: rgba(194,168,120,.18) !important;
   box-shadow: 0 10px 30px rgba(0,0,0,.28) !important;
 }
 
@@ -939,7 +939,7 @@
 }
 
 .admin-container.admin-dark table th {
-  color: #d4af37 !important;
+  color: #c2a878 !important;
 }
 
 .admin-container.admin-dark table tbody tr,
@@ -971,9 +971,9 @@
 .admin-container.admin-dark .clientes-filter-button:hover,
 .admin-container.admin-dark .pedidos-filter-button:hover,
 .admin-container.admin-dark .domicilios-filter-button:hover {
-  color: #d4af37 !important;
-  border-color: #d4af37 !important;
-  background: rgba(212,175,55,.08) !important;
+  color: #c2a878 !important;
+  border-color: #c2a878 !important;
+  background: rgba(194,168,120,.08) !important;
 }
 
 /* =========================================================
@@ -1142,8 +1142,8 @@
 .admin-container .producto-actions button:first-child:hover,
 .admin-container .rol-actions button:first-child:hover,
 .admin-container .usuario-actions button:first-child:hover {
-  color: #d4af37 !important;
-  background: rgba(212, 175, 55, 0.10) !important;
+  color: #c2a878 !important;
+  background: rgba(194, 168, 120, 0.10) !important;
 }
 
 .admin-container .cliente-actions button:nth-child(2):hover,

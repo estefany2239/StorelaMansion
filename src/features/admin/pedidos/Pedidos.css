@@ -205,7 +205,7 @@
   border-radius: 9px;
 
   background:
-    var(--admin-gold);
+    var(--admin-cta-gold);
 
   color:
     #111111;
@@ -220,7 +220,7 @@
 
 .pedidos-add-button:hover {
   background:
-    var(--admin-gold-dark);
+    var(--admin-cta-gold-dark);
 }
 
 
@@ -1080,7 +1080,7 @@
   border-radius: 9px;
 
   background:
-    var(--admin-gold);
+    var(--admin-cta-gold);
 
   color:
     #111111;
@@ -1095,7 +1095,7 @@
 
 .pedido-create-button:hover {
   background:
-    var(--admin-gold-dark);
+    var(--admin-cta-gold-dark);
 }
 
 
@@ -1109,7 +1109,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(212, 175, 55, 0.20);
+    rgba(194, 168, 120, 0.20);
 }
 
 
@@ -1142,7 +1142,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(212, 175, 55, 0.18);
+    rgba(194, 168, 120, 0.18);
 }
 
 
@@ -1255,7 +1255,7 @@
 
 [data-theme="dark"] .pedido-total-box {
   background:
-    rgba(212, 175, 55, 0.10);
+    rgba(194, 168, 120, 0.10);
 }
 
 

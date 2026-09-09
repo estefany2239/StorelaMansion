@@ -162,7 +162,7 @@
   border-radius: 9px;
 
   background:
-    var(--admin-gold);
+    var(--admin-cta-gold);
 
   color:
     #111111;
@@ -182,7 +182,7 @@
 
 .clientes-add-button:hover {
   background:
-    var(--admin-gold-dark);
+    var(--admin-cta-gold-dark);
 }
 
 
@@ -999,7 +999,7 @@
   border-radius: 9px;
 
   background:
-    var(--admin-gold);
+    var(--admin-cta-gold);
 
   color:
     #111111;
@@ -1014,7 +1014,7 @@
 
 .cliente-create-button:hover {
   background:
-    var(--admin-gold-dark);
+    var(--admin-cta-gold-dark);
 }
 
 
@@ -1027,7 +1027,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(212, 175, 55, 0.20);
+    rgba(194, 168, 120, 0.20);
 }
 
 
@@ -1042,7 +1042,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(212, 175, 55, 0.18);
+    rgba(194, 168, 120, 0.18);
 }
 
 

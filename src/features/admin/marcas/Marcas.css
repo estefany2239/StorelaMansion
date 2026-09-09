@@ -112,7 +112,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-gold);
+  background: var(--admin-cta-gold);
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -120,7 +120,7 @@
 }
 
 .marcas-add-button:hover {
-  background: var(--admin-gold-dark);
+  background: var(--admin-cta-gold-dark);
 }
 
 /* =========================================================
@@ -448,7 +448,7 @@
   padding: 0 24px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-gold);
+  background: var(--admin-cta-gold);
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -456,7 +456,7 @@
 }
 
 .marca-create-button:hover {
-  background: var(--admin-gold-dark);
+  background: var(--admin-cta-gold-dark);
 }
 
 /* =========================================================
@@ -490,7 +490,7 @@
 .admin-container.admin-dark .marcas-table-container {
   background: #171717;
   border-color:
-    rgba(212, 175, 55, 0.18);
+    rgba(194, 168, 120, 0.18);
 }
 
 .admin-container.admin-dark .marcas-table th {
@@ -506,7 +506,7 @@
 
 .admin-container.admin-dark .marcas-table tbody tr:hover {
   background:
-    rgba(212, 175, 55, 0.04);
+    rgba(194, 168, 120, 0.04);
 }
 
 .admin-container.admin-dark .marca-nombre {
