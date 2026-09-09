@@ -194,26 +194,38 @@
 .admin-container.admin-dark .cliente-create-button,
 .admin-container.admin-dark .pedido-create-button,
 .admin-container.admin-dark .domicilio-create-button,
-.admin-container.admin-dark .perfil-edit-button {
+.admin-container.admin-dark .perfil-edit-button,
+.admin-container.admin-dark .categorias-add-button,
+.admin-container.admin-dark .marcas-add-button,
+.admin-container.admin-dark .tallas-add-button,
+.admin-container.admin-dark .colores-add-button {
   background: #c2a878 !important;
   color: #111111 !important;
 }
 
-.admin-container.admin-dark .roles-add-button:hover,
 .admin-container.admin-dark .usuarios-add-button:hover,
 .admin-container.admin-dark .productos-add-button:hover,
 .admin-container.admin-dark .ventas-add-button:hover,
 .admin-container.admin-dark .clientes-add-button:hover,
 .admin-container.admin-dark .pedidos-add-button:hover,
 .admin-container.admin-dark .domicilios-add-button:hover,
-.admin-container.admin-dark .rol-create-button:hover,
 .admin-container.admin-dark .producto-create-button:hover,
 .admin-container.admin-dark .venta-create-button:hover,
 .admin-container.admin-dark .cliente-create-button:hover,
 .admin-container.admin-dark .pedido-create-button:hover,
 .admin-container.admin-dark .domicilio-create-button:hover,
-.admin-container.admin-dark .perfil-edit-button:hover {
+.admin-container.admin-dark .perfil-edit-button:hover,
+.admin-container.admin-dark .categorias-add-button:hover,
+.admin-container.admin-dark .marcas-add-button:hover,
+.admin-container.admin-dark .tallas-add-button:hover,
+.admin-container.admin-dark .colores-add-button:hover {
   background: #d4bc94 !important;
+}
+
+/* Roles: el hover oscurece el dorado igual que en modo claro */
+.admin-container.admin-dark .roles-add-button:hover,
+.admin-container.admin-dark .rol-create-button:hover {
+  background: var(--admin-gold-dark) !important;
 }
 
 /* ---------- TARJETAS / PANELES ---------- */
@@ -731,7 +743,6 @@
 
 /* Textos que en los CSS originales tenían negro fijo */
 .admin-container.admin-dark .rol-nombre,
-.admin-container.admin-dark .rol-descripcion,
 .admin-container.admin-dark .rol-usuarios,
 .admin-container.admin-dark .usuario-rol,
 .admin-container.admin-dark .producto-categoria,

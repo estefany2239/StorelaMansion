@@ -209,7 +209,7 @@ export default function Tallas() {
             <Plus size={19} />
 
             <span>
-              Agregar
+              Agregar talla
             </span>
 
           </button>

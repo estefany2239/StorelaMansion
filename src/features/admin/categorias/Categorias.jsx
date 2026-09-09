@@ -239,7 +239,7 @@ export default function Categorias() {
             <Plus size={19} />
 
             <span>
-              Agregar
+              Agregar categoría
             </span>
 
           </button>

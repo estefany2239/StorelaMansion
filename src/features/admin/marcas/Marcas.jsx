@@ -208,7 +208,7 @@ export default function Marcas() {
             <Plus size={19} />
 
             <span>
-              Agregar
+              Agregar marca
             </span>
 
           </button>

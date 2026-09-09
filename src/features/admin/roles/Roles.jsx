@@ -24,7 +24,6 @@ export default function Roles() {
     {
       id: "ROL-001",
       nombre: "Administrador",
-      descripcion: "Acceso completo a la administración del sistema.",
       permisos: [
         "Gestionar usuarios",
         "Gestionar productos",
@@ -38,7 +37,6 @@ export default function Roles() {
     {
       id: "ROL-002",
       nombre: "Vendedor",
-      descripcion: "Gestiona productos, ventas y pedidos.",
       permisos: [
         "Gestionar productos",
         "Gestionar ventas",
@@ -50,7 +48,6 @@ export default function Roles() {
     {
       id: "ROL-003",
       nombre: "Cliente",
-      descripcion: "Gestiona sus pedidos y consulta sus compras.",
       permisos: ["Gestionar pedidos"],
       usuarios: 12,
       estado: "Activo",
@@ -65,7 +62,6 @@ export default function Roles() {
   const [rolForm, setRolForm] = useState({
     id: "",
     nombre: "",
-    descripcion: "",
     permisos: [],
   });
 
@@ -97,7 +93,6 @@ export default function Roles() {
     setRolForm({
       id: `ROL-${String(roles.length + 1).padStart(3, "0")}`,
       nombre: "",
-      descripcion: "",
       permisos: [],
     });
 
@@ -119,7 +114,6 @@ export default function Roles() {
     setRolForm({
       id: rol.id,
       nombre: rol.nombre,
-      descripcion: rol.descripcion,
       permisos: [...rol.permisos],
     });
 
@@ -187,11 +181,6 @@ export default function Roles() {
       return;
     }
 
-    if (!rolForm.descripcion.trim()) {
-      alert("Ingrese la descripción del rol.");
-      return;
-    }
-
     if (rolForm.permisos.length === 0) {
       alert("Debe seleccionar al menos un permiso.");
       return;
@@ -201,7 +190,6 @@ export default function Roles() {
       const nuevoRol = {
         id: rolForm.id,
         nombre: rolForm.nombre.trim(),
-        descripcion: rolForm.descripcion.trim(),
         permisos: rolForm.permisos,
         usuarios: 0,
         estado: "Activo",
@@ -217,7 +205,6 @@ export default function Roles() {
             ? {
                 ...rol,
                 nombre: rolForm.nombre.trim(),
-                descripcion: rolForm.descripcion.trim(),
                 permisos: rolForm.permisos,
               }
             : rol
@@ -339,7 +326,6 @@ export default function Roles() {
             <tr>
               <th>ID ROL</th>
               <th>NOMBRE</th>
-              <th>DESCRIPCIÓN</th>
               <th>USUARIOS</th>
               <th>ESTADO</th>
               <th>ACCIONES</th>
@@ -364,12 +350,6 @@ export default function Roles() {
                     <span className="rol-nombre">
                       {rol.nombre}
                     </span>
-                  </td>
-
-                  <td>
-                    <div className="rol-descripcion">
-                      {rol.descripcion}
-                    </div>
                   </td>
 
                   <td>
@@ -451,7 +431,7 @@ export default function Roles() {
               <tr>
 
                 <td
-                  colSpan="7"
+                  colSpan="5"
                   className="roles-empty"
                 >
                   No se encontraron roles.
@@ -732,18 +712,6 @@ export default function Roles() {
 
                   <div className="rol-info-value">
                     {modal.rol.permisos.length}
-                  </div>
-
-                </div>
-
-                <div className="rol-info-group rol-info-full">
-
-                  <label>
-                    Descripción
-                  </label>
-
-                  <div className="rol-info-value">
-                    {modal.rol.descripcion}
                   </div>
 
                 </div>

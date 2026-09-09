@@ -208,7 +208,7 @@ export default function Colores() {
             <Plus size={19} />
 
             <span>
-              Agregar
+              Agregar color
             </span>
 
           </button>

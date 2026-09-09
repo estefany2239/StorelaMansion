@@ -161,8 +161,8 @@
 }
 
 .roles-filter option {
-  background: #ffffff;
-  color: #333333;
+  background: var(--admin-card);
+  color: var(--admin-text);
   font-size: 13px;
 }
 
@@ -275,17 +275,6 @@
 }
 
 /* =========================================================
-   DESCRIPCIÓN
-   ========================================================= */
-
-.rol-descripcion {
-  max-width: 330px;
-  color: #738096;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/* =========================================================
    PERMISOS
    ========================================================= */
 
@@ -343,13 +332,13 @@
 .slider {
   position: relative;
   display: block;
-  width: 48px;
-  height: 25px;
-  border-radius: 30px;
-  background: #8c96a6;
+  width: 40px;
+  height: 22px;
+  border-radius: 22px;
+  background: #d1d5db;
   transition:
-    background 0.25s ease,
-    box-shadow 0.25s ease;
+    background 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 /* Círculo blanco */
@@ -360,8 +349,8 @@
   top: 3px;
   left: 3px;
 
-  width: 19px;
-  height: 19px;
+  width: 16px;
+  height: 16px;
 
   background: #ffffff;
   border-radius: 50%;
@@ -370,15 +359,13 @@
     0 1px 3px rgba(0, 0, 0, 0.20);
 
   transition:
-    transform 0.25s ease;
+    transform 0.3s ease;
 }
 
 /* Switch activo */
 
 .switch-estado input:checked + .slider {
-  background: #20c9ad;
-  box-shadow:
-    0 0 0 2px rgba(32, 201, 173, 0.08);
+  background: #16a34a;
 }
 
 /* Mover círculo cuando está activo */
@@ -386,28 +373,28 @@
 .switch-estado
   input:checked
   + .slider::before {
-  transform: translateX(23px);
+  transform: translateX(18px);
 }
 
 /* Texto del estado */
 
 .estado-texto {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
 }
 
 /* Texto ACTIVO */
 
 .estado-texto.activo {
-  color: #20c9ad;
+  color: #16a34a;
 }
 
 /* Texto INACTIVO */
 
 .estado-texto.inactivo {
-  color: #8b95a5;
+  color: #9ca3af;
 }
 
 /* Efecto al enfocar con teclado */
@@ -417,7 +404,7 @@
   + .slider {
   box-shadow:
     0 0 0 3px
-    rgba(32, 201, 173, 0.20);
+    rgba(22, 163, 74, 0.20);
 }
 
 /* =========================================================
@@ -662,8 +649,8 @@
 }
 
 .rol-form-group input:disabled {
-  background: #f5f5f5;
-  color: #777777;
+  background: var(--admin-bg);
+  color: var(--admin-text-muted);
   cursor: not-allowed;
 }
 
@@ -676,7 +663,7 @@
   padding-top: 22px;
 
   border-top:
-    1px solid #e5e5e5;
+    1px solid var(--admin-border);
 }
 
 .rol-permisos-header {
@@ -697,12 +684,12 @@
 
   font-size: 20px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--admin-text);
 }
 
 .rol-permisos-header span {
   font-size: 12px;
-  color: #697386;
+  color: var(--admin-text-secondary);
 }
 
 .rol-permisos-list {
@@ -722,11 +709,11 @@
   box-sizing: border-box;
 
   border:
-    1px solid #d7d7d7;
+    1px solid var(--admin-border);
 
   border-radius: 9px;
 
-  background: #ffffff;
+  background: var(--admin-card);
   cursor: pointer;
 
   transition:
@@ -750,7 +737,7 @@
 }
 
 .rol-permiso-item span {
-  color: #333333;
+  color: var(--admin-text);
   font-size: 13px;
   font-weight: 500;
 }
@@ -836,7 +823,7 @@
   padding-bottom: 20px;
 
   border-bottom:
-    1px solid #e5e5e5;
+    1px solid var(--admin-border);
 }
 
 .rol-detail-icon {
@@ -858,7 +845,7 @@
 .rol-detail-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #222222;
+  color: var(--admin-text);
 }
 
 .rol-detail-header p {
@@ -934,7 +921,7 @@
 
   font-size: 20px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--admin-text);
 }
 
 .rol-detail-permisos-list {
@@ -955,154 +942,6 @@
 
   font-size: 11px;
   font-weight: 600;
-}
-
-/* =========================================================
-   DARK MODE
-   ========================================================= */
-
-[data-theme="dark"] .roles-search,
-[data-theme="dark"] .roles-filter {
-  background: var(--admin-card);
-
-  border-color:
-    rgba(194, 168, 120, 0.20);
-}
-
-[data-theme="dark"] .roles-search input {
-  color: var(--admin-text);
-}
-
-[data-theme="dark"] .roles-search input::placeholder {
-  color: #888888;
-}
-
-[data-theme="dark"] .roles-filter option {
-  background: #181818;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .roles-table-container {
-  background: var(--admin-card);
-
-  border-color:
-    rgba(194, 168, 120, 0.18);
-}
-
-[data-theme="dark"] .roles-table th {
-  color: var(--admin-text-secondary);
-
-  border-color:
-    rgba(255, 255, 255, 0.10);
-}
-
-[data-theme="dark"] .roles-table td {
-  border-color:
-    rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] .roles-table tbody tr:hover {
-  background:
-    rgba(194, 168, 120, 0.04);
-}
-
-[data-theme="dark"] .rol-nombre,
-[data-theme="dark"] .rol-usuarios {
-  color: var(--admin-text);
-}
-
-[data-theme="dark"] .rol-descripcion {
-  color: var(--admin-text-secondary);
-}
-
-[data-theme="dark"] .rol-permiso-item {
-  background: #181818;
-
-  border-color:
-    rgba(255, 255, 255, 0.15);
-}
-
-[data-theme="dark"] .rol-permiso-item span {
-  color: #ffffff;
-}
-
-[data-theme="dark"] .rol-modal {
-  background: #1e1e1e;
-}
-
-[data-theme="dark"] .rol-modal-header {
-  border-color:
-    rgba(255, 255, 255, 0.10);
-}
-
-[data-theme="dark"] .rol-modal-header h3 {
-  color: #ffffff;
-}
-
-[data-theme="dark"] .rol-modal-close {
-  color: #b0b0b0;
-}
-
-[data-theme="dark"] .rol-modal-close:hover {
-  background: #292929;
-}
-
-[data-theme="dark"] .rol-form-group label,
-[data-theme="dark"] .rol-info-group label {
-  color: #b0b0b0;
-}
-
-[data-theme="dark"] .rol-form-group input,
-[data-theme="dark"] .rol-form-group select,
-[data-theme="dark"] .rol-form-group textarea {
-  background: #181818;
-
-  border-color:
-    rgba(255, 255, 255, 0.15);
-
-  color: #ffffff;
-}
-
-[data-theme="dark"] .rol-form-group input:disabled {
-  background: #222222;
-  color: #888888;
-}
-
-[data-theme="dark"] .rol-info-value {
-  background: #181818;
-
-  border-color:
-    rgba(255, 255, 255, 0.15);
-
-  color: #ffffff;
-}
-
-[data-theme="dark"] .rol-detail-header {
-  border-color:
-    rgba(255, 255, 255, 0.10);
-}
-
-[data-theme="dark"] .rol-detail-header h3,
-[data-theme="dark"] .rol-detail-permisos-title {
-  color: #ffffff;
-}
-
-[data-theme="dark"] .rol-modal-footer {
-  border-color:
-    rgba(255, 255, 255, 0.10);
-}
-
-[data-theme="dark"] .rol-cancel-button {
-  background: transparent;
-
-  border-color:
-    rgba(255, 255, 255, 0.18);
-
-  color: #b0b0b0;
-}
-
-[data-theme="dark"] .rol-cancel-button:hover {
-  background: #292929;
 }
 
 /* =========================================================
