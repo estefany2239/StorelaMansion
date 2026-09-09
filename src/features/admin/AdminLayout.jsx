@@ -39,7 +39,10 @@ export default function AdminLayout({ user, onLogout }) {
 
   const [adminView, setAdminView] = useState("dashboard");
 
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    const guardado = localStorage.getItem("sla-admin-theme");
+    return guardado === "dark";
+  });
 
   const [gestionProductosAbierto, setGestionProductosAbierto] =
     useState(false);
@@ -149,7 +152,11 @@ export default function AdminLayout({ user, onLogout }) {
 
   const cambiarTema = () => {
 
-    setDarkMode((actual) => !actual);
+    setDarkMode((actual) => {
+      const nuevo = !actual;
+      localStorage.setItem("sla-admin-theme", nuevo ? "dark" : "light");
+      return nuevo;
+    });
 
   };
 
