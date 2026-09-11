@@ -48,11 +48,12 @@
 :root[data-theme="dark"],
 [data-theme="dark"] {
   /* Fondos y superficies */
-  --bg-main: #121212;          /* Fondo negro elegante */
-  --bg-card: #1e1d1b;          /* Superficie oscura para tarjetas */
-  --bg-header: #121212;
-  --card-bg: #1a1a1a;
-  --white: #121212;            /* Blanco se convierte en negro en dark mode */
+  --bg-main: #0a0a0a;          /* Fondo negro unificado para todas las secciones */
+  --bg-dark: #0a0a0a;          /* Negro base para secciones oscuras */
+  --bg-card: #141414;          /* Superficie oscura para tarjetas (sutil contraste) */
+  --bg-header: #0a0a0a;
+  --card-bg: #141414;
+  --white: #0a0a0a;            /* Blanco se convierte en negro en dark mode */
 
   /* Texto */
   --ink: #f0f0f0;              /* Texto claro */

@@ -80,7 +80,6 @@ header,
 section,
 .section-white,
 .section-beige,
-.hero,
 .categories-section {
   width: 100%;
   background-color: var(--bg-main) !important;
@@ -199,28 +198,40 @@ div[class*="view"] {
 
 .categories__banners {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .categories__banner {
   position: relative;
-  min-height: 380px;
+  min-height: 460px;
   border-radius: 16px;
   overflow: hidden;
-  background-size: 110%;
+  background-size: cover;
+  background-position: center 30%;
   background-repeat: no-repeat;
-  background-position: center;
-  background-color: var(--bg-main);
+  background-color: var(--bg-dark, #0a0a0a);
   display: flex;
   align-items: flex-end;
-  padding: 36px;
+  padding: 40px 36px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.categories__banner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 .categories__banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.65) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.15) 40%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  z-index: 1;
 }
 
 .categories__banner-content {
@@ -231,42 +242,56 @@ div[class*="view"] {
 
 .categories__banner-eyebrow {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   color: var(--gold);
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
 .categories__banner h3 {
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
   color: #ffffff;
-  line-height: 1.2;
-  margin-bottom: 20px;
+  line-height: 1.15;
+  margin-bottom: 24px;
+  font-weight: 600;
 }
 
 .categories__banner button {
-  background: rgba(0, 0, 0, 0.35);
+  background: transparent;
   color: #ffffff;
   border: 1.5px solid var(--gold);
-  padding: 10px 22px;
+  padding: 11px 26px;
   border-radius: 999px;
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
+  letter-spacing: 0.3px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   transition: all 0.3s ease;
+}
+
+.categories__banner button svg {
+  stroke: var(--gold);
+  transition: transform 0.3s ease;
 }
 
 .categories__banner button:hover {
   background-color: var(--gold);
-  color: #ffffff;
+  color: #000000;
   border-color: var(--gold);
+}
+
+.categories__banner button:hover svg {
+  stroke: #000000;
+  transform: translateX(3px);
 }
 
 /* ==========================================
@@ -405,19 +430,20 @@ div[class*="view"] {
 }
 
 .gender-cards-container {
-  display: flex;
-  gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
   justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
+  align-items: stretch;
   width: 100%;
+  max-width: 820px;
   margin: 0 auto;
 }
 
 .gender-card {
-  width: 300px;
-  height: 400px;
-  border: 1px solid rgba(201, 162, 39, 0.3);
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid rgba(201, 162, 39, 0.25);
   border-radius: 20px;
   cursor: pointer;
   display: flex;
@@ -429,8 +455,9 @@ div[class*="view"] {
   position: relative;
   overflow: hidden;
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
+  background-color: var(--bg-dark, #0a0a0a);
 }
 
 .gender-card::before {
@@ -442,7 +469,7 @@ div[class*="view"] {
   height: 100%;
   background: inherit;
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   transition: transform 0.6s ease;
   z-index: 1;
 }
@@ -453,21 +480,21 @@ div[class*="view"] {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  height: 65%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
   z-index: 2;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
 }
 
 .gender-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
   border-color: var(--gold);
-  box-shadow: 0 15px 35px rgba(201, 162, 39, 0.2);
+  box-shadow: 0 20px 45px rgba(201, 162, 39, 0.2);
 }
 
 .gender-card:hover::before {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 .gender-card-content {
@@ -480,7 +507,7 @@ div[class*="view"] {
 .gender-card span {
   position: relative;
   display: inline-block;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 1.5px;
@@ -506,6 +533,17 @@ div[class*="view"] {
   width: 60px;
 }
 
+@media (max-width: 768px) {
+  .gender-cards-container {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+
+  .gender-card {
+    min-height: 340px;
+  }
+}
+
 /* ==========================================
    8. ADAPTABILIDAD MÓVIL
    ========================================== */
@@ -513,8 +551,19 @@ div[class*="view"] {
   .categories__grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
+  .categories__banners {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
   .categories__banner {
-    background-size: 85%;
+    min-height: 340px;
+    padding: 28px 24px;
+  }
+
+  .categories__banner h3 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
   }
 }

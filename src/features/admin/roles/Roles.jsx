@@ -5,6 +5,7 @@ import {
   Plus,
   Eye,
   Pencil,
+  Trash2,
   X,
   Shield,
 } from "lucide-react";
@@ -242,6 +243,28 @@ export default function Roles() {
     );
   };
 
+  /* =====================================================
+     ELIMINAR ROL
+     ===================================================== */
+
+  const eliminarRol = (rol) => {
+    if (rol.estado !== "Inactivo") {
+      alert(
+        "No se puede eliminar el rol porque solo se permiten eliminar roles inactivos."
+      );
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Deseas eliminar el rol "${rol.nombre}"?`
+    );
+    if (!confirmar) return;
+
+    setRoles((actuales) =>
+      actuales.filter((item) => item.id !== rol.id)
+    );
+  };
+
   return (
     <div className="roles-page">
 
@@ -416,6 +439,25 @@ export default function Roles() {
                         }
                       >
                         <Pencil size={18} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          rol.estado !== "Inactivo"
+                            ? "disabled"
+                            : ""
+                        }
+                        title={
+                          rol.estado !== "Inactivo"
+                            ? "Solo se pueden eliminar roles inactivos"
+                            : "Eliminar rol"
+                        }
+                        onClick={() =>
+                          eliminarRol(rol)
+                        }
+                      >
+                        <Trash2 size={18} />
                       </button>
 
                     </div>

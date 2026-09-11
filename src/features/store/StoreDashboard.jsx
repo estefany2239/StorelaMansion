@@ -107,7 +107,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
     { id: "gorras", title: "Gorras", image: new URL("../../assets/img/jorda.png", import.meta.url).href },
     { id: "Busos", title: "Busos", image: new URL("../../assets/img/sos.png", import.meta.url).href },
     { id: "pantalones", title: "Pantalones", image: new URL("../../assets/img/lone.png", import.meta.url).href },
-    { id: "relojes", title: "Relojes", image: new URL("../../assets/img/reloj.png", import.meta.url).href },
+    { id: "accesorios", title: "Accesorios", image: new URL("../../assets/img/reloj.png", import.meta.url).href },
   ];
 
   const handleLogout = () => {

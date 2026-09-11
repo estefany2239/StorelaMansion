@@ -1,20 +1,23 @@
 .hero {
   position: relative;
   width: 100%;
-  min-height: 80vh;
+  min-height: 85vh;
   display: flex;
   align-items: center;
+  background-color: var(--bg-dark, #0a0a0a);
+  background-image: url("../../assets/img/ima.png");
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   overflow: hidden;
 }
 
-/* Oscurecedor sobre la imagen de fondo */
-.hero__overlay {
+.hero::before {
+  content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55); /* Capa oscura para legibilidad */
+  background:
+    linear-gradient(180deg, rgba(20, 20, 20, 0.82) 0%, rgba(10, 10, 10, 0.75) 50%, rgba(10, 10, 10, 0.88) 100%),
+    radial-gradient(ellipse at 75% 15%, rgba(255, 254, 250, 0.12) 0%, transparent 55%);
   z-index: 1;
 }
 

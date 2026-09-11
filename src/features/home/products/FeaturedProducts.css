@@ -137,11 +137,11 @@
    ========================================== */
 
 [data-theme="dark"] .featured {
-  background: #1e1d1b;
+  background: var(--bg-dark, #0a0a0a);
 }
 
 [data-theme="dark"] .product-card {
-  background-color: #262421 !important;
+  background-color: var(--card-bg, #141414) !important;
 }
 
 [data-theme="dark"] .featured__title,

@@ -8,7 +8,7 @@
 }
 
 [data-theme="dark"] .categories-section {
-  background-color: #1e1d1b !important;
+  background-color: var(--bg-dark, #0a0a0a) !important;
 }
 
 /* ==========================================
@@ -87,31 +87,45 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Banners promocionales inferiores (Mujer / Hombre) con tamaño ajustado */
+/* ==========================================
+   BANNERS HOMBRE / MUJER — Grid editorial premium
+   ========================================== */
 .categories__banners {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .categories__banner {
   position: relative;
-  min-height: 380px;
+  min-height: 460px;
   border-radius: 16px;
   overflow: hidden;
-  background-size: 110%; /* 👈 Sube al 85% para que se vea más grande pero conserve buen margen */
+  background-size: cover;
+  background-position: center 30%;
   background-repeat: no-repeat;
-  background-position: center;
-  background-color: var(--cream, #f5ead6);
+  background-color: var(--bg-dark, #0a0a0a);
   display: flex;
   align-items: flex-end;
-  padding: 36px;
+  padding: 40px 36px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.categories__banner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 .categories__banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.65) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.15) 40%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  z-index: 1;
 }
 
 .categories__banner-content {
@@ -122,47 +136,56 @@
 
 .categories__banner-eyebrow {
   font-family: var(--font-body, "Inter", sans-serif);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   color: var(--gold, #c9a227);
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
 .categories__banner h3 {
   font-family: var(--font-display, "Playfair Display", serif);
-  font-size: 1.8rem;
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
   color: #ffffff;
-  line-height: 1.2;
-  margin-bottom: 20px;
+  line-height: 1.15;
+  margin-bottom: 24px;
+  font-weight: 600;
 }
 
 .categories__banner button {
-  background: rgba(0, 0, 0, 0.35);
+  background: transparent;
   color: #ffffff;
   border: 1.5px solid var(--gold, #c9a227);
-  padding: 10px 22px;
+  padding: 11px 26px;
   border-radius: 999px;
   font-family: var(--font-body, "Inter", sans-serif);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
+  letter-spacing: 0.3px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   transition: all 0.3s ease;
 }
 
 .categories__banner button svg {
-  stroke: #ffffff;
+  stroke: var(--gold, #c9a227);
+  transition: transform 0.3s ease;
 }
 
 .categories__banner button:hover {
   background-color: var(--gold, #c9a227);
-  color: #ffffff;
+  color: #000000;
   border-color: var(--gold, #c9a227);
+}
+
+.categories__banner button:hover svg {
+  stroke: #000000;
+  transform: translateX(3px);
 }
 
 /* Adaptabilidad móvil */
@@ -170,8 +193,19 @@
   .categories__grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
+  .categories__banners {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
   .categories__banner {
-    background-size: 85%; /* Ligeramente más grande en móviles para lucir bien */
+    min-height: 340px;
+    padding: 28px 24px;
+  }
+
+  .categories__banner h3 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
   }
 }

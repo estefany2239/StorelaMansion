@@ -39,7 +39,8 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   // DETECCIÓN INDEPENDIENTE PARA CADA CATEGORÍA
   const isTenis = category?.title?.toLowerCase().includes('tenis') || category?.id === 'tenis';
   const isGorras = category?.title?.toLowerCase().includes('gorra') || category?.id === 'gorras';
-  const isRelojes = category?.title?.toLowerCase().includes('reloj') || category?.id === 'relojes';
+  const isAccesorios = category?.title?.toLowerCase().includes('accesorio') || category?.id === 'accesorios' ||
+                       category?.title?.toLowerCase().includes('reloj') || category?.id === 'relojes';
   
   const isBusos = category?.title?.toLowerCase().includes('buso') || category?.id === 'busos';
   const isSudaderas = category?.title?.toLowerCase().includes('sudadera') || category?.id === 'sudaderas';
@@ -52,7 +53,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
     category, 
     selectedGender, 
     isGorras ? selectedBrands : [], 
-    isRelojes ? [] : selectedSizes, 
+    isAccesorios ? [] : selectedSizes, 
     isTenis ? [] : selectedColors
   );
 
@@ -146,10 +147,10 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                     ))}
                   </div>
                 </div>
-              ) : isRelojes ? (
-                /* 2. SI ES RELOJES */
+              ) : isAccesorios ? (
+                /* 2. SI ES ACCESORIOS */
                 <div className="filter__group">
-                  <h4>Colección de Relojes</h4>
+                  <h4>Estilos de Accesorios</h4>
                   <p className="product__details" style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
                     Estilos para {selectedGender}
                   </p>

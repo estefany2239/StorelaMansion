@@ -4,10 +4,14 @@ import {
   Eye,
   EyeOff,
   Lock,
-  Mail
+  Mail,
+  ArrowRight,
+  User
 } from "lucide-react";
 
 import "./Login.css";
+
+const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
 
 export default function Login({
   onBackToHome,
@@ -18,14 +22,13 @@ export default function Login({
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     setError("");
 
-    // ADMINISTRADOR
     if (
       email === "admin@storelamansion.com" &&
       password === "Admin123"
@@ -35,20 +38,11 @@ export default function Login({
         email: email,
         rol: "Administrador"
       };
-
-      localStorage.setItem(
-        "usuario",
-        JSON.stringify(usuario)
-      );
-
-      if (onLoginSuccess) {
-        onLoginSuccess(usuario);
-      }
-
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+      if (onLoginSuccess) onLoginSuccess(usuario);
       return;
     }
 
-    // CLIENTE
     if (
       email === "cliente@storelamansion.com" &&
       password === "Cliente123"
@@ -58,249 +52,131 @@ export default function Login({
         email: email,
         rol: "Cliente"
       };
-
-      localStorage.setItem(
-        "usuario",
-        JSON.stringify(usuario)
-      );
-
-      if (onLoginSuccess) {
-        onLoginSuccess(usuario);
-      }
-
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+      if (onLoginSuccess) onLoginSuccess(usuario);
       return;
     }
 
     setError("Correo o contraseña incorrectos");
   };
 
-  const fillDemoCredentials = (
-    demoEmail,
-    demoPass
-  ) => {
+  const fillDemoCredentials = (demoEmail, demoPass) => {
     setEmail(demoEmail);
     setPassword(demoPass);
     setError("");
   };
 
   return (
-    <div className="login-page">
+    <div className="auth-page" style={{ backgroundImage: `url(${authBg})` }}>
+      <div className="auth-overlay" />
 
-      <button
-        className="login__back-btn"
-        onClick={onBackToHome}
-      >
+      <button className="auth__back-btn" onClick={onBackToHome}>
         <ArrowLeft size={18} />
-        Volver
+        Volver al inicio
       </button>
 
-      <div className="login-container">
+      <div className="auth-container">
+        <div className="auth-card">
 
-        <div className="login-card">
-
-          <div className="login__header">
-
-            <div className="login__icon-wrapper">
-              <Lock
-                size={20}
-                className="login__gold-icon"
-              />
-            </div>
-
-            <h2>Store La Mansión</h2>
-
-            <p>
-              Inicia sesión en tu cuenta
-            </p>
-
+          <div className="auth__brand">
+            <h1 className="auth__logo">LA MANSI<span className="auth__logo-accent">ÓN</span></h1>
+            <span className="auth__subtitle">STORE</span>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="login__form"
-          >
+          <div className="auth__header">
+            <div className="auth__icon-wrapper">
+              <Lock size={20} className="auth__gold-icon" />
+            </div>
+            <h2>Bienvenido de vuelta</h2>
+            <p>Inicia sesión en tu cuenta para continuar</p>
+          </div>
 
-            {/* CORREO */}
+          <form onSubmit={handleSubmit} className="auth__form">
 
-            <div className="form-group">
-
-              <label>
-                CORREO ELECTRÓNICO
-              </label>
-
-              <div className="input-with-icon">
-
-                <Mail
-                  size={16}
-                  className="input-icon"
-                />
-
+            <div className="auth-field">
+              <label>USUARIO O CORREO</label>
+              <div className="auth-input-wrap">
+                <Mail size={16} className="auth-input-icon" />
                 <input
                   type="email"
                   placeholder="tu@correo.com"
                   value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-
               </div>
-
             </div>
 
-            {/* CONTRASEÑA */}
-
-            <div className="form-group">
-
-              <label>
-                CONTRASEÑA
-              </label>
-
-              <div className="input-with-icon">
-
-                <Lock
-                  size={16}
-                  className="input-icon"
-                />
-
+            <div className="auth-field">
+              <label>CONTRASEÑA</label>
+              <div className="auth-input-wrap">
+                <Lock size={16} className="auth-input-icon" />
                 <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
+                  type={showPassword ? "text" : "password"}
                   placeholder="Tu contraseña"
                   value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-
                 <button
                   type="button"
-                  className="toggle-password"
-                  onClick={() =>
-                    setShowPassword(
-                      !showPassword
-                    )
-                  }
+                  className="auth-toggle-pw"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
-
               </div>
-
             </div>
 
-            {/* ERROR */}
+            {error && <div className="auth-error">{error}</div>}
 
-            {error && (
-              <div className="login-error">
-                {error}
-              </div>
-            )}
-
-            {/* RECUPERAR */}
-
-            <div className="form-options">
-
-              <button
-                type="button"
-                onClick={onNavigateForgot}
-                className="forgot-link"
-              >
+            <div className="auth-row-between">
+              <label className="auth-checkbox">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span className="auth-checkmark" />
+                Recordarme
+              </label>
+              <button type="button" onClick={onNavigateForgot} className="auth-link">
                 ¿Olvidaste tu contraseña?
               </button>
-
             </div>
 
-            {/* BOTÓN */}
-
-            <button
-              type="submit"
-              className="login__submit-btn"
-            >
-              Iniciar sesión
+            <button type="submit" className="auth-submit-btn">
+              Iniciar sesión <ArrowRight size={18} />
             </button>
 
-            {/* REGISTRO */}
-
-            <div className="register-redirect">
-
-              <span>
-                ¿No tienes cuenta?{" "}
-              </span>
-
-              <button
-                type="button"
-                onClick={onNavigateRegister}
-                className="forgot-link"
-              >
+            <div className="auth-footer-text">
+              <span>¿No tienes cuenta? </span>
+              <button type="button" onClick={onNavigateRegister} className="auth-link">
                 Crear cuenta
               </button>
-
             </div>
-
           </form>
 
-          {/* DEMO */}
-
-          <div className="demo-credentials">
-
-            <span className="demo-title">
-              CREDENCIALES DE DEMO
-            </span>
-
+          <div className="auth-demo">
+            <span className="auth-demo-title">CREDENCIALES DE DEMO</span>
             <div
-              className="demo-item"
-              onClick={() =>
-                fillDemoCredentials(
-                  "admin@storelamansion.com",
-                  "Admin123"
-                )
-              }
+              className="auth-demo-item"
+              onClick={() => fillDemoCredentials("admin@storelamansion.com", "Admin123")}
             >
-              <strong>
-                Administrador
-              </strong>
-
-              <span>
-                admin@storelamansion.com · Admin123
-              </span>
-
+              <strong>Administrador</strong>
+              <span>admin@storelamansion.com · Admin123</span>
             </div>
-
             <div
-              className="demo-item"
-              onClick={() =>
-                fillDemoCredentials(
-                  "cliente@storelamansion.com",
-                  "Cliente123"
-                )
-              }
+              className="auth-demo-item"
+              onClick={() => fillDemoCredentials("cliente@storelamansion.com", "Cliente123")}
             >
-              <strong>
-                Cliente
-              </strong>
-
-              <span>
-                cliente@storelamansion.com · Cliente123
-              </span>
-
+              <strong>Cliente</strong>
+              <span>cliente@storelamansion.com · Cliente123</span>
             </div>
-
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 }

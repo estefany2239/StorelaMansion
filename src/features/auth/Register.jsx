@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { User, Mail, Lock, ArrowLeft, Shield } from 'lucide-react';
+import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight } from 'lucide-react';
 import './Login.css';
+
+const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
 
 export default function Register({ onBackToLogin }) {
   const [formData, setFormData] = useState({
@@ -25,26 +27,34 @@ export default function Register({ onBackToLogin }) {
   };
 
   return (
-    <div className="login-page">
-      <button className="login__back-btn" onClick={onBackToLogin}>
-        <ArrowLeft size={18} /> Volver
+    <div className="auth-page" style={{ backgroundImage: `url(${authBg})` }}>
+      <div className="auth-overlay" />
+
+      <button className="auth__back-btn" onClick={onBackToLogin}>
+        <ArrowLeft size={18} /> Volver al inicio
       </button>
 
-      <div className="login-container">
-        <div className="login-card">
-          <div className="login__header">
-            <div className="login__icon-wrapper">
-              <Shield size={20} className="login__gold-icon" />
+      <div className="auth-container">
+        <div className="auth-card">
+
+          <div className="auth__brand">
+            <h1 className="auth__logo">LA MANSI<span className="auth__logo-accent">ÓN</span></h1>
+            <span className="auth__subtitle">STORE</span>
+          </div>
+
+          <div className="auth__header">
+            <div className="auth__icon-wrapper">
+              <Shield size={20} className="auth__gold-icon" />
             </div>
             <h2>Crear Cuenta</h2>
             <p>Únete a Store La Mansión</p>
           </div>
 
-          <form className="login__form" onSubmit={handleSubmit}>
-            <div className="form-group">
+          <form className="auth__form" onSubmit={handleSubmit}>
+            <div className="auth-field">
               <label>NOMBRE COMPLETO</label>
-              <div className="input-with-icon">
-                <User size={16} className="input-icon" />
+              <div className="auth-input-wrap">
+                <User size={16} className="auth-input-icon" />
                 <input
                   type="text"
                   name="name"
@@ -56,10 +66,10 @@ export default function Register({ onBackToLogin }) {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="auth-field">
               <label>CORREO ELECTRÓNICO</label>
-              <div className="input-with-icon">
-                <Mail size={16} className="input-icon" />
+              <div className="auth-input-wrap">
+                <Mail size={16} className="auth-input-icon" />
                 <input
                   type="email"
                   name="email"
@@ -71,10 +81,10 @@ export default function Register({ onBackToLogin }) {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="auth-field">
               <label>CONTRASEÑA</label>
-              <div className="input-with-icon">
-                <Lock size={16} className="input-icon" />
+              <div className="auth-input-wrap">
+                <Lock size={16} className="auth-input-icon" />
                 <input
                   type="password"
                   name="password"
@@ -86,10 +96,10 @@ export default function Register({ onBackToLogin }) {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="auth-field">
               <label>CONFIRMAR CONTRASEÑA</label>
-              <div className="input-with-icon">
-                <Lock size={16} className="input-icon" />
+              <div className="auth-input-wrap">
+                <Lock size={16} className="auth-input-icon" />
                 <input
                   type="password"
                   name="confirmPassword"
@@ -101,22 +111,18 @@ export default function Register({ onBackToLogin }) {
               </div>
             </div>
 
-            <button type="submit" className="login__submit-btn">
-              Registrarse
+            <button type="submit" className="auth-submit-btn">
+              Registrarse <ArrowRight size={18} />
             </button>
 
-            <div className="register-redirect">
+            <div className="auth-footer-text">
               <span>¿Ya tienes una cuenta? </span>
-              <button 
-                type="button" 
-                onClick={onBackToLogin}
-                className="forgot-link"
-                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline" }}
-              >
+              <button type="button" onClick={onBackToLogin} className="auth-link">
                 Inicia sesión
               </button>
             </div>
           </form>
+
         </div>
       </div>
     </div>

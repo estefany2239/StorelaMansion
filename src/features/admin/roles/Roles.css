@@ -467,6 +467,16 @@
     rgba(201, 162, 39, 0.08);
 }
 
+.rol-actions button.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.rol-actions button.disabled:hover {
+  color: #70798a;
+  background: transparent;
+}
+
 /* =========================================================
    SIN RESULTADOS
    ========================================================= */
