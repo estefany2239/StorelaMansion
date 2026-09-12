@@ -196,7 +196,6 @@
 .admin-container.admin-dark .domicilio-create-button,
 .admin-container.admin-dark .perfil-edit-button,
 .admin-container.admin-dark .categorias-add-button,
-.admin-container.admin-dark .marcas-add-button,
 .admin-container.admin-dark .tallas-add-button,
 .admin-container.admin-dark .colores-add-button {
   background: #c2a878 !important;
@@ -216,7 +215,6 @@
 .admin-container.admin-dark .domicilio-create-button:hover,
 .admin-container.admin-dark .perfil-edit-button:hover,
 .admin-container.admin-dark .categorias-add-button:hover,
-.admin-container.admin-dark .marcas-add-button:hover,
 .admin-container.admin-dark .tallas-add-button:hover,
 .admin-container.admin-dark .colores-add-button:hover {
   background: #d4bc94 !important;
@@ -620,72 +618,29 @@
   background: #090909 !important;
 }
 
-/* ---------- DOMICILIOS: NO CORTAR COLUMNAS ---------- */
+/* ---------- DOMICILIOS: TABLA CONSISTENTE ---------- */
 .admin-container .domicilios-table-container {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
-}
-
-.admin-container .domicilios-table {
-  width: 100%;
-  min-width: 0 !important;
-  table-layout: fixed;
+  overflow-x: auto;
 }
 
 .admin-container .domicilios-table th,
 .admin-container .domicilios-table td {
   box-sizing: border-box;
-  padding-left: 10px;
-  padding-right: 10px;
 }
 
 .admin-container .domicilios-table th {
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .admin-container .domicilios-table td {
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-
-.admin-container .domicilios-table th:nth-child(1),
-.admin-container .domicilios-table td:nth-child(1) { width: 10%; }
-.admin-container .domicilios-table th:nth-child(2),
-.admin-container .domicilios-table td:nth-child(2) { width: 9%; }
-.admin-container .domicilios-table th:nth-child(3),
-.admin-container .domicilios-table td:nth-child(3) { width: 9%; }
-.admin-container .domicilios-table th:nth-child(4),
-.admin-container .domicilios-table td:nth-child(4) { width: 14%; }
-.admin-container .domicilios-table th:nth-child(5),
-.admin-container .domicilios-table td:nth-child(5) { width: 17%; }
-.admin-container .domicilios-table th:nth-child(6),
-.admin-container .domicilios-table td:nth-child(6) { width: 10%; }
-.admin-container .domicilios-table th:nth-child(7),
-.admin-container .domicilios-table td:nth-child(7) { width: 11%; }
-.admin-container .domicilios-table th:nth-child(8),
-.admin-container .domicilios-table td:nth-child(8) { width: 11%; }
-.admin-container .domicilios-table th:nth-child(9),
-.admin-container .domicilios-table td:nth-child(9) { width: 9%; }
-
-.admin-container .domicilio-id,
-.admin-container .domicilio-id-relacion,
-.admin-container .domicilio-fecha,
-.admin-container .domicilio-estado {
-  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .admin-container .domicilio-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  flex-wrap: nowrap;
-}
-
-.admin-container .domicilio-actions button {
-  flex: 0 0 auto;
+  justify-content: center;
 }
 
 /* ---------- DOMICILIOS EN DARK ---------- */
@@ -746,7 +701,6 @@
 .admin-container.admin-dark .rol-usuarios,
 .admin-container.admin-dark .usuario-rol,
 .admin-container.admin-dark .producto-categoria,
-.admin-container.admin-dark .producto-marca,
 .admin-container.admin-dark .producto-talla,
 .admin-container.admin-dark .producto-color,
 .admin-container.admin-dark .producto-stock,

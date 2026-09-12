@@ -259,9 +259,24 @@
 
 .productos-table {
   width: 100%;
-  min-width: 1250px;
+  min-width: 680px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
+
+/* DISTRIBUCIÓN DE LAS 5 COLUMNAS DEL LISTADO:
+   ID PRODUCTO | NOMBRE | STOCK | ESTADO | ACCIONES */
+.productos-table th:nth-child(1) { width: 11%; }
+.productos-table th:nth-child(2) { width: 34%; }
+.productos-table th:nth-child(3) { width: 23%; }
+.productos-table th:nth-child(4) { width: 18%; }
+.productos-table th:nth-child(5) { width: 14%; }
+
+.productos-table th:nth-child(4),
+.productos-table td:nth-child(4) { text-align: center; }
+
+.productos-table th:nth-child(5),
+.productos-table td:nth-child(5) { text-align: center; }
 
 .productos-table th {
   height: 44px;
@@ -277,7 +292,7 @@
 }
 
 .productos-table td {
-  height: 76px;
+  height: 72px;
   padding: 0 16px;
   vertical-align: middle;
   border-bottom:
@@ -319,6 +334,13 @@
 /* =========================================================
    NOMBRE
    ========================================================= */
+
+.productos-table .producto-nombre {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .producto-nombre {
   color: #111111;
@@ -506,6 +528,7 @@
 .producto-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
 }
 
@@ -592,7 +615,7 @@
    ========================================================= */
 
 .producto-modal-header {
-  min-height: 86px;
+  min-height: 66px;
   padding: 0 30px;
   display: flex;
   align-items: center;
@@ -607,7 +630,7 @@
     Georgia,
     "Times New Roman",
     serif;
-  font-size: 25px;
+  font-size: 22px;
   font-weight: 500;
   color: #1a1a1a;
 }
@@ -634,7 +657,7 @@
    ========================================================= */
 
 .producto-modal-body {
-  padding: 30px;
+  padding: 22px;
 }
 
 /* =========================================================
@@ -645,8 +668,8 @@
   display: grid;
   grid-template-columns:
     1fr 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 14px;
 }
 
 .producto-form-group,
@@ -667,8 +690,8 @@
 .producto-form-group input,
 .producto-form-group select {
   width: 100%;
-  height: 48px;
-  padding: 0 14px;
+  height: 42px;
+  padding: 0 12px;
   box-sizing: border-box;
   border:
     1px solid #d7d7d7;
@@ -705,8 +728,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 20px;
-  padding: 12px 14px;
+  margin-top: 14px;
+  padding: 10px 12px;
   border-radius: 8px;
   background: #fde5e5;
   color: #d32f2f;
@@ -788,7 +811,7 @@
    ========================================================= */
 
 .producto-modal-footer {
-  min-height: 96px;
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -803,7 +826,7 @@
    ========================================================= */
 
 .producto-cancel-button {
-  height: 48px;
+  height: 42px;
   padding: 0 24px;
   border:
     1px solid #dedede;
@@ -824,7 +847,7 @@
    ========================================================= */
 
 .producto-create-button {
-  height: 48px;
+  height: 42px;
   padding: 0 24px;
   border: none;
   border-radius: 9px;

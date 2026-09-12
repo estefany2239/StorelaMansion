@@ -92,30 +92,34 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
         {!selectedGender ? (
           <div className="gender-selector-wrapper">
-            <h3>¿Para quién buscas en {category?.title}?</h3>
+            <div className="gender-selector-header">
+              <span className="gender-selector-kicker">Descubre</span>
+              <h3>¿Para quién buscas en {category?.title}?</h3>
+            </div>
+
             <div className="gender-cards-container">
-              
-              <div 
-                className="gender-card" 
-                style={{ 
-                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('${new URL("../../assets/img/foto.png", import.meta.url).href}')` 
-                }}
+
+              <div
+                className="gender-card"
+                style={{ backgroundImage: `url('${new URL("../../assets/img/el.jpeg", import.meta.url).href}')` }}
                 onClick={() => setSelectedGender('hombre')}
               >
                 <div className="gender-card-content">
-                  <span>Hombre</span>
+                  <span className="gender-card-title">MODA MASCULINA</span>
+                  <span className="gender-card-divider" />
+                  <span className="gender-card-caption">Premium &amp; urbano</span>
                 </div>
               </div>
 
-              <div 
-                className="gender-card" 
-                style={{ 
-                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('${new URL("../../assets/img/foti.png", import.meta.url).href}')` 
-                }}
+              <div
+                className="gender-card"
+                style={{ backgroundImage: `url('${new URL("../../assets/img/ell.jpeg", import.meta.url).href}')` }}
                 onClick={() => setSelectedGender('mujer')}
               >
                 <div className="gender-card-content">
-                  <span>Mujer</span>
+                  <span className="gender-card-title">MODA FEMENINA</span>
+                  <span className="gender-card-divider" />
+                  <span className="gender-card-caption">Elegante &amp; chic</span>
                 </div>
               </div>
 

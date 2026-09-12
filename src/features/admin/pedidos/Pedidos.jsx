@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 
 import "./Pedidos.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Pedidos() {
 
@@ -112,6 +114,69 @@ export default function Pedidos() {
           talla: "L",
           color: "Azul oscuro",
           precio: 890000
+        }
+      ]
+    },
+
+    {
+      id: "PED-005",
+      idCliente: "CLI-005",
+      cliente: "Santiago Gómez",
+      fecha: "2024-08-01",
+      total: 340000,
+      estado: "Registrado",
+      metodoPago: "Efectivo",
+      direccion: "Calle 10 #20-15, Medellín",
+
+      productos: [
+        {
+          nombre: "Vestido Cóctel Elegante",
+          cantidad: 1,
+          talla: "S",
+          color: "Negro",
+          precio: 340000
+        }
+      ]
+    },
+
+    {
+      id: "PED-006",
+      idCliente: "CLI-006",
+      cliente: "Marcela Ríos",
+      fecha: "2024-08-05",
+      total: 620000,
+      estado: "Despachado",
+      metodoPago: "Tarjeta de crédito",
+      direccion: "Carrera 45 #22-40, Cali",
+
+      productos: [
+        {
+          nombre: "Abrigo Wool Premium",
+          cantidad: 1,
+          talla: "M",
+          color: "Beige",
+          precio: 620000
+        }
+      ]
+    },
+
+    {
+      id: "PED-007",
+      idCliente: "CLI-007",
+      cliente: "Diego Muñoz",
+      fecha: "2024-08-10",
+      total: 320000,
+      estado: "En preparación",
+      metodoPago: "Transferencia bancaria",
+      direccion: "Av. 68 #55-10, Bogotá",
+
+      productos: [
+        {
+          nombre: "Blazer Ejecutivo Femenino",
+          cantidad: 1,
+          talla: "S",
+          color: "Café",
+          precio: 320000
         }
       ]
     }
@@ -260,6 +325,35 @@ export default function Pedidos() {
 
     }
   );
+
+
+  // =====================================================
+  // PAGINACIÓN DE LA TABLA
+  // =====================================================
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(pedidosFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const pedidosPaginados = pedidosFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroCliente, filtroEstado]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
 
   // =====================================================
@@ -835,19 +929,11 @@ export default function Pedidos() {
 
               <th>ID PEDIDO</th>
 
-              <th>ID CLIENTE</th>
-
               <th>CLIENTE</th>
-
-              <th>FECHA</th>
 
               <th>TOTAL</th>
 
               <th>ESTADO</th>
-
-              <th>MÉTODO DE PAGO</th>
-
-              <th>DIRECCIÓN</th>
 
               <th>ACCIONES</th>
 
@@ -858,7 +944,7 @@ export default function Pedidos() {
 
           <tbody>
 
-            {pedidosFiltrados.map(
+            {pedidosPaginados.map(
               (pedido) => (
 
                 <tr key={pedido.id}>
@@ -877,33 +963,9 @@ export default function Pedidos() {
 
                   <td>
 
-                    <span className="pedido-id-cliente">
-
-                      {pedido.idCliente}
-
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
                     <span className="pedido-cliente">
 
                       {pedido.cliente}
-
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="pedido-fecha">
-
-                      {formatearFecha(
-                        pedido.fecha
-                      )}
 
                     </span>
 
@@ -957,28 +1019,6 @@ export default function Pedidos() {
                     >
 
                       {pedido.estado}
-
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="pedido-pago">
-
-                      {pedido.metodoPago}
-
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="pedido-direccion">
-
-                      {pedido.direccion}
 
                     </span>
 
@@ -1050,7 +1090,7 @@ export default function Pedidos() {
               <tr>
 
                 <td
-                  colSpan="9"
+                  colSpan="5"
                   className="pedidos-empty"
                 >
 
@@ -1065,6 +1105,14 @@ export default function Pedidos() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

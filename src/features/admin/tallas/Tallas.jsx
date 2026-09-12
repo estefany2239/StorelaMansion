@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 
 import "./Tallas.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Tallas() {
 
@@ -21,7 +23,9 @@ export default function Tallas() {
     { id: "TAL-002", nombre: "S", enUso: true },
     { id: "TAL-003", nombre: "M", enUso: true },
     { id: "TAL-004", nombre: "L", enUso: true },
-    { id: "TAL-005", nombre: "XL", enUso: false }
+    { id: "TAL-005", nombre: "XL", enUso: false },
+    { id: "TAL-006", nombre: "XXL", enUso: false },
+    { id: "TAL-007", nombre: "XXXL", enUso: false }
   ]);
 
   /* =====================================================
@@ -49,6 +53,34 @@ export default function Tallas() {
     const texto = busqueda.toLowerCase().trim();
     return talla.nombre.toLowerCase().includes(texto);
   });
+
+  /* =====================================================
+     PAGINACIÓN DE LA TABLA
+     ===================================================== */
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(tallasFiltradas.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const tallasPaginadas = tallasFiltradas.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR MODAL DE NUEVA TALLA
@@ -250,7 +282,7 @@ export default function Tallas() {
           <tbody>
 
             {tallasFiltradas.length > 0 ? (
-              tallasFiltradas.map((talla) => (
+              tallasPaginadas.map((talla) => (
 
                 <tr key={talla.id}>
 
@@ -317,6 +349,14 @@ export default function Tallas() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

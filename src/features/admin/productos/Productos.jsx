@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -13,6 +13,8 @@ import {
 
 import "./Productos.css";
 
+import Pagination from "../components/Pagination";
+
 export default function Productos() {
   // =====================================================
   // PRODUCTOS
@@ -23,7 +25,6 @@ export default function Productos() {
       id: "PROD-001",
       nombre: "Vestido de Noche Premium",
       categoria: "Vestidos",
-      marca: "La Mansión Collection",
       talla: "M",
       color: "Negro",
       precio: 485000,
@@ -37,7 +38,6 @@ export default function Productos() {
       id: "PROD-002",
       nombre: "Blazer Ejecutivo Femenino",
       categoria: "Blazers",
-      marca: "Elegance by LM",
       talla: "S",
       color: "Café",
       precio: 320000,
@@ -51,7 +51,6 @@ export default function Productos() {
       id: "PROD-003",
       nombre: "Traje Sastre Masculino",
       categoria: "Trajes",
-      marca: "Prestige Wear",
       talla: "L",
       color: "Negro",
       precio: 750000,
@@ -65,7 +64,6 @@ export default function Productos() {
       id: "PROD-004",
       nombre: "Abrigo Wool Premium",
       categoria: "Abrigos",
-      marca: "La Mansión Collection",
       talla: "M",
       color: "Beige",
       precio: 620000,
@@ -79,7 +77,6 @@ export default function Productos() {
       id: "PROD-005",
       nombre: "Vestido Cóctel Elegante",
       categoria: "Vestidos",
-      marca: "Elegance by LM",
       talla: "S",
       color: "Negro",
       precio: 395000,
@@ -93,7 +90,6 @@ export default function Productos() {
       id: "PROD-006",
       nombre: "Traje Oscuro Clásico",
       categoria: "Trajes",
-      marca: "Clásico Moderno",
       talla: "L",
       color: "Azul oscuro",
       precio: 890000,
@@ -107,7 +103,6 @@ export default function Productos() {
       id: "PROD-007",
       nombre: "Camiseta Básica",
       categoria: "Camisetas",
-      marca: "La Mansión Collection",
       talla: "M",
       color: "Blanco",
       precio: 95000,
@@ -121,7 +116,6 @@ export default function Productos() {
       id: "PROD-008",
       nombre: "Tenis Urbanos",
       categoria: "Tenis",
-      marca: "Prestige Wear",
       talla: "40",
       color: "Blanco",
       precio: 280000,
@@ -146,9 +140,6 @@ export default function Productos() {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   const [filtroCategoria, setFiltroCategoria] =
-    useState("Todos");
-
-  const [filtroMarca, setFiltroMarca] =
     useState("Todos");
 
   const [filtroTalla, setFiltroTalla] =
@@ -177,7 +168,6 @@ export default function Productos() {
     id: "",
     nombre: "",
     categoria: "",
-    marca: "",
     talla: "",
     color: "",
     precio: 0,
@@ -203,13 +193,6 @@ export default function Productos() {
     "Trajes",
     "Abrigos",
     "Busos"
-  ];
-
-  const marcas = [
-    "La Mansión Collection",
-    "Elegance by LM",
-    "Prestige Wear",
-    "Clásico Moderno"
   ];
 
   const tallas = [
@@ -264,10 +247,6 @@ export default function Productos() {
       filtroCategoria === "Todos" ||
       producto.categoria === filtroCategoria;
 
-    const coincideMarca =
-      filtroMarca === "Todos" ||
-      producto.marca === filtroMarca;
-
     const coincideTalla =
       filtroTalla === "Todos" ||
       producto.talla === filtroTalla;
@@ -279,11 +258,38 @@ export default function Productos() {
     return (
       coincideNombre &&
       coincideCategoria &&
-      coincideMarca &&
       coincideTalla &&
       coincideColor
     );
   });
+
+  // =====================================================
+  // PAGINACIÓN DE LA TABLA
+  // =====================================================
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(productosFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const productosPaginados = productosFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroCategoria, filtroTalla, filtroColor]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
   // =====================================================
   // ABRIR AGREGAR
@@ -298,7 +304,6 @@ export default function Productos() {
       id: `PROD-${numero}`,
       nombre: "",
       categoria: "",
-      marca: "",
       talla: "",
       color: "",
       precio: 0,
@@ -320,7 +325,6 @@ export default function Productos() {
       id: producto.id,
       nombre: producto.nombre,
       categoria: producto.categoria,
-      marca: producto.marca,
       talla: producto.talla,
       color: producto.color,
       precio: producto.precio,
@@ -352,7 +356,6 @@ export default function Productos() {
     if (
       !formulario.nombre.trim() ||
       !formulario.categoria ||
-      !formulario.marca ||
       !formulario.talla ||
       !formulario.color
     ) {
@@ -385,7 +388,6 @@ export default function Productos() {
       id: formulario.id,
       nombre: formulario.nombre,
       categoria: formulario.categoria,
-      marca: formulario.marca,
       talla: formulario.talla,
       color: formulario.color,
       precio: Number(formulario.precio),
@@ -486,7 +488,6 @@ export default function Productos() {
   const limpiarFiltros = () => {
     setBusqueda("");
     setFiltroCategoria("Todos");
-    setFiltroMarca("Todos");
     setFiltroTalla("Todos");
     setFiltroColor("Todos");
   };
@@ -597,32 +598,6 @@ export default function Productos() {
           </div>
 
           <div className="productos-filter-group">
-            <label>MARCA</label>
-
-            <select
-              value={filtroMarca}
-              onChange={(e) =>
-                setFiltroMarca(
-                  e.target.value
-                )
-              }
-            >
-              <option value="Todos">
-                Todas
-              </option>
-
-              {marcas.map((marca) => (
-                <option
-                  key={marca}
-                  value={marca}
-                >
-                  {marca}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="productos-filter-group">
             <label>TALLA</label>
 
             <select
@@ -715,13 +690,7 @@ export default function Productos() {
           <thead>
             <tr>
               <th>ID PRODUCTO</th>
-              <th>IMAGEN</th>
               <th>NOMBRE</th>
-              <th>CATEGORÍA</th>
-              <th>MARCA</th>
-              <th>TALLA</th>
-              <th>COLOR</th>
-              <th>PRECIO</th>
               <th>STOCK</th>
               <th>ESTADO</th>
               <th>ACCIONES</th>
@@ -730,7 +699,7 @@ export default function Productos() {
 
           <tbody>
 
-            {productosFiltrados.map((producto) => (
+            {productosPaginados.map((producto) => (
               <tr key={producto.id}>
 
                 <td>
@@ -740,49 +709,9 @@ export default function Productos() {
                 </td>
 
                 <td>
-                  <img
-                    className="producto-image"
-                    src={producto.imagen}
-                    alt={producto.nombre}
-                  />
-                </td>
-
-                <td>
                   <span className="producto-nombre">
                     {producto.nombre}
                   </span>
-                </td>
-
-                <td>
-                  <span className="producto-secondary">
-                    {producto.categoria}
-                  </span>
-                </td>
-
-                <td>
-                  <span className="producto-secondary">
-                    {producto.marca}
-                  </span>
-                </td>
-
-                <td>
-                  <span className="producto-secondary">
-                    {producto.talla}
-                  </span>
-                </td>
-
-                <td>
-                  <span className="producto-secondary">
-                    {producto.color}
-                  </span>
-                </td>
-
-                <td>
-                  <strong className="producto-price">
-                    {formatearPrecio(
-                      producto.precio
-                    )}
-                  </strong>
                 </td>
 
                 <td>
@@ -885,7 +814,7 @@ export default function Productos() {
             {productosFiltrados.length === 0 && (
               <tr>
                 <td
-                  colSpan="11"
+                  colSpan="5"
                   className="productos-empty"
                 >
                   No se encontraron productos.
@@ -896,6 +825,14 @@ export default function Productos() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 
@@ -1019,35 +956,6 @@ export default function Productos() {
                         value={categoria}
                       >
                         {categoria}
-                      </option>
-                    ))}
-                  </select>
-
-                </div>
-
-                <div className="producto-form-group">
-
-                  <label>MARCA</label>
-
-                  <select
-                    value={formulario.marca}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "marca",
-                        e.target.value
-                      )
-                    }
-                  >
-                    <option value="">
-                      Seleccionar marca
-                    </option>
-
-                    {marcas.map((marca) => (
-                      <option
-                        key={marca}
-                        value={marca}
-                      >
-                        {marca}
                       </option>
                     ))}
                   </select>
@@ -1299,16 +1207,6 @@ export default function Productos() {
 
                     <div className="producto-info-value">
                       {productoSeleccionado.categoria}
-                    </div>
-
-                  </div>
-
-                  <div className="producto-info-group">
-
-                    <label>MARCA</label>
-
-                    <div className="producto-info-value">
-                      {productoSeleccionado.marca}
                     </div>
 
                   </div>

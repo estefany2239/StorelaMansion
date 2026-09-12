@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import "./Domicilios.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Domicilios() {
 
@@ -69,7 +71,46 @@ export default function Domicilios() {
       responsable: "Andrés López",
       estado: "En camino",
       fecha: "2024-07-26"
-    }
+    },
+
+    {
+      id: "DOM-005",
+      idPedido: "PED-005",
+      idCliente: "CLI-005",
+      cliente: "Santiago Gómez",
+      direccion: "Calle 10 #20-15",
+      ciudad: "Medellín",
+      valor: 16000,
+      responsable: "Carlos Rodríguez",
+      estado: "Pendiente",
+      fecha: "2024-08-02"
+    },
+
+    {
+      id: "DOM-006",
+      idPedido: "PED-006",
+      idCliente: "CLI-006",
+      cliente: "Marcela Ríos",
+      direccion: "Carrera 45 #22-40",
+      ciudad: "Cali",
+      valor: 18000,
+      responsable: "Andrés López",
+      estado: "En camino",
+      fecha: "2024-08-06"
+    },
+
+    {
+      id: "DOM-007",
+      idPedido: "PED-007",
+      idCliente: "CLI-007",
+      cliente: "Diego Muñoz",
+      direccion: "Av. 68 #55-10",
+      ciudad: "Bogotá",
+      valor: 20000,
+      responsable: "Carlos Rodríguez",
+      estado: "Entregado",
+      fecha: "2024-08-11"
+    },
   ]);
 
 
@@ -241,6 +282,35 @@ export default function Domicilios() {
 
     }
   );
+
+
+  // =====================================================
+  // PAGINACIÓN DE LA TABLA
+  // =====================================================
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(domiciliosFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const domiciliosPaginados = domiciliosFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroCliente, filtroEstado]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
 
   // =====================================================
@@ -885,19 +955,7 @@ export default function Domicilios() {
               </th>
 
               <th>
-                ID PEDIDO
-              </th>
-
-              <th>
-                ID CLIENTE
-              </th>
-
-              <th>
                 CLIENTE
-              </th>
-
-              <th>
-                DIRECCIÓN
               </th>
 
               <th>
@@ -906,10 +964,6 @@ export default function Domicilios() {
 
               <th>
                 ESTADO
-              </th>
-
-              <th>
-                FECHA
               </th>
 
               <th>
@@ -923,7 +977,7 @@ export default function Domicilios() {
 
           <tbody>
 
-            {domiciliosFiltrados.map(
+            {domiciliosPaginados.map(
               (domicilio) => (
 
                 <tr
@@ -941,35 +995,8 @@ export default function Domicilios() {
 
                   <td>
 
-                    <span className="domicilio-id-relacion">
-                      {domicilio.idPedido}
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="domicilio-id-relacion">
-                      {domicilio.idCliente}
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
                     <span className="domicilio-cliente">
                       {domicilio.cliente}
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="domicilio-direccion">
-                      {domicilio.direccion}
                     </span>
 
                   </td>
@@ -1014,17 +1041,6 @@ export default function Domicilios() {
 
                       {domicilio.estado}
 
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="domicilio-fecha">
-                      {formatearFecha(
-                        domicilio.fecha
-                      )}
                     </span>
 
                   </td>
@@ -1105,7 +1121,7 @@ export default function Domicilios() {
               <tr>
 
                 <td
-                  colSpan="9"
+                  colSpan="5"
                   className="domicilios-empty"
                 >
 
@@ -1120,6 +1136,14 @@ export default function Domicilios() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

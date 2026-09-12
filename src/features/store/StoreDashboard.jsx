@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sun,
   Moon,
@@ -19,27 +19,38 @@ import {
   CheckCircle,
   Truck,
   Smartphone,
-  Building2
+  Building2,
+  Wallet
 } from "lucide-react";
 
 import "./StoreDashboard.css";
 import CategoryProductsView from "../categories/CategoryProductsView";
+import MisPedidos from "./MisPedidos";
+import Configuracion from "./Configuracion";
+import { pedidosClienteIniciales } from "./pedidosCliente";
+import {
+  cargarPerfilCliente,
+  cargarDireccionesCliente,
+  cargarPreferenciasCliente
+} from "./configuracionCliente";
 
 // Importación de la imagen para el banner principal
 import bannerImage from "../../assets/img/web.png";
 
-const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
+const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Estados globales de navegación y tienda
-  const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" | "products" | "favorites" | "cart" | "checkout" | "success"
+  const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" | "products" | "favorites" | "cart" | "checkout" | "success" | "mis-pedidos" | "configuracion"
   const [selectedCategory, setSelectedCategory] = useState(null);
   
   // Estados de Pago / Checkout
   const [paymentMethod, setPaymentMethod] = useState("nequi");
   const [shippingAddress, setShippingAddress] = useState("");
   const [phoneNequi, setPhoneNequi] = useState("");
+  const [tipoPago, setTipoPago] = useState("completo"); // "completo" | "parcial"
+  const [montoAbono, setMontoAbono] = useState("");
 
   const [cart, setCart] = useState(() => {
     return JSON.parse(localStorage.getItem('cart')) || [];
@@ -48,6 +59,39 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
   const [favorites, setFavorites] = useState(() => {
     return JSON.parse(localStorage.getItem('favorites')) || [];
   });
+
+  // Pedidos del cliente: mock iniciales + pedidos nuevos guardados en localStorage
+  const [pedidosCliente, setPedidosCliente] = useState(() => {
+    const guardados = JSON.parse(localStorage.getItem('pedidosCliente'));
+    return guardados && guardados.length > 0 ? guardados : pedidosClienteIniciales;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('pedidosCliente', JSON.stringify(pedidosCliente));
+  }, [pedidosCliente]);
+
+  // Configuración del cliente: perfil, direcciones y preferencias en localStorage
+  const [perfilCliente, setPerfilCliente] = useState(() =>
+    cargarPerfilCliente(user)
+  );
+  const [direccionesCliente, setDireccionesCliente] = useState(() =>
+    cargarDireccionesCliente()
+  );
+  const [preferenciasCliente, setPreferenciasCliente] = useState(() =>
+    cargarPreferenciasCliente()
+  );
+
+  useEffect(() => {
+    localStorage.setItem('perfilCliente', JSON.stringify(perfilCliente));
+  }, [perfilCliente]);
+
+  useEffect(() => {
+    localStorage.setItem('direccionesCliente', JSON.stringify(direccionesCliente));
+  }, [direccionesCliente]);
+
+  useEffect(() => {
+    localStorage.setItem('preferenciasCliente', JSON.stringify(preferenciasCliente));
+  }, [preferenciasCliente]);
 
   const handleAddToCart = (product) => {
     setCart(prevCart => {
@@ -110,6 +154,10 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
     { id: "accesorios", title: "Accesorios", image: new URL("../../assets/img/reloj.png", import.meta.url).href },
   ];
 
+  const misPedidos = pedidosCliente.filter(
+    (pedido) => pedido.clienteEmail === user?.email
+  );
+
   const handleLogout = () => {
     alert("Sesión cerrada");
     setShowProfileMenu(false);
@@ -136,9 +184,22 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
 
   const totalCartItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const formattedTotalPrice = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(calculateTotal());
+  const formattedMontoAbono = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(montoAbono) || 0);
 
   const handleProcessCheckout = (e) => {
     e.preventDefault();
+    const total = calculateTotal();
+    const montoNum = Number(montoAbono);
+    if (tipoPago === "parcial") {
+      if (!montoAbono.trim() || isNaN(montoNum) || montoNum <= 0) {
+        alert("Por favor ingresa un monto válido para el abono.");
+        return;
+      }
+      if (montoNum > total) {
+        alert("El monto del abono no puede ser mayor al total del pedido.");
+        return;
+      }
+    }
     if (!shippingAddress.trim()) {
       alert("Por favor ingresa una dirección de envío.");
       return;
@@ -147,6 +208,35 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
       alert("Por favor ingresa tu número celular de Nequi.");
       return;
     }
+    const montoPagado = tipoPago === "completo" ? total : montoNum;
+    const metodoPagoLabel = {
+      nequi: "Nequi",
+      bancolombia: "Bancolombia",
+      card: "Tarjeta",
+      cash: "Contra entrega"
+    }[paymentMethod];
+    const fechaHoy = new Date().toISOString().split("T")[0];
+    const nuevoPedido = {
+      id: `PED-${Date.now()}`,
+      clienteEmail: user?.email,
+      fecha: fechaHoy,
+      estado: "En proceso",
+      mensajeEstado: "Estamos preparando tu pedido.",
+      estimadoEntrega: "Nos comunicaremos contigo pronto.",
+      productos: cart.map((item) => ({
+        nombre: item.name || item.title,
+        imagen: item.image,
+        cantidad: item.quantity || 1,
+        talla: item.talla || item.size || "-",
+        color: item.color || "-",
+        precio: Number(String(item.price).replace(/[^0-9]/g, '')) || 0
+      })),
+      total,
+      abonos: [
+        { fecha: fechaHoy, valor: montoPagado, metodoPago: metodoPagoLabel }
+      ]
+    };
+    setPedidosCliente((prev) => [nuevoPedido, ...prev]);
     setCurrentView("success");
     setCart([]);
     localStorage.removeItem('cart');
@@ -197,13 +287,13 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
             {showProfileMenu && (
               <div className="profile-dropdown-card">
                 <div className="profile-header-info">
-                  <p className="profile-welcome">Hola,</p>
-                  <p className="profile-email">estefany@lamansion.com</p>
+                  <p className="profile-welcome">Hola, {user?.nombre}</p>
+                  <p className="profile-email">{user?.email}</p>
                 </div>
                 <div className="profile-divider"></div>
                 <ul className="profile-options-list">
-                  <li onClick={() => setShowProfileMenu(false)}><Package size={16} /><span>Mis pedidos</span></li>
-                  <li onClick={() => setShowProfileMenu(false)}><Settings size={16} /><span>Configuración</span></li>
+                  <li className={currentView === "mis-pedidos" ? "profile-option-active" : ""} onClick={() => { setCurrentView("mis-pedidos"); setShowProfileMenu(false); }}><Package size={16} /><span>Mis pedidos</span></li>
+                  <li className={currentView === "configuracion" ? "profile-option-active" : ""} onClick={() => { setCurrentView("configuracion"); setShowProfileMenu(false); }}><Settings size={16} /><span>Configuración</span></li>
                   <li className="logout-option" onClick={handleLogout}><LogOut size={16} /><span>Salir de la cuenta</span></li>
                 </ul>
               </div>
@@ -488,12 +578,73 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
                 </div>
               )}
 
+              <div className="checkout-field-group">
+                <label className="checkout-label">
+                  <Wallet size={18} /> ¿Cuánto vas a pagar?
+                </label>
+
+                <div className="payment-methods-grid">
+                  <div
+                    className={`payment-option-card ${tipoPago === 'completo' ? 'selected' : ''}`}
+                    onClick={() => setTipoPago('completo')}
+                  >
+                    <CreditCard size={22} color="#c9a227" />
+                    <span>Pagar el total</span>
+                  </div>
+
+                  <div
+                    className={`payment-option-card ${tipoPago === 'parcial' ? 'selected' : ''}`}
+                    onClick={() => setTipoPago('parcial')}
+                  >
+                    <Wallet size={22} color="#c9a227" />
+                    <span>Abonar una parte</span>
+                  </div>
+                </div>
+              </div>
+
+              {tipoPago === 'parcial' && (
+                <div className="payment-extra-box">
+                  <p className="payment-instructions">
+                    Total del pedido: {formattedTotalPrice}. ¿Cuánto deseas abonar hoy?
+                  </p>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ej. 150000"
+                    value={montoAbono}
+                    onChange={(e) => setMontoAbono(e.target.value)}
+                    className="checkout-text-input"
+                  />
+                </div>
+              )}
+
               <button type="submit" className="checkout-submit-btn">
-                Confirmar y Pagar {formattedTotalPrice}
+                {tipoPago === "completo"
+                  ? `Confirmar y Pagar ${formattedTotalPrice}`
+                  : `Confirmar y Abonar ${formattedMontoAbono}`}
               </button>
             </form>
           </div>
         </div>
+      ) : currentView === "mis-pedidos" ? (
+        <MisPedidos
+          pedidos={misPedidos}
+          onBack={handleBackToDashboard}
+        />
+      ) : currentView === "configuracion" ? (
+        <Configuracion
+          user={user}
+          theme={theme}
+          onToggleTheme={onToggleTheme}
+          onLogout={handleLogout}
+          onBack={handleBackToDashboard}
+          perfilCliente={perfilCliente}
+          setPerfilCliente={setPerfilCliente}
+          direccionesCliente={direccionesCliente}
+          setDireccionesCliente={setDireccionesCliente}
+          preferenciasCliente={preferenciasCliente}
+          setPreferenciasCliente={setPreferenciasCliente}
+        />
       ) : (
         <div className="category-catalog-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }}>
           <div style={{ textAlign: 'center', maxWidth: '450px', padding: '40px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px' }}>
@@ -502,8 +653,8 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout }) => {
             <p style={{ opacity: 0.8, marginBottom: '25px', lineHeight: '1.5' }}>
               Muchas gracias por tu compra en **La Mansión Store**. Tu pedido está siendo procesado y llegará pronto a tu dirección.
             </p>
-            <button onClick={handleBackToDashboard} className="checkout-submit-btn">
-              Volver al inicio
+            <button onClick={() => setCurrentView("mis-pedidos")} className="checkout-submit-btn">
+              Ver mis pedidos
             </button>
           </div>
         </div>

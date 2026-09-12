@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 
 import "./Categorias.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Categorias() {
 
@@ -21,7 +23,9 @@ export default function Categorias() {
     { id: "CAT-002", nombre: "Gorras", descripcion: "Gorras y viseras de diferentes estilos.", estado: "Activo", enUso: true },
     { id: "CAT-003", nombre: "Relojes", descripcion: "Relojes de pulso ejecutivos y deportivos.", estado: "Activo", enUso: true },
     { id: "CAT-004", nombre: "Pantalones", descripcion: "Jeans y pantalones de vestir.", estado: "Activo", enUso: false },
-    { id: "CAT-005", nombre: "Busos", descripcion: "Busos y sudaderas con capota.", estado: "Inactivo", enUso: false }
+    { id: "CAT-005", nombre: "Busos", descripcion: "Busos y sudaderas con capota.", estado: "Inactivo", enUso: false },
+    { id: "CAT-006", nombre: "Tenis", descripcion: "Tenis urbanos y deportivos.", estado: "Activo", enUso: false },
+    { id: "CAT-007", nombre: "Blazers", descripcion: "Blazers para hombre y mujer.", estado: "Activo", enUso: false }
   ]);
 
   /* =====================================================
@@ -51,6 +55,34 @@ export default function Categorias() {
     const texto = busqueda.toLowerCase().trim();
     return categoria.nombre.toLowerCase().includes(texto);
   });
+
+  /* =====================================================
+     PAGINACIÓN DE LA TABLA
+     ===================================================== */
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(categoriasFiltradas.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const categoriasPaginadas = categoriasFiltradas.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR MODAL DE NUEVA CATEGORÍA
@@ -270,10 +302,6 @@ export default function Categorias() {
               </th>
 
               <th>
-                DESCRIPCIÓN
-              </th>
-
-              <th>
                 ESTADO
               </th>
 
@@ -288,7 +316,7 @@ export default function Categorias() {
           <tbody>
 
             {categoriasFiltradas.length > 0 ? (
-              categoriasFiltradas.map((categoria) => (
+              categoriasPaginadas.map((categoria) => (
 
                 <tr key={categoria.id}>
 
@@ -301,12 +329,6 @@ export default function Categorias() {
                   <td>
                     <span className="categoria-nombre">
                       {categoria.nombre}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="categoria-descripcion">
-                      {categoria.descripcion}
                     </span>
                   </td>
 
@@ -386,7 +408,7 @@ export default function Categorias() {
               <tr>
 
                 <td
-                  colSpan="5"
+                  colSpan="4"
                   className="categorias-empty"
                 >
                   No se encontraron categorías.
@@ -398,6 +420,14 @@ export default function Categorias() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

@@ -13,7 +13,6 @@ import {
   Moon,
   ChevronDown,
   Tags,
-  BadgeCheck,
   Ruler,
   Palette
 } from "lucide-react";
@@ -23,7 +22,6 @@ import Roles from "./roles/Roles";
 import Usuarios from "./usuarios/Usuarios";
 import Productos from "./productos/Productos";
 import Categorias from "./categorias/Categorias";
-import Marcas from "./marcas/Marcas";
 import Tallas from "./tallas/Tallas";
 import Colores from "./colores/Colores";
 import Ventas from "./ventas/Ventas";
@@ -87,11 +85,6 @@ export default function AdminLayout({ user, onLogout }) {
       nombre: "Categorías",
       vista: "categorias",
       icono: Tags
-    },
-    {
-      nombre: "Marcas",
-      vista: "marcas",
-      icono: BadgeCheck
     },
     {
       nombre: "Tallas",
@@ -194,9 +187,6 @@ export default function AdminLayout({ user, onLogout }) {
 
       case "categorias":
         return <Categorias />;
-
-      case "marcas":
-        return <Marcas />;
 
       case "tallas":
         return <Tallas />;

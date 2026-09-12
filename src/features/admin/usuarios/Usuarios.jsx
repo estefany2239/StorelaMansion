@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 
 import "./Usuarios.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Usuarios() {
 
@@ -89,6 +91,35 @@ export default function Usuarios() {
       estado: "Inactivo",
       fecha: "2024-05-18",
       direccion: "Calle 10 #20-15, Medellín",
+      permisos: [
+        "Gestionar pedidos"
+      ]
+    },
+
+    {
+      id: "USR-006",
+      nombre: "Marcela Ríos",
+      correo: "marcela@email.com",
+      rol: "Vendedor",
+      telefono: "+57 318 555 0006",
+      estado: "Activo",
+      fecha: "2024-06-10",
+      direccion: "Carrera 45 #22-40, Cali",
+      permisos: [
+        "Gestionar ventas",
+        "Gestionar pedidos"
+      ]
+    },
+
+    {
+      id: "USR-007",
+      nombre: "Diego Muñoz",
+      correo: "diego@email.com",
+      rol: "Cliente",
+      telefono: "+57 320 555 0007",
+      estado: "Inactivo",
+      fecha: "2024-06-25",
+      direccion: "Av. 68 #55-10, Bogotá",
       permisos: [
         "Gestionar pedidos"
       ]
@@ -213,6 +244,34 @@ export default function Usuarios() {
       );
 
     });
+
+  // =====================================================
+  // PAGINACIÓN DE LA TABLA
+  // =====================================================
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(usuariosFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const usuariosPaginados = usuariosFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
   // =====================================================
   // ABRIR AGREGAR
@@ -589,23 +648,11 @@ export default function Usuarios() {
               </th>
 
               <th>
-                CORREO
-              </th>
-
-              <th>
                 ROL
               </th>
 
               <th>
-                TELÉFONO
-              </th>
-
-              <th>
                 ESTADO
-              </th>
-
-              <th>
-                FECHA
               </th>
 
               <th>
@@ -618,7 +665,7 @@ export default function Usuarios() {
 
           <tbody>
 
-            {usuariosFiltrados.map(
+            {usuariosPaginados.map(
               (usuario) => (
 
                 <tr
@@ -643,24 +690,8 @@ export default function Usuarios() {
 
                   <td>
 
-                    <span className="usuario-correo">
-                      {usuario.correo}
-                    </span>
-
-                  </td>
-
-                  <td>
-
                     <span className="usuario-rol">
                       {usuario.rol}
-                    </span>
-
-                  </td>
-
-                  <td>
-
-                    <span className="usuario-telefono">
-                      {usuario.telefono}
                     </span>
 
                   </td>
@@ -696,16 +727,6 @@ export default function Usuarios() {
                       </span>
 
                     </label>
-
-                  </td>
-
-                  <td>
-
-                    <span className="usuario-fecha">
-                      {formatearFecha(
-                        usuario.fecha
-                      )}
-                    </span>
 
                   </td>
 
@@ -762,7 +783,7 @@ export default function Usuarios() {
               <tr>
 
                 <td
-                  colSpan="8"
+                  colSpan="5"
                   className="usuarios-empty"
                 >
 
@@ -777,6 +798,14 @@ export default function Usuarios() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -10,6 +10,8 @@ import {
 
 import "./Colores.css";
 
+import Pagination from "../components/Pagination";
+
 export default function Colores() {
 
   /* =====================================================
@@ -20,7 +22,10 @@ export default function Colores() {
     { id: "COL-001", nombre: "Negro", enUso: true },
     { id: "COL-002", nombre: "Blanco", enUso: true },
     { id: "COL-003", nombre: "Café", enUso: true },
-    { id: "COL-004", nombre: "Beige", enUso: false }
+    { id: "COL-004", nombre: "Beige", enUso: false },
+    { id: "COL-005", nombre: "Gris", enUso: false },
+    { id: "COL-006", nombre: "Azul", enUso: false },
+    { id: "COL-007", nombre: "Rojo", enUso: false }
   ]);
 
   /* =====================================================
@@ -48,6 +53,34 @@ export default function Colores() {
     const texto = busqueda.toLowerCase().trim();
     return color.nombre.toLowerCase().includes(texto);
   });
+
+  /* =====================================================
+     PAGINACIÓN DE LA TABLA
+     ===================================================== */
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(coloresFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const coloresPaginados = coloresFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR MODAL DE NUEVO COLOR
@@ -249,7 +282,7 @@ export default function Colores() {
           <tbody>
 
             {coloresFiltrados.length > 0 ? (
-              coloresFiltrados.map((color) => (
+              coloresPaginados.map((color) => (
 
                 <tr key={color.id}>
 
@@ -316,6 +349,14 @@ export default function Colores() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

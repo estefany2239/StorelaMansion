@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 
 import "./Ventas.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Ventas() {
 
@@ -96,6 +98,57 @@ export default function Ventas() {
           nombre: "Camiseta Clásica",
           cantidad: 1,
           precio: 135000
+        }
+      ]
+    },
+
+    {
+      id: "V-00121",
+      cliente: "María García",
+      fecha: "2026-08-28",
+      total: 620000,
+      metodoPago: "Tarjeta de crédito",
+      estado: "Cerrada",
+
+      productos: [
+        {
+          nombre: "Abrigo Wool Premium",
+          cantidad: 1,
+          precio: 620000
+        }
+      ]
+    },
+
+    {
+      id: "V-00120",
+      cliente: "Valentina Torres",
+      fecha: "2026-08-21",
+      total: 280000,
+      metodoPago: "Efectivo",
+      estado: "Cerrada",
+
+      productos: [
+        {
+          nombre: "Tenis Urbanos",
+          cantidad: 1,
+          precio: 280000
+        }
+      ]
+    },
+
+    {
+      id: "V-00119",
+      cliente: "Sofía Martínez",
+      fecha: "2026-08-15",
+      total: 340000,
+      metodoPago: "Transferencia",
+      estado: "Anulada",
+
+      productos: [
+        {
+          nombre: "Vestido Cóctel Elegante",
+          cantidad: 1,
+          precio: 340000
         }
       ]
     }
@@ -218,6 +271,35 @@ export default function Ventas() {
     );
 
   });
+
+
+  // =========================================================
+  // PAGINACIÓN DE LA TABLA
+  // =========================================================
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(ventasFiltradas.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const ventasPaginadas = ventasFiltradas.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroFecha, filtroEstado]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
 
   // =========================================================
@@ -599,15 +681,7 @@ export default function Ventas() {
               </th>
 
               <th>
-                FECHA
-              </th>
-
-              <th>
                 TOTAL
-              </th>
-
-              <th>
-                MÉTODO DE PAGO
               </th>
 
               <th>
@@ -625,7 +699,7 @@ export default function Ventas() {
 
           <tbody>
 
-            {ventasFiltradas.map(
+            {ventasPaginadas.map(
               (venta) => (
 
                 <tr
@@ -655,19 +729,6 @@ export default function Ventas() {
                   </td>
 
 
-                  {/* FECHA */}
-
-                  <td>
-
-                    <span className="venta-fecha">
-                      {formatearFecha(
-                        venta.fecha
-                      )}
-                    </span>
-
-                  </td>
-
-
                   {/* TOTAL */}
 
                   <td>
@@ -677,17 +738,6 @@ export default function Ventas() {
                         venta.total
                       )}
                     </strong>
-
-                  </td>
-
-
-                  {/* MÉTODO */}
-
-                  <td>
-
-                    <span className="venta-metodo">
-                      {venta.metodoPago}
-                    </span>
 
                   </td>
 
@@ -753,7 +803,7 @@ export default function Ventas() {
               <tr>
 
                 <td
-                  colSpan="7"
+                  colSpan="5"
                   className="ventas-empty"
                 >
 
@@ -768,6 +818,14 @@ export default function Ventas() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

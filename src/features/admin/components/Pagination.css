@@ -1,0 +1,100 @@
+/* =========================================================
+   PAGINACIÓN - PANEL ADMINISTRATIVO
+   ========================================================= */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  box-sizing: border-box;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pagination-button,
+.pagination-number {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pagination-button {
+  width: 38px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.pagination-button:hover:not(:disabled),
+.pagination-number:hover:not(.active) {
+  background: #f7f3ea;
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
+
+.pagination-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination-number.active {
+  background: #D4AF37;
+  border-color: #D4AF37;
+  color: #111111;
+  font-weight: 600;
+}
+
+.pagination-ellipsis {
+  color: #858585;
+  padding: 0 3px;
+  font-size: 14px;
+}
+
+/* =========================================================
+   MODO OSCURO DEL PANEL ADMINISTRATIVO
+   ========================================================= */
+
+.admin-container.admin-dark .pagination-button,
+.admin-container.admin-dark .pagination-number {
+  background: #171717 !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+  color: #e6e6e6 !important;
+}
+
+.admin-container.admin-dark .pagination-button:hover:not(:disabled),
+.admin-container.admin-dark .pagination-number:hover:not(.active) {
+  background: rgba(194, 168, 120, 0.10) !important;
+  border-color: rgba(194, 168, 120, 0.45) !important;
+  color: #d4bc94 !important;
+}
+
+.admin-container.admin-dark .pagination-number.active {
+  background: #D4AF37 !important;
+  border-color: #D4AF37 !important;
+  color: #111111 !important;
+}
+
+.admin-container.admin-dark .pagination-ellipsis {
+  color: #858585 !important;
+}

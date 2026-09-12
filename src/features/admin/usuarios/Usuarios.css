@@ -135,9 +135,23 @@
 
 .usuarios-table {
   width: 100%;
-  min-width: 1050px;
+  min-width: 680px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
+
+/* DISTRIBUCIÓN: ID | NOMBRE | ROL | ESTADO | ACCIONES */
+.usuarios-table th:nth-child(1) { width: 11%; }
+.usuarios-table th:nth-child(2) { width: 33%; }
+.usuarios-table th:nth-child(3) { width: 24%; }
+.usuarios-table th:nth-child(4) { width: 18%; }
+.usuarios-table th:nth-child(5) { width: 14%; }
+
+.usuarios-table th:nth-child(4),
+.usuarios-table td:nth-child(4) { text-align: center; }
+
+.usuarios-table th:nth-child(5),
+.usuarios-table td:nth-child(5) { text-align: center; }
 
 
 .usuarios-table th {
@@ -154,8 +168,8 @@
 
 
 .usuarios-table td {
-  min-height: 76px;
-  padding: 16px;
+  height: 72px;
+  padding: 0 16px;
   vertical-align: middle;
   border-bottom: 1px solid #e8e8e8;
   font-size: 14px;
@@ -187,9 +201,15 @@
    CELDA: NOMBRE
    ========================================================= */
 
+.usuarios-table .usuario-nombre {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .usuario-nombre {
   display: block;
-  max-width: 180px;
   color: #111111;
   font-size: 14px;
   font-weight: 500;
@@ -318,6 +338,7 @@
 .usuarios-table .usuario-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 

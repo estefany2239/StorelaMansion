@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Plus,
@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 
 import "./Clientes.css";
+
+import Pagination from "../components/Pagination";
 
 export default function Clientes() {
 
@@ -63,14 +65,36 @@ export default function Clientes() {
     },
 
     {
-      id: "CLI-005",
+id: "CLI-005",
       nombre: "Santiago Gómez",
       correo: "santiago@email.com",
       telefono: "+57 311 555 0005",
-      direccion: "Itagüí, Antioquia",
+      direccion: "Calle 10 #20-15, Medellín",
       estado: "Inactivo",
       fecha: "2024-05-18",
-      pedidos: 2
+      pedidos: 0
+    },
+
+    {
+      id: "CLI-006",
+      nombre: "Marcela Ríos",
+      correo: "marcela@email.com",
+      telefono: "+57 318 555 0006",
+      direccion: "Carrera 45 #22-40, Cali",
+      estado: "Activo",
+      fecha: "2024-06-10",
+      pedidos: 3
+    },
+
+    {
+      id: "CLI-007",
+      nombre: "Diego Muñoz",
+      correo: "diego@email.com",
+      telefono: "+57 320 555 0007",
+      direccion: "Av. 68 #55-10, Bogotá",
+      estado: "Inactivo",
+      fecha: "2024-06-25",
+      pedidos: 0
     }
   ]);
 
@@ -141,6 +165,34 @@ export default function Clientes() {
 
     }
   );
+
+  // =====================================================
+  // PAGINACIÓN DE LA TABLA
+  // =====================================================
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(clientesFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const clientesPaginados = clientesFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
 
   // =====================================================
@@ -555,15 +607,7 @@ export default function Clientes() {
               </th>
 
               <th>
-                TELÉFONO
-              </th>
-
-              <th>
                 ESTADO
-              </th>
-
-              <th>
-                FECHA
               </th>
 
               <th>
@@ -577,7 +621,7 @@ export default function Clientes() {
 
           <tbody>
 
-            {clientesFiltrados.map(
+            {clientesPaginados.map(
               (cliente) => (
 
                 <tr
@@ -606,15 +650,6 @@ export default function Clientes() {
 
                     <span className="cliente-correo">
                       {cliente.correo}
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="cliente-telefono">
-                      {cliente.telefono}
                     </span>
 
                   </td>
@@ -667,17 +702,6 @@ export default function Clientes() {
                       </span>
 
                     </button>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="cliente-fecha">
-                      {formatearFecha(
-                        cliente.fecha
-                      )}
-                    </span>
 
                   </td>
 
@@ -747,7 +771,7 @@ export default function Clientes() {
               <tr>
 
                 <td
-                  colSpan="7"
+                  colSpan="5"
                   className="clientes-empty"
                 >
 
@@ -762,6 +786,14 @@ export default function Clientes() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

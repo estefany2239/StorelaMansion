@@ -1,0 +1,627 @@
+/* =========================================================
+   CONFIGURACIÓN DEL CLIENTE - STORE LA MANSIÓN
+   ========================================================= */
+
+.configuracion-section {
+  width: 100%;
+  min-height: calc(100vh - 84px);
+  padding: 40px 30px 80px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.configuracion-wrap {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.cfg-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: var(--gold);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cfg-back-btn:hover {
+  color: var(--gold-light);
+  transform: translateX(-3px);
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.configuracion-header {
+  margin-bottom: 28px;
+}
+
+.cfg-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.cfg-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.cfg-subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.cfg-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cfg-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.cfg-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.cfg-card-head svg {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.cfg-card-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   FORMULARIO / INPUTS
+   ========================================================= */
+
+.cfg-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.cfg-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.cfg-field-grid .cfg-form-group {
+  margin-bottom: 14px;
+}
+
+.cfg-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cfg-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.cfg-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.cfg-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.cfg-password-wrap {
+  position: relative;
+}
+
+.cfg-password-wrap .cfg-input {
+  padding-right: 42px;
+}
+
+.cfg-eye-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.cfg-eye-btn:hover {
+  color: var(--gold);
+}
+
+.cfg-error {
+  margin: -4px 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e85d5d;
+}
+
+.cfg-form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
+.cfg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cfg-btn-primary {
+  border: none;
+  background-color: var(--gold);
+  color: #000000;
+}
+
+.cfg-btn-primary:hover {
+  background-color: var(--gold-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.28);
+}
+
+.cfg-btn-outline {
+  border: 1px solid var(--border-color);
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.cfg-btn-outline:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.cfg-btn-danger-outline {
+  border: 1px solid rgba(232, 93, 93, 0.55);
+  background-color: transparent;
+  color: #e85d5d;
+}
+
+.cfg-btn-danger-outline:hover {
+  background-color: rgba(232, 93, 93, 0.1);
+  border-color: #e85d5d;
+}
+
+.cfg-btn-danger {
+  border: none;
+  background-color: #c94a4a;
+  color: #ffffff;
+}
+
+.cfg-btn-danger:hover {
+  background-color: #b53f3f;
+}
+
+/* =========================================================
+   DIRECCIONES
+   ========================================================= */
+
+.cfg-direcciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cfg-direccion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-main);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.35s ease;
+}
+
+.cfg-direccion.predeterminada {
+  border-color: var(--gold);
+  background-color: rgba(212, 175, 55, 0.06);
+}
+
+.cfg-direccion-info {
+  min-width: 0;
+}
+
+.cfg-direccion-etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.cfg-direccion-etiqueta strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cfg-badge-default {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 30px;
+  background-color: rgba(212, 175, 55, 0.16);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.cfg-direccion-info p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.cfg-direccion-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cfg-addr-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cfg-addr-btn:hover {
+  background-color: rgba(212, 175, 55, 0.12);
+  color: var(--gold);
+}
+
+.cfg-addr-btn.danger:hover {
+  background-color: rgba(232, 93, 93, 0.12);
+  color: #e85d5d;
+}
+
+.cfg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 16px;
+  margin-bottom: 16px;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.cfg-empty svg {
+  color: var(--gold);
+}
+
+.cfg-empty p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cfg-empty span {
+  font-size: 12.5px;
+}
+
+.cfg-direccion-form {
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-main);
+  margin-bottom: 16px;
+}
+
+.cfg-add-address {
+  width: 100%;
+}
+
+/* =========================================================
+   PREFERENCIAS
+   ========================================================= */
+
+.cfg-preferencias {
+  display: flex;
+  flex-direction: column;
+}
+
+.cfg-pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 4px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cfg-pref-row:last-child {
+  border-bottom: none;
+}
+
+.cfg-pref-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.cfg-pref-desc {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.cfg-switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--border-color);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.25s ease;
+}
+
+.cfg-switch .cfg-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--card-bg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s ease;
+}
+
+.cfg-switch.on {
+  background-color: var(--gold);
+}
+
+.cfg-switch.on .cfg-switch-knob {
+  transform: translateX(20px);
+}
+
+/* =========================================================
+   ZONA DE CUENTA
+   ========================================================= */
+
+.cfg-account-card .cfg-card-head svg {
+  color: #e85d5d;
+}
+
+.cfg-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* =========================================================
+   TOAST DE CONFIRMACIÓN
+   ========================================================= */
+
+.cfg-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background-color: var(--gold);
+  color: #111111;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.3);
+  animation: cfg-toast-in 0.28s ease;
+}
+
+@keyframes cfg-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* =========================================================
+   MODAL ELIMINAR CUENTA
+   ========================================================= */
+
+.cfg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.cfg-modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 26px 26px 22px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.cfg-modal-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(232, 93, 93, 0.12);
+  color: #e85d5d;
+}
+
+.cfg-modal h3 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cfg-modal p {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.cfg-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cfg-modal-actions .cfg-btn {
+  width: 100%;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .configuracion-section {
+    padding: 26px 16px 60px;
+  }
+
+  .cfg-card {
+    padding: 18px;
+  }
+
+  .cfg-field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .cfg-account-actions .cfg-btn {
+    width: 100%;
+  }
+}

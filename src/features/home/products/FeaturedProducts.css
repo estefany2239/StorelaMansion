@@ -63,11 +63,11 @@
 .product-card {
   background-color: #ffffff !important;
   border-radius: 12px !important; /* Bordes un poco más refinados (12px) */
-  overflow: hidden !important;
   padding: 0 0 12px 0 !important; /* Padding inferior ajustado */
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04),
+    0 0 0 0 rgba(201, 162, 39, 0);
   max-width: 280px; /* Evita que crezcan demasiado si hay pocos elementos */
   margin: 0 auto;
   width: 100%;

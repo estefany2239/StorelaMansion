@@ -360,11 +360,23 @@
 
 .ventas-table {
   width: 100%;
-
+  min-width: 680px;
   border-collapse: collapse;
-
   table-layout: fixed;
 }
+
+/* DISTRIBUCIÓN: ID VENTA | CLIENTE | TOTAL | ESTADO | DETALLE */
+.ventas-table th:nth-child(1) { width: 11%; }
+.ventas-table th:nth-child(2) { width: 33%; }
+.ventas-table th:nth-child(3) { width: 24%; }
+.ventas-table th:nth-child(4) { width: 18%; }
+.ventas-table th:nth-child(5) { width: 14%; }
+
+.ventas-table th:nth-child(4),
+.ventas-table td:nth-child(4) { text-align: center; }
+
+.ventas-table th:nth-child(5),
+.ventas-table td:nth-child(5) { text-align: center; }
 
 
 /* =========================================================
@@ -372,7 +384,7 @@
    ========================================================= */
 
 .ventas-table th {
-  height: 45px;
+  height: 44px;
 
   padding: 0 16px;
 
@@ -431,52 +443,6 @@
 
 
 /* =========================================================
-   ANCHOS
-   ========================================================= */
-
-.ventas-table th:nth-child(1),
-.ventas-table td:nth-child(1) {
-  width: 13%;
-}
-
-
-.ventas-table th:nth-child(2),
-.ventas-table td:nth-child(2) {
-  width: 18%;
-}
-
-
-.ventas-table th:nth-child(3),
-.ventas-table td:nth-child(3) {
-  width: 14%;
-}
-
-
-.ventas-table th:nth-child(4),
-.ventas-table td:nth-child(4) {
-  width: 14%;
-}
-
-
-.ventas-table th:nth-child(5),
-.ventas-table td:nth-child(5) {
-  width: 18%;
-}
-
-
-.ventas-table th:nth-child(6),
-.ventas-table td:nth-child(6) {
-  width: 14%;
-}
-
-
-.ventas-table th:nth-child(7),
-.ventas-table td:nth-child(7) {
-  width: 9%;
-}
-
-
-/* =========================================================
    DATOS
    ========================================================= */
 
@@ -489,6 +455,13 @@
   font-weight: 600;
 }
 
+
+.ventas-table .venta-cliente {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .venta-cliente {
   font-size: 15px;
@@ -576,7 +549,7 @@
   width: 32px;
   height: 32px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 

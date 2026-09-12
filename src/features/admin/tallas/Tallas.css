@@ -164,12 +164,20 @@
 }
 
 .tallas-table td {
-  height: 76px;
+  height: 72px;
   padding: 0 16px;
   vertical-align: middle;
   border-bottom:
     1px solid #e8e8e8;
   font-size: 14px;
+}
+
+.tallas-table th:last-child {
+  text-align: center;
+}
+
+.tallas-table td:last-child {
+  text-align: center;
 }
 
 .tallas-table tbody tr:last-child td {
@@ -195,6 +203,13 @@
    NOMBRE
    ========================================================= */
 
+.tallas-table .talla-nombre {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .talla-nombre {
   color: #111111;
   font-size: 14px;
@@ -209,6 +224,7 @@
 .talla-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
 }
 

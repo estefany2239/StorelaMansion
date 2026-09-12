@@ -213,10 +213,25 @@
 .clientes-table {
   width: 100%;
 
+  min-width: 680px;
+
   border-collapse: collapse;
 
   table-layout: fixed;
 }
+
+/* DISTRIBUCIÓN: ID | NOMBRE | CORREO | ESTADO | ACCIONES */
+.clientes-table th:nth-child(1) { width: 11%; }
+.clientes-table th:nth-child(2) { width: 33%; }
+.clientes-table th:nth-child(3) { width: 24%; }
+.clientes-table th:nth-child(4) { width: 18%; }
+.clientes-table th:nth-child(5) { width: 14%; }
+
+.clientes-table th:nth-child(4),
+.clientes-table td:nth-child(4) { text-align: center; }
+
+.clientes-table th:nth-child(5),
+.clientes-table td:nth-child(5) { text-align: center; }
 
 
 .clientes-table th {
@@ -243,7 +258,7 @@
 
 
 .clientes-table td {
-  height: 63px;
+  height: 72px;
 
   padding: 0 16px;
 
@@ -262,52 +277,6 @@
 
 
 /* =========================================================
-   ANCHOS
-   ========================================================= */
-
-.clientes-table th:nth-child(1),
-.clientes-table td:nth-child(1) {
-  width: 11%;
-}
-
-
-.clientes-table th:nth-child(2),
-.clientes-table td:nth-child(2) {
-  width: 16%;
-}
-
-
-.clientes-table th:nth-child(3),
-.clientes-table td:nth-child(3) {
-  width: 25%;
-}
-
-
-.clientes-table th:nth-child(4),
-.clientes-table td:nth-child(4) {
-  width: 16%;
-}
-
-
-.clientes-table th:nth-child(5),
-.clientes-table td:nth-child(5) {
-  width: 10%;
-}
-
-
-.clientes-table th:nth-child(6),
-.clientes-table td:nth-child(6) {
-  width: 12%;
-}
-
-
-.clientes-table th:nth-child(7),
-.clientes-table td:nth-child(7) {
-  width: 10%;
-}
-
-
-/* =========================================================
    DATOS
    ========================================================= */
 
@@ -320,6 +289,13 @@
   font-weight: 600;
 }
 
+
+.clientes-table .cliente-nombre {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .cliente-nombre {
   color:
@@ -543,6 +519,8 @@
   display: flex;
 
   align-items: center;
+
+  justify-content: center;
 
   gap: 5px;
 }

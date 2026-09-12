@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Search,
@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import "./Roles.css";
+
+import Pagination from "../components/Pagination";
 
 const PERMISOS = [
   "Gestionar usuarios",
@@ -85,6 +87,34 @@ export default function Roles() {
 
     return coincideBusqueda && coincideEstado;
   });
+
+  /* =====================================================
+     PAGINACIÓN DE LA TABLA
+     ===================================================== */
+
+  const REGISTROS_POR_PAGINA = 6;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(rolesFiltrados.length / REGISTROS_POR_PAGINA)
+  );
+
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const rolesPaginados = rolesFiltrados.slice(
+    inicio,
+    inicio + REGISTROS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas);
+    }
+  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR CREAR
@@ -359,7 +389,7 @@ export default function Roles() {
 
             {rolesFiltrados.length > 0 ? (
 
-              rolesFiltrados.map((rol) => (
+              rolesPaginados.map((rol) => (
 
                 <tr key={rol.id}>
 
@@ -486,6 +516,14 @@ export default function Roles() {
           </tbody>
 
         </table>
+
+        {totalPaginas > 1 && (
+          <Pagination
+            currentPage={paginaActual}
+            totalPages={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
+        )}
 
       </div>
 

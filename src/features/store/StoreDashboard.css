@@ -312,6 +312,12 @@ input {
   color: var(--gold);
 }
 
+.profile-options-list .profile-option-active {
+  background-color: rgba(212, 175, 55, 0.14);
+  color: var(--gold);
+  font-weight: 700;
+}
+
 .profile-options-list .logout-option {
   color: #e85d5d;
   margin-top: 4px;

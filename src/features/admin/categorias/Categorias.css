@@ -146,9 +146,22 @@
 
 .categorias-table {
   width: 100%;
-  min-width: 800px;
+  min-width: 680px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
+
+/* DISTRIBUCIÓN: ID | NOMBRE | ESTADO | ACCIONES */
+.categorias-table th:nth-child(1) { width: 14%; }
+.categorias-table th:nth-child(2) { width: 46%; }
+.categorias-table th:nth-child(3) { width: 22%; }
+.categorias-table th:nth-child(4) { width: 18%; }
+
+.categorias-table th:nth-child(3),
+.categorias-table td:nth-child(3) { text-align: center; }
+
+.categorias-table th:nth-child(4),
+.categorias-table td:nth-child(4) { text-align: center; }
 
 .categorias-table th {
   height: 44px;
@@ -164,7 +177,7 @@
 }
 
 .categorias-table td {
-  height: 76px;
+  height: 72px;
   padding: 0 16px;
   vertical-align: middle;
   border-bottom:
@@ -194,6 +207,13 @@
 /* =========================================================
    NOMBRE
    ========================================================= */
+
+.categorias-table .categoria-nombre {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .categoria-nombre {
   color: #111111;
@@ -295,6 +315,7 @@
 .categoria-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
 }
 
