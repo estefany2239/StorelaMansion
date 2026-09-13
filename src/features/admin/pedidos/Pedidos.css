@@ -141,52 +141,8 @@
 
 
 /* =========================================================
-   FILTROS
+   BOTÓN AGREGAR
    ========================================================= */
-
-.pedidos-filter-button {
-  height: 45px;
-
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 7px;
-
-  padding: 0 15px;
-
-  border:
-    1px solid #d8dce2;
-
-  border-radius: 9px;
-
-  background:
-    #ffffff;
-
-  color:
-    #626d7d;
-
-  font-size: 13px;
-
-  font-weight: 500;
-
-  cursor: pointer;
-}
-
-
-.pedidos-filter-button.active,
-.pedidos-filter-button:hover {
-  border-color:
-    var(--admin-gold);
-
-  color:
-    var(--admin-gold-dark);
-
-  background:
-    rgba(201, 162, 39, 0.06);
-}
-
 
 .pedidos-add-button {
   height: 45px;
@@ -221,103 +177,6 @@
 .pedidos-add-button:hover {
   background:
     var(--admin-cta-gold-dark);
-}
-
-
-/* =========================================================
-   PANEL FILTROS
-   ========================================================= */
-
-.pedidos-filters-panel {
-  display: flex;
-
-  align-items: flex-end;
-
-  gap: 15px;
-
-  margin-bottom: 18px;
-
-  padding: 18px;
-
-  background:
-    rgba(255, 255, 255, 0.55);
-
-  border:
-    1px solid
-    rgba(201, 162, 39, 0.18);
-
-  border-radius: 12px;
-}
-
-
-.pedidos-filter-group {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 7px;
-}
-
-
-.pedidos-filter-group label {
-  font-size: 10px;
-
-  font-weight: 600;
-
-  letter-spacing: 1px;
-
-  color:
-    #667085;
-}
-
-
-.pedidos-filter-group select {
-  height: 42px;
-
-  min-width: 190px;
-
-  padding: 0 12px;
-
-  border:
-    1px solid #d8dce2;
-
-  border-radius: 8px;
-
-  background:
-    #ffffff;
-
-  outline: none;
-
-  color:
-    #555555;
-
-  font-size: 13px;
-}
-
-
-.pedidos-filter-group select:focus {
-  border-color:
-    var(--admin-gold);
-}
-
-
-.pedidos-clear-filter {
-  height: 42px;
-
-  padding: 0 15px;
-
-  border: none;
-
-  background: transparent;
-
-  color:
-    var(--admin-gold-dark);
-
-  font-size: 13px;
-
-  font-weight: 600;
-
-  cursor: pointer;
 }
 
 
@@ -588,6 +447,15 @@
   opacity: 0.35;
 
   cursor: not-allowed;
+}
+
+
+.pedido-actions button.pedido-delete-button:hover {
+  color:
+    #e53935;
+
+  background:
+    rgba(229, 57, 53, 0.08);
 }
 
 
@@ -950,6 +818,354 @@
 
 
 /* =========================================================
+   PRODUCTO EDITABLE
+   ========================================================= */
+
+.pedido-product-edit {
+  padding: 12px 14px;
+
+  border-bottom:
+    1px solid #e5e5e5;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+.pedido-product-edit:last-child {
+  border-bottom: none;
+}
+
+
+.pedido-product-edit-head {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+
+.pedido-product-edit-number {
+  font-size: 12px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.5px;
+
+  color:
+    #8a857a;
+}
+
+
+.pedido-product-delete {
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background:
+    rgba(220, 53, 69, 0.08);
+
+  color:
+    #d64550;
+
+  cursor: pointer;
+}
+
+
+.pedido-product-delete:hover {
+  background:
+    rgba(220, 53, 69, 0.16);
+
+  color:
+    #c03845;
+}
+
+
+.pedido-product-edit-fields {
+  display: grid;
+
+  grid-template-columns:
+    1.6fr 0.7fr 0.6fr 0.8fr 0.9fr 0.9fr;
+
+  gap: 8px;
+
+  align-items: end;
+}
+
+
+.pedido-product-edit-field,
+.pedido-product-edit-subtotal {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.pedido-product-edit-field label,
+.pedido-product-edit-subtotal label {
+  font-size: 10px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.8px;
+
+  color:
+    #8a857a;
+}
+
+
+.pedido-product-edit-field input {
+  width: 100%;
+
+  height: 36px;
+
+  padding: 0 9px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background:
+    #ffffff;
+
+  font-size: 13px;
+
+  color:
+    #222222;
+}
+
+
+.pedido-product-edit-field input:focus {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+
+.pedido-product-edit-subtotal strong {
+  height: 36px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 0 10px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(201, 162, 39, 0.08);
+
+  font-size: 13px;
+
+  color:
+    #111111;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   ABONOS
+   ========================================================= */
+
+.pedido-abonos-resumen {
+  margin-top: 14px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 10px;
+}
+
+
+.pedido-abonos-resumen-item {
+  min-height: 56px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 4px;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border-radius: 9px;
+
+  background:
+    rgba(201, 162, 39, 0.08);
+}
+
+
+.pedido-abonos-resumen-item span {
+  font-size: 10px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+
+  color:
+    #667085;
+}
+
+
+.pedido-abonos-resumen-item strong {
+  font-size: 16px;
+
+  color:
+    #111111;
+}
+
+
+.pedido-abonos-resumen-item strong.abonado {
+  color:
+    #0ca653;
+}
+
+
+.pedido-abonos-resumen-item strong.pendiente {
+  color:
+    #c68a00;
+}
+
+
+.pedido-abonos-resumen-item strong.saldado {
+  color:
+    #0ca653;
+}
+
+
+.pedido-abonos-list {
+  overflow: hidden;
+
+  border:
+    1px solid #e1e1e1;
+
+  border-radius: 9px;
+}
+
+
+.pedido-abono-item {
+  min-height: 52px;
+
+  padding: 8px 14px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 16px;
+
+  border-bottom:
+    1px solid #e5e5e5;
+}
+
+
+.pedido-abono-item:last-child {
+  border-bottom: none;
+}
+
+
+.pedido-abono-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.pedido-abono-info strong {
+  font-size: 13px;
+
+  color:
+    #222222;
+}
+
+
+.pedido-abono-info span {
+  font-size: 12px;
+
+  color:
+    #738096;
+}
+
+
+.pedido-abono-valor {
+  font-size: 14px;
+
+  color:
+    #111111;
+}
+
+
+.pedido-abono-form {
+  margin-top: 14px;
+
+  padding: 16px;
+
+  border: 1px dashed
+    rgba(201, 162, 39, 0.5);
+
+  border-radius: 10px;
+
+  background:
+    rgba(201, 162, 39, 0.05);
+}
+
+
+.pedido-abono-form-actions {
+  margin-top: 14px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 12px;
+}
+
+
+/* =========================================================
    INFORMACIÓN DETALLE
    ========================================================= */
 
@@ -1127,8 +1343,7 @@
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .pedidos-search,
-[data-theme="dark"] .pedidos-filter-button {
+[data-theme="dark"] .pedidos-search {
   background:
     var(--admin-card);
 
@@ -1140,24 +1355,6 @@
 [data-theme="dark"] .pedidos-search input {
   color:
     var(--admin-text);
-}
-
-
-[data-theme="dark"] .pedidos-filters-panel {
-  background:
-    var(--admin-card);
-}
-
-
-[data-theme="dark"] .pedidos-filter-group select {
-  background:
-    #181818;
-
-  border-color:
-    rgba(255, 255, 255, 0.15);
-
-  color:
-    #ffffff;
 }
 
 
@@ -1277,6 +1474,129 @@
 }
 
 
+[data-theme="dark"] .pedido-product-edit {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .pedido-product-edit-number {
+  color:
+    #9b9488;
+}
+
+
+[data-theme="dark"] .pedido-product-delete {
+  background:
+    rgba(220, 53, 69, 0.15);
+
+  color:
+    #e06a74;
+}
+
+
+[data-theme="dark"] .pedido-product-delete:hover {
+  background:
+    rgba(220, 53, 69, 0.25);
+
+  color:
+    #ef8089;
+}
+
+
+[data-theme="dark"] .pedido-product-edit-field label,
+[data-theme="dark"] .pedido-product-edit-subtotal label {
+  color:
+    #9b9488;
+}
+
+
+[data-theme="dark"] .pedido-product-edit-field input {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .pedido-product-edit-subtotal strong {
+  background:
+    rgba(194, 168, 120, 0.12);
+
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .pedido-abonos-resumen-item {
+  background:
+    rgba(194, 168, 120, 0.10);
+}
+
+
+[data-theme="dark"] .pedido-abonos-resumen-item span {
+  color:
+    #b0b0b0;
+}
+
+
+[data-theme="dark"] .pedido-abonos-resumen-item strong {
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .pedido-abonos-resumen-item strong.abonado,
+[data-theme="dark"] .pedido-abonos-resumen-item strong.saldado {
+  color:
+    #67d99b;
+}
+
+
+[data-theme="dark"] .pedido-abonos-resumen-item strong.pendiente {
+  color:
+    #e5b84c;
+}
+
+
+[data-theme="dark"] .pedido-abonos-list {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .pedido-abono-item {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .pedido-abono-info strong,
+[data-theme="dark"] .pedido-abono-valor {
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .pedido-abono-info span {
+  color:
+    #b0b0b0;
+}
+
+
+[data-theme="dark"] .pedido-abono-form {
+  border-color:
+    rgba(194, 168, 120, 0.35);
+
+  background:
+    rgba(194, 168, 120, 0.06);
+}
+
+
 [data-theme="dark"] .pedido-total-box {
   background:
     rgba(194, 168, 120, 0.10);
@@ -1347,11 +1667,17 @@
     min-width: 220px;
   }
 
-  .pedidos-filters-panel {
-    flex-wrap: wrap;
+  .pedido-form-row {
+    grid-template-columns:
+      1fr;
   }
 
-  .pedido-form-row {
+  .pedido-product-edit-fields {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .pedido-abonos-resumen {
     grid-template-columns:
       1fr;
   }
@@ -1374,15 +1700,8 @@
   }
 
   .pedidos-search,
-  .pedidos-filter-button,
   .pedidos-add-button {
     width: 100%;
-  }
-
-  .pedidos-filters-panel {
-    flex-direction: column;
-
-    align-items: stretch;
   }
 
   .pedido-modal-overlay {

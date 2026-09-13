@@ -19,13 +19,13 @@ export default function Colores() {
      ===================================================== */
 
   const [colores, setColores] = useState([
-    { id: "COL-001", nombre: "Negro", enUso: true },
-    { id: "COL-002", nombre: "Blanco", enUso: true },
-    { id: "COL-003", nombre: "Café", enUso: true },
-    { id: "COL-004", nombre: "Beige", enUso: false },
-    { id: "COL-005", nombre: "Gris", enUso: false },
-    { id: "COL-006", nombre: "Azul", enUso: false },
-    { id: "COL-007", nombre: "Rojo", enUso: false }
+    { id: "COL-001", nombre: "Negro", enUso: true, estado: "Activo" },
+    { id: "COL-002", nombre: "Blanco", enUso: true, estado: "Activo" },
+    { id: "COL-003", nombre: "Café", enUso: true, estado: "Activo" },
+    { id: "COL-004", nombre: "Beige", enUso: false, estado: "Activo" },
+    { id: "COL-005", nombre: "Gris", enUso: false, estado: "Activo" },
+    { id: "COL-006", nombre: "Azul", enUso: false, estado: "Activo" },
+    { id: "COL-007", nombre: "Rojo", enUso: false, estado: "Activo" }
   ]);
 
   /* =====================================================
@@ -94,7 +94,8 @@ export default function Colores() {
 
     setFormulario({
       id: `COL-${String(siguienteNumero).padStart(3, "0")}`,
-      nombre: ""
+      nombre: "",
+      estado: "Activo"
     });
 
     setModoEdicion(false);
@@ -150,12 +151,30 @@ export default function Colores() {
         {
           id: formulario.id,
           nombre: formulario.nombre.trim(),
-          enUso: false
+          enUso: false,
+          estado: "Activo"
         }
       ]);
     }
 
     cerrarModal();
+  };
+
+  /* =====================================================
+     CAMBIAR ESTADO DEL COLOR
+     ===================================================== */
+
+  const cambiarEstado = (color) => {
+    const nuevoEstado =
+      color.estado === "Activo" ? "Inactivo" : "Activo";
+
+    setColores((actuales) =>
+      actuales.map((item) =>
+        item.id === color.id
+          ? { ...item, estado: nuevoEstado }
+          : item
+      )
+    );
   };
 
   /* =====================================================
@@ -272,6 +291,10 @@ export default function Colores() {
               </th>
 
               <th>
+                ESTADO
+              </th>
+
+              <th>
                 ACCIONES
               </th>
 
@@ -296,6 +319,35 @@ export default function Colores() {
                     <span className="color-nombre">
                       {color.nombre}
                     </span>
+                  </td>
+
+                  <td>
+
+                    <label
+                      className="switch-color-estado"
+                      title={
+                        color.estado === "Activo"
+                          ? "Hacer Inactivo"
+                          : "Hacer Activo"
+                      }
+                    >
+
+                      <input
+                        type="checkbox"
+                        checked={color.estado === "Activo"}
+                        onChange={() =>
+                          cambiarEstado(color)
+                        }
+                      />
+
+                      <span className="slider-color"></span>
+
+                      <span className={`estado-color-texto ${color.estado === "Activo" ? "activo" : "inactivo"}`}>
+                        {color.estado.toUpperCase()}
+                      </span>
+
+                    </label>
+
                   </td>
 
                   <td>
@@ -337,7 +389,7 @@ export default function Colores() {
               <tr>
 
                 <td
-                  colSpan="3"
+                  colSpan="4"
                   className="colores-empty"
                 >
                   No se encontraron colores.

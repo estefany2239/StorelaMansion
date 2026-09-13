@@ -146,7 +146,7 @@
 
 .tallas-table {
   width: 100%;
-  min-width: 550px;
+  min-width: 680px;
   border-collapse: collapse;
 }
 
@@ -177,6 +177,11 @@
 }
 
 .tallas-table td:last-child {
+  text-align: center;
+}
+
+.tallas-table th:nth-child(3),
+.tallas-table td:nth-child(3) {
   text-align: center;
 }
 
@@ -215,6 +220,70 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
+}
+
+/* =========================================================
+   ESTADO - SWITCH
+   ========================================================= */
+
+.switch-talla-estado {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-talla-estado input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider-talla {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  background-color: #cbd5e1;
+  border-radius: 22px;
+  transition: background-color 0.3s ease;
+}
+
+.slider-talla::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.switch-talla-estado input:checked + .slider-talla {
+  background-color: #16a34a;
+}
+
+.switch-talla-estado input:checked + .slider-talla::before {
+  transform: translateX(18px);
+}
+
+.estado-talla-texto {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.estado-talla-texto.activo {
+  color: #15803d;
+}
+
+.estado-talla-texto.inactivo {
+  color: #494747;
 }
 
 /* =========================================================
@@ -527,6 +596,22 @@
 
 .admin-container.admin-dark .talla-nombre {
   color: #ffffff;
+}
+
+/* =========================================================
+   ESTADO DARK
+   ========================================================= */
+
+.admin-container.admin-dark .slider-talla {
+  background-color: #4b4b4b;
+}
+
+.admin-container.admin-dark .estado-talla-texto.activo {
+  color: #4ade80;
+}
+
+.admin-container.admin-dark .estado-talla-texto.inactivo {
+  color: #a1a1aa;
 }
 
 /* =========================================================

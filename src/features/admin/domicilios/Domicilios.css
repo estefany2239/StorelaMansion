@@ -141,52 +141,8 @@
 
 
 /* =========================================================
-   FILTROS
+   BOTÓN AGREGAR DOMICILIO
    ========================================================= */
-
-.domicilios-filter-button {
-  height: 45px;
-
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 7px;
-
-  padding: 0 15px;
-
-  border:
-    1px solid #d8dce2;
-
-  border-radius: 9px;
-
-  background:
-    #ffffff;
-
-  color:
-    #626d7d;
-
-  font-size: 13px;
-
-  font-weight: 500;
-
-  cursor: pointer;
-}
-
-
-.domicilios-filter-button.active,
-.domicilios-filter-button:hover {
-  border-color:
-    var(--admin-gold);
-
-  color:
-    var(--admin-gold-dark);
-
-  background:
-    rgba(201, 162, 39, 0.06);
-}
-
 
 .domicilios-add-button {
   height: 45px;
@@ -221,97 +177,6 @@
 .domicilios-add-button:hover {
   background:
     var(--admin-cta-gold-dark);
-}
-
-
-/* =========================================================
-   PANEL DE FILTROS
-   ========================================================= */
-
-.domicilios-filters-panel {
-  display: flex;
-
-  align-items: flex-end;
-
-  gap: 15px;
-
-  margin-bottom: 18px;
-
-  padding: 18px;
-
-  background:
-    rgba(255, 255, 255, 0.55);
-
-  border:
-    1px solid
-    rgba(201, 162, 39, 0.18);
-
-  border-radius: 12px;
-}
-
-
-.domicilios-filter-group {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 7px;
-}
-
-
-.domicilios-filter-group label {
-  font-size: 10px;
-
-  font-weight: 600;
-
-  letter-spacing: 1px;
-
-  color:
-    #667085;
-}
-
-
-.domicilios-filter-group select {
-  height: 42px;
-
-  min-width: 190px;
-
-  padding: 0 12px;
-
-  border:
-    1px solid #d8dce2;
-
-  border-radius: 8px;
-
-  background:
-    #ffffff;
-
-  outline: none;
-
-  color:
-    #555555;
-
-  font-size: 13px;
-}
-
-
-.domicilios-clear-filter {
-  height: 42px;
-
-  padding: 0 15px;
-
-  border: none;
-
-  background: transparent;
-
-  color:
-    var(--admin-gold-dark);
-
-  font-size: 13px;
-
-  font-weight: 600;
-
-  cursor: pointer;
 }
 
 
@@ -938,8 +803,7 @@
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .domicilios-search,
-[data-theme="dark"] .domicilios-filter-button {
+[data-theme="dark"] .domicilios-search {
   background:
     var(--admin-card);
 
@@ -951,24 +815,6 @@
 [data-theme="dark"] .domicilios-search input {
   color:
     var(--admin-text);
-}
-
-
-[data-theme="dark"] .domicilios-filters-panel {
-  background:
-    var(--admin-card);
-}
-
-
-[data-theme="dark"] .domicilios-filter-group select {
-  background:
-    #181818;
-
-  border-color:
-    rgba(255, 255, 255, 0.15);
-
-  color:
-    #ffffff;
 }
 
 
@@ -1110,10 +956,6 @@
     min-width: 220px;
   }
 
-  .domicilios-filters-panel {
-    flex-wrap: wrap;
-  }
-
   .domicilio-form-row {
     grid-template-columns:
       1fr;
@@ -1137,15 +979,8 @@
   }
 
   .domicilios-search,
-  .domicilios-filter-button,
   .domicilios-add-button {
     width: 100%;
-  }
-
-  .domicilios-filters-panel {
-    flex-direction: column;
-
-    align-items: stretch;
   }
 
   .domicilio-modal-overlay {

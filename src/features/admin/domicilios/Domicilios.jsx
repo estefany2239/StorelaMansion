@@ -6,8 +6,7 @@ import {
   Eye,
   Pencil,
   Trash2,
-  X,
-  SlidersHorizontal
+  X
 } from "lucide-react";
 
 import "./Domicilios.css";
@@ -120,15 +119,6 @@ export default function Domicilios() {
 
   const [busqueda, setBusqueda] = useState("");
 
-  const [mostrarFiltros, setMostrarFiltros] =
-    useState(false);
-
-  const [filtroCliente, setFiltroCliente] =
-    useState("Todos");
-
-  const [filtroEstado, setFiltroEstado] =
-    useState("Todos");
-
   const [mostrarModal, setMostrarModal] =
     useState(false);
 
@@ -198,23 +188,6 @@ export default function Domicilios() {
 
 
   // =====================================================
-  // CLIENTES DISPONIBLES
-  // =====================================================
-
-  const clientesDisponibles = [
-    ...new Map(
-      domicilios.map((domicilio) => [
-        domicilio.idCliente,
-        {
-          id: domicilio.idCliente,
-          nombre: domicilio.cliente
-        }
-      ])
-    ).values()
-  ];
-
-
-  // =====================================================
   // PEDIDOS DISPONIBLES
   // =====================================================
 
@@ -264,20 +237,8 @@ export default function Domicilios() {
           .includes(texto);
 
 
-      const coincideCliente =
-        filtroCliente === "Todos" ||
-        domicilio.idCliente === filtroCliente;
-
-
-      const coincideEstado =
-        filtroEstado === "Todos" ||
-        domicilio.estado === filtroEstado;
-
-
       return (
-        coincideBusqueda &&
-        coincideCliente &&
-        coincideEstado
+        coincideBusqueda
       );
 
     }
@@ -304,7 +265,7 @@ export default function Domicilios() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroCliente, filtroEstado]);
+  }, [busqueda]);
 
   useEffect(() => {
     if (paginaActual > totalPaginas) {
@@ -728,21 +689,6 @@ export default function Domicilios() {
 
 
   // =====================================================
-  // LIMPIAR FILTROS
-  // =====================================================
-
-  const limpiarFiltros = () => {
-
-    setFiltroCliente("Todos");
-
-    setFiltroEstado("Todos");
-
-    setBusqueda("");
-
-  };
-
-
-  // =====================================================
   // RENDER
   // =====================================================
 
@@ -793,29 +739,6 @@ export default function Domicilios() {
           </div>
 
 
-          {/* FILTROS */}
-
-          <button
-            type="button"
-            className={
-              mostrarFiltros
-                ? "domicilios-filter-button active"
-                : "domicilios-filter-button"
-            }
-            onClick={() =>
-              setMostrarFiltros(
-                !mostrarFiltros
-              )
-            }
-          >
-
-            <SlidersHorizontal size={18} />
-
-            Filtros
-
-          </button>
-
-
           {/* AGREGAR */}
 
           <button
@@ -833,109 +756,6 @@ export default function Domicilios() {
         </div>
 
       </div>
-
-
-      {/* =================================================
-          FILTROS
-      ================================================= */}
-
-      {mostrarFiltros && (
-
-        <div className="domicilios-filters-panel">
-
-
-          <div className="domicilios-filter-group">
-
-            <label>
-              CLIENTE
-            </label>
-
-            <select
-              value={filtroCliente}
-              onChange={(e) =>
-                setFiltroCliente(
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="Todos">
-                Todos
-              </option>
-
-              {clientesDisponibles.map(
-                (cliente) => (
-
-                  <option
-                    key={cliente.id}
-                    value={cliente.id}
-                  >
-
-                    {cliente.nombre}
-
-                  </option>
-
-                )
-              )}
-
-            </select>
-
-          </div>
-
-
-          <div className="domicilios-filter-group">
-
-            <label>
-              ESTADO
-            </label>
-
-            <select
-              value={filtroEstado}
-              onChange={(e) =>
-                setFiltroEstado(
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="Todos">
-                Todos
-              </option>
-
-              <option value="Pendiente">
-                Pendiente
-              </option>
-
-              <option value="En camino">
-                En camino
-              </option>
-
-              <option value="Entregado">
-                Entregado
-              </option>
-
-              <option value="Cancelado">
-                Cancelado
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <button
-            type="button"
-            className="domicilios-clear-filter"
-            onClick={limpiarFiltros}
-          >
-
-            Limpiar filtros
-
-          </button>
-
-        </div>
-
-      )}
 
 
       {/* =================================================

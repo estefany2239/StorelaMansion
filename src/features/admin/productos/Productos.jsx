@@ -7,7 +7,6 @@ import {
   Pencil,
   Trash2,
   X,
-  SlidersHorizontal,
   AlertTriangle
 } from "lucide-react";
 
@@ -137,16 +136,6 @@ export default function Productos() {
   // =====================================================
 
   const [busqueda, setBusqueda] = useState("");
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
-
-  const [filtroCategoria, setFiltroCategoria] =
-    useState("Todos");
-
-  const [filtroTalla, setFiltroTalla] =
-    useState("Todos");
-
-  const [filtroColor, setFiltroColor] =
-    useState("Todos");
 
   const [mostrarModal, setMostrarModal] =
     useState(false);
@@ -243,24 +232,7 @@ export default function Productos() {
       .toLowerCase()
       .includes(texto);
 
-    const coincideCategoria =
-      filtroCategoria === "Todos" ||
-      producto.categoria === filtroCategoria;
-
-    const coincideTalla =
-      filtroTalla === "Todos" ||
-      producto.talla === filtroTalla;
-
-    const coincideColor =
-      filtroColor === "Todos" ||
-      producto.color === filtroColor;
-
-    return (
-      coincideNombre &&
-      coincideCategoria &&
-      coincideTalla &&
-      coincideColor
-    );
+    return coincideNombre;
   });
 
   // =====================================================
@@ -283,7 +255,7 @@ export default function Productos() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroCategoria, filtroTalla, filtroColor]);
+  }, [busqueda]);
 
   useEffect(() => {
     if (paginaActual > totalPaginas) {
@@ -482,17 +454,6 @@ export default function Productos() {
   };
 
   // =====================================================
-  // LIMPIAR FILTROS
-  // =====================================================
-
-  const limpiarFiltros = () => {
-    setBusqueda("");
-    setFiltroCategoria("Todos");
-    setFiltroTalla("Todos");
-    setFiltroColor("Todos");
-  };
-
-  // =====================================================
   // RENDER
   // =====================================================
 
@@ -531,25 +492,6 @@ export default function Productos() {
             />
           </div>
 
-          {/* FILTROS */}
-
-          <button
-            type="button"
-            className={
-              mostrarFiltros
-                ? "productos-filter-button active"
-                : "productos-filter-button"
-            }
-            onClick={() =>
-              setMostrarFiltros(
-                !mostrarFiltros
-              )
-            }
-          >
-            <SlidersHorizontal size={18} />
-            Filtros
-          </button>
-
           {/* AGREGAR */}
 
           <button
@@ -563,102 +505,6 @@ export default function Productos() {
 
         </div>
       </div>
-
-      {/* =================================================
-          FILTROS
-      ================================================= */}
-
-      {mostrarFiltros && (
-        <div className="productos-filters-panel">
-
-          <div className="productos-filter-group">
-            <label>CATEGORÍA</label>
-
-            <select
-              value={filtroCategoria}
-              onChange={(e) =>
-                setFiltroCategoria(
-                  e.target.value
-                )
-              }
-            >
-              <option value="Todos">
-                Todas
-              </option>
-
-              {categorias.map((categoria) => (
-                <option
-                  key={categoria}
-                  value={categoria}
-                >
-                  {categoria}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="productos-filter-group">
-            <label>TALLA</label>
-
-            <select
-              value={filtroTalla}
-              onChange={(e) =>
-                setFiltroTalla(
-                  e.target.value
-                )
-              }
-            >
-              <option value="Todos">
-                Todas
-              </option>
-
-              {tallas.map((talla) => (
-                <option
-                  key={talla}
-                  value={talla}
-                >
-                  {talla}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="productos-filter-group">
-            <label>COLOR</label>
-
-            <select
-              value={filtroColor}
-              onChange={(e) =>
-                setFiltroColor(
-                  e.target.value
-                )
-              }
-            >
-              <option value="Todos">
-                Todos
-              </option>
-
-              {colores.map((color) => (
-                <option
-                  key={color}
-                  value={color}
-                >
-                  {color}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="button"
-            className="productos-clear-filter"
-            onClick={limpiarFiltros}
-          >
-            Limpiar filtros
-          </button>
-
-        </div>
-      )}
 
       {/* =================================================
           ALERTA DE STOCK

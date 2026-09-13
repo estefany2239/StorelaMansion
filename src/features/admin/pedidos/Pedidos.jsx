@@ -6,7 +6,9 @@ import {
   Eye,
   Pencil,
   X,
-  SlidersHorizontal
+  Trash2,
+  Receipt,
+  Wallet
 } from "lucide-react";
 
 import "./Pedidos.css";
@@ -45,6 +47,19 @@ export default function Pedidos() {
           color: "Blanco",
           precio: 160000
         }
+      ],
+
+      abonos: [
+        {
+          fecha: "2024-07-05",
+          valor: 300000,
+          metodoPago: "Efectivo"
+        },
+        {
+          fecha: "2024-07-10",
+          valor: 505000,
+          metodoPago: "Tarjeta de crédito"
+        }
       ]
     },
 
@@ -73,6 +88,14 @@ export default function Pedidos() {
           color: "Beige",
           precio: 500000
         }
+      ],
+
+      abonos: [
+        {
+          fecha: "2024-07-14",
+          valor: 500000,
+          metodoPago: "Transferencia bancaria"
+        }
       ]
     },
 
@@ -94,7 +117,9 @@ export default function Pedidos() {
           color: "Negro",
           precio: 395000
         }
-      ]
+      ],
+
+      abonos: []
     },
 
     {
@@ -114,6 +139,14 @@ export default function Pedidos() {
           talla: "L",
           color: "Azul oscuro",
           precio: 890000
+        }
+      ],
+
+      abonos: [
+        {
+          fecha: "2024-07-22",
+          valor: 400000,
+          metodoPago: "Tarjeta débito"
         }
       ]
     },
@@ -136,7 +169,9 @@ export default function Pedidos() {
           color: "Negro",
           precio: 340000
         }
-      ]
+      ],
+
+      abonos: []
     },
 
     {
@@ -156,6 +191,14 @@ export default function Pedidos() {
           talla: "M",
           color: "Beige",
           precio: 620000
+        }
+      ],
+
+      abonos: [
+        {
+          fecha: "2024-08-03",
+          valor: 620000,
+          metodoPago: "Tarjeta de crédito"
         }
       ]
     },
@@ -178,7 +221,9 @@ export default function Pedidos() {
           color: "Café",
           precio: 320000
         }
-      ]
+      ],
+
+      abonos: []
     }
   ]);
 
@@ -188,15 +233,6 @@ export default function Pedidos() {
   // =====================================================
 
   const [busqueda, setBusqueda] = useState("");
-
-  const [mostrarFiltros, setMostrarFiltros] =
-    useState(false);
-
-  const [filtroCliente, setFiltroCliente] =
-    useState("Todos");
-
-  const [filtroEstado, setFiltroEstado] =
-    useState("Todos");
 
   const [mostrarModal, setMostrarModal] =
     useState(false);
@@ -209,6 +245,27 @@ export default function Pedidos() {
 
   const [pedidoSeleccionado, setPedidoSeleccionado] =
     useState(null);
+
+
+  // =====================================================
+  // ABONOS
+  // =====================================================
+
+  const [mostrarAbonos, setMostrarAbonos] =
+    useState(false);
+
+  const [pedidoAbonos, setPedidoAbonos] =
+    useState(null);
+
+  const [mostrarFormAbono, setMostrarFormAbono] =
+    useState(false);
+
+  const [formularioAbono, setFormularioAbono] =
+    useState({
+      fecha: "",
+      valor: "",
+      metodoPago: "Efectivo"
+    });
 
 
   // =====================================================
@@ -265,6 +322,28 @@ export default function Pedidos() {
 
 
   // =====================================================
+  // ABONOS DE UN PEDIDO
+  // =====================================================
+
+  const obtenerAbonos = (pedido) =>
+    pedido?.abonos || [];
+
+
+  const totalAbonadoPedido =
+    obtenerAbonos(pedidoAbonos).reduce(
+      (suma, abono) =>
+        suma + Number(abono.valor),
+      0
+    );
+
+
+  const saldoPendientePedido =
+    (pedidoAbonos
+      ? Number(pedidoAbonos.total)
+      : 0) - totalAbonadoPedido;
+
+
+  // =====================================================
   // CLIENTES DISPONIBLES
   // =====================================================
 
@@ -307,20 +386,8 @@ export default function Pedidos() {
           .includes(texto);
 
 
-      const coincideCliente =
-        filtroCliente === "Todos" ||
-        pedido.idCliente === filtroCliente;
-
-
-      const coincideEstado =
-        filtroEstado === "Todos" ||
-        pedido.estado === filtroEstado;
-
-
       return (
-        coincideBusqueda &&
-        coincideCliente &&
-        coincideEstado
+        coincideBusqueda
       );
 
     }
@@ -347,7 +414,7 @@ export default function Pedidos() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroCliente, filtroEstado]);
+  }, [busqueda]);
 
   useEffect(() => {
     if (paginaActual > totalPaginas) {
@@ -468,13 +535,13 @@ export default function Pedidos() {
 
     const nuevoProducto = {
 
-      nombre: "Nuevo producto",
+      nombre: "",
 
       cantidad: 1,
 
-      talla: "M",
+      talla: "",
 
-      color: "Negro",
+      color: "",
 
       precio: 0
 
@@ -489,6 +556,58 @@ export default function Pedidos() {
           ...actual.productos,
           nuevoProducto
         ]
+
+      })
+    );
+
+  };
+
+
+  // =====================================================
+  // ACTUALIZAR PRODUCTO
+  // =====================================================
+
+  const actualizarProducto = (
+    index,
+    campo,
+    valor
+  ) => {
+
+    setFormulario(
+      (actual) => ({
+        ...actual,
+
+        productos:
+          actual.productos.map(
+            (producto, i) =>
+              i === index
+                ? {
+                    ...producto,
+                    [campo]: valor
+                  }
+                : producto
+          )
+
+      })
+    );
+
+  };
+
+
+  // =====================================================
+  // ELIMINAR PRODUCTO
+  // =====================================================
+
+  const eliminarProducto = (index) => {
+
+    setFormulario(
+      (actual) => ({
+        ...actual,
+
+        productos:
+          actual.productos.filter(
+            (_, i) => i !== index
+          )
 
       })
     );
@@ -587,7 +706,9 @@ export default function Pedidos() {
           formulario.productos,
 
         total:
-          total
+          total,
+
+        abonos: []
 
       };
 
@@ -603,6 +724,28 @@ export default function Pedidos() {
 
 
     cerrarModal();
+
+  };
+
+
+  // =====================================================
+  // ELIMINAR PEDIDO
+  // =====================================================
+
+  const eliminarPedido = (pedido) => {
+
+    const confirmar = window.confirm(
+      `¿Deseas eliminar el pedido "${pedido.id}"?`
+    );
+
+    if (!confirmar) return;
+
+    setPedidos(
+      (prev) =>
+        prev.filter(
+          (item) => item.id !== pedido.id
+        )
+    );
 
   };
 
@@ -703,16 +846,158 @@ export default function Pedidos() {
 
 
   // =====================================================
-  // LIMPIAR FILTROS
+  // VER ABONOS
   // =====================================================
 
-  const limpiarFiltros = () => {
+  const verAbonos = (pedido) => {
 
-    setFiltroCliente("Todos");
+    setPedidoAbonos(pedido);
 
-    setFiltroEstado("Todos");
+    setMostrarFormAbono(false);
 
-    setBusqueda("");
+    setMostrarAbonos(true);
+
+  };
+
+
+  // =====================================================
+  // CERRAR ABONOS
+  // =====================================================
+
+  const cerrarAbonos = () => {
+
+    setMostrarAbonos(false);
+
+    setPedidoAbonos(null);
+
+    setMostrarFormAbono(false);
+
+  };
+
+
+  // =====================================================
+  // ABRIR FORMULARIO ABONO
+  // =====================================================
+
+  const abrirFormAbono = () => {
+
+    setFormularioAbono({
+      fecha: "2026-09-07",
+      valor: "",
+      metodoPago: "Efectivo"
+    });
+
+    setMostrarFormAbono(true);
+
+  };
+
+
+  // =====================================================
+  // REGISTRAR ABONO
+  // =====================================================
+
+  const registrarAbono = () => {
+
+    if (!pedidoAbonos) {
+      return;
+    }
+
+
+    if (pedidoAbonos.estado === "Entregado") {
+
+      alert(
+        "Los pedidos en estado Entregado no pueden recibir abonos."
+      );
+
+      return;
+
+    }
+
+
+    const valor =
+      Number(formularioAbono.valor);
+
+    const abonado =
+      obtenerAbonos(pedidoAbonos).reduce(
+        (suma, abono) =>
+          suma + Number(abono.valor),
+        0
+      );
+
+
+    if (
+      !formularioAbono.fecha ||
+      !formularioAbono.valor ||
+      isNaN(valor) ||
+      valor <= 0
+    ) {
+
+      alert(
+        "Ingresa un monto válido para el abono."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      valor >
+      Number(pedidoAbonos.total) - abonado
+    ) {
+
+      alert(
+        "El monto no puede superar el saldo pendiente del pedido."
+      );
+
+      return;
+
+    }
+
+
+    const nuevoAbono = {
+
+      fecha:
+        formularioAbono.fecha,
+
+      valor,
+
+      metodoPago:
+        formularioAbono.metodoPago
+
+    };
+
+
+    setPedidos(
+      (actuales) =>
+        actuales.map(
+          (pedido) =>
+            pedido.id ===
+            pedidoAbonos.id
+              ? {
+                  ...pedido,
+                  abonos: [
+                    ...obtenerAbonos(pedido),
+                    nuevoAbono
+                  ]
+                }
+              : pedido
+        )
+    );
+
+
+    setPedidoAbonos(
+      (actual) => ({
+        ...actual,
+        abonos: [
+          ...obtenerAbonos(actual),
+          nuevoAbono
+        ]
+      })
+    );
+
+
+    setMostrarFormAbono(false);
 
   };
 
@@ -768,29 +1053,6 @@ export default function Pedidos() {
           </div>
 
 
-          {/* FILTROS */}
-
-          <button
-            type="button"
-            className={
-              mostrarFiltros
-                ? "pedidos-filter-button active"
-                : "pedidos-filter-button"
-            }
-            onClick={() =>
-              setMostrarFiltros(
-                !mostrarFiltros
-              )
-            }
-          >
-
-            <SlidersHorizontal size={18} />
-
-            Filtros
-
-          </button>
-
-
           {/* AGREGAR */}
 
           <button
@@ -808,111 +1070,6 @@ export default function Pedidos() {
         </div>
 
       </div>
-
-
-      {/* =================================================
-          FILTROS
-      ================================================= */}
-
-      {mostrarFiltros && (
-
-        <div className="pedidos-filters-panel">
-
-
-          <div className="pedidos-filter-group">
-
-            <label>
-              CLIENTE
-            </label>
-
-            <select
-              value={filtroCliente}
-              onChange={(e) =>
-                setFiltroCliente(
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="Todos">
-                Todos
-              </option>
-
-              {clientesDisponibles.map(
-                (cliente) => (
-
-                  <option
-                    key={cliente.id}
-                    value={cliente.id}
-                  >
-                    {cliente.nombre}
-                  </option>
-
-                )
-              )}
-
-            </select>
-
-          </div>
-
-
-          <div className="pedidos-filter-group">
-
-            <label>
-              ESTADO
-            </label>
-
-            <select
-              value={filtroEstado}
-              onChange={(e) =>
-                setFiltroEstado(
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="Todos">
-                Todos
-              </option>
-
-              <option value="Registrado">
-                Registrado
-              </option>
-
-              <option value="En preparación">
-                En preparación
-              </option>
-
-              <option value="Despachado">
-                Despachado
-              </option>
-
-              <option value="Entregado">
-                Entregado
-              </option>
-
-              <option value="Cancelado">
-                Cancelado
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <button
-            type="button"
-            className="pedidos-clear-filter"
-            onClick={limpiarFiltros}
-          >
-
-            Limpiar filtros
-
-          </button>
-
-        </div>
-
-      )}
 
 
       {/* =================================================
@@ -1047,6 +1204,23 @@ export default function Pedidos() {
                       </button>
 
 
+                      {/* ABONOS */}
+
+                      <button
+                        type="button"
+                        title="Ver abonos"
+                        onClick={() =>
+                          verAbonos(
+                            pedido
+                          )
+                        }
+                      >
+
+                        <Receipt size={18} />
+
+                      </button>
+
+
                       {/* EDITAR */}
 
                       <button
@@ -1071,6 +1245,24 @@ export default function Pedidos() {
                       >
 
                         <Pencil size={18} />
+
+                      </button>
+
+
+                      {/* ELIMINAR */}
+
+                      <button
+                        type="button"
+                        className="pedido-delete-button"
+                        title="Eliminar pedido"
+                        onClick={() =>
+                          eliminarPedido(
+                            pedido
+                          )
+                        }
+                      >
+
+                        <Trash2 size={18} />
 
                       </button>
 
@@ -1442,38 +1634,178 @@ export default function Pedidos() {
                     (producto, index) => (
 
                       <div
-                        className="pedido-product-item"
+                        className="pedido-product-edit"
                         key={index}
                       >
 
-                        <div>
+                        <div className="pedido-product-edit-head">
 
-                          <strong>
-                            {producto.nombre}
-                          </strong>
-
-                          <span>
-                            Cantidad:{" "}
-                            {producto.cantidad}
-                            {" · "}
-                            Talla:{" "}
-                            {producto.talla}
-                            {" · "}
-                            Color:{" "}
-                            {producto.color}
+                          <span className="pedido-product-edit-number">
+                            Producto #{index + 1}
                           </span>
+
+                          <button
+                            type="button"
+                            className="pedido-product-delete"
+                            title="Eliminar producto"
+                            onClick={() =>
+                              eliminarProducto(
+                                index
+                              )
+                            }
+                          >
+
+                            <Trash2 size={16} />
+
+                          </button>
 
                         </div>
 
 
-                        <strong>
+                        <div className="pedido-product-edit-fields">
 
-                          {formatearPrecio(
-                            producto.precio *
-                            producto.cantidad
-                          )}
+                          <div className="pedido-product-edit-field nombre">
 
-                        </strong>
+                            <label>
+                              NOMBRE
+                            </label>
+
+                            <input
+                              type="text"
+                              value={
+                                producto.nombre
+                              }
+                              placeholder="Nombre del producto"
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "nombre",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="pedido-product-edit-field">
+
+                            <label>
+                              CANTIDAD
+                            </label>
+
+                            <input
+                              type="number"
+                              min="1"
+                              value={
+                                producto.cantidad
+                              }
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "cantidad",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="pedido-product-edit-field">
+
+                            <label>
+                              TALLA
+                            </label>
+
+                            <input
+                              type="text"
+                              value={
+                                producto.talla
+                              }
+                              placeholder="Talla"
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "talla",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="pedido-product-edit-field">
+
+                            <label>
+                              COLOR
+                            </label>
+
+                            <input
+                              type="text"
+                              value={
+                                producto.color
+                              }
+                              placeholder="Color"
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "color",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="pedido-product-edit-field">
+
+                            <label>
+                              PRECIO (COP)
+                            </label>
+
+                            <input
+                              type="number"
+                              min="0"
+                              value={
+                                producto.precio
+                              }
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "precio",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="pedido-product-edit-subtotal">
+
+                            <label>
+                              SUBTOTAL
+                            </label>
+
+                            <strong>
+
+                              {formatearPrecio(
+                                Number(
+                                  producto.precio
+                                ) *
+                                Number(
+                                  producto.cantidad
+                                )
+                              )}
+
+                            </strong>
+
+                          </div>
+
+                        </div>
 
                       </div>
 
@@ -1821,6 +2153,404 @@ export default function Pedidos() {
                 type="button"
                 className="pedido-cancel-button"
                 onClick={cerrarDetalle}
+              >
+
+                Cerrar
+
+              </button>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      {/* =================================================
+          MODAL ABONOS
+      ================================================= */}
+
+      {mostrarAbonos &&
+        pedidoAbonos && (
+
+        <div className="pedido-modal-overlay">
+
+          <div className="pedido-modal">
+
+            <div className="pedido-modal-header">
+
+              <h3>
+                Abonos del Pedido
+              </h3>
+
+
+              <button
+                type="button"
+                className="pedido-modal-close"
+                onClick={cerrarAbonos}
+              >
+
+                <X size={21} />
+
+              </button>
+
+            </div>
+
+
+            <div className="pedido-modal-body">
+
+
+              {/* INFO DEL PEDIDO */}
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    ID PEDIDO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoAbonos.id}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    CLIENTE
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoAbonos.cliente}
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* RESUMEN FINANCIERO */}
+
+              <div className="pedido-abonos-resumen">
+
+                <div className="pedido-abonos-resumen-item">
+
+                  <span>
+                    Total del pedido
+                  </span>
+
+                  <strong>
+                    {formatearPrecio(
+                      pedidoAbonos.total
+                    )}
+                  </strong>
+
+                </div>
+
+
+                <div className="pedido-abonos-resumen-item">
+
+                  <span>
+                    Total abonado
+                  </span>
+
+                  <strong className="pedido-abono-monto abonado">
+
+                    {formatearPrecio(
+                      totalAbonadoPedido
+                    )}
+
+                  </strong>
+
+                </div>
+
+
+                <div className="pedido-abonos-resumen-item">
+
+                  <span>
+                    Saldo pendiente
+                  </span>
+
+                  <strong
+                    className={
+                      saldoPendientePedido > 0
+                        ? "pedido-abono-monto pendiente"
+                        : "pedido-abono-monto saldado"
+                    }
+                  >
+
+                    {formatearPrecio(
+                      saldoPendientePedido
+                    )}
+
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              {/* ENCABEZADO LISTA */}
+
+              <div className="pedido-details-header">
+
+                <label>
+                  ABONOS DEL PEDIDO
+                </label>
+
+
+                {pedidoAbonos.estado !==
+                  "Entregado" && (
+
+                  <button
+                    type="button"
+                    className="pedido-add-product"
+                    onClick={abrirFormAbono}
+                  >
+
+                    <Plus size={16} />
+
+                    Registrar abono
+
+                  </button>
+
+                )}
+
+              </div>
+
+
+              {/* LISTA DE ABONOS */}
+
+              {obtenerAbonos(
+                pedidoAbonos
+              ).length === 0 ? (
+
+                <div className="pedido-no-products">
+
+                  Aún no se han registrado
+                  abonos para este pedido.
+
+                </div>
+
+              ) : (
+
+                <div className="pedido-abonos-list">
+
+                  {obtenerAbonos(
+                    pedidoAbonos
+                  ).map((abono, index) => (
+
+                    <div
+                      className="pedido-abono-item"
+                      key={index}
+                    >
+
+                      <div className="pedido-abono-info">
+
+                        <strong>
+                          {formatearFecha(
+                            abono.fecha
+                          )}
+                        </strong>
+
+                        <span>
+                          {abono.metodoPago}
+                        </span>
+
+                      </div>
+
+
+                      <strong className="pedido-abono-valor">
+
+                        {formatearPrecio(
+                          abono.valor
+                        )}
+
+                      </strong>
+
+                    </div>
+
+                  ))}
+
+                </div>
+
+              )}
+
+
+              {/* FORMULARIO REGISTRAR ABONO */}
+
+              {mostrarFormAbono && (
+
+                <div className="pedido-abono-form">
+
+                  <div className="pedido-form-row">
+
+                    <div className="pedido-form-group">
+
+                      <label>
+                        FECHA
+                      </label>
+
+                      <input
+                        type="date"
+                        value={
+                          formularioAbono.fecha
+                        }
+                        onChange={(e) =>
+                          setFormularioAbono(
+                            (actual) => ({
+                              ...actual,
+                              fecha:
+                                e.target.value
+                            })
+                          )
+                        }
+                      />
+
+                    </div>
+
+
+                    <div className="pedido-form-group">
+
+                      <label>
+                        MÉTODO DE PAGO
+                      </label>
+
+                      <select
+                        value={
+                          formularioAbono.metodoPago
+                        }
+                        onChange={(e) =>
+                          setFormularioAbono(
+                            (actual) => ({
+                              ...actual,
+                              metodoPago:
+                                e.target.value
+                            })
+                          )
+                        }
+                      >
+
+                        <option value="Efectivo">
+                          Efectivo
+                        </option>
+
+                        <option value="Nequi">
+                          Nequi
+                        </option>
+
+                        <option value="Transferencia bancaria">
+                          Transferencia bancaria
+                        </option>
+
+                        <option value="Tarjeta débito">
+                          Tarjeta débito
+                        </option>
+
+                        <option value="Tarjeta de crédito">
+                          Tarjeta de crédito
+                        </option>
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-form-group">
+
+                    <label>
+                      MONTO DEL ABONO (COP)
+                    </label>
+
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="0"
+                      value={
+                        formularioAbono.valor
+                      }
+                      onChange={(e) =>
+                        setFormularioAbono(
+                          (actual) => ({
+                            ...actual,
+                            valor:
+                              e.target.value
+                          })
+                        )
+                      }
+                    />
+
+                  </div>
+
+
+                  <div className="pedido-abono-form-actions">
+
+                    <button
+                      type="button"
+                      className="pedido-cancel-button"
+                      onClick={() =>
+                        setMostrarFormAbono(
+                          false
+                        )
+                      }
+                    >
+
+                      Cancelar
+
+                    </button>
+
+
+                    <button
+                      type="button"
+                      className="pedido-create-button"
+                      onClick={registrarAbono}
+                    >
+
+                      <Wallet size={16} />
+
+                      Registrar abono
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+
+              {/* REGLA DE NEGOCIO */}
+
+              {pedidoAbonos.estado ===
+                "Entregado" && (
+
+                <div className="pedido-delivered-info">
+
+                  Este pedido se encuentra
+                  entregado y no admite nuevos
+                  abonos.
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            <div className="pedido-modal-footer">
+
+              <button
+                type="button"
+                className="pedido-cancel-button"
+                onClick={cerrarAbonos}
               >
 
                 Cerrar

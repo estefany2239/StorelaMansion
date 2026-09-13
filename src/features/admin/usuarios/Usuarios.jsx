@@ -5,6 +5,7 @@ import {
   Search,
   Eye,
   Pencil,
+  Trash2,
   X,
   ShieldCheck
 } from "lucide-react";
@@ -525,6 +526,40 @@ export default function Usuarios() {
   };
 
   // =====================================================
+  // ELIMINAR USUARIO
+  // =====================================================
+
+  const eliminarUsuario = (usuario) => {
+
+    if (usuario.estado !== "Inactivo") {
+
+      alert(
+        "Solo se pueden eliminar los usuarios que estén en estado Inactivo."
+      );
+
+      return;
+
+    }
+
+
+    const confirmar =
+      window.confirm(
+        `¿Deseas eliminar al usuario "${usuario.nombre}"?`
+      );
+
+    if (!confirmar) return;
+
+
+    setUsuarios(
+      (prev) =>
+        prev.filter(
+          (item) => item.id !== usuario.id
+        )
+    );
+
+  };
+
+  // =====================================================
   // VER DETALLE
   // =====================================================
 
@@ -763,6 +798,35 @@ export default function Usuarios() {
                       >
 
                         <Pencil
+                          size={18}
+                        />
+
+                      </button>
+
+                      {/* ELIMINAR */}
+
+                      <button
+                        type="button"
+                        title={
+                          usuario.estado ===
+                          "Inactivo"
+                            ? "Eliminar usuario"
+                            : "Solo se puede eliminar un usuario Inactivo"
+                        }
+                        className={
+                          usuario.estado ===
+                          "Inactivo"
+                            ? ""
+                            : "disabled"
+                        }
+                        onClick={() =>
+                          eliminarUsuario(
+                            usuario
+                          )
+                        }
+                      >
+
+                        <Trash2
                           size={18}
                         />
 

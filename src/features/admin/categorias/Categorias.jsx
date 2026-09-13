@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
+  Eye,
   Pencil,
   Trash2,
   X
@@ -35,6 +36,7 @@ export default function Categorias() {
   const [busqueda, setBusqueda] = useState("");
   const [mostrarModal, setMostrarModal] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
 
   /* =====================================================
      FORMULARIO
@@ -219,6 +221,18 @@ export default function Categorias() {
     setModoEdicion(false);
   };
 
+  /* =====================================================
+     VER DETALLE DE CATEGORÍA
+     ===================================================== */
+
+  const verDetalle = (categoria) => {
+    setCategoriaSeleccionada(categoria);
+  };
+
+  const cerrarDetalle = () => {
+    setCategoriaSeleccionada(null);
+  };
+
 
   /* =====================================================
      RENDER
@@ -334,12 +348,8 @@ export default function Categorias() {
 
                   <td>
 
-                    <button
-                      type="button"
-                      className="categoria-estado-control"
-                      onClick={() =>
-                        cambiarEstado(categoria)
-                      }
+                    <label
+                      className="switch-categoria-estado"
                       title={
                         categoria.estado === "Activo"
                           ? "Hacer Inactiva"
@@ -347,31 +357,39 @@ export default function Categorias() {
                       }
                     >
 
-                      <span className={
-                        categoria.estado === "Activo"
-                          ? "estado-toggle activo"
-                          : "estado-toggle inactivo"
-                      }>
+                      <input
+                        type="checkbox"
+                        checked={categoria.estado === "Activo"}
+                        onChange={() =>
+                          cambiarEstado(categoria)
+                        }
+                      />
 
-                        <span className="estado-toggle-circle"></span>
+                      <span className="slider-categoria"></span>
 
+                      <span className={`estado-categoria-texto ${categoria.estado === "Activo" ? "activo" : "inactivo"}`}>
+                        {categoria.estado.toUpperCase()}
                       </span>
 
-                      <span className={
-                        categoria.estado === "Activo"
-                          ? "estado-label activo"
-                          : "estado-label inactivo"
-                      }>
-                        {categoria.estado}
-                      </span>
-
-                    </button>
+                    </label>
 
                   </td>
 
                   <td>
 
                     <div className="categoria-actions">
+
+                      <button
+                        type="button"
+                        title="Ver"
+                        onClick={() =>
+                          verDetalle(categoria)
+                        }
+                      >
+
+                        <Eye size={15} />
+
+                      </button>
 
                       <button
                         type="button"
@@ -565,6 +583,170 @@ export default function Categorias() {
                 onClick={guardarCategoria}
               >
                 {modoEdicion ? "Guardar" : "Crear"}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      {/* =================================================
+          MODAL VER DETALLE
+          ================================================= */}
+
+      {categoriaSeleccionada && (
+
+        <div
+          className="categoria-modal-overlay"
+          onClick={cerrarDetalle}
+        >
+
+          <div
+            className="categoria-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <div className="categoria-modal-header">
+
+              <h3>
+                Detalle de la Categoría
+              </h3>
+
+              <button
+                type="button"
+                className="categoria-modal-close"
+                onClick={cerrarDetalle}
+              >
+
+                <X size={19} />
+
+              </button>
+
+            </div>
+
+            <div className="categoria-modal-body">
+
+              <div className="categoria-detail-top">
+
+                <div className="categoria-detail-avatar">
+
+                  {categoriaSeleccionada.nombre.charAt(0)}
+
+                </div>
+
+                <div>
+
+                  <strong>
+                    {categoriaSeleccionada.nombre}
+                  </strong>
+
+                  <span>
+                    {categoriaSeleccionada.id}
+                  </span>
+
+                </div>
+
+              </div>
+
+              <div className="categoria-form-row">
+
+                <div className="categoria-info-group">
+
+                  <label>
+                    IDENTIFICADOR
+                  </label>
+
+                  <div className="categoria-info-value">
+                    {categoriaSeleccionada.id}
+                  </div>
+
+                </div>
+
+                <div className="categoria-info-group">
+
+                  <label>
+                    ESTADO
+                  </label>
+
+                  <div className="categoria-info-value">
+
+                    <label className="switch-categoria-estado">
+
+                      <input
+                        type="checkbox"
+                        checked={categoriaSeleccionada.estado === "Activo"}
+                        disabled
+                        readOnly
+                      />
+
+                      <span className="slider-categoria"></span>
+
+                      <span className={`estado-categoria-texto ${categoriaSeleccionada.estado === "Activo" ? "activo" : "inactivo"}`}>
+                        {categoriaSeleccionada.estado.toUpperCase()}
+                      </span>
+
+                    </label>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="categoria-form-row">
+
+                <div className="categoria-info-group">
+
+                  <label>
+                    NOMBRE
+                  </label>
+
+                  <div className="categoria-info-value">
+                    {categoriaSeleccionada.nombre}
+                  </div>
+
+                </div>
+
+                <div className="categoria-info-group">
+
+                  <label>
+                    EN USO POR PRODUCTOS
+                  </label>
+
+                  <div className="categoria-info-value">
+                    {categoriaSeleccionada.enUso ? "Sí" : "No"}
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="categoria-info-group">
+
+                <label>
+                  DESCRIPCIÓN
+                </label>
+
+                <div className="categoria-info-value">
+                  {categoriaSeleccionada.descripcion}
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="categoria-modal-footer">
+
+              <button
+                type="button"
+                className="categoria-cancel-button"
+                onClick={cerrarDetalle}
+              >
+                Cerrar
               </button>
 
             </div>

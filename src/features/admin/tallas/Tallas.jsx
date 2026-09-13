@@ -19,13 +19,13 @@ export default function Tallas() {
      ===================================================== */
 
   const [tallas, setTallas] = useState([
-    { id: "TAL-001", nombre: "XS", enUso: false },
-    { id: "TAL-002", nombre: "S", enUso: true },
-    { id: "TAL-003", nombre: "M", enUso: true },
-    { id: "TAL-004", nombre: "L", enUso: true },
-    { id: "TAL-005", nombre: "XL", enUso: false },
-    { id: "TAL-006", nombre: "XXL", enUso: false },
-    { id: "TAL-007", nombre: "XXXL", enUso: false }
+    { id: "TAL-001", nombre: "XS", enUso: false, estado: "Activo" },
+    { id: "TAL-002", nombre: "S", enUso: true, estado: "Activo" },
+    { id: "TAL-003", nombre: "M", enUso: true, estado: "Activo" },
+    { id: "TAL-004", nombre: "L", enUso: true, estado: "Activo" },
+    { id: "TAL-005", nombre: "XL", enUso: false, estado: "Activo" },
+    { id: "TAL-006", nombre: "XXL", enUso: false, estado: "Activo" },
+    { id: "TAL-007", nombre: "XXXL", enUso: false, estado: "Activo" }
   ]);
 
   /* =====================================================
@@ -94,7 +94,8 @@ export default function Tallas() {
 
     setFormulario({
       id: `TAL-${String(siguienteNumero).padStart(3, "0")}`,
-      nombre: ""
+      nombre: "",
+      estado: "Activo"
     });
 
     setModoEdicion(false);
@@ -150,12 +151,30 @@ export default function Tallas() {
         {
           id: formulario.id,
           nombre: formulario.nombre.trim(),
-          enUso: false
+          enUso: false,
+          estado: "Activo"
         }
       ]);
     }
 
     cerrarModal();
+  };
+
+  /* =====================================================
+     CAMBIAR ESTADO DE LA TALLA
+     ===================================================== */
+
+  const cambiarEstado = (talla) => {
+    const nuevoEstado =
+      talla.estado === "Activo" ? "Inactivo" : "Activo";
+
+    setTallas((actuales) =>
+      actuales.map((item) =>
+        item.id === talla.id
+          ? { ...item, estado: nuevoEstado }
+          : item
+      )
+    );
   };
 
   /* =====================================================
@@ -272,6 +291,10 @@ export default function Tallas() {
               </th>
 
               <th>
+                ESTADO
+              </th>
+
+              <th>
                 ACCIONES
               </th>
 
@@ -296,6 +319,35 @@ export default function Tallas() {
                     <span className="talla-nombre">
                       {talla.nombre}
                     </span>
+                  </td>
+
+                  <td>
+
+                    <label
+                      className="switch-talla-estado"
+                      title={
+                        talla.estado === "Activo"
+                          ? "Hacer Inactiva"
+                          : "Hacer Activa"
+                      }
+                    >
+
+                      <input
+                        type="checkbox"
+                        checked={talla.estado === "Activo"}
+                        onChange={() =>
+                          cambiarEstado(talla)
+                        }
+                      />
+
+                      <span className="slider-talla"></span>
+
+                      <span className={`estado-talla-texto ${talla.estado === "Activo" ? "activo" : "inactivo"}`}>
+                        {talla.estado.toUpperCase()}
+                      </span>
+
+                    </label>
+
                   </td>
 
                   <td>
@@ -337,7 +389,7 @@ export default function Tallas() {
               <tr>
 
                 <td
-                  colSpan="3"
+                  colSpan="4"
                   className="tallas-empty"
                 >
                   No se encontraron tallas.

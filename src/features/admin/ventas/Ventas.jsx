@@ -5,7 +5,7 @@ import {
   Search,
   Eye,
   X,
-  SlidersHorizontal
+  Trash2
 } from "lucide-react";
 
 import "./Ventas.css";
@@ -161,15 +161,6 @@ export default function Ventas() {
 
   const [busqueda, setBusqueda] = useState("");
 
-  const [mostrarFiltros, setMostrarFiltros] =
-    useState(false);
-
-  const [filtroFecha, setFiltroFecha] =
-    useState("");
-
-  const [filtroEstado, setFiltroEstado] =
-    useState("Todos");
-
 
   const [mostrarModal, setMostrarModal] =
     useState(false);
@@ -189,9 +180,9 @@ export default function Ventas() {
   const [formulario, setFormulario] = useState({
     cliente: "",
     fecha: "2026-09-06",
-    total: "",
     metodoPago: "Transferencia",
-    estado: "Completada"
+    estado: "Completada",
+    productos: []
   });
 
 
@@ -254,21 +245,7 @@ export default function Ventas() {
         .includes(texto);
 
 
-    const coincideFecha =
-      filtroFecha === "" ||
-      venta.fecha === filtroFecha;
-
-
-    const coincideEstado =
-      filtroEstado === "Todos" ||
-      venta.estado === filtroEstado;
-
-
-    return (
-      coincideBusqueda &&
-      coincideFecha &&
-      coincideEstado
-    );
+    return coincideBusqueda;
 
   });
 
@@ -293,7 +270,7 @@ export default function Ventas() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroFecha, filtroEstado]);
+  }, [busqueda]);
 
   useEffect(() => {
     if (paginaActual > totalPaginas) {
@@ -311,9 +288,9 @@ export default function Ventas() {
     setFormulario({
       cliente: "",
       fecha: "2026-09-06",
-      total: "",
       metodoPago: "Transferencia",
-      estado: "Completada"
+      estado: "Completada",
+      productos: []
     });
 
     setMostrarModal(true);
@@ -347,6 +324,94 @@ export default function Ventas() {
 
 
   // =========================================================
+  // AGREGAR PRODUCTO
+  // =========================================================
+
+  const agregarProducto = () => {
+
+    const nuevoProducto = {
+
+      nombre: "Nuevo producto",
+
+      cantidad: 1,
+
+      talla: "M",
+
+      color: "Negro",
+
+      precio: 0
+
+    };
+
+
+    setFormulario(
+      (actual) => ({
+        ...actual,
+
+        productos: [
+          ...actual.productos,
+          nuevoProducto
+        ]
+
+      })
+    );
+
+  };
+
+
+  // =========================================================
+  // ACTUALIZAR PRODUCTO
+  // =========================================================
+
+  const actualizarProducto = (
+    index,
+    campo,
+    valor
+  ) => {
+
+    setFormulario(
+      (actual) => ({
+        ...actual,
+
+        productos:
+          actual.productos.map(
+            (producto, i) =>
+              i === index
+                ? {
+                    ...producto,
+                    [campo]: valor
+                  }
+                : producto
+          )
+
+      })
+    );
+
+  };
+
+
+  // =========================================================
+  // ELIMINAR PRODUCTO
+  // =========================================================
+
+  const eliminarProducto = (index) => {
+
+    setFormulario(
+      (actual) => ({
+        ...actual,
+
+        productos:
+          actual.productos.filter(
+            (_, i) => i !== index
+          )
+
+      })
+    );
+
+  };
+
+
+  // =========================================================
   // REGISTRAR VENTA
   // =========================================================
 
@@ -354,8 +419,7 @@ export default function Ventas() {
 
     if (
       !formulario.cliente.trim() ||
-      !formulario.fecha ||
-      !formulario.total
+      !formulario.fecha
     ) {
 
       alert(
@@ -364,6 +428,16 @@ export default function Ventas() {
 
       return;
     }
+
+
+    const totalProductos =
+      formulario.productos.reduce(
+        (suma, producto) =>
+          suma +
+          Number(producto.precio) *
+          Number(producto.cantidad),
+        0
+      );
 
 
     const nuevoId =
@@ -383,7 +457,7 @@ export default function Ventas() {
         formulario.fecha,
 
       total:
-        Number(formulario.total),
+        totalProductos,
 
       metodoPago:
         formulario.metodoPago,
@@ -391,7 +465,8 @@ export default function Ventas() {
       estado:
         formulario.estado,
 
-      productos: []
+      productos:
+        formulario.productos
 
     };
 
@@ -470,21 +545,6 @@ export default function Ventas() {
 
 
   // =========================================================
-  // LIMPIAR FILTROS
-  // =========================================================
-
-  const limpiarFiltros = () => {
-
-    setBusqueda("");
-
-    setFiltroFecha("");
-
-    setFiltroEstado("Todos");
-
-  };
-
-
-  // =========================================================
   // RENDER
   // =========================================================
 
@@ -539,30 +599,6 @@ export default function Ventas() {
           </div>
 
 
-          {/* BOTÓN FILTROS */}
-
-          <button
-            type="button"
-            className={
-              mostrarFiltros
-                ? "ventas-filter-button active"
-                : "ventas-filter-button"
-            }
-            onClick={() =>
-              setMostrarFiltros(
-                !mostrarFiltros
-              )
-            }
-            title="Filtros"
-          >
-
-            <SlidersHorizontal size={18} />
-
-            Filtros
-
-          </button>
-
-
           {/* AGREGAR */}
 
           <button
@@ -580,84 +616,6 @@ export default function Ventas() {
         </div>
 
       </div>
-
-
-      {/* =====================================================
-          FILTROS
-      ===================================================== */}
-
-      {mostrarFiltros && (
-
-        <div className="ventas-filters-panel">
-
-
-          <div className="ventas-filter-group">
-
-            <label>
-              FECHA
-            </label>
-
-            <input
-              type="date"
-              value={filtroFecha}
-              onChange={(e) =>
-                setFiltroFecha(
-                  e.target.value
-                )
-              }
-            />
-
-          </div>
-
-
-          <div className="ventas-filter-group">
-
-            <label>
-              ESTADO
-            </label>
-
-            <select
-              value={filtroEstado}
-              onChange={(e) =>
-                setFiltroEstado(
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="Todos">
-                Todos
-              </option>
-
-              <option value="Completada">
-                Completada
-              </option>
-
-              <option value="Cerrada">
-                Cerrada
-              </option>
-
-              <option value="Anulada">
-                Anulada
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <button
-            type="button"
-            className="ventas-clear-filter"
-            onClick={limpiarFiltros}
-          >
-            Limpiar filtros
-          </button>
-
-
-        </div>
-
-      )}
 
 
       {/* =====================================================
@@ -918,67 +876,39 @@ export default function Ventas() {
               </div>
 
 
-              {/* TOTAL + MÉTODO */}
+              {/* MÉTODO DE PAGO */}
 
-              <div className="venta-form-row">
+              <div className="venta-form-group">
 
-                <div className="venta-form-group">
+                <label>
+                  MÉTODO DE PAGO
+                </label>
 
-                  <label>
-                    MONTO TOTAL (COP)
-                  </label>
+                <select
+                  value={
+                    formulario.metodoPago
+                  }
+                  onChange={(e) =>
+                    cambiarCampo(
+                      "metodoPago",
+                      e.target.value
+                    )
+                  }
+                >
 
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={
-                      formulario.total
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "total",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <option value="Transferencia">
+                    Transferencia
+                  </option>
 
-                </div>
+                  <option value="Efectivo">
+                    Efectivo
+                  </option>
 
+                  <option value="Nequi">
+                    Nequi
+                  </option>
 
-                <div className="venta-form-group">
-
-                  <label>
-                    MÉTODO DE PAGO
-                  </label>
-
-                  <select
-                    value={
-                      formulario.metodoPago
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "metodoPago",
-                        e.target.value
-                      )
-                    }
-                  >
-
-                    <option value="Transferencia">
-                      Transferencia
-                    </option>
-
-                    <option value="Efectivo">
-                      Efectivo
-                    </option>
-
-                    <option value="Nequi">
-                      Nequi
-                    </option>
-
-                  </select>
-
-                </div>
+                </select>
 
               </div>
 
@@ -1016,14 +946,255 @@ export default function Ventas() {
               </div>
 
 
-              {/* INFORMACIÓN */}
+              {/* PRODUCTOS DE LA VENTA */}
 
-              <div className="venta-form-info">
+              <div className="venta-details-header">
+
+                <label>
+                  PRODUCTOS DE LA VENTA
+                </label>
+
+
+                <button
+                  type="button"
+                  className="venta-add-product"
+                  onClick={agregarProducto}
+                >
+
+                  <Plus size={16} />
+
+                  Agregar producto
+
+                </button>
+
+              </div>
+
+
+              {formulario.productos.length ===
+                0 ? (
+
+                <div className="venta-no-productos">
+
+                  Sin productos. Agrega uno.
+
+                </div>
+
+              ) : (
+
+                <div className="venta-products-list">
+
+                  {formulario.productos.map(
+                    (producto, index) => (
+
+                      <div
+                        className="venta-product-item"
+                        key={index}
+                      >
+
+                        <div className="venta-product-item-head">
+
+                          <span className="venta-product-item-number">
+                            Producto #{index + 1}
+                          </span>
+
+                          <button
+                            type="button"
+                            className="venta-product-delete"
+                            title="Eliminar producto"
+                            onClick={() =>
+                              eliminarProducto(
+                                index
+                              )
+                            }
+                          >
+
+                            <Trash2 size={16} />
+
+                          </button>
+
+                        </div>
+
+
+                        <div className="venta-product-item-fields">
+
+                          <div className="venta-product-item-field nombre">
+
+                            <label>
+                              NOMBRE
+                            </label>
+
+                            <input
+                              type="text"
+                              value={
+                                producto.nombre
+                              }
+                              placeholder="Nombre del producto"
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "nombre",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="venta-product-item-field">
+
+                            <label>
+                              CANTIDAD
+                            </label>
+
+                            <input
+                              type="number"
+                              min="1"
+                              value={
+                                producto.cantidad
+                              }
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "cantidad",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="venta-product-item-field">
+
+                            <label>
+                              TALLA
+                            </label>
+
+                            <input
+                              type="text"
+                              value={
+                                producto.talla
+                              }
+                              placeholder="Talla"
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "talla",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="venta-product-item-field">
+
+                            <label>
+                              COLOR
+                            </label>
+
+                            <input
+                              type="text"
+                              value={
+                                producto.color
+                              }
+                              placeholder="Color"
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "color",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="venta-product-item-field">
+
+                            <label>
+                              PRECIO (COP)
+                            </label>
+
+                            <input
+                              type="number"
+                              min="0"
+                              value={
+                                producto.precio
+                              }
+                              onChange={(e) =>
+                                actualizarProducto(
+                                  index,
+                                  "precio",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                          </div>
+
+
+                          <div className="venta-product-item-subtotal">
+
+                            <label>
+                              SUBTOTAL
+                            </label>
+
+                            <strong>
+
+                              {formatearPrecio(
+                                Number(
+                                  producto.precio
+                                ) *
+                                Number(
+                                  producto.cantidad
+                                )
+                              )}
+
+                            </strong>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              )}
+
+
+              {/* TOTAL */}
+
+              <div className="venta-total-box">
 
                 <span>
-                  El detalle de productos se asociará
-                  a la venta durante el proceso de registro.
+                  MONTO TOTAL
                 </span>
+
+                <strong>
+
+                  {formatearPrecio(
+                    formulario.productos.reduce(
+                      (suma, producto) =>
+                        suma +
+                        Number(
+                          producto.precio
+                        ) *
+                        Number(
+                          producto.cantidad
+                        ),
+                      0
+                    )
+                  )}
+
+                </strong>
 
               </div>
 

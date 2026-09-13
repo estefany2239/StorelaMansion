@@ -365,6 +365,19 @@
 }
 
 
+.usuarios-table .usuario-actions button.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+
+.usuarios-table .usuario-actions button.disabled:hover {
+  color: #70798a;
+  background: transparent;
+  border-color: #e2e8f0;
+}
+
+
 /* =========================================================
    ESTADO VACÍO DE LA TABLA
    ========================================================= */

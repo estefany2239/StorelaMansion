@@ -146,8 +146,20 @@
 
 .colores-table {
   width: 100%;
-  min-width: 550px;
+  min-width: 680px;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* DISTRIBUCIÓN: ID | NOMBRE | ESTADO | ACCIONES */
+.colores-table th:nth-child(1) { width: 14%; }
+.colores-table th:nth-child(2) { width: 44%; }
+.colores-table th:nth-child(3) { width: 22%; }
+.colores-table th:nth-child(4) { width: 20%; }
+
+.colores-table th:nth-child(3),
+.colores-table td:nth-child(3) {
+  text-align: center;
 }
 
 .colores-table th {
@@ -215,6 +227,70 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
+}
+
+/* =========================================================
+   ESTADO - SWITCH
+   ========================================================= */
+
+.switch-color-estado {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-color-estado input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider-color {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  background-color: #cbd5e1;
+  border-radius: 22px;
+  transition: background-color 0.3s ease;
+}
+
+.slider-color::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.switch-color-estado input:checked + .slider-color {
+  background-color: #16a34a;
+}
+
+.switch-color-estado input:checked + .slider-color::before {
+  transform: translateX(18px);
+}
+
+.estado-color-texto {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.estado-color-texto.activo {
+  color: #15803d;
+}
+
+.estado-color-texto.inactivo {
+  color: #494747;
 }
 
 /* =========================================================
@@ -527,6 +603,22 @@
 
 .admin-container.admin-dark .color-nombre {
   color: #ffffff;
+}
+
+/* =========================================================
+   ESTADO DARK
+   ========================================================= */
+
+.admin-container.admin-dark .slider-color {
+  background-color: #4b4b4b;
+}
+
+.admin-container.admin-dark .estado-color-texto.activo {
+  color: #4ade80;
+}
+
+.admin-container.admin-dark .estado-color-texto.inactivo {
+  color: #a1a1aa;
 }
 
 /* =========================================================

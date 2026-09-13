@@ -131,60 +131,6 @@
 
 
 /* =========================================================
-   BOTÓN FILTROS
-   ========================================================= */
-
-.ventas-filter-button {
-  height: 45px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 7px;
-
-  padding: 0 15px;
-
-  border:
-    1px solid #d8dce2;
-
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  color: #626d7d;
-
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
-
-  font-size: 13px;
-  font-weight: 500;
-
-  cursor: pointer;
-
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease,
-    background 0.2s ease;
-}
-
-
-.ventas-filter-button:hover,
-.ventas-filter-button.active {
-  border-color:
-    var(--admin-gold);
-
-  color:
-    var(--admin-gold-dark);
-
-  background:
-    rgba(201, 162, 39, 0.06);
-}
-
-
-/* =========================================================
    BOTÓN AGREGAR
    ========================================================= */
 
@@ -230,107 +176,6 @@
 
   transform:
     translateY(-1px);
-}
-
-
-/* =========================================================
-   PANEL DE FILTROS
-   ========================================================= */
-
-.ventas-filters-panel {
-  display: flex;
-  align-items: flex-end;
-  gap: 15px;
-
-  margin-bottom: 18px;
-
-  padding: 18px;
-
-  background:
-    rgba(255, 255, 255, 0.55);
-
-  border:
-    1px solid
-    rgba(201, 162, 39, 0.18);
-
-  border-radius: 12px;
-}
-
-
-.ventas-filter-group {
-  display: flex;
-  flex-direction: column;
-
-  gap: 7px;
-}
-
-
-.ventas-filter-group label {
-  font-size: 10px;
-
-  font-weight: 600;
-
-  letter-spacing: 1px;
-
-  color:
-    #667085;
-}
-
-
-.ventas-filter-group input,
-.ventas-filter-group select {
-  height: 42px;
-
-  min-width: 180px;
-
-  padding: 0 12px;
-
-  box-sizing: border-box;
-
-  border:
-    1px solid #d8dce2;
-
-  border-radius: 8px;
-
-  outline: none;
-
-  background: #ffffff;
-
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
-
-  font-size: 13px;
-
-  color: #555555;
-}
-
-
-.ventas-filter-group input:focus,
-.ventas-filter-group select:focus {
-  border-color:
-    var(--admin-gold);
-}
-
-
-.ventas-clear-filter {
-  height: 42px;
-
-  padding: 0 15px;
-
-  border: none;
-
-  background: transparent;
-
-  color:
-    var(--admin-gold-dark);
-
-  font-size: 13px;
-
-  font-weight: 600;
-
-  cursor: pointer;
 }
 
 
@@ -999,23 +844,267 @@
 
 
 /* =========================================================
-   INFORMACIÓN DEL FORMULARIO
+   PANEL DE AGREGAR PRODUCTOS
    ========================================================= */
 
-.venta-form-info {
+.venta-details-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+
+.venta-details-header label {
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+}
+
+
+.venta-add-product {
+  height: 32px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 0 15px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background:
+    var(--admin-gold);
+
+  color:
+    #111111;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.venta-add-product:hover {
+  background:
+    var(--admin-gold-dark);
+}
+
+
+.venta-no-productos {
+  min-height: 70px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border:
+    1px solid #e2e2e2;
+
+  border-radius: 9px;
+
+  color:
+    #738096;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   PRODUCTO EDITABLE DE LA VENTA
+   ========================================================= */
+
+.venta-products-list {
+  overflow: hidden;
+
+  border:
+    1px solid #e1e1e1;
+
+  border-radius: 9px;
+}
+
+
+.venta-product-item {
   padding: 12px 14px;
+
+  border-bottom:
+    1px solid #e5e5e5;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+.venta-product-item:last-child {
+  border-bottom: none;
+}
+
+
+.venta-product-item-head {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+
+.venta-product-item-number {
+  font-size: 12px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.5px;
+
+  color:
+    #8a857a;
+}
+
+
+.venta-product-delete {
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background:
+    rgba(220, 53, 69, 0.08);
+
+  color:
+    #d64550;
+
+  cursor: pointer;
+}
+
+
+.venta-product-delete:hover {
+  background:
+    rgba(220, 53, 69, 0.16);
+
+  color:
+    #c03845;
+}
+
+
+.venta-product-item-fields {
+  display: grid;
+
+  grid-template-columns:
+    1.6fr 0.7fr 0.6fr 0.8fr 0.9fr 0.9fr;
+
+  gap: 8px;
+
+  align-items: end;
+}
+
+
+.venta-product-item-field,
+.venta-product-item-subtotal {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.venta-product-item-field label,
+.venta-product-item-subtotal label {
+  font-size: 10px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.8px;
+
+  color:
+    #8a857a;
+}
+
+
+.venta-product-item-field input {
+  width: 100%;
+
+  height: 36px;
+
+  padding: 0 9px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background:
+    #ffffff;
+
+  font-size: 13px;
+
+  color:
+    #222222;
+}
+
+
+.venta-product-item-field input:focus {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.10);
+}
+
+
+.venta-product-item-subtotal strong {
+  height: 36px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 0 10px;
 
   border-radius: 8px;
 
   background:
     rgba(201, 162, 39, 0.08);
 
+  font-size: 13px;
+
   color:
-    #737b89;
-
-  font-size: 12px;
-
-  line-height: 1.5;
+    #111111;
 }
 
 
@@ -1116,8 +1205,7 @@
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .ventas-search,
-[data-theme="dark"] .ventas-filter-button {
+[data-theme="dark"] .ventas-search {
   background:
     var(--admin-card);
 
@@ -1129,25 +1217,6 @@
 [data-theme="dark"] .ventas-search input {
   color:
     var(--admin-text);
-}
-
-
-[data-theme="dark"] .ventas-filters-panel {
-  background:
-    var(--admin-card);
-}
-
-
-[data-theme="dark"] .ventas-filter-group input,
-[data-theme="dark"] .ventas-filter-group select {
-  background:
-    #181818;
-
-  border-color:
-    rgba(255, 255, 255, 0.15);
-
-  color:
-    #ffffff;
 }
 
 
@@ -1265,6 +1334,61 @@
 }
 
 
+[data-theme="dark"] .venta-details-header label {
+  color:
+    #b0b0b0;
+}
+
+
+[data-theme="dark"] .venta-no-productos {
+  border-color:
+    rgba(255, 255, 255, 0.12);
+
+  color:
+    #b0b0b0;
+}
+
+
+[data-theme="dark"] .venta-product-item {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+[data-theme="dark"] .venta-product-item-number {
+  color:
+    #a19a8b;
+}
+
+
+[data-theme="dark"] .venta-product-item-field label,
+[data-theme="dark"] .venta-product-item-subtotal label {
+  color:
+    #a19a8b;
+}
+
+
+[data-theme="dark"] .venta-product-item-field input {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+[data-theme="dark"] .venta-product-item-subtotal strong {
+  background:
+    rgba(194, 168, 120, 0.10);
+
+  color:
+    #ffffff;
+}
+
+
 [data-theme="dark"] .venta-total-box {
   background:
     rgba(194, 168, 120, 0.10);
@@ -1283,15 +1407,6 @@
 
   color:
     #bcaaf0;
-}
-
-
-[data-theme="dark"] .venta-form-info {
-  background:
-    rgba(194, 168, 120, 0.10);
-
-  color:
-    #b0b0b0;
 }
 
 
@@ -1348,10 +1463,6 @@
     min-width: 900px;
   }
 
-  .ventas-filters-panel {
-    flex-wrap: wrap;
-  }
-
   .venta-form-row {
     grid-template-columns:
       1fr;
@@ -1375,24 +1486,17 @@
   }
 
   .ventas-search,
-  .ventas-filter-button,
   .ventas-add-button {
-    width: 100%;
-  }
-
-  .ventas-filters-panel {
-    flex-direction: column;
-
-    align-items: stretch;
-  }
-
-  .ventas-filter-group input,
-  .ventas-filter-group select {
     width: 100%;
   }
 
   .ventas-table {
     min-width: 900px;
+  }
+
+  .venta-product-item-fields {
+    grid-template-columns:
+      1fr 1fr;
   }
 
   .venta-modal-overlay {
