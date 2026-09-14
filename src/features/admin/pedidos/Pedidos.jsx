@@ -15,7 +15,7 @@ import "./Pedidos.css";
 
 import Pagination from "../components/Pagination";
 
-export default function Pedidos() {
+export default function Pedidos({ vendedorId }) {
 
   // =====================================================
   // PEDIDOS
@@ -26,6 +26,7 @@ export default function Pedidos() {
       id: "PED-001",
       idCliente: "CLI-001",
       cliente: "María García",
+      vendedor_id: "USR-003",
       fecha: "2024-07-10",
       total: 805000,
       estado: "Entregado",
@@ -67,6 +68,7 @@ export default function Pedidos() {
       id: "PED-002",
       idCliente: "CLI-002",
       cliente: "Valentina Torres",
+      vendedor_id: "USR-006",
       fecha: "2024-07-15",
       total: 1250000,
       estado: "En preparación",
@@ -103,6 +105,7 @@ export default function Pedidos() {
       id: "PED-003",
       idCliente: "CLI-003",
       cliente: "Sofía Martínez",
+      vendedor_id: "USR-003",
       fecha: "2024-07-20",
       total: 395000,
       estado: "Registrado",
@@ -126,6 +129,7 @@ export default function Pedidos() {
       id: "PED-004",
       idCliente: "CLI-004",
       cliente: "Camila Reyes",
+      vendedor_id: "USR-006",
       fecha: "2024-07-25",
       total: 890000,
       estado: "Despachado",
@@ -155,6 +159,7 @@ export default function Pedidos() {
       id: "PED-005",
       idCliente: "CLI-005",
       cliente: "Santiago Gómez",
+      vendedor_id: "USR-003",
       fecha: "2024-08-01",
       total: 340000,
       estado: "Registrado",
@@ -178,6 +183,7 @@ export default function Pedidos() {
       id: "PED-006",
       idCliente: "CLI-006",
       cliente: "Marcela Ríos",
+      vendedor_id: "USR-006",
       fecha: "2024-08-05",
       total: 620000,
       estado: "Despachado",
@@ -207,6 +213,7 @@ export default function Pedidos() {
       id: "PED-007",
       idCliente: "CLI-007",
       cliente: "Diego Muñoz",
+      vendedor_id: "USR-003",
       fecha: "2024-08-10",
       total: 320000,
       estado: "En preparación",
@@ -366,6 +373,13 @@ export default function Pedidos() {
 
   const pedidosFiltrados = pedidos.filter(
     (pedido) => {
+
+      if (
+        vendedorId &&
+        pedido.vendedor_id !== vendedorId
+      ) {
+        return false;
+      }
 
       const texto =
         busqueda
@@ -683,6 +697,8 @@ export default function Pedidos() {
       const nuevoPedido = {
 
         id: formulario.id,
+
+        vendedor_id: vendedorId,
 
         idCliente:
           formulario.idCliente,
@@ -1223,48 +1239,48 @@ export default function Pedidos() {
 
                       {/* EDITAR */}
 
-                      <button
-                        type="button"
-                        title={
-                          pedido.estado ===
-                          "Entregado"
-                            ? "Pedido entregado: no se puede modificar"
-                            : "Editar pedido"
-                        }
-                        className={
-                          pedido.estado ===
-                          "Entregado"
-                            ? "disabled"
-                            : ""
-                        }
-                        onClick={() =>
-                          abrirEditar(
-                            pedido
-                          )
-                        }
-                      >
+                        <button
+                          type="button"
+                          title={
+                            pedido.estado ===
+                            "Entregado"
+                              ? "Pedido entregado: no se puede modificar"
+                              : "Editar pedido"
+                          }
+                          className={
+                            pedido.estado ===
+                            "Entregado"
+                              ? "disabled"
+                              : ""
+                          }
+                          onClick={() =>
+                            abrirEditar(
+                              pedido
+                            )
+                          }
+                        >
 
-                        <Pencil size={18} />
+                          <Pencil size={18} />
 
-                      </button>
+                        </button>
 
 
                       {/* ELIMINAR */}
 
-                      <button
-                        type="button"
-                        className="pedido-delete-button"
-                        title="Eliminar pedido"
-                        onClick={() =>
-                          eliminarPedido(
-                            pedido
-                          )
-                        }
-                      >
+                        <button
+                          type="button"
+                          className="pedido-delete-button"
+                          title="Eliminar pedido"
+                          onClick={() =>
+                            eliminarPedido(
+                              pedido
+                            )
+                          }
+                        >
 
-                        <Trash2 size={18} />
+                          <Trash2 size={18} />
 
-                      </button>
+                        </button>
 
 
                     </div>

@@ -12,7 +12,7 @@ import "./Ventas.css";
 
 import Pagination from "../components/Pagination";
 
-export default function Ventas() {
+export default function Ventas({ vendedorId }) {
 
   // =========================================================
   // DATOS DE VENTAS
@@ -21,6 +21,7 @@ export default function Ventas() {
   const [ventas, setVentas] = useState([
     {
       id: "V-00125",
+      vendedor_id: "USR-003",
       cliente: "María López",
       fecha: "2026-09-06",
       total: 250000,
@@ -43,6 +44,7 @@ export default function Ventas() {
 
     {
       id: "V-00124",
+      vendedor_id: "USR-006",
       cliente: "Juan Pérez",
       fecha: "2026-09-05",
       total: 180000,
@@ -60,6 +62,7 @@ export default function Ventas() {
 
     {
       id: "V-00123",
+      vendedor_id: "USR-003",
       cliente: "Laura Gómez",
       fecha: "2026-09-05",
       total: 320000,
@@ -82,6 +85,7 @@ export default function Ventas() {
 
     {
       id: "V-00122",
+      vendedor_id: "USR-006",
       cliente: "Carlos Rodríguez",
       fecha: "2026-09-04",
       total: 485000,
@@ -104,6 +108,7 @@ export default function Ventas() {
 
     {
       id: "V-00121",
+      vendedor_id: "USR-003",
       cliente: "María García",
       fecha: "2026-08-28",
       total: 620000,
@@ -121,6 +126,7 @@ export default function Ventas() {
 
     {
       id: "V-00120",
+      vendedor_id: "USR-006",
       cliente: "Valentina Torres",
       fecha: "2026-08-21",
       total: 280000,
@@ -138,6 +144,7 @@ export default function Ventas() {
 
     {
       id: "V-00119",
+      vendedor_id: "USR-003",
       cliente: "Sofía Martínez",
       fecha: "2026-08-15",
       total: 340000,
@@ -230,6 +237,13 @@ export default function Ventas() {
   // =========================================================
 
   const ventasFiltradas = ventas.filter((venta) => {
+
+    if (
+      vendedorId &&
+      venta.vendedor_id !== vendedorId
+    ) {
+      return false;
+    }
 
     const texto =
       busqueda.toLowerCase().trim();
@@ -449,6 +463,8 @@ export default function Ventas() {
     const nuevaVenta = {
 
       id: nuevoId,
+
+      vendedor_id: vendedorId,
 
       cliente:
         formulario.cliente.trim(),

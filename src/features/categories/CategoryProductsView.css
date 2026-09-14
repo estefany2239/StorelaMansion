@@ -247,6 +247,25 @@ body.dark .catalog__product-card,
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Prendas (camisas/camisetas): la foto completa sin recortes */
+.product__img-wrap--camisas {
+  height: 280px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #ffffff;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .product__img-wrap--camisas,
+body.dark-mode .product__img-wrap--camisas,
+body.dark .product__img-wrap--camisas,
+.dark-mode .product__img-wrap--camisas,
+.dark-mode-active .product__img-wrap--camisas {
+  background-color: #1e1e1e;
+}
+
 .product__brand-tag {
   position: absolute;
   top: 12px;

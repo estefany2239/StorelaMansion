@@ -5,8 +5,11 @@ import {
   EyeOff,
   Lock,
   Mail,
+  UserRound,
   ArrowRight
 } from "lucide-react";
+
+import { vendedores } from "../../data/vendedoresData";
 
 import "./Login.css";
 
@@ -22,6 +25,7 @@ export default function Login({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [vendedorSeleccionado, setVendedorSeleccionado] = useState("");
   const [error, setError] = useState("");
 
   const [intentosFallidos, setIntentosFallidos] = useState(0);
@@ -65,6 +69,26 @@ export default function Login({
     return () => clearInterval(intervalo);
   }, [tiempoBloqueo]);
 
+  const guardarSesion = (usuarioBase) => {
+    const vendedorElegido =
+      vendedores.find(
+        (vendedor) =>
+          vendedor.id === vendedorSeleccionado
+      );
+
+    const usuario = vendedorElegido
+      ? {
+          nombre: vendedorElegido.nombre,
+          email: vendedorElegido.correo,
+          rol: "Vendedor",
+          vendedorId: vendedorElegido.id
+        }
+      : usuarioBase;
+
+    localStorage.setItem("usuario", JSON.stringify(usuario));
+    if (onLoginSuccess) onLoginSuccess(usuario);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
@@ -90,8 +114,7 @@ export default function Login({
         email: email,
         rol: "Administrador"
       };
-      localStorage.setItem("usuario", JSON.stringify(usuario));
-      if (onLoginSuccess) onLoginSuccess(usuario);
+      guardarSesion(usuario);
       return;
     }
 
@@ -107,8 +130,7 @@ export default function Login({
         email: email,
         rol: "Cliente"
       };
-      localStorage.setItem("usuario", JSON.stringify(usuario));
-      if (onLoginSuccess) onLoginSuccess(usuario);
+      guardarSesion(usuario);
       return;
     }
 
@@ -126,6 +148,14 @@ export default function Login({
   const fillDemoCredentials = (demoEmail, demoPass) => {
     setEmail(demoEmail);
     setPassword(demoPass);
+    setVendedorSeleccionado("");
+    setError("");
+  };
+
+  const fillDemoCuentaVendedor = () => {
+    setEmail("admin@storelamansion.com");
+    setPassword("Admin123");
+    setVendedorSeleccionado(vendedores[0]?.id || "");
     setError("");
   };
 
@@ -191,6 +221,24 @@ export default function Login({
               </div>
             </div>
 
+            <div className="auth-field">
+              <label>VENDEDOR (OPCIONAL)</label>
+              <div className="auth-input-wrap">
+                <UserRound size={16} className="auth-input-icon" />
+                <select
+                  value={vendedorSeleccionado}
+                  onChange={(e) => setVendedorSeleccionado(e.target.value)}
+                >
+                  <option value="">Sin vendedor</option>
+                  {vendedores.map((vendedor) => (
+                    <option key={vendedor.id} value={vendedor.id}>
+                      {vendedor.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {error && <div className="auth-error">{error}</div>}
 
             {tiempoBloqueo > 0 && (
@@ -245,6 +293,13 @@ export default function Login({
             >
               <strong>Cliente</strong>
               <span>cliente@storelamansion.com · Cliente123</span>
+            </div>
+            <div
+              className="auth-demo-item"
+              onClick={fillDemoCuentaVendedor}
+            >
+              <strong>Vendedor</strong>
+              <span>Admin123 + elige vendedor en el selector</span>
             </div>
           </div>
 

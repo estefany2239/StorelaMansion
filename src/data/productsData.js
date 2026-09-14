@@ -794,109 +794,90 @@ export const allProducts = [
     id: 160, 
     name: 'Gorra Trucker Snapback', 
     categoryId: 'gorras', 
-    gender: 'unisex', 
-    size: 'Única', 
-    color: 'Rojo', 
-    brand: 'Boss',
     price: '$70.000', 
-    image: new URL("../assets/img/go.png", import.meta.url).href 
+    image: new URL("../assets/img/go.jpeg", import.meta.url).href 
   },
   { 
     id: 161, 
     name: 'Gorra Casual Classic', 
     categoryId: 'gorras', 
     gender: 'unisex', 
-    size: 'Única', 
+    size: 'Gorras', 
     color: 'Blanco', 
-    brand: 'Boss',
     price: '$65.000', 
-    image: new URL("../assets/img/gorr.png", import.meta.url).href 
+    image: new URL("../assets/img/gorr.jpeg", import.meta.url).href 
   },
   { 
     id: 162, 
     name: 'Gorra Casual Classic', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    size: 'Única', 
-    color: 'Blanco', 
-    brand: 'Boss',
+    size: 'Gorras', 
     price: '$65.000', 
-    image: new URL("../assets/img/gorro.png", import.meta.url).href 
+    image: new URL("../assets/img/gorro.jpeg", import.meta.url).href 
   },
   { 
     id: 163, 
     name: 'Buso Hoodie Oversized', 
     categoryId: 'gorras', 
     gender: 'unisex', 
-    color: 'Negro', 
-    brand: 'Calvin Klein',
+    size: 'Gorras', 
     price: '$140.000', 
-    image: new URL("../assets/img/kle.png", import.meta.url).href 
+    image: new URL("../assets/img/kle.jpeg", import.meta.url).href 
   },
   { 
     id: 164, 
     name: 'Perfume Luxury Essence', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    color: 'Dorado', 
-    brand: 'Guess',
+    size: 'Gorras',
     price: '$220.000', 
-    image: new URL("../assets/img/guess.png", import.meta.url).href 
+    image: new URL("../assets/img/guess.jpeg", import.meta.url).href 
   },
   { 
     id: 165, 
     name: 'Reloj Chronograph Gold', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    size: 'Única', 
-    color: 'Dorado', 
-    brand: 'Guess',
+    size: 'Gorras', 
     price: '$280.000', 
-    image: new URL("../assets/img/gorra.png", import.meta.url).href 
+    image: new URL("../assets/img/gorra.jpeg", import.meta.url).href 
   },
   { 
     id: 166, 
     name: 'Reloj Chronograph Gold', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    size: 'Única', 
-    color: 'Dorado', 
-    brand: 'Lacoste',
+    size: 'Gorras', 
     price: '$280.000', 
-    image: new URL("../assets/img/lac.png", import.meta.url).href 
+    image: new URL("../assets/img/lac.jpeg", import.meta.url).href 
   },
   { 
     id: 167, 
     name: 'Reloj Chronograph Gold', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    size: 'Única', 
-    color: 'Dorado', 
-    brand: 'Pyscho Bunny',
+    size: 'Gorras', 
     price: '$280.000', 
-    image: new URL("../assets/img/con.png", import.meta.url).href 
+    image: new URL("../assets/img/conjunto.jpeg", import.meta.url).href 
   },
   { 
     id: 168, 
     name: 'Reloj Chronograph Gold', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    size: 'Única', 
-    color: 'Dorado', 
-    brand: 'Pyscho Bunny',
+    size: 'Gorras', 
     price: '$280.000', 
-    image: new URL("../assets/img/jo.png", import.meta.url).href 
+    image: new URL("../assets/img/jo.jpeg", import.meta.url).href 
   },
   { 
     id: 169, 
     name: 'Reloj Chronograph Gold', 
     categoryId: 'gorras', 
     gender: 'mujer', 
-    size: 'Única', 
-    color: 'Dorado', 
-    brand: 'Pyscho Bunny',
+    size: 'Gorras', 
     price: '$280.000', 
-    image: new URL("../assets/img/nejo.png", import.meta.url).href 
+    image: new URL("../assets/img/nejo.jpeg", import.meta.url).href 
   },
 
   // ==========================================
@@ -1232,7 +1213,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/cam.png", import.meta.url).href 
   },
   { 
     id: 22, 
@@ -1242,7 +1223,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/037.png", import.meta.url).href 
   },
   { 
     id: 23, 
@@ -1252,7 +1233,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/038.png", import.meta.url).href 
   },
   { 
     id: 24, 
@@ -1262,7 +1243,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/039.png", import.meta.url).href 
   },
   { 
     id: 25, 
@@ -1272,7 +1253,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/040.png", import.meta.url).href 
   },
   { 
     id: 26, 
@@ -1282,7 +1263,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/041.png", import.meta.url).href 
   },
   { 
     id: 27, 
@@ -1292,7 +1273,7 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/042.png", import.meta.url).href 
   },
   { 
     id: 28, 
@@ -1302,8 +1283,236 @@ export const allProducts = [
     size: 'M', 
     color: 'Blanco', 
     price: '$90.000', 
-    image: new URL("../assets/img/020.png", import.meta.url).href 
+    image: new URL("../assets/img/043.png", import.meta.url).href 
   },
+  { 
+    id: 29, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/044.png", import.meta.url).href 
+  },
+  { 
+    id: 30, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/045.png", import.meta.url).href 
+  },
+  { 
+    id: 31, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/046.png", import.meta.url).href 
+  },
+  { 
+    id: 32, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/048.png", import.meta.url).href 
+  },
+  { 
+    id: 33, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/049.png", import.meta.url).href 
+  },
+  { 
+    id: 34, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/050.png", import.meta.url).href 
+  },
+  { 
+    id: 35, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/051.png", import.meta.url).href 
+  },{ 
+    id: 36, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/052.png", import.meta.url).href 
+  },{ 
+    id: 37, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/053.png", import.meta.url).href 
+  },{ 
+    id: 38, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/054.png", import.meta.url).href 
+  },
+  { 
+    id: 39, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'M', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/055.png", import.meta.url).href 
+  },
+  { 
+    id: 40, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/056.png", import.meta.url).href 
+  },
+  { 
+    id: 41, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/057.png", import.meta.url).href 
+  },
+  { 
+    id: 42, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/058.png", import.meta.url).href 
+  },
+  { 
+    id: 43, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/059.png", import.meta.url).href 
+  },
+  { 
+    id: 44, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/060.png", import.meta.url).href 
+  },
+  { 
+    id: 45, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/061.png", import.meta.url).href 
+  },
+  { 
+    id: 46, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/062.png", import.meta.url).href 
+  },
+  { 
+    id: 47, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/063.png", import.meta.url).href 
+  },
+  { 
+    id: 48, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/064.png", import.meta.url).href 
+  },
+  { 
+    id: 49, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/065.png", import.meta.url).href 
+  },
+  { 
+    id: 50, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/066.png", import.meta.url).href 
+  },
+  { 
+    id: 51, 
+    name: 'Camiseta', 
+    categoryId: 'camisetas', 
+    gender: 'hombre', 
+    size: 'XL', 
+    color: 'Blanco', 
+    price: '$90.000', 
+    image: new URL("../assets/img/067.png", import.meta.url).href 
+  },
+  
   
 
    
@@ -1311,11 +1520,19 @@ export const allProducts = [
 
 ];
 
-// 5. Función de filtrado flexible (Garantiza que las gorras aparezcan al presionar su categoría o género)
+// 5. Función de filtrado flexible
+//    La categoría "Accesorios" agrupa gorras, perfumes y relojes
+//    tanto para hombre como para mujer.
 export const getFilteredProducts = (category, gender, brands, sizes, colors) => {
+  const tipoKeywords = {
+    gorras: 'gorra',
+    perfumes: 'perfume',
+    relojes: 'reloj',
+  };
+
   return allProducts.filter(product => {
     const prodCat = (product.categoryId || "").toLowerCase().trim();
-    
+
     let catString = "";
     if (typeof category === 'object' && category !== null) {
       catString = (category.id || category.title || "").toLowerCase().trim();
@@ -1323,13 +1540,44 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors) => 
       catString = category.toLowerCase().trim();
     }
 
-    const matchCategory = !catString || catString === 'todos' || prodCat === catString || prodCat.includes(catString);
-    
-    const isAccessory = ['gorras', 'perfumes', 'reloj', 'relojes', 'accesorios'].some(t => 
-      catString.includes(t) || prodCat.includes(t)
-    );
-    
-    const matchGender = !gender || product.gender === gender || (isAccessory && (product.gender === 'unisex' || !product.gender));
+    const sinFiltroCategoria = !catString || catString === 'todos';
+
+    const esCategoriaAccesorios =
+      !sinFiltroCategoria &&
+      ['accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
+        .some(t => catString.includes(t));
+
+    const esProductoAccesorio = () => {
+      if (
+        ['gorras', 'accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
+          .some(t => prodCat.includes(t))
+      ) {
+        return true;
+      }
+      return ['gorra', 'perfume', 'reloj'].some(kw =>
+        (product.name || '').toLowerCase().includes(kw)
+      );
+    };
+
+    let matchCategory;
+    if (esCategoriaAccesorios) {
+      matchCategory = esProductoAccesorio();
+    } else {
+      matchCategory =
+        sinFiltroCategoria ||
+        prodCat === catString ||
+        prodCat.includes(catString);
+    }
+
+    const isAccessory =
+      sinFiltroCategoria ||
+      ['gorras', 'perfumes', 'reloj', 'relojes', 'accesorios']
+        .some(t => catString.includes(t) || prodCat.includes(t));
+
+    const matchGender =
+      !gender ||
+      product.gender === gender ||
+      (isAccessory && (product.gender === 'unisex' || !product.gender));
 
     if (!matchCategory || !matchGender) return false;
 
@@ -1340,7 +1588,15 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors) => 
       }
     }
 
-    if (!isAccessory && sizes && sizes.length > 0 && product.size && !sizes.includes(product.size)) {
+    // En accesorios los "sizes" son tipos (Gorras, Perfumes, Relojes)
+    if (esCategoriaAccesorios && sizes && sizes.length > 0) {
+      const nombre = (product.name || '').toLowerCase();
+      const coincideTipo = sizes.some(tipo => {
+        const kw = tipoKeywords[String(tipo).toLowerCase()] || String(tipo).toLowerCase();
+        return nombre.includes(kw);
+      });
+      if (!coincideTipo) return false;
+    } else if (!isAccessory && sizes && sizes.length > 0 && product.size && !sizes.includes(product.size)) {
       return false;
     }
 

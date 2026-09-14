@@ -35,7 +35,11 @@ import "./AdminTheme.css";
 
 export default function AdminLayout({ user, onLogout }) {
 
-  const [adminView, setAdminView] = useState("dashboard");
+  const esVendedor = user?.rol === "Vendedor";
+
+  const [adminView, setAdminView] = useState(
+    esVendedor ? "ventas" : "dashboard"
+  );
 
   const [darkMode, setDarkMode] = useState(() => {
     const guardado = localStorage.getItem("sla-admin-theme");
@@ -46,30 +50,32 @@ export default function AdminLayout({ user, onLogout }) {
     useState(false);
 
   const [gestionVentasAbierto, setGestionVentasAbierto] =
-    useState(false);
+    useState(esVendedor);
 
 
   /* =====================================================
      MENÚ PRINCIPAL
      ===================================================== */
 
-  const menu = [
-    {
-      nombre: "Dashboard",
-      vista: "dashboard",
-      icono: LayoutDashboard
-    },
-    {
-      nombre: "Roles",
-      vista: "roles",
-      icono: Shield
-    },
-    {
-      nombre: "Usuarios",
-      vista: "usuarios",
-      icono: Users
-    }
-  ];
+  const menu = esVendedor
+    ? []
+    : [
+        {
+          nombre: "Dashboard",
+          vista: "dashboard",
+          icono: LayoutDashboard
+        },
+        {
+          nombre: "Roles",
+          vista: "roles",
+          icono: Shield
+        },
+        {
+          nombre: "Usuarios",
+          vista: "usuarios",
+          icono: Users
+        }
+      ];
 
   /* =====================================================
      SUBMENÚ GESTIÓN DE PRODUCTOS
@@ -102,28 +108,41 @@ export default function AdminLayout({ user, onLogout }) {
      SUBMENÚ GESTIÓN DE VENTAS
      ===================================================== */
 
-  const menuVentas = [
-    {
-      nombre: "Ventas",
-      vista: "ventas",
-      icono: ShoppingCart
-    },
-    {
-      nombre: "Clientes",
-      vista: "clientes",
-      icono: UserRound
-    },
-    {
-      nombre: "Pedidos",
-      vista: "pedidos",
-      icono: ShoppingCart
-    },
-    {
-      nombre: "Domicilios",
-      vista: "domicilios",
-      icono: Truck
-    }
-  ];
+  const menuVentas = esVendedor
+    ? [
+        {
+          nombre: "Ventas",
+          vista: "ventas",
+          icono: ShoppingCart
+        },
+        {
+          nombre: "Pedidos",
+          vista: "pedidos",
+          icono: ShoppingCart
+        }
+      ]
+    : [
+        {
+          nombre: "Ventas",
+          vista: "ventas",
+          icono: ShoppingCart
+        },
+        {
+          nombre: "Clientes",
+          vista: "clientes",
+          icono: UserRound
+        },
+        {
+          nombre: "Pedidos",
+          vista: "pedidos",
+          icono: ShoppingCart
+        },
+        {
+          nombre: "Domicilios",
+          vista: "domicilios",
+          icono: Truck
+        }
+      ];
 
 
   /* =====================================================
@@ -195,13 +214,13 @@ export default function AdminLayout({ user, onLogout }) {
         return <Colores />;
 
       case "ventas":
-        return <Ventas />;
+        return <Ventas vendedorId={user?.vendedorId} />;
 
       case "clientes":
         return <Clientes />;
 
       case "pedidos":
-        return <Pedidos />;
+        return <Pedidos vendedorId={user?.vendedorId} />;
 
       case "domicilios":
         return <Domicilios />;
@@ -255,7 +274,9 @@ export default function AdminLayout({ user, onLogout }) {
           </h2>
 
           <span>
-            Panel Administrativo
+            {esVendedor
+              ? "Panel del Vendedor"
+              : "Panel Administrativo"}
           </span>
 
         </div>
@@ -267,9 +288,11 @@ export default function AdminLayout({ user, onLogout }) {
 
         <nav className="admin-menu">
 
-          <span className="menu-title">
-            MENÚ PRINCIPAL
-          </span>
+          {!esVendedor && (
+            <span className="menu-title">
+              MENÚ PRINCIPAL
+            </span>
+          )}
 
 
           {menu.map((item) => {
@@ -311,7 +334,9 @@ export default function AdminLayout({ user, onLogout }) {
               ACORDEÓN GESTIÓN DE PRODUCTOS
               ================================================= */}
 
-          <div className="admin-menu-accordion">
+          {!esVendedor && (
+
+            <div className="admin-menu-accordion">
 
             <button
               type="button"
@@ -383,6 +408,8 @@ export default function AdminLayout({ user, onLogout }) {
             )}
 
           </div>
+
+          )}
 
 
           {/* =================================================

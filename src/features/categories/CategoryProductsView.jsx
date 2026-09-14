@@ -47,13 +47,18 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const isPantalones = category?.title?.toLowerCase().includes('pantalon') || 
                        category?.title?.toLowerCase().includes('pantalón') || 
                        category?.id === 'pantalones';
+  const isCamisas = category?.title?.toLowerCase().includes('camiseta') || 
+                    category?.title?.toLowerCase().includes('camisa') || 
+                    category?.id === 'camisetas' || 
+                    category?.id === 'camisas';
 
-  // CORREGIDO: Se limpian las marcas solo en gorras y se ajustan las tallas para que los tenis no se bloqueen
+  // CORREGIDO: Se limpian las marcas solo en gorras y se ajustan las tallas para que los tenis no se bloqueen.
+  // En accesorios los "sizes" son los tipos (Gorras, Perfumes, Relojes) y se filtran por nombre en getFilteredProducts.
   const filteredProducts = getFilteredProducts(
     category, 
     selectedGender, 
     isGorras ? selectedBrands : [], 
-    isAccesorios ? [] : selectedSizes, 
+    selectedSizes, 
     isTenis ? [] : selectedColors
   );
 
@@ -154,18 +159,18 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
               ) : isAccesorios ? (
                 /* 2. SI ES ACCESORIOS */
                 <div className="filter__group">
-                  <h4>Estilos de Accesorios</h4>
+                  <h4>Tipo de Accesorio</h4>
                   <p className="product__details" style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
-                    Estilos para {selectedGender}
+                    Accesorios para {selectedGender}
                   </p>
                   <div className="filter__sizes-grid">
-                    {['Deportivo', 'Elegante', 'Casual'].map(estilo => (
+                    {['Gorras', 'Perfumes', 'Relojes'].map(tipo => (
                       <button 
-                        key={estilo}
-                        className={`filter__size-btn ${selectedSizes.includes(estilo) ? 'active' : ''}`}
-                        onClick={() => toggleSize(estilo)}
+                        key={tipo}
+                        className={`filter__size-btn ${selectedSizes.includes(tipo) ? 'active' : ''}`}
+                        onClick={() => toggleSize(tipo)}
                       >
-                        {estilo}
+                        {tipo}
                       </button>
                     ))}
                   </div>
@@ -214,7 +219,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                   <h4>Tallas de Tenis</h4>
                   <div className="filter__sizes-grid">
                     {selectedGender === 'hombre' 
-                      ? ['39', '40', '41', '42', '43', '44'].map(size => (
+                      ? ['38.5', '37', '37.5', '38', '39', '39.5'].map(size => (
                           <button 
                             key={size}
                             className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
@@ -235,8 +240,40 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                     }
                   </div>
                 </div>
+              ) : isCamisas && selectedGender === 'hombre' ? (
+                /* 7. SI ES CAMISAS DE HOMBRE (TALLAS M, L, XL) */
+                <div className="filter__group">
+                  <h4>Tallas de Camisas</h4>
+                  <div className="filter__sizes-grid">
+                    {['M', 'L', 'XL'].map(size => (
+                      <button 
+                        key={size}
+                        className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
+                        onClick={() => toggleSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : isCamisas ? (
+                /* 7B. SI ES CAMISAS DE MUJER (TALLAS XS, S, M, L) */
+                <div className="filter__group">
+                  <h4>Tallas de Camisas</h4>
+                  <div className="filter__sizes-grid">
+                    {['XS', 'S', 'M', 'L'].map(size => (
+                      <button 
+                        key={size}
+                        className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
+                        onClick={() => toggleSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : (
-                /* 7. TALLAS PARA OTRAS ROPAS GENERALES */
+                /* 8. TALLAS PARA OTRAS ROPAS GENERALES */
                 <div className="filter__group">
                   <h4>Tallas</h4>
                   <div className="filter__sizes-grid">
@@ -263,7 +300,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                   return (
                     <div key={product.id} className="catalog__product-card">
                       <div 
-                        className="product__img-wrap" 
+                        className={`product__img-wrap ${isCamisas ? 'product__img-wrap--camisas' : ''}`}
                         style={{ backgroundImage: `url(${product.image})` }}
                       >
                         <span className="product__brand-tag">{product.brand}</span>

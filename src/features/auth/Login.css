@@ -201,6 +201,43 @@
   box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.08);
 }
 
+.auth-input-wrap select {
+  width: 100%;
+  border-radius: 12px;
+  padding: 13px 36px 13px 42px;
+  font-size: 0.9rem;
+  font-family: var(--font-body, "Inter", sans-serif);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-input-wrap select option {
+  background: #121212;
+  color: #ffffff;
+}
+
+.auth-input-wrap select:focus {
+  border-color: var(--gold, #c9a227);
+  background: rgba(201, 162, 39, 0.04);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.08);
+}
+
+.auth-input-wrap select::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  border: solid rgba(255, 255, 255, 0.5);
+  border-width: 0 2px 2px 0;
+  padding: 3px;
+  transform: rotate(45deg);
+}
+
 /* --- TOGGLE PASSWORD --- */
 
 .auth-toggle-pw {

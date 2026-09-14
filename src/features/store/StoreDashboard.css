@@ -554,8 +554,9 @@ input {
 
 .categories-grid {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 20px;
 }
 
@@ -566,6 +567,7 @@ input {
 
 .category-card {
   position: relative;
+  width: calc((100% - 40px) / 3);
   height: 285px;
   overflow: hidden;
   border-radius: 17px;
@@ -734,10 +736,11 @@ input {
   }
 
   .categories-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
   }
 
   .category-card {
+    width: calc((100% - 20px) / 2);
     height: 300px;
   }
 }
@@ -887,11 +890,11 @@ input {
   }
 
   .categories-grid {
-    grid-template-columns: 1fr;
     gap: 15px;
   }
 
   .category-card {
+    width: 100%;
     height: 310px;
   }
 }

@@ -179,10 +179,13 @@ export default function App() {
     setUser(userData);
 
 
-    // Si es administrador
-    if (userData.rol === "Administrador") {
+    // Si es administrador o vendedor
+    if (
+      userData.rol === "Administrador" ||
+      userData.rol === "Vendedor"
+    ) {
 
-      console.log("Entrando como administrador");
+      console.log("Entrando al panel administrativo");
 
       setCurrentView("admin");
 
