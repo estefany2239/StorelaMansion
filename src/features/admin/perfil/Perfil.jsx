@@ -1,8 +1,11 @@
+import { useState } from "react";
+
 import {
   UserRound,
   Moon,
   LogOut,
-  Pencil
+  Pencil,
+  X
 } from "lucide-react";
 
 import "./Perfil.css";
@@ -13,14 +16,68 @@ export default function Perfil({
   onToggleTheme
 }) {
 
-  const nombre =
-    user?.nombre || "Carlos Rodríguez";
+  const [perfil, setPerfil] = useState({
+    id: "USR-001",
+    nombre:
+      user?.nombre || "Carlos Rodríguez",
+    correo:
+      user?.email || "admin@storelamansion.com",
+    telefono: "+57 310 555 0001",
+    direccion: "Cra 15 #93-47, Bogotá",
+    rol:
+      user?.rol || "Administrador",
+  });
 
-  const correo =
-    user?.email || "admin@storelamansion.com";
+  const [modalAbierto, setModalAbierto] =
+    useState(false);
 
-  const rol =
-    user?.rol || "Administrador";
+  const [form, setForm] = useState(perfil);
+
+  /* =====================================================
+     ABRIR MODAL EDITAR
+     ===================================================== */
+
+  const abrirEditar = () => {
+    setForm({ ...perfil });
+    setModalAbierto(true);
+  };
+
+  /* =====================================================
+     CERRAR MODAL
+     ===================================================== */
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+  };
+
+  /* =====================================================
+     MANEJAR CAMPOS
+     ===================================================== */
+
+  const manejarCambio = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  /* =====================================================
+     GUARDAR PERFIL
+     ===================================================== */
+
+  const guardarPerfil = (e) => {
+    e.preventDefault();
+
+    if (!form.nombre.trim()) {
+      alert("El nombre no puede estar vacío.");
+      return;
+    }
+
+    setPerfil({ ...form });
+    cerrarModal();
+  };
 
   return (
     <div className="perfil-page">
@@ -63,17 +120,17 @@ export default function Perfil({
 
 
           <h2>
-            {nombre}
+            {perfil.nombre}
           </h2>
 
 
           <p className="perfil-email">
-            {correo}
+            {perfil.correo}
           </p>
 
 
           <p className="perfil-role">
-            {rol}
+            {perfil.rol}
           </p>
 
 
@@ -82,6 +139,7 @@ export default function Perfil({
           <button
             type="button"
             className="perfil-edit-button"
+            onClick={abrirEditar}
           >
 
             <Pencil size={17} />
@@ -157,7 +215,7 @@ export default function Perfil({
               </label>
 
               <div className="perfil-input perfil-input-bold">
-                USR-001
+                {perfil.id}
               </div>
 
             </div>
@@ -172,7 +230,7 @@ export default function Perfil({
               </label>
 
               <div className="perfil-input">
-                {nombre}
+                {perfil.nombre}
               </div>
 
             </div>
@@ -187,7 +245,7 @@ export default function Perfil({
               </label>
 
               <div className="perfil-input">
-                {correo}
+                {perfil.correo}
               </div>
 
             </div>
@@ -202,7 +260,7 @@ export default function Perfil({
               </label>
 
               <div className="perfil-input">
-                +57 310 555 0001
+                {perfil.telefono}
               </div>
 
             </div>
@@ -217,7 +275,7 @@ export default function Perfil({
               </label>
 
               <div className="perfil-input">
-                {rol}
+                {perfil.rol}
               </div>
 
             </div>
@@ -262,7 +320,7 @@ export default function Perfil({
               </label>
 
               <div className="perfil-input">
-                Cra 15 #93-47, Bogotá
+                {perfil.direccion}
               </div>
 
             </div>
@@ -272,6 +330,164 @@ export default function Perfil({
         </div>
 
       </div>
+
+      {/* =====================================================
+          MODAL EDITAR PERFIL
+          ===================================================== */}
+
+      {modalAbierto && (
+
+        <div
+          className="rol-modal-overlay"
+          onClick={cerrarModal}
+        >
+
+          <div
+            className="rol-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <div className="rol-modal-header">
+
+              <h3>
+                Editar perfil
+              </h3>
+
+              <button
+                type="button"
+                className="rol-modal-close"
+                onClick={cerrarModal}
+              >
+                <X size={20} />
+              </button>
+
+            </div>
+
+            <form onSubmit={guardarPerfil}>
+
+              <div className="rol-modal-body">
+
+                <div className="rol-form-row">
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      ID USUARIO
+                    </label>
+
+                    <input
+                      type="text"
+                      name="id"
+                      value={form.id}
+                      disabled
+                    />
+
+                  </div>
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      NOMBRE COMPLETO
+                    </label>
+
+                    <input
+                      type="text"
+                      name="nombre"
+                      placeholder="Tu nombre completo"
+                      value={form.nombre}
+                      onChange={manejarCambio}
+                      required
+                    />
+
+                  </div>
+
+                </div>
+
+                <div className="rol-form-row">
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      CORREO ELECTRÓNICO
+                    </label>
+
+                    <input
+                      type="email"
+                      name="correo"
+                      placeholder="tu@correo.com"
+                      value={form.correo}
+                      onChange={manejarCambio}
+                      required
+                    />
+
+                  </div>
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      TELÉFONO
+                    </label>
+
+                    <input
+                      type="text"
+                      name="telefono"
+                      placeholder="+57 300 000 0000"
+                      value={form.telefono}
+                      onChange={manejarCambio}
+                      required
+                    />
+
+                  </div>
+
+                </div>
+
+                <div className="rol-form-group">
+
+                  <label>
+                    DIRECCIÓN
+                  </label>
+
+                  <input
+                    type="text"
+                    name="direccion"
+                    placeholder="Tu dirección"
+                    value={form.direccion}
+                    onChange={manejarCambio}
+                    required
+                  />
+
+                </div>
+
+              </div>
+
+              <div className="rol-modal-footer">
+
+                <button
+                  type="button"
+                  className="rol-cancel-button"
+                  onClick={cerrarModal}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="rol-create-button"
+                >
+                  Guardar cambios
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      )}
 
     </div>
   );

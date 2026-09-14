@@ -63,7 +63,7 @@ export default function Ventas() {
       cliente: "Laura Gómez",
       fecha: "2026-09-05",
       total: 320000,
-      metodoPago: "Nequi",
+      metodoPago: "Transferencia",
       estado: "Cerrada",
 
       productos: [
@@ -107,7 +107,7 @@ export default function Ventas() {
       cliente: "María García",
       fecha: "2026-08-28",
       total: 620000,
-      metodoPago: "Tarjeta de crédito",
+      metodoPago: "Crédito",
       estado: "Cerrada",
 
       productos: [
@@ -904,8 +904,8 @@ export default function Ventas() {
                     Efectivo
                   </option>
 
-                  <option value="Nequi">
-                    Nequi
+                  <option value="Crédito">
+                    Crédito
                   </option>
 
                 </select>

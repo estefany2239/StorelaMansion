@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Eye,
   EyeOff,
   Lock,
   Mail,
-  ArrowRight,
-  User
+  ArrowRight
 } from "lucide-react";
 
 import "./Login.css";
@@ -25,14 +24,67 @@ export default function Login({
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
+  const [intentosFallidos, setIntentosFallidos] = useState(0);
+  const [emailIntento, setEmailIntento] = useState("");
+  const [tiempoBloqueo, setTiempoBloqueo] = useState(0);
+
+  const [auditLog, setAuditLog] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("auditLoginLog")) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  const registrarAuditoria = (correo, resultado) => {
+    const nuevoRegistro = {
+      fecha: new Date().toISOString(),
+      correo,
+      resultado
+    };
+    const actualizado = [...auditLog, nuevoRegistro];
+    setAuditLog(actualizado);
+    localStorage.setItem("auditLoginLog", JSON.stringify(actualizado));
+  };
+
+  useEffect(() => {
+    if (tiempoBloqueo <= 0) return;
+
+    const intervalo = setInterval(() => {
+      setTiempoBloqueo((anterior) => {
+        if (anterior <= 1) {
+          clearInterval(intervalo);
+          setIntentosFallidos(0);
+          setEmailIntento("");
+          return 0;
+        }
+        return anterior - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalo);
+  }, [tiempoBloqueo]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
+
+    if (tiempoBloqueo > 0) {
+      return;
+    }
+
+    if (emailIntento !== email) {
+      setIntentosFallidos(0);
+      setEmailIntento(email);
+    }
 
     if (
       email === "admin@storelamansion.com" &&
       password === "Admin123"
     ) {
+      registrarAuditoria(email, "Éxito");
+      setIntentosFallidos(0);
+      setEmailIntento("");
       const usuario = {
         nombre: "Administrador",
         email: email,
@@ -47,6 +99,9 @@ export default function Login({
       email === "cliente@storelamansion.com" &&
       password === "Cliente123"
     ) {
+      registrarAuditoria(email, "Éxito");
+      setIntentosFallidos(0);
+      setEmailIntento("");
       const usuario = {
         nombre: "Cliente",
         email: email,
@@ -55,6 +110,14 @@ export default function Login({
       localStorage.setItem("usuario", JSON.stringify(usuario));
       if (onLoginSuccess) onLoginSuccess(usuario);
       return;
+    }
+
+    registrarAuditoria(email, "Fallido");
+    const nuevosIntentos = intentosFallidos + 1;
+    setIntentosFallidos(nuevosIntentos);
+
+    if (nuevosIntentos >= 3) {
+      setTiempoBloqueo(60);
     }
 
     setError("Correo o contraseña incorrectos");
@@ -130,6 +193,12 @@ export default function Login({
 
             {error && <div className="auth-error">{error}</div>}
 
+            {tiempoBloqueo > 0 && (
+              <div className="auth-error">
+                Demasiados intentos fallidos. Intenta de nuevo en {tiempoBloqueo} segundos.
+              </div>
+            )}
+
             <div className="auth-row-between">
               <label className="auth-checkbox">
                 <input
@@ -145,7 +214,11 @@ export default function Login({
               </button>
             </div>
 
-            <button type="submit" className="auth-submit-btn">
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={tiempoBloqueo > 0}
+            >
               Iniciar sesión <ArrowRight size={18} />
             </button>
 

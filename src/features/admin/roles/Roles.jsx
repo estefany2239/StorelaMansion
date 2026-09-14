@@ -135,13 +135,6 @@ export default function Roles() {
      ===================================================== */
 
   const abrirEditar = (rol) => {
-    if (rol.usuarios > 0) {
-      alert(
-        "No se puede modificar este rol porque está asignado a usuarios activos."
-      );
-      return;
-    }
-
     setRolForm({
       id: rol.id,
       nombre: rol.nombre,
@@ -251,13 +244,6 @@ export default function Roles() {
      ===================================================== */
 
   const cambiarEstado = (rol) => {
-    if (rol.usuarios > 0) {
-      alert(
-        "No se puede cambiar el estado de este rol porque está asignado a usuarios activos."
-      );
-      return;
-    }
-
     setRoles((prev) =>
       prev.map((item) =>
         item.id === rol.id

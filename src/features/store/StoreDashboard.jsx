@@ -46,7 +46,8 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   
   // Estados de Pago / Checkout
-  const [paymentMethod, setPaymentMethod] = useState("nequi");
+  const [paymentMethod, setPaymentMethod] = useState("efectivo");
+  const [transferenciaTipo, setTransferenciaTipo] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [phoneNequi, setPhoneNequi] = useState("");
   const [tipoPago, setTipoPago] = useState("completo"); // "completo" | "parcial"
@@ -204,17 +205,24 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
       alert("Por favor ingresa una dirección de envío.");
       return;
     }
-    if (paymentMethod === 'nequi' && !phoneNequi.trim()) {
+    if (
+      paymentMethod === 'transferencia' &&
+      transferenciaTipo === 'nequi' &&
+      !phoneNequi.trim()
+    ) {
       alert("Por favor ingresa tu número celular de Nequi.");
       return;
     }
     const montoPagado = tipoPago === "completo" ? total : montoNum;
-    const metodoPagoLabel = {
-      nequi: "Nequi",
-      bancolombia: "Bancolombia",
-      card: "Tarjeta",
-      cash: "Contra entrega"
-    }[paymentMethod];
+    const metodoPagoLabel =
+      paymentMethod === "transferencia"
+        ? transferenciaTipo === "nequi"
+          ? "Transferencia (Nequi)"
+          : "Transferencia (Bancolombia)"
+        : {
+            efectivo: "Efectivo",
+            credito: "Crédito"
+          }[paymentMethod];
     const fechaHoy = new Date().toISOString().split("T")[0];
     const nuevoPedido = {
       id: `PED-${Date.now()}`,
@@ -516,59 +524,81 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                 
                 <div className="payment-methods-grid">
                   <div 
-                    className={`payment-option-card ${paymentMethod === 'nequi' ? 'selected' : ''}`}
-                    onClick={() => setPaymentMethod('nequi')}
+                    className={`payment-option-card ${paymentMethod === 'efectivo' ? 'selected' : ''}`}
+                    onClick={() => setPaymentMethod('efectivo')}
                   >
-                    <Smartphone size={22} color="#c9a227" />
-                    <span>Nequi</span>
+                    <Wallet size={22} color="#c9a227" />
+                    <span>Efectivo</span>
                   </div>
 
                   <div 
-                    className={`payment-option-card ${paymentMethod === 'bancolombia' ? 'selected' : ''}`}
-                    onClick={() => setPaymentMethod('bancolombia')}
+                    className={`payment-option-card ${paymentMethod === 'transferencia' ? 'selected' : ''}`}
+                    onClick={() => setPaymentMethod('transferencia')}
                   >
                     <Building2 size={22} color="#c9a227" />
-                    <span>Bancolombia</span>
+                    <span>Transferencia</span>
                   </div>
 
                   <div 
-                    className={`payment-option-card ${paymentMethod === 'card' ? 'selected' : ''}`}
-                    onClick={() => setPaymentMethod('card')}
+                    className={`payment-option-card ${paymentMethod === 'credito' ? 'selected' : ''}`}
+                    onClick={() => setPaymentMethod('credito')}
                   >
                     <CreditCard size={22} color="#c9a227" />
-                    <span>Tarjeta</span>
-                  </div>
-
-                  <div 
-                    className={`payment-option-card ${paymentMethod === 'cash' ? 'selected' : ''}`}
-                    onClick={() => setPaymentMethod('cash')}
-                  >
-                    <Truck size={22} color="#c9a227" />
-                    <span>Contra entrega</span>
+                    <span>Crédito</span>
                   </div>
                 </div>
               </div>
 
-              {paymentMethod === 'nequi' && (
+              {paymentMethod === 'efectivo' && (
                 <div className="payment-extra-box">
-                  <p className="payment-instructions">Ingresa tu número celular registrado en Nequi para recibir la notificación de cobro:</p>
-                  <input 
-                    type="tel" 
-                    placeholder="Ej. 300 123 4567" 
-                    value={phoneNequi}
-                    onChange={(e) => setPhoneNequi(e.target.value)}
-                    className="checkout-text-input"
-                  />
+                  <p className="payment-instructions">Paga en efectivo al momento de recibir tu pedido.</p>
                 </div>
               )}
 
-              {paymentMethod === 'bancolombia' && (
+              {paymentMethod === 'transferencia' && (
                 <div className="payment-extra-box">
-                  <p className="payment-instructions">Realiza transferencia a la Cuenta de Ahorros Bancolombia <b># 123-456789-00</b> a nombre de La Mansión Store. Tu pedido será despachado al confirmar el comprobante.</p>
+                  <p className="payment-instructions">Selecciona el medio por el que realizarás la transferencia:</p>
+
+                  <div className="payment-methods-grid">
+                    <div 
+                      className={`payment-option-card ${transferenciaTipo === 'nequi' ? 'selected' : ''}`}
+                      onClick={() => setTransferenciaTipo('nequi')}
+                    >
+                      <Smartphone size={22} color="#c9a227" />
+                      <span>Nequi</span>
+                    </div>
+
+                    <div 
+                      className={`payment-option-card ${transferenciaTipo === 'bancolombia' ? 'selected' : ''}`}
+                      onClick={() => setTransferenciaTipo('bancolombia')}
+                    >
+                      <Building2 size={22} color="#c9a227" />
+                      <span>Bancolombia</span>
+                    </div>
+                  </div>
+
+                  {transferenciaTipo === 'nequi' && (
+                    <div className="payment-extra-box">
+                      <p className="payment-instructions">Ingresa tu número celular registrado en Nequi para recibir la notificación de cobro:</p>
+                      <input 
+                        type="tel" 
+                        placeholder="Ej. 300 123 4567" 
+                        value={phoneNequi}
+                        onChange={(e) => setPhoneNequi(e.target.value)}
+                        className="checkout-text-input"
+                      />
+                    </div>
+                  )}
+
+                  {transferenciaTipo === 'bancolombia' && (
+                    <div className="payment-extra-box">
+                      <p className="payment-instructions">Realiza transferencia a la Cuenta de Ahorros Bancolombia <b># 123-456789-00</b> a nombre de La Mansión Store. Tu pedido será despachado al confirmar el comprobante.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {paymentMethod === 'card' && (
+              {paymentMethod === 'credito' && (
                 <div className="payment-extra-box">
                   <input type="text" placeholder="Número de tarjeta (4532 •••• •••• ••••)" className="checkout-text-input" />
                   <div className="card-split-inputs">

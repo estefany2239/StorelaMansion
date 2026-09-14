@@ -10,6 +10,36 @@ export default function ForgotPassword({ onBackToLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const correo = email.trim().toLowerCase();
+
+    const leerRegistrados = () => {
+      try {
+        return JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
+      } catch {
+        return [];
+      }
+    };
+
+    const fijos = [
+      "admin@storelamansion.com",
+      "cliente@storelamansion.com"
+    ];
+
+    const registrados = [
+      ...fijos,
+      ...leerRegistrados()
+    ];
+
+    const existe = registrados.some(
+      (item) => String(item).toLowerCase() === correo
+    );
+
+    if (!existe) {
+      alert("No existe una cuenta asociada a este correo.");
+      return;
+    }
+
     setSubmitted(true);
   };
 

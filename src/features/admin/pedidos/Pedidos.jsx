@@ -29,7 +29,7 @@ export default function Pedidos() {
       fecha: "2024-07-10",
       total: 805000,
       estado: "Entregado",
-      metodoPago: "Tarjeta de crédito",
+      metodoPago: "Crédito",
       direccion: "Cll 72 #10-34, Medellín",
 
       productos: [
@@ -58,7 +58,7 @@ export default function Pedidos() {
         {
           fecha: "2024-07-10",
           valor: 505000,
-          metodoPago: "Tarjeta de crédito"
+          metodoPago: "Crédito"
         }
       ]
     },
@@ -70,7 +70,7 @@ export default function Pedidos() {
       fecha: "2024-07-15",
       total: 1250000,
       estado: "En preparación",
-      metodoPago: "Transferencia bancaria",
+      metodoPago: "Transferencia",
       direccion: "Cll 50 #45-20, Cali",
 
       productos: [
@@ -94,7 +94,7 @@ export default function Pedidos() {
         {
           fecha: "2024-07-14",
           valor: 500000,
-          metodoPago: "Transferencia bancaria"
+          metodoPago: "Transferencia"
         }
       ]
     },
@@ -129,7 +129,7 @@ export default function Pedidos() {
       fecha: "2024-07-25",
       total: 890000,
       estado: "Despachado",
-      metodoPago: "Tarjeta débito",
+      metodoPago: "Crédito",
       direccion: "Av. 80 #33-15, Medellín",
 
       productos: [
@@ -146,7 +146,7 @@ export default function Pedidos() {
         {
           fecha: "2024-07-22",
           valor: 400000,
-          metodoPago: "Tarjeta débito"
+          metodoPago: "Crédito"
         }
       ]
     },
@@ -181,7 +181,7 @@ export default function Pedidos() {
       fecha: "2024-08-05",
       total: 620000,
       estado: "Despachado",
-      metodoPago: "Tarjeta de crédito",
+      metodoPago: "Crédito",
       direccion: "Carrera 45 #22-40, Cali",
 
       productos: [
@@ -198,7 +198,7 @@ export default function Pedidos() {
         {
           fecha: "2024-08-03",
           valor: 620000,
-          metodoPago: "Tarjeta de crédito"
+          metodoPago: "Crédito"
         }
       ]
     },
@@ -210,7 +210,7 @@ export default function Pedidos() {
       fecha: "2024-08-10",
       total: 320000,
       estado: "En preparación",
-      metodoPago: "Transferencia bancaria",
+      metodoPago: "Transferencia",
       direccion: "Av. 68 #55-10, Bogotá",
 
       productos: [
@@ -1545,20 +1545,12 @@ export default function Pedidos() {
                       Efectivo
                     </option>
 
-                    <option value="Transferencia bancaria">
-                      Transferencia bancaria
+                    <option value="Transferencia">
+                      Transferencia
                     </option>
 
-                    <option value="Nequi">
-                      Nequi
-                    </option>
-
-                    <option value="Tarjeta débito">
-                      Tarjeta débito
-                    </option>
-
-                    <option value="Tarjeta de crédito">
-                      Tarjeta de crédito
+                    <option value="Crédito">
+                      Crédito
                     </option>
 
                   </select>
@@ -2441,20 +2433,12 @@ export default function Pedidos() {
                           Efectivo
                         </option>
 
-                        <option value="Nequi">
-                          Nequi
+                        <option value="Transferencia">
+                          Transferencia
                         </option>
 
-                        <option value="Transferencia bancaria">
-                          Transferencia bancaria
-                        </option>
-
-                        <option value="Tarjeta débito">
-                          Tarjeta débito
-                        </option>
-
-                        <option value="Tarjeta de crédito">
-                          Tarjeta de crédito
+                        <option value="Crédito">
+                          Crédito
                         </option>
 
                       </select>

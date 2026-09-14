@@ -315,6 +315,19 @@
   box-shadow: 0 8px 24px rgba(201, 162, 39, 0.3);
 }
 
+.auth-submit-btn:disabled {
+  background: #666666;
+  color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.auth-submit-btn:disabled svg {
+  stroke: #cccccc;
+}
+
 .auth-submit-btn svg {
   stroke: #111111;
 }

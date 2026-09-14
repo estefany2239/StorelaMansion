@@ -4,6 +4,7 @@ import {
   CreditCard,
   Smartphone,
   Building2,
+  Banknote,
   Upload,
   CheckCircle,
   ShoppingBag,
@@ -18,6 +19,7 @@ export default function PaymentView({
   darkMode,
 }) {
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [transferenciaTipo, setTransferenciaTipo] = useState("");
   const [proofFile, setProofFile] = useState(null);
 
   /* =========================================================
@@ -85,11 +87,7 @@ export default function PaymentView({
       return;
     }
 
-    if (
-      (paymentMethod === "nequi" ||
-        paymentMethod === "transferencia") &&
-      !proofFile
-    ) {
+    if (paymentMethod === "transferencia" && !proofFile) {
       alert("Por favor adjunta el comprobante de pago.");
       return;
     }
@@ -261,77 +259,37 @@ export default function PaymentView({
 
             <div className="payment-methods">
 
-              {/* TARJETA */}
+              {/* EFECTIVO */}
 
               <button
                 type="button"
                 className={`payment-method ${
-                  paymentMethod === "tarjeta"
+                  paymentMethod === "efectivo"
                     ? "selected"
                     : ""
                 }`}
                 onClick={() =>
-                  setPaymentMethod("tarjeta")
+                  setPaymentMethod("efectivo")
                 }
               >
 
                 <div className="method-icon">
-                  <CreditCard size={23} />
+                  <Banknote size={23} />
                 </div>
 
                 <div className="method-info">
 
                   <strong>
-                    Tarjeta
+                    Efectivo
                   </strong>
 
                   <span>
-                    Crédito o débito
+                    Pago en efectivo
                   </span>
 
                 </div>
 
-                {paymentMethod === "tarjeta" && (
-                  <CheckCircle
-                    className="method-check"
-                    size={19}
-                  />
-                )}
-
-              </button>
-
-
-              {/* NEQUI */}
-
-              <button
-                type="button"
-                className={`payment-method ${
-                  paymentMethod === "nequi"
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() =>
-                  setPaymentMethod("nequi")
-                }
-              >
-
-                <div className="method-icon">
-                  <Smartphone size={23} />
-                </div>
-
-                <div className="method-info">
-
-                  <strong>
-                    Nequi
-                  </strong>
-
-                  <span>
-                    Pago desde Nequi
-                  </span>
-
-                </div>
-
-                {paymentMethod === "nequi" && (
+                {paymentMethod === "efectivo" && (
                   <CheckCircle
                     className="method-check"
                     size={19}
@@ -350,9 +308,10 @@ export default function PaymentView({
                     ? "selected"
                     : ""
                 }`}
-                onClick={() =>
-                  setPaymentMethod("transferencia")
-                }
+                onClick={() => {
+                  setPaymentMethod("transferencia");
+                  setTransferenciaTipo("");
+                }}
               >
 
                 <div className="method-icon">
@@ -380,14 +339,429 @@ export default function PaymentView({
 
               </button>
 
+
+              {/* CRÉDITO */}
+
+              <button
+                type="button"
+                className={`payment-method ${
+                  paymentMethod === "credito"
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() =>
+                  setPaymentMethod("credito")
+                }
+              >
+
+                <div className="method-icon">
+                  <CreditCard size={23} />
+                </div>
+
+                <div className="method-info">
+
+                  <strong>
+                    Crédito
+                  </strong>
+
+                  <span>
+                    Pago con tarjeta de crédito
+                  </span>
+
+                </div>
+
+                {paymentMethod === "credito" && (
+                  <CheckCircle
+                    className="method-check"
+                    size={19}
+                  />
+                )}
+
+              </button>
+
             </div>
 
 
             {/* =================================================
-                TARJETA
+                EFECTIVO
             ================================================= */}
 
-            {paymentMethod === "tarjeta" && (
+            {paymentMethod === "efectivo" && (
+
+              <div className="payment-extra">
+
+                <div className="extra-title">
+
+                  <Banknote size={19} />
+
+                  <span>
+                    Pago en efectivo
+                  </span>
+
+                </div>
+
+                <p className="payment-instruction">
+                  Paga en efectivo al momento de recibir tu
+                  pedido.
+                </p>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                TRANSFERENCIA
+            ================================================= */}
+
+            {paymentMethod === "transferencia" && (
+
+              <>
+
+                <div className="payment-extra">
+
+                  <div className="extra-title">
+
+                    <Building2 size={19} />
+
+                    <span>
+                      Medio de transferencia
+                    </span>
+
+                  </div>
+
+                  <p className="payment-instruction">
+                    Selecciona el medio por el que realizarás
+                    la transferencia.
+                  </p>
+
+                  <div className="payment-methods">
+
+                    {/* NEQUI */}
+
+                    <button
+                      type="button"
+                      className={`payment-method ${
+                        transferenciaTipo === "nequi"
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setTransferenciaTipo("nequi")
+                      }
+                    >
+
+                      <div className="method-icon">
+                        <Smartphone size={23} />
+                      </div>
+
+                      <div className="method-info">
+
+                        <strong>
+                          Nequi
+                        </strong>
+
+                        <span>
+                          Pago desde Nequi
+                        </span>
+
+                      </div>
+
+                      {transferenciaTipo === "nequi" && (
+                        <CheckCircle
+                          className="method-check"
+                          size={19}
+                        />
+                      )}
+
+                    </button>
+
+
+                    {/* BANCOLOMBIA */}
+
+                    <button
+                      type="button"
+                      className={`payment-method ${
+                        transferenciaTipo === "bancolombia"
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setTransferenciaTipo("bancolombia")
+                      }
+                    >
+
+                      <div className="method-icon">
+                        <Building2 size={23} />
+                      </div>
+
+                      <div className="method-info">
+
+                        <strong>
+                          Bancolombia
+                        </strong>
+
+                        <span>
+                          Transferencia bancaria
+                        </span>
+
+                      </div>
+
+                      {transferenciaTipo === "bancolombia" && (
+                        <CheckCircle
+                          className="method-check"
+                          size={19}
+                        />
+                      )}
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+
+                {/* NEQUI - INSTRUCCIONES */}
+
+                {transferenciaTipo === "nequi" && (
+
+                  <div className="payment-extra">
+
+                    <div className="extra-title">
+
+                      <Smartphone size={19} />
+
+                      <span>
+                        Pago por Nequi
+                      </span>
+
+                    </div>
+
+                    <p className="payment-instruction">
+                      Realiza el pago al número de Nequi
+                      registrado por Store La Mansión.
+                    </p>
+
+
+                    {/* NÚMERO NEQUI */}
+
+                    <div className="payment-account">
+
+                      <div>
+
+                        <span>
+                          Número Nequi
+                        </span>
+
+                        <strong>
+                          300 000 0000
+                        </strong>
+
+                      </div>
+
+                      <Smartphone size={22} />
+
+                    </div>
+
+
+                    {/* AVISO */}
+
+                    <div className="payment-notice">
+
+                      <CheckCircle size={18} />
+
+                      <span>
+                        Después de realizar el pago, adjunta
+                        una captura o imagen del comprobante.
+                      </span>
+
+                    </div>
+
+
+                    {/* COMPROBANTE */}
+
+                    <div className="proof-upload">
+
+                      <label className="proof-label">
+                        Comprobante de pago
+                      </label>
+
+                      <label className="upload-proof-btn">
+
+                        <Upload size={18} />
+
+                        <span>
+                          {proofFile
+                            ? proofFile.name
+                            : "Subir comprobante"}
+                        </span>
+
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleProofChange}
+                        />
+
+                      </label>
+
+
+                      {proofFile && (
+                        <div className="proof-success">
+
+                          <CheckCircle size={17} />
+
+                          <span>
+                            Comprobante seleccionado
+                          </span>
+
+                        </div>
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
+
+
+                {/* BANCOLOMBIA - DATOS DE LA CUENTA */}
+
+                {transferenciaTipo === "bancolombia" && (
+
+                  <div className="payment-extra">
+
+                    <div className="extra-title">
+
+                      <Building2 size={19} />
+
+                      <span>
+                        Transferencia bancaria
+                      </span>
+
+                    </div>
+
+
+                    <div className="transfer-layout">
+
+                      <div className="transfer-data">
+
+                        <p className="payment-instruction">
+                          Realiza la transferencia utilizando
+                          los siguientes datos.
+                        </p>
+
+
+                        <div className="bank-data">
+
+                          <span>
+                            Banco
+                          </span>
+
+                          <strong>
+                            Bancolombia
+                          </strong>
+
+                        </div>
+
+
+                        <div className="bank-data">
+
+                          <span>
+                            Tipo de cuenta
+                          </span>
+
+                          <strong>
+                            Cuenta de ahorros
+                          </strong>
+
+                        </div>
+
+
+                        <div className="bank-data">
+
+                          <span>
+                            Número
+                          </span>
+
+                          <strong>
+                            000 000 0000
+                          </strong>
+
+                        </div>
+
+
+                        <div className="bank-data">
+
+                          <span>
+                            Titular
+                          </span>
+
+                          <strong>
+                            Store La Mansión
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+
+                    {/* COMPROBANTE */}
+
+                    <div className="proof-upload">
+
+                      <label className="proof-label">
+                        Comprobante de pago
+                      </label>
+
+                      <label className="upload-proof-btn">
+
+                        <Upload size={18} />
+
+                        <span>
+                          {proofFile
+                            ? proofFile.name
+                            : "Subir comprobante"}
+                        </span>
+
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleProofChange}
+                        />
+
+                      </label>
+
+
+                      {proofFile && (
+                        <div className="proof-success">
+
+                          <CheckCircle size={17} />
+
+                          <span>
+                            Comprobante seleccionado
+                          </span>
+
+                        </div>
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
+
+              </>
+
+            )}
+
+
+            {/* =================================================
+                CRÉDITO
+            ================================================= */}
+
+            {paymentMethod === "credito" && (
 
               <div className="payment-extra">
 
@@ -465,242 +839,6 @@ export default function PaymentView({
                     Tus datos de pago se manejan de forma
                     segura.
                   </span>
-
-                </div>
-
-              </div>
-
-            )}
-
-
-            {/* =================================================
-                NEQUI
-            ================================================= */}
-
-            {paymentMethod === "nequi" && (
-
-              <div className="payment-extra">
-
-                <div className="extra-title">
-
-                  <Smartphone size={19} />
-
-                  <span>
-                    Pago por Nequi
-                  </span>
-
-                </div>
-
-                <p className="payment-instruction">
-                  Realiza el pago al número de Nequi
-                  registrado por Store La Mansión.
-                </p>
-
-
-                {/* NÚMERO NEQUI */}
-
-                <div className="payment-account">
-
-                  <div>
-
-                    <span>
-                      Número Nequi
-                    </span>
-
-                    <strong>
-                      300 000 0000
-                    </strong>
-
-                  </div>
-
-                  <Smartphone size={22} />
-
-                </div>
-
-
-                {/* AVISO */}
-
-                <div className="payment-notice">
-
-                  <CheckCircle size={18} />
-
-                  <span>
-                    Después de realizar el pago, adjunta
-                    una captura o imagen del comprobante.
-                  </span>
-
-                </div>
-
-
-                {/* COMPROBANTE */}
-
-                <div className="proof-upload">
-
-                  <label className="proof-label">
-                    Comprobante de pago
-                  </label>
-
-                  <label className="upload-proof-btn">
-
-                    <Upload size={18} />
-
-                    <span>
-                      {proofFile
-                        ? proofFile.name
-                        : "Subir comprobante"}
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={handleProofChange}
-                    />
-
-                  </label>
-
-
-                  {proofFile && (
-                    <div className="proof-success">
-
-                      <CheckCircle size={17} />
-
-                      <span>
-                        Comprobante seleccionado
-                      </span>
-
-                    </div>
-                  )}
-
-                </div>
-
-              </div>
-
-            )}
-
-
-            {/* =================================================
-                TRANSFERENCIA
-            ================================================= */}
-
-            {paymentMethod === "transferencia" && (
-
-              <div className="payment-extra">
-
-                <div className="extra-title">
-
-                  <Building2 size={19} />
-
-                  <span>
-                    Transferencia bancaria
-                  </span>
-
-                </div>
-
-
-                <div className="transfer-layout">
-
-                  <div className="transfer-data">
-
-                    <p className="payment-instruction">
-                      Realiza la transferencia utilizando
-                      los siguientes datos.
-                    </p>
-
-
-                    <div className="bank-data">
-
-                      <span>
-                        Banco
-                      </span>
-
-                      <strong>
-                        Bancolombia
-                      </strong>
-
-                    </div>
-
-
-                    <div className="bank-data">
-
-                      <span>
-                        Tipo de cuenta
-                      </span>
-
-                      <strong>
-                        Cuenta de ahorros
-                      </strong>
-
-                    </div>
-
-
-                    <div className="bank-data">
-
-                      <span>
-                        Número
-                      </span>
-
-                      <strong>
-                        000 000 0000
-                      </strong>
-
-                    </div>
-
-
-                    <div className="bank-data">
-
-                      <span>
-                        Titular
-                      </span>
-
-                      <strong>
-                        Store La Mansión
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                {/* COMPROBANTE */}
-
-                <div className="proof-upload">
-
-                  <label className="proof-label">
-                    Comprobante de pago
-                  </label>
-
-                  <label className="upload-proof-btn">
-
-                    <Upload size={18} />
-
-                    <span>
-                      {proofFile
-                        ? proofFile.name
-                        : "Subir comprobante"}
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={handleProofChange}
-                    />
-
-                  </label>
-
-
-                  {proofFile && (
-                    <div className="proof-success">
-
-                      <CheckCircle size={17} />
-
-                      <span>
-                        Comprobante seleccionado
-                      </span>
-
-                    </div>
-                  )}
 
                 </div>
 

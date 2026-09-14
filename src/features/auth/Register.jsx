@@ -22,6 +22,39 @@ export default function Register({ onBackToLogin }) {
       alert("Las contraseñas no coinciden");
       return;
     }
+
+    const correo = formData.email.trim().toLowerCase();
+
+    const leerRegistrados = () => {
+      try {
+        return JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
+      } catch {
+        return [];
+      }
+    };
+
+    const fijos = [
+      "admin@storelamansion.com",
+      "cliente@storelamansion.com"
+    ];
+
+    const registrados = [
+      ...fijos,
+      ...leerRegistrados()
+    ];
+
+    const yaExiste = registrados.some(
+      (item) => String(item).toLowerCase() === correo
+    );
+
+    if (yaExiste) {
+      alert("Este correo ya está registrado.");
+      return;
+    }
+
+    const actualizados = [...leerRegistrados(), correo];
+    localStorage.setItem("usuariosRegistrados", JSON.stringify(actualizados));
+
     alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
     onBackToLogin();
   };
