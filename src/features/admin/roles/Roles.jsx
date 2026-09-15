@@ -8,6 +8,7 @@ import {
   Trash2,
   X,
   Shield,
+  CheckCircle,
 } from "lucide-react";
 
 import "./Roles.css";
@@ -61,6 +62,8 @@ export default function Roles() {
   const [filtroEstado, setFiltroEstado] = useState("Todos");
 
   const [modal, setModal] = useState(null);
+
+  const [toast, setToast] = useState(null);
 
   const [rolForm, setRolForm] = useState({
     id: "",
@@ -197,6 +200,14 @@ export default function Roles() {
      GUARDAR ROL
      ===================================================== */
 
+  const mostrarToast = (mensaje) => {
+    setToast(mensaje);
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+
   const guardarRol = (e) => {
     e.preventDefault();
 
@@ -220,6 +231,8 @@ export default function Roles() {
       };
 
       setRoles((prev) => [...prev, nuevoRol]);
+
+      mostrarToast("Rol creado con éxito");
     }
 
     if (modal === "editar") {
@@ -827,6 +840,17 @@ export default function Roles() {
 
         </div>
 
+      )}
+
+      {/* =================================================
+          NOTIFICACIÓN
+          ================================================= */}
+
+      {toast && (
+        <div className="rol-toast">
+          <CheckCircle size={20} />
+          <span>{toast}</span>
+        </div>
       )}
 
     </div>

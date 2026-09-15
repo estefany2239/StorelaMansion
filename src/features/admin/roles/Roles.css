@@ -977,6 +977,61 @@
 }
 
 /* =========================================================
+   NOTIFICACIÓN (TOAST)
+   ========================================================= */
+
+.rol-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 6000;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 14px 20px;
+
+  background: #16a34a;
+  color: #ffffff;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 10px 30px rgba(22, 163, 74, 0.35);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  animation:
+    rol-toast-in 0.3s ease;
+}
+
+.rol-toast svg {
+  flex-shrink: 0;
+}
+
+@keyframes rol-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .rol-toast {
+    top: 14px;
+    right: 14px;
+    left: 14px;
+  }
+}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 
