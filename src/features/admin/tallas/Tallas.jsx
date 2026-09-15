@@ -11,6 +11,9 @@ import {
 import "./Tallas.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Tallas() {
 
@@ -35,6 +38,13 @@ export default function Tallas() {
   const [busqueda, setBusqueda] = useState("");
   const [mostrarModal, setMostrarModal] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [tallaEliminar, setTallaEliminar] = useState(null);
+
+  const [aviso, setAviso] = useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] = useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
   /* =====================================================
      FORMULARIO
@@ -138,25 +148,34 @@ export default function Tallas() {
     }
 
     if (modoEdicion) {
-      setTallas((actuales) =>
-        actuales.map((talla) =>
-          talla.id === formulario.id
-            ? { ...talla, nombre: formulario.nombre.trim() }
-            : talla
-        )
-      );
-    } else {
-      setTallas((actuales) => [
-        ...actuales,
-        {
-          id: formulario.id,
-          nombre: formulario.nombre.trim(),
-          enUso: false,
-          estado: "Activo"
-        }
-      ]);
+      setConfirmarEdicion(true);
+      return;
     }
 
+    setTallas((actuales) => [
+      ...actuales,
+      {
+        id: formulario.id,
+        nombre: formulario.nombre.trim(),
+        enUso: false,
+        estado: "Activo"
+      }
+    ]);
+
+    mostrarToast("Talla creada con éxito");
+    cerrarModal();
+  };
+
+  const confirmarEdicionTalla = () => {
+    setTallas((actuales) =>
+      actuales.map((talla) =>
+        talla.id === formulario.id
+          ? { ...talla, nombre: formulario.nombre.trim() }
+          : talla
+      )
+    );
+
+    setConfirmarEdicion(false);
     cerrarModal();
   };
 
@@ -183,20 +202,21 @@ export default function Tallas() {
 
   const eliminarTalla = (talla) => {
     if (talla.enUso) {
-      alert(
+      setAviso(
         "No se puede eliminar la talla porque está asociada a productos existentes."
       );
       return;
     }
 
-    const confirmar = window.confirm(
-      `¿Deseas eliminar la talla "${talla.nombre}"?`
-    );
-    if (!confirmar) return;
+    setTallaEliminar(talla);
+  };
 
+  const confirmarEliminarTalla = () => {
     setTallas((actuales) =>
-      actuales.filter((item) => item.id !== talla.id)
+      actuales.filter((item) => item.id !== tallaEliminar.id)
     );
+
+    setTallaEliminar(null);
   };
 
   /* =====================================================
@@ -392,7 +412,7 @@ export default function Tallas() {
                   colSpan="4"
                   className="tallas-empty"
                 >
-                  No se encontraron tallas.
+                  Talla no encontrada en el sistema.
                 </td>
 
               </tr>
@@ -513,6 +533,52 @@ export default function Tallas() {
         </div>
 
       )}
+
+      {tallaEliminar && (
+        <ConfirmDialog
+          abierto={tallaEliminar !== null}
+          titulo="Eliminar talla"
+          mensaje={
+            <>¿Deseas eliminar la talla "
+              <strong>{tallaEliminar.nombre}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarTalla}
+          onCancelar={() =>
+            setTallaEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={aviso !== null}
+        titulo="Aviso"
+        mensaje={aviso}
+        textoConfirmar="Entendido"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={() => setAviso(null)}
+        onCancelar={() => setAviso(null)}
+      />
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en la talla "
+            <strong>{formulario.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionTalla}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
   );

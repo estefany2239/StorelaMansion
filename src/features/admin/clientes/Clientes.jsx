@@ -12,6 +12,9 @@ import {
 import "./Clientes.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Clientes() {
 
@@ -116,6 +119,16 @@ id: "CLI-005",
 
   const [clienteSeleccionado, setClienteSeleccionado] =
     useState(null);
+
+  const [clienteEliminar, setClienteEliminar] =
+    useState(null);
+
+  const [aviso, setAviso] = useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
 
   // =====================================================
@@ -366,30 +379,11 @@ id: "CLI-005",
 
     }
 
+if (modoEdicion) {
 
-    if (modoEdicion) {
+      setConfirmarEdicion(true);
 
-      setClientes(
-        (actuales) =>
-          actuales.map(
-            (cliente) =>
-              cliente.id === formulario.id
-                ? {
-                    ...cliente,
-                    nombre:
-                      formulario.nombre,
-                    correo:
-                      formulario.correo,
-                    telefono:
-                      formulario.telefono,
-                    direccion:
-                      formulario.direccion,
-                    estado:
-                      formulario.estado
-                  }
-                : cliente
-          )
-      );
+      return;
 
     } else {
 
@@ -412,6 +406,7 @@ id: "CLI-005",
         estado:
           formulario.estado,
 
+
         fecha:
           formulario.fecha,
 
@@ -427,8 +422,41 @@ id: "CLI-005",
         ]
       );
 
+      mostrarToast("Cliente creado con éxito");
+
     }
 
+
+    cerrarModal();
+
+  };
+
+
+  const confirmarEdicionCliente = () => {
+
+    setClientes(
+      (actuales) =>
+        actuales.map(
+          (cliente) =>
+            cliente.id === formulario.id
+              ? {
+                  ...cliente,
+                  nombre:
+                    formulario.nombre,
+                  correo:
+                    formulario.correo,
+                  telefono:
+                    formulario.telefono,
+                  direccion:
+                    formulario.direccion,
+                  estado:
+                    formulario.estado
+                }
+              : cliente
+        )
+    );
+
+    setConfirmarEdicion(false);
 
     cerrarModal();
 
@@ -445,7 +473,7 @@ id: "CLI-005",
       cliente.estado === "Activo"
     ) {
 
-      alert(
+      setAviso(
         "No se puede eliminar un cliente activo. Primero cambia su estado a Inactivo."
       );
 
@@ -453,23 +481,21 @@ id: "CLI-005",
 
     }
 
+    setClienteEliminar(cliente);
 
-    const confirmar =
-      window.confirm(
-        `¿Deseas eliminar al cliente ${cliente.nombre}?`
-      );
+  };
 
-
-    if (!confirmar) return;
-
+  const confirmarEliminarCliente = () => {
 
     setClientes(
       (actuales) =>
         actuales.filter(
           (item) =>
-            item.id !== cliente.id
+            item.id !== clienteEliminar.id
         )
     );
+
+    setClienteEliminar(null);
 
   };
 
@@ -775,7 +801,7 @@ id: "CLI-005",
                   className="clientes-empty"
                 >
 
-                  No se encontraron clientes.
+                  Cliente no encontrado en el sistema.
 
                 </td>
 
@@ -1266,6 +1292,52 @@ id: "CLI-005",
         </div>
 
       )}
+
+      {clienteEliminar && (
+        <ConfirmDialog
+          abierto={clienteEliminar !== null}
+          titulo="Eliminar cliente"
+          mensaje={
+            <>¿Deseas eliminar al cliente "
+              <strong>{clienteEliminar.nombre}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarCliente}
+          onCancelar={() =>
+            setClienteEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={aviso !== null}
+        titulo="Aviso"
+        mensaje={aviso}
+        textoConfirmar="Entendido"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={() => setAviso(null)}
+        onCancelar={() => setAviso(null)}
+      />
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en el cliente "
+            <strong>{formulario.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionCliente}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
 

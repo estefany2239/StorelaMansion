@@ -13,6 +13,9 @@ import {
 import "./Productos.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Productos() {
   // =====================================================
@@ -148,6 +151,14 @@ export default function Productos() {
 
   const [productoSeleccionado, setProductoSeleccionado] =
     useState(null);
+
+  const [productoEliminar, setProductoEliminar] =
+    useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
   // =====================================================
   // FORMULARIO
@@ -356,33 +367,50 @@ export default function Productos() {
       return;
     }
 
-    const productoActualizado = {
-      id: formulario.id,
-      nombre: formulario.nombre,
-      categoria: formulario.categoria,
-      talla: formulario.talla,
-      color: formulario.color,
-      precio: Number(formulario.precio),
-      stock: Number(formulario.stock),
-      estado: formulario.estado,
-      imagen: formulario.imagen
-    };
-
     if (modoEdicion) {
-      setProductos((actuales) =>
-        actuales.map((producto) =>
-          producto.id === formulario.id
-            ? productoActualizado
-            : producto
-        )
-      );
-    } else {
-      setProductos((actuales) => [
-        ...actuales,
-        productoActualizado
-      ]);
+      setConfirmarEdicion(true);
+      return;
     }
 
+    setProductos((actuales) => [
+      ...actuales,
+      {
+        id: formulario.id,
+        nombre: formulario.nombre,
+        categoria: formulario.categoria,
+        talla: formulario.talla,
+        color: formulario.color,
+        precio: Number(formulario.precio),
+        stock: Number(formulario.stock),
+        estado: formulario.estado,
+        imagen: formulario.imagen
+      }
+    ]);
+
+    mostrarToast("Producto creado con éxito");
+    cerrarModal();
+  };
+
+  const confirmarEdicionProducto = () => {
+    setProductos((actuales) =>
+      actuales.map((producto) =>
+        producto.id === formulario.id
+          ? {
+              id: formulario.id,
+              nombre: formulario.nombre,
+              categoria: formulario.categoria,
+              talla: formulario.talla,
+              color: formulario.color,
+              precio: Number(formulario.precio),
+              stock: Number(formulario.stock),
+              estado: formulario.estado,
+              imagen: formulario.imagen
+            }
+          : producto
+      )
+    );
+
+    setConfirmarEdicion(false);
     cerrarModal();
   };
 
@@ -413,17 +441,17 @@ export default function Productos() {
   // =====================================================
 
   const eliminarProducto = (producto) => {
-    const confirmar = window.confirm(
-      `¿Deseas eliminar el producto "${producto.nombre}"?`
-    );
+    setProductoEliminar(producto);
+  };
 
-    if (!confirmar) return;
-
+  const confirmarEliminarProducto = () => {
     setProductos((actuales) =>
       actuales.filter(
-        (item) => item.id !== producto.id
+        (item) => item.id !== productoEliminar.id
       )
     );
+
+    setProductoEliminar(null);
   };
 
   // =====================================================
@@ -663,7 +691,7 @@ export default function Productos() {
                   colSpan="5"
                   className="productos-empty"
                 >
-                  No se encontraron productos.
+                  Producto no encontrado en el sistema.
                 </td>
               </tr>
             )}
@@ -1196,6 +1224,41 @@ export default function Productos() {
 
           </div>
         )}
+
+        {productoEliminar && (
+          <ConfirmDialog
+            abierto={productoEliminar !== null}
+            titulo="Eliminar producto"
+            mensaje={
+              <>¿Deseas eliminar el producto "
+                <strong>{productoEliminar.nombre}</strong>"?
+                Esta acción no se puede deshacer.</>
+            }
+            textoConfirmar="Eliminar"
+            textoCancelar="Cancelar"
+            variante="peligro"
+            onConfirmar={confirmarEliminarProducto}
+            onCancelar={() =>
+              setProductoEliminar(null)
+            }
+          />
+        )}
+
+        <Toast toast={toast} />
+
+        <ConfirmDialog
+          abierto={confirmarEdicion}
+          titulo="Confirmar cambios"
+          mensaje={
+            <>¿Deseas guardar los cambios realizados en el producto "
+              <strong>{formulario.nombre.trim()}</strong>"?</>
+          }
+          textoConfirmar="Guardar cambios"
+          textoCancelar="Cancelar"
+          variante="info"
+          onConfirmar={confirmarEdicionProducto}
+          onCancelar={() => setConfirmarEdicion(false)}
+        />
 
     </div>
   );

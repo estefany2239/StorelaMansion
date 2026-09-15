@@ -12,6 +12,9 @@ import {
 import "./Categorias.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Categorias() {
 
@@ -37,6 +40,13 @@ export default function Categorias() {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
+  const [categoriaEliminar, setCategoriaEliminar] = useState(null);
+
+  const [aviso, setAviso] = useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] = useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
   /* =====================================================
      FORMULARIO
@@ -145,31 +155,40 @@ export default function Categorias() {
     }
 
     if (modoEdicion) {
-      setCategorias((actuales) =>
-        actuales.map((categoria) =>
-          categoria.id === formulario.id
-            ? {
-                ...categoria,
-                nombre: formulario.nombre.trim(),
-                descripcion: formulario.descripcion.trim(),
-                estado: formulario.estado
-              }
-            : categoria
-        )
-      );
-    } else {
-      setCategorias((actuales) => [
-        ...actuales,
-        {
-          id: formulario.id,
-          nombre: formulario.nombre.trim(),
-          descripcion: formulario.descripcion.trim(),
-          estado: formulario.estado,
-          enUso: false
-        }
-      ]);
+      setConfirmarEdicion(true);
+      return;
     }
 
+    setCategorias((actuales) => [
+      ...actuales,
+      {
+        id: formulario.id,
+        nombre: formulario.nombre.trim(),
+        descripcion: formulario.descripcion.trim(),
+        estado: formulario.estado,
+        enUso: false
+      }
+    ]);
+
+    mostrarToast("Categoría creada con éxito");
+    cerrarModal();
+  };
+
+  const confirmarEdicionCategoria = () => {
+    setCategorias((actuales) =>
+      actuales.map((categoria) =>
+        categoria.id === formulario.id
+          ? {
+              ...categoria,
+              nombre: formulario.nombre.trim(),
+              descripcion: formulario.descripcion.trim(),
+              estado: formulario.estado
+            }
+          : categoria
+      )
+    );
+
+    setConfirmarEdicion(false);
     cerrarModal();
   };
 
@@ -196,20 +215,21 @@ export default function Categorias() {
 
   const eliminarCategoria = (categoria) => {
     if (categoria.enUso) {
-      alert(
+      setAviso(
         "No se puede eliminar la categoría porque está asociada a productos existentes."
       );
       return;
     }
 
-    const confirmar = window.confirm(
-      `¿Deseas eliminar la categoría "${categoria.nombre}"?`
-    );
-    if (!confirmar) return;
+    setCategoriaEliminar(categoria);
+  };
 
+  const confirmarEliminarCategoria = () => {
     setCategorias((actuales) =>
-      actuales.filter((item) => item.id !== categoria.id)
+      actuales.filter((item) => item.id !== categoriaEliminar.id)
     );
+
+    setCategoriaEliminar(null);
   };
 
   /* =====================================================
@@ -429,7 +449,7 @@ export default function Categorias() {
                   colSpan="4"
                   className="categorias-empty"
                 >
-                  No se encontraron categorías.
+                  Categoría no encontrada en el sistema.
                 </td>
 
               </tr>
@@ -756,6 +776,52 @@ export default function Categorias() {
         </div>
 
       )}
+
+      {categoriaEliminar && (
+        <ConfirmDialog
+          abierto={categoriaEliminar !== null}
+          titulo="Eliminar categoría"
+          mensaje={
+            <>¿Deseas eliminar la categoría "
+              <strong>{categoriaEliminar.nombre}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarCategoria}
+          onCancelar={() =>
+            setCategoriaEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={aviso !== null}
+        titulo="Aviso"
+        mensaje={aviso}
+        textoConfirmar="Entendido"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={() => setAviso(null)}
+        onCancelar={() => setAviso(null)}
+      />
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en "
+            <strong>{formulario.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionCategoria}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
   );

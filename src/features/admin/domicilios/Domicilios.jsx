@@ -12,6 +12,9 @@ import {
 import "./Domicilios.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Domicilios() {
 
@@ -130,6 +133,16 @@ export default function Domicilios() {
 
   const [domicilioSeleccionado, setDomicilioSeleccionado] =
     useState(null);
+
+  const [domicilioEliminar, setDomicilioEliminar] =
+    useState(null);
+
+  const [aviso, setAviso] = useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
 
   // =====================================================
@@ -469,46 +482,9 @@ export default function Domicilios() {
 
     if (modoEdicion) {
 
-      setDomicilios(
-        (actuales) =>
-          actuales.map(
-            (domicilio) =>
-              domicilio.id === formulario.id
-                ? {
-                    ...domicilio,
+      setConfirmarEdicion(true);
 
-                    idPedido:
-                      formulario.idPedido,
-
-                    idCliente:
-                      formulario.idCliente,
-
-                    cliente:
-                      formulario.cliente,
-
-                    direccion:
-                      formulario.direccion,
-
-                    ciudad:
-                      formulario.ciudad,
-
-                    valor:
-                      Number(
-                        formulario.valor
-                      ),
-
-                    responsable:
-                      formulario.responsable,
-
-                    estado:
-                      formulario.estado,
-
-                    fecha:
-                      formulario.fecha
-                  }
-                : domicilio
-          )
-      );
+      return;
 
     } else {
 
@@ -556,8 +532,60 @@ export default function Domicilios() {
         ]
       );
 
+      mostrarToast("Domicilio creado con éxito");
+
     }
 
+
+    cerrarModal();
+
+  };
+
+
+  const confirmarEdicionDomicilio = () => {
+
+    setDomicilios(
+      (actuales) =>
+        actuales.map(
+          (domicilio) =>
+            domicilio.id === formulario.id
+              ? {
+                  ...domicilio,
+
+                  idPedido:
+                    formulario.idPedido,
+
+                  idCliente:
+                    formulario.idCliente,
+
+                  cliente:
+                    formulario.cliente,
+
+                  direccion:
+                    formulario.direccion,
+
+                  ciudad:
+                    formulario.ciudad,
+
+                  valor:
+                    Number(
+                      formulario.valor
+                    ),
+
+                  responsable:
+                    formulario.responsable,
+
+                  estado:
+                    formulario.estado,
+
+                  fecha:
+                    formulario.fecha
+                }
+              : domicilio
+        )
+    );
+
+    setConfirmarEdicion(false);
 
     cerrarModal();
 
@@ -574,7 +602,7 @@ export default function Domicilios() {
       domicilio.estado !== "Pendiente"
     ) {
 
-      alert(
+      setAviso(
         "Solo se pueden eliminar domicilios pendientes."
       );
 
@@ -582,23 +610,21 @@ export default function Domicilios() {
 
     }
 
+    setDomicilioEliminar(domicilio);
 
-    const confirmar =
-      window.confirm(
-        `¿Deseas eliminar el domicilio ${domicilio.id}?`
-      );
+  };
 
-
-    if (!confirmar) return;
-
+  const confirmarEliminarDomicilio = () => {
 
     setDomicilios(
       (actuales) =>
         actuales.filter(
           (item) =>
-            item.id !== domicilio.id
+            item.id !== domicilioEliminar.id
         )
     );
+
+    setDomicilioEliminar(null);
 
   };
 
@@ -945,7 +971,7 @@ export default function Domicilios() {
                   className="domicilios-empty"
                 >
 
-                  No se encontraron domicilios.
+                  Domicilio no encontrado en el sistema.
 
                 </td>
 
@@ -1571,6 +1597,52 @@ export default function Domicilios() {
         </div>
 
       )}
+
+      {domicilioEliminar && (
+        <ConfirmDialog
+          abierto={domicilioEliminar !== null}
+          titulo="Eliminar domicilio"
+          mensaje={
+            <>¿Deseas eliminar el domicilio "
+              <strong>{domicilioEliminar.id}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarDomicilio}
+          onCancelar={() =>
+            setDomicilioEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={aviso !== null}
+        titulo="Aviso"
+        mensaje={aviso}
+        textoConfirmar="Entendido"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={() => setAviso(null)}
+        onCancelar={() => setAviso(null)}
+      />
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en el domicilio "
+            <strong>{formulario.cliente || formulario.id}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionDomicilio}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
 

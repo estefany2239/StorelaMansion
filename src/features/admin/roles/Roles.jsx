@@ -9,11 +9,13 @@ import {
   X,
   Shield,
   CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 import "./Roles.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
 
 const PERMISOS = [
   "Gestionar usuarios",
@@ -65,6 +67,10 @@ export default function Roles() {
 
   const [toast, setToast] = useState(null);
 
+  const [rolEliminar, setRolEliminar] = useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] = useState(false);
+
   const [rolForm, setRolForm] = useState({
     id: "",
     nombre: "",
@@ -76,13 +82,23 @@ export default function Roles() {
      ===================================================== */
 
   const rolesFiltrados = roles.filter((rol) => {
+    const texto = busqueda.toLowerCase();
+
     const coincideBusqueda =
       rol.nombre
         .toLowerCase()
-        .includes(busqueda.toLowerCase()) ||
+        .includes(texto) ||
       rol.id
         .toLowerCase()
-        .includes(busqueda.toLowerCase());
+        .includes(texto) ||
+      rol.estado
+        .toLowerCase()
+        .includes(texto) ||
+      rol.permisos.some((permiso) =>
+        permiso
+          .toLowerCase()
+          .includes(texto)
+      );
 
     const coincideEstado =
       filtroEstado === "Todos" ||
@@ -119,6 +135,15 @@ export default function Roles() {
     }
   }, [paginaActual, totalPaginas]);
 
+  useEffect(() => {
+    if (
+      busqueda.trim() &&
+      rolesFiltrados.length === 0
+    ) {
+      mostrarToast("Rol no encontrado en el sistema", "error");
+    }
+  }, [busqueda, filtroEstado, rolesFiltrados.length]);
+
   /* =====================================================
      ABRIR CREAR
      ===================================================== */
@@ -138,6 +163,14 @@ export default function Roles() {
      ===================================================== */
 
   const abrirEditar = (rol) => {
+    if (rol.estado !== "Activo") {
+      mostrarToast(
+        "No se puede editar un rol inactivo",
+        "error"
+      );
+      return;
+    }
+
     setRolForm({
       id: rol.id,
       nombre: rol.nombre,
@@ -200,8 +233,8 @@ export default function Roles() {
      GUARDAR ROL
      ===================================================== */
 
-  const mostrarToast = (mensaje) => {
-    setToast(mensaje);
+  const mostrarToast = (mensaje, tipo = "exito") => {
+    setToast({ mensaje, tipo });
 
     setTimeout(() => {
       setToast(null);
@@ -221,6 +254,11 @@ export default function Roles() {
       return;
     }
 
+    if (modal === "editar") {
+      setConfirmarEdicion(true);
+      return;
+    }
+
     if (modal === "crear") {
       const nuevoRol = {
         id: rolForm.id,
@@ -235,20 +273,25 @@ export default function Roles() {
       mostrarToast("Rol creado con éxito");
     }
 
-    if (modal === "editar") {
-      setRoles((prev) =>
-        prev.map((rol) =>
-          rol.id === rolForm.id
-            ? {
-                ...rol,
-                nombre: rolForm.nombre.trim(),
-                permisos: rolForm.permisos,
-              }
-            : rol
-        )
-      );
-    }
+    cerrarModal();
+  };
 
+  const confirmarEdicionRol = () => {
+    setRoles((prev) =>
+      prev.map((rol) =>
+        rol.id === rolForm.id
+          ? {
+              ...rol,
+              nombre: rolForm.nombre.trim(),
+              permisos: rolForm.permisos,
+            }
+          : rol
+      )
+    );
+
+    mostrarToast("Rol editado con éxito");
+
+    setConfirmarEdicion(false);
     cerrarModal();
   };
 
@@ -278,20 +321,24 @@ export default function Roles() {
 
   const eliminarRol = (rol) => {
     if (rol.estado !== "Inactivo") {
-      alert(
-        "No se puede eliminar el rol porque solo se permiten eliminar roles inactivos."
+      mostrarToast(
+        "No se puede eliminar el rol porque solo se permiten eliminar roles inactivos.",
+        "error"
       );
       return;
     }
 
-    const confirmar = window.confirm(
-      `¿Deseas eliminar el rol "${rol.nombre}"?`
-    );
-    if (!confirmar) return;
+    setRolEliminar(rol);
+  };
 
+  const confirmarEliminar = () => {
     setRoles((actuales) =>
-      actuales.filter((item) => item.id !== rol.id)
+      actuales.filter((item) => item.id !== rolEliminar.id)
     );
+
+    setRolEliminar(null);
+
+    mostrarToast("Rol eliminado con éxito");
   };
 
   return (
@@ -321,7 +368,7 @@ export default function Roles() {
 
             <input
               type="text"
-              placeholder="Buscar roles..."
+              placeholder="Buscar por nombre, permiso o estado..."
               value={busqueda}
               onChange={(e) =>
                 setBusqueda(e.target.value)
@@ -462,7 +509,16 @@ export default function Roles() {
 
                       <button
                         type="button"
-                        title="Editar rol"
+                        className={
+                          rol.estado !== "Activo"
+                            ? "disabled"
+                            : ""
+                        }
+                        title={
+                          rol.estado !== "Activo"
+                            ? "No se puede editar un rol inactivo"
+                            : "Editar rol"
+                        }
                         onClick={() =>
                           abrirEditar(rol)
                         }
@@ -505,7 +561,7 @@ export default function Roles() {
                   colSpan="5"
                   className="roles-empty"
                 >
-                  No se encontraron roles.
+                  Rol no encontrado en el sistema.
                 </td>
 
               </tr>
@@ -843,13 +899,60 @@ export default function Roles() {
       )}
 
       {/* =================================================
+          CONFIRMACIÓN DE ELIMINACIÓN
+          ================================================= */}
+
+      {rolEliminar && (
+        <ConfirmDialog
+          abierto={rolEliminar !== null}
+          titulo="Eliminar rol"
+          mensaje={
+            <>¿Deseas eliminar el rol "
+              <strong>{rolEliminar.nombre}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminar}
+          onCancelar={() =>
+            setRolEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en el rol "
+            <strong>{rolForm.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionRol}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      {/* =================================================
           NOTIFICACIÓN
           ================================================= */}
 
       {toast && (
-        <div className="rol-toast">
-          <CheckCircle size={20} />
-          <span>{toast}</span>
+        <div
+          className={`rol-toast ${
+            toast.tipo === "error"
+              ? "rol-toast-error"
+              : ""
+          }`}
+        >
+          {toast.tipo === "error" ? (
+            <XCircle size={20} />
+          ) : (
+            <CheckCircle size={20} />
+          )}
+          <span>{toast.mensaje}</span>
         </div>
       )}
 

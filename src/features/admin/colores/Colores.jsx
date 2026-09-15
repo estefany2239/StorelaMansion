@@ -11,6 +11,9 @@ import {
 import "./Colores.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Colores() {
 
@@ -35,6 +38,13 @@ export default function Colores() {
   const [busqueda, setBusqueda] = useState("");
   const [mostrarModal, setMostrarModal] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [colorEliminar, setColorEliminar] = useState(null);
+
+  const [aviso, setAviso] = useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] = useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
   /* =====================================================
      FORMULARIO
@@ -138,25 +148,34 @@ export default function Colores() {
     }
 
     if (modoEdicion) {
-      setColores((actuales) =>
-        actuales.map((color) =>
-          color.id === formulario.id
-            ? { ...color, nombre: formulario.nombre.trim() }
-            : color
-        )
-      );
-    } else {
-      setColores((actuales) => [
-        ...actuales,
-        {
-          id: formulario.id,
-          nombre: formulario.nombre.trim(),
-          enUso: false,
-          estado: "Activo"
-        }
-      ]);
+      setConfirmarEdicion(true);
+      return;
     }
 
+    setColores((actuales) => [
+      ...actuales,
+      {
+        id: formulario.id,
+        nombre: formulario.nombre.trim(),
+        enUso: false,
+        estado: "Activo"
+      }
+    ]);
+
+    mostrarToast("Color creado con éxito");
+    cerrarModal();
+  };
+
+  const confirmarEdicionColor = () => {
+    setColores((actuales) =>
+      actuales.map((color) =>
+        color.id === formulario.id
+          ? { ...color, nombre: formulario.nombre.trim() }
+          : color
+      )
+    );
+
+    setConfirmarEdicion(false);
     cerrarModal();
   };
 
@@ -183,20 +202,21 @@ export default function Colores() {
 
   const eliminarColor = (color) => {
     if (color.enUso) {
-      alert(
+      setAviso(
         "No se puede eliminar el color porque está asociado a productos activos."
       );
       return;
     }
 
-    const confirmar = window.confirm(
-      `¿Deseas eliminar el color "${color.nombre}"?`
-    );
-    if (!confirmar) return;
+    setColorEliminar(color);
+  };
 
+  const confirmarEliminarColor = () => {
     setColores((actuales) =>
-      actuales.filter((item) => item.id !== color.id)
+      actuales.filter((item) => item.id !== colorEliminar.id)
     );
+
+    setColorEliminar(null);
   };
 
   /* =====================================================
@@ -392,7 +412,7 @@ export default function Colores() {
                   colSpan="4"
                   className="colores-empty"
                 >
-                  No se encontraron colores.
+                  Color no encontrado en el sistema.
                 </td>
 
               </tr>
@@ -513,6 +533,52 @@ export default function Colores() {
         </div>
 
       )}
+
+      {colorEliminar && (
+        <ConfirmDialog
+          abierto={colorEliminar !== null}
+          titulo="Eliminar color"
+          mensaje={
+            <>¿Deseas eliminar el color "
+              <strong>{colorEliminar.nombre}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarColor}
+          onCancelar={() =>
+            setColorEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={aviso !== null}
+        titulo="Aviso"
+        mensaje={aviso}
+        textoConfirmar="Entendido"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={() => setAviso(null)}
+        onCancelar={() => setAviso(null)}
+      />
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en el color "
+            <strong>{formulario.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionColor}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
   );

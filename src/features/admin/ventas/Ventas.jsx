@@ -11,6 +11,8 @@ import {
 import "./Ventas.css";
 
 import Pagination from "../components/Pagination";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Ventas({ vendedorId }) {
 
@@ -178,6 +180,8 @@ export default function Ventas({ vendedorId }) {
 
   const [ventaSeleccionada, setVentaSeleccionada] =
     useState(null);
+
+  const { toast, mostrarToast } = useToast();
 
 
   // =========================================================
@@ -492,6 +496,8 @@ export default function Ventas({ vendedorId }) {
       nuevaVenta
     ]);
 
+    mostrarToast("Venta registrada con éxito");
+
 
     cerrarModal();
 
@@ -781,7 +787,7 @@ export default function Ventas({ vendedorId }) {
                   className="ventas-empty"
                 >
 
-                  No se encontraron ventas.
+                  Venta no encontrada en el sistema.
 
                 </td>
 
@@ -1493,6 +1499,8 @@ export default function Ventas({ vendedorId }) {
         </div>
 
       )}
+
+      <Toast toast={toast} />
 
     </div>
 

@@ -1,0 +1,236 @@
+/* =========================================================
+   CONFIRMACIÓN REUTILIZABLE - STORE LA MANSIÓN
+   Diseño dorado / elegante del panel administrativo.
+   Compatible con tema Light y Dark (usa variables CSS).
+   ========================================================= */
+
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 25px;
+  box-sizing: border-box;
+
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.confirm-dialog-card {
+  position: relative;
+
+  width: 100%;
+  max-width: 440px;
+
+  padding: 34px 30px 28px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  background: var(--admin-card, #ffffff);
+  border: 1px solid var(--admin-border, #e5e5e5);
+  border-top: 3px solid var(--admin-cta-gold, #d4af37);
+  border-radius: 18px;
+
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+
+  animation: confirm-dialog-in 0.25s ease;
+}
+
+@keyframes confirm-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   BOTÓN CERRAR
+   ========================================================= */
+
+.confirm-dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: var(--admin-text-muted, #777777);
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+.confirm-dialog-close:hover {
+  background: var(--admin-hover, #f3f3f3);
+}
+
+/* =========================================================
+   ÍCONO
+   ========================================================= */
+
+.confirm-dialog-icon {
+  width: 66px;
+  height: 66px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  margin-bottom: 18px;
+}
+
+.confirm-dialog-peligro .confirm-dialog-icon {
+  background: rgba(229, 57, 53, 0.12);
+  color: #e53935;
+}
+
+.confirm-dialog-info .confirm-dialog-icon {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--admin-cta-gold-dark, #a98718);
+}
+
+/* =========================================================
+   TÍTULO
+   ========================================================= */
+
+.confirm-dialog-card h3 {
+  margin: 0 0 10px;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--admin-text, #171717);
+}
+
+/* =========================================================
+   MENSAJE
+   ========================================================= */
+
+.confirm-dialog-card p {
+  margin: 0 0 26px;
+
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--admin-text-secondary, #555555);
+}
+
+.confirm-dialog-card p strong {
+  color: var(--admin-gold-dark, #8f7645);
+  font-weight: 600;
+}
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.confirm-dialog-actions {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+}
+
+.confirm-cancel-button {
+  height: 48px;
+  padding: 0 24px;
+
+  border: 1px solid var(--admin-border, #e5e5e5);
+  border-radius: 9px;
+
+  background: transparent;
+  color: var(--admin-text-secondary, #697386);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.confirm-cancel-button:hover {
+  background: var(--admin-hover, #f7f7f7);
+}
+
+.confirm-action-button {
+  height: 48px;
+  padding: 0 24px;
+
+  border: none;
+  border-radius: 9px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Variante peligro (eliminar) */
+
+.confirm-dialog-peligro .confirm-action-button {
+  background: #e53935;
+  color: #ffffff;
+}
+
+.confirm-dialog-peligro .confirm-action-button:hover {
+  background: #c62828;
+  box-shadow: 0 8px 18px rgba(229, 57, 53, 0.30);
+}
+
+/* Variante info (aviso) */
+
+.confirm-dialog-info .confirm-action-button {
+  background: var(--admin-cta-gold, #d4af37);
+  color: #111111;
+}
+
+.confirm-dialog-info .confirm-action-button:hover {
+  background: var(--admin-cta-gold-dark, #a98718);
+  box-shadow: 0 8px 18px rgba(212, 175, 55, 0.30);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .confirm-dialog-overlay {
+    padding: 12px;
+  }
+
+  .confirm-dialog-actions {
+    flex-direction: column;
+  }
+
+  .confirm-cancel-button,
+  .confirm-action-button {
+    width: 100%;
+  }
+}

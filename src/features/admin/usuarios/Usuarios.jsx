@@ -13,6 +13,9 @@ import {
 import "./Usuarios.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Usuarios() {
 
@@ -144,6 +147,14 @@ export default function Usuarios() {
 
   const [usuarioSeleccionado, setUsuarioSeleccionado] =
     useState(null);
+
+  const [usuarioEliminar, setUsuarioEliminar] =
+    useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
   // =====================================================
   // FORMULARIO
@@ -440,60 +451,100 @@ export default function Usuarios() {
         formulario.rol
       );
 
-    const usuarioActualizado = {
-
-      id:
-        formulario.id,
-
-      nombre:
-        formulario.nombre,
-
-      correo:
-        formulario.correo,
-
-      telefono:
-        formulario.telefono,
-
-      rol:
-        formulario.rol,
-
-      estado:
-        formulario.estado,
-
-      fecha:
-        formulario.fecha,
-
-      direccion:
-        formulario.direccion,
-
-      permisos
-
-    };
-
     if (modoEdicion) {
 
-      setUsuarios(
-        (actuales) =>
-          actuales.map(
-            (usuario) =>
-              usuario.id === formulario.id
-                ? {
-                    ...usuarioActualizado
-                  }
-                : usuario
-          )
-      );
+      setConfirmarEdicion(true);
+
+      return;
 
     } else {
 
       setUsuarios(
         (actuales) => [
           ...actuales,
-          usuarioActualizado
+          {
+            id:
+              formulario.id,
+
+            nombre:
+              formulario.nombre,
+
+            correo:
+              formulario.correo,
+
+            telefono:
+              formulario.telefono,
+
+            rol:
+              formulario.rol,
+
+            estado:
+              formulario.estado,
+
+            fecha:
+              formulario.fecha,
+
+            direccion:
+              formulario.direccion,
+
+            permisos
+          }
         ]
       );
 
+      mostrarToast("Usuario creado con éxito");
+
     }
+
+    cerrarModal();
+
+  };
+
+
+  const confirmarEdicionUsuario = () => {
+
+    const permisos =
+      obtenerPermisos(
+        formulario.rol
+      );
+
+    setUsuarios(
+      (actuales) =>
+        actuales.map(
+          (usuario) =>
+            usuario.id === formulario.id
+              ? {
+                  id:
+                    formulario.id,
+
+                  nombre:
+                    formulario.nombre,
+
+                  correo:
+                    formulario.correo,
+
+                  telefono:
+                    formulario.telefono,
+
+                  rol:
+                    formulario.rol,
+
+                  estado:
+                    formulario.estado,
+
+                  fecha:
+                    formulario.fecha,
+
+                  direccion:
+                    formulario.direccion,
+
+                  permisos
+                }
+              : usuario
+        )
+    );
+
+    setConfirmarEdicion(false);
 
     cerrarModal();
 
@@ -541,21 +592,20 @@ export default function Usuarios() {
 
     }
 
+    setUsuarioEliminar(usuario);
 
-    const confirmar =
-      window.confirm(
-        `¿Deseas eliminar al usuario "${usuario.nombre}"?`
-      );
+  };
 
-    if (!confirmar) return;
-
+  const confirmarEliminarUsuario = () => {
 
     setUsuarios(
       (prev) =>
         prev.filter(
-          (item) => item.id !== usuario.id
+          (item) => item.id !== usuarioEliminar.id
         )
     );
+
+    setUsuarioEliminar(null);
 
   };
 
@@ -851,7 +901,7 @@ export default function Usuarios() {
                   className="usuarios-empty"
                 >
 
-                  No se encontraron usuarios.
+                  Usuario no encontrado en el sistema.
 
                 </td>
 
@@ -1389,6 +1439,41 @@ export default function Usuarios() {
         </div>
 
       )}
+
+      {usuarioEliminar && (
+        <ConfirmDialog
+          abierto={usuarioEliminar !== null}
+          titulo="Eliminar usuario"
+          mensaje={
+            <>¿Deseas eliminar al usuario "
+              <strong>{usuarioEliminar.nombre}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarUsuario}
+          onCancelar={() =>
+            setUsuarioEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en el usuario "
+            <strong>{formulario.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionUsuario}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
   );

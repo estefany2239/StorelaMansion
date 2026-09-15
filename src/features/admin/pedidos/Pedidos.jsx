@@ -14,6 +14,9 @@ import {
 import "./Pedidos.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
+import Toast from "../components/Toast";
+import useToast from "../hooks/useToast";
 
 export default function Pedidos({ vendedorId }) {
 
@@ -252,6 +255,14 @@ export default function Pedidos({ vendedorId }) {
 
   const [pedidoSeleccionado, setPedidoSeleccionado] =
     useState(null);
+
+  const [pedidoEliminar, setPedidoEliminar] =
+    useState(null);
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
+
+  const { toast, mostrarToast } = useToast();
 
 
   // =====================================================
@@ -663,34 +674,9 @@ export default function Pedidos({ vendedorId }) {
 
     if (modoEdicion) {
 
-      setPedidos(
-        (actuales) =>
-          actuales.map(
-            (pedido) =>
-              pedido.id === formulario.id
-                ? {
-                    ...pedido,
-                    idCliente:
-                      formulario.idCliente,
-                    cliente:
-                      formulario.cliente,
-                    fecha:
-                      formulario.fecha,
-                    estado:
-                      formulario.estado,
-                    metodoPago:
-                      formulario.metodoPago,
-                    direccion:
-                      formulario.direccion,
-                    productos:
-                      formulario.productos,
-                    total:
-                      total ||
-                      pedido.total
-                  }
-                : pedido
-          )
-      );
+      setConfirmarEdicion(true);
+
+      return;
 
     } else {
 
@@ -736,8 +722,57 @@ export default function Pedidos({ vendedorId }) {
         ]
       );
 
+      mostrarToast("Pedido creado con éxito");
+
     }
 
+
+    cerrarModal();
+
+  };
+
+
+  const confirmarEdicionPedido = () => {
+
+    const total =
+      formulario.productos.reduce(
+        (suma, producto) =>
+          suma +
+          Number(producto.precio) *
+          Number(producto.cantidad),
+        0
+      );
+
+    setPedidos(
+      (actuales) =>
+        actuales.map(
+          (pedido) =>
+            pedido.id === formulario.id
+              ? {
+                  ...pedido,
+                  idCliente:
+                    formulario.idCliente,
+                  cliente:
+                    formulario.cliente,
+                  fecha:
+                    formulario.fecha,
+                  estado:
+                    formulario.estado,
+                  metodoPago:
+                    formulario.metodoPago,
+                  direccion:
+                    formulario.direccion,
+                  productos:
+                    formulario.productos,
+                  total:
+                    total ||
+                    pedido.total
+                }
+              : pedido
+        )
+    );
+
+    setConfirmarEdicion(false);
 
     cerrarModal();
 
@@ -750,18 +785,20 @@ export default function Pedidos({ vendedorId }) {
 
   const eliminarPedido = (pedido) => {
 
-    const confirmar = window.confirm(
-      `¿Deseas eliminar el pedido "${pedido.id}"?`
-    );
+    setPedidoEliminar(pedido);
 
-    if (!confirmar) return;
+  };
+
+  const confirmarEliminarPedido = () => {
 
     setPedidos(
       (prev) =>
         prev.filter(
-          (item) => item.id !== pedido.id
+          (item) => item.id !== pedidoEliminar.id
         )
     );
+
+    setPedidoEliminar(null);
 
   };
 
@@ -1302,7 +1339,7 @@ export default function Pedidos({ vendedorId }) {
                   className="pedidos-empty"
                 >
 
-                  No se encontraron pedidos.
+                  Pedido no encontrado en el sistema.
 
                 </td>
 
@@ -2565,6 +2602,41 @@ export default function Pedidos({ vendedorId }) {
         </div>
 
       )}
+
+      {pedidoEliminar && (
+        <ConfirmDialog
+          abierto={pedidoEliminar !== null}
+          titulo="Eliminar pedido"
+          mensaje={
+            <>¿Deseas eliminar el pedido "
+              <strong>{pedidoEliminar.id}</strong>"? Esta
+              acción no se puede deshacer.</>
+          }
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          variante="peligro"
+          onConfirmar={confirmarEliminarPedido}
+          onCancelar={() =>
+            setPedidoEliminar(null)
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en el pedido "
+            <strong>{formulario.id}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionPedido}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <Toast toast={toast} />
 
     </div>
 

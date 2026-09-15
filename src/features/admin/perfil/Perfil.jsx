@@ -8,6 +8,8 @@ import {
   X
 } from "lucide-react";
 
+import ConfirmDialog from "../shared/ConfirmDialog";
+
 import "./Perfil.css";
 
 export default function Perfil({
@@ -32,6 +34,9 @@ export default function Perfil({
     useState(false);
 
   const [form, setForm] = useState(perfil);
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
 
   /* =====================================================
      ABRIR MODAL EDITAR
@@ -75,7 +80,12 @@ export default function Perfil({
       return;
     }
 
+    setConfirmarEdicion(true);
+  };
+
+  const confirmarEdicionPerfil = () => {
     setPerfil({ ...form });
+    setConfirmarEdicion(false);
     cerrarModal();
   };
 
@@ -488,6 +498,20 @@ export default function Perfil({
         </div>
 
       )}
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en tu perfil "
+            <strong>{form.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionPerfil}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
 
     </div>
   );
