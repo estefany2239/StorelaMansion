@@ -34,8 +34,10 @@ import {
   cargarPreferenciasCliente
 } from "./configuracionCliente";
 
-// Importación de la imagen para el banner principal
+// Importación de las imágenes para el banner principal (carrusel)
 import bannerImage from "../../assets/img/web.png";
+import bannerImage2 from "../../assets/img/ima.png";
+import bannerImage3 from "../../assets/img/img.png";
 
 const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,6 +62,21 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
   const [favorites, setFavorites] = useState(() => {
     return JSON.parse(localStorage.getItem('favorites')) || [];
   });
+
+  // Carrusel del hero: índice de la imagen de fondo activa.
+  // web.png es el banner principal; ima.png e img.png son las que
+  // tienen proporción de banner ancho disponible en src/assets/img/.
+  // Si prefieres otras, solo cambia los nombres de los imports.
+  const heroImages = [bannerImage, bannerImage2, bannerImage3];
+  const [indiceHero, setIndiceHero] = useState(0);
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setIndiceHero((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+
+    return () => clearInterval(intervalo);
+  }, [indiceHero, heroImages.length]);
 
   // Pedidos del cliente: mock iniciales + pedidos nuevos guardados en localStorage
   const [pedidosCliente, setPedidosCliente] = useState(() => {
@@ -313,16 +330,27 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
       {currentView === "dashboard" ? (
         <main className="main-content">
           <section className="hero-section">
-            <div 
+            <div
               className="hero-banner-box"
-              style={{ 
-                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${bannerImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+              style={{
                 borderRadius: '20px',
                 overflow: 'hidden'
               }}
             >
+              {heroImages.map((imagen, indice) => (
+                <div
+                  key={indice}
+                  className={`hero-banner-slide ${
+                    indice === indiceHero ? "hero-banner-slide-active" : ""
+                  }`}
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${imagen})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+              ))}
+
               <div className="hero-content-inner">
                 <div className="welcome-pill">
                   <Sparkles size={15} />
@@ -334,6 +362,20 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                   <span>Explorar productos</span>
                   <ArrowRight size={20} />
                 </button>
+              </div>
+
+              <div className="hero-banner-dots">
+                {heroImages.map((_, indice) => (
+                  <button
+                    key={indice}
+                    type="button"
+                    className={`hero-banner-dot ${
+                      indice === indiceHero ? "hero-banner-dot-active" : ""
+                    }`}
+                    onClick={() => setIndiceHero(indice)}
+                    aria-label={`Ver imagen ${indice + 1}`}
+                  />
+                ))}
               </div>
             </div>
           </section>
