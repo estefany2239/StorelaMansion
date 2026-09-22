@@ -1212,7 +1212,7 @@ export default function Productos() {
 
                 <button
                   type="button"
-                  className="producto-cancel-button"
+                  className="producto-cancel-button detail-cerrar-button"
                   onClick={cerrarDetalle}
                 >
                   Cerrar

@@ -884,7 +884,7 @@ export default function Roles() {
 
               <button
                 type="button"
-                className="rol-cancel-button"
+                className="rol-cancel-button detail-cerrar-button"
                 onClick={cerrarModal}
               >
                 Cerrar

@@ -1582,7 +1582,7 @@ export default function Domicilios() {
 
               <button
                 type="button"
-                className="domicilio-cancel-button"
+                className="domicilio-cancel-button detail-cerrar-button"
                 onClick={cerrarDetalle}
               >
 

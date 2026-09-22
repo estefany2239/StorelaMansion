@@ -535,6 +535,24 @@
   color: #ffffff !important;
 }
 
+/* ---------- BOTÓN CERRAR DE LOS DETALLES ---------- */
+/* Dorado en light y dark, con especificidad extra para
+   ganar a las reglas propias de cada módulo. */
+
+.admin-container .detail-cerrar-button.detail-cerrar-button,
+.admin-container.admin-dark .detail-cerrar-button.detail-cerrar-button {
+  background: var(--admin-cta-gold, #d4af37) !important;
+  border-color: var(--admin-cta-gold, #d4af37) !important;
+  color: #111111 !important;
+}
+
+.admin-container .detail-cerrar-button.detail-cerrar-button:hover,
+.admin-container.admin-dark .detail-cerrar-button.detail-cerrar-button:hover {
+  background: var(--admin-cta-gold-dark, #a98718) !important;
+  border-color: var(--admin-cta-gold-dark, #a98718) !important;
+  color: #111111 !important;
+}
+
 /* ---------- OVERLAYS ---------- */
 
 .admin-container.admin-dark .rol-modal-overlay,

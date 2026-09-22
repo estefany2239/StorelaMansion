@@ -763,7 +763,7 @@ export default function Categorias() {
 
               <button
                 type="button"
-                className="categoria-cancel-button"
+                className="categoria-cancel-button detail-cerrar-button"
                 onClick={cerrarDetalle}
               >
                 Cerrar

@@ -1205,7 +1205,7 @@
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .ventas-search {
+.admin-container.admin-dark .ventas-search {
   background:
     var(--admin-card);
 
@@ -1214,13 +1214,13 @@
 }
 
 
-[data-theme="dark"] .ventas-search input {
+.admin-container.admin-dark .ventas-search input {
   color:
     var(--admin-text);
 }
 
 
-[data-theme="dark"] .ventas-table-container {
+.admin-container.admin-dark .ventas-table-container {
   background:
     var(--admin-card);
 
@@ -1229,7 +1229,7 @@
 }
 
 
-[data-theme="dark"] .ventas-table th {
+.admin-container.admin-dark .ventas-table th {
   color:
     var(--admin-text-secondary);
 
@@ -1238,55 +1238,55 @@
 }
 
 
-[data-theme="dark"] .ventas-table td {
+.admin-container.admin-dark .ventas-table td {
   border-color:
     rgba(255, 255, 255, 0.08);
 }
 
 
-[data-theme="dark"] .venta-fecha,
-[data-theme="dark"] .venta-metodo {
+.admin-container.admin-dark .venta-fecha,
+.admin-container.admin-dark .venta-metodo {
   color:
     var(--admin-text-secondary);
 }
 
 
-[data-theme="dark"] .venta-total {
+.admin-container.admin-dark .venta-total {
   color:
     var(--admin-text);
 }
 
 
-[data-theme="dark"] .venta-modal {
+.admin-container.admin-dark .venta-modal {
   background:
     #1e1e1e;
 }
 
 
-[data-theme="dark"] .venta-modal-header {
+.admin-container.admin-dark .venta-modal-header {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
 
-[data-theme="dark"] .venta-modal-header h3 {
+.admin-container.admin-dark .venta-modal-header h3 {
   color:
     #ffffff;
 }
 
 
-[data-theme="dark"] .venta-form-group label,
-[data-theme="dark"] .venta-info-group label,
-[data-theme="dark"] .venta-products label,
-[data-theme="dark"] .venta-status label,
-[data-theme="dark"] .venta-total-box span {
+.admin-container.admin-dark .venta-form-group label,
+.admin-container.admin-dark .venta-info-group label,
+.admin-container.admin-dark .venta-products label,
+.admin-container.admin-dark .venta-status label,
+.admin-container.admin-dark .venta-total-box span {
   color:
     #b0b0b0;
 }
 
 
-[data-theme="dark"] .venta-form-group input,
-[data-theme="dark"] .venta-form-group select {
+.admin-container.admin-dark .venta-form-group input,
+.admin-container.admin-dark .venta-form-group select {
   background:
     #181818;
 
@@ -1298,7 +1298,7 @@
 }
 
 
-[data-theme="dark"] .venta-info-value {
+.admin-container.admin-dark .venta-info-value {
   background:
     #181818;
 
@@ -1310,37 +1310,37 @@
 }
 
 
-[data-theme="dark"] .venta-products-list {
+.admin-container.admin-dark .venta-products-list {
   border-color:
     rgba(255, 255, 255, 0.12);
 }
 
 
-[data-theme="dark"] .venta-product {
+.admin-container.admin-dark .venta-product {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
 
-[data-theme="dark"] .venta-product strong {
+.admin-container.admin-dark .venta-product strong {
   color:
     #ffffff;
 }
 
 
-[data-theme="dark"] .venta-product span {
+.admin-container.admin-dark .venta-product span {
   color:
     #b0b0b0;
 }
 
 
-[data-theme="dark"] .venta-details-header label {
+.admin-container.admin-dark .venta-details-header label {
   color:
     #b0b0b0;
 }
 
 
-[data-theme="dark"] .venta-no-productos {
+.admin-container.admin-dark .venta-no-productos {
   border-color:
     rgba(255, 255, 255, 0.12);
 
@@ -1349,26 +1349,26 @@
 }
 
 
-[data-theme="dark"] .venta-product-item {
+.admin-container.admin-dark .venta-product-item {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
 
-[data-theme="dark"] .venta-product-item-number {
+.admin-container.admin-dark .venta-product-item-number {
   color:
     #a19a8b;
 }
 
 
-[data-theme="dark"] .venta-product-item-field label,
-[data-theme="dark"] .venta-product-item-subtotal label {
+.admin-container.admin-dark .venta-product-item-field label,
+.admin-container.admin-dark .venta-product-item-subtotal label {
   color:
     #a19a8b;
 }
 
 
-[data-theme="dark"] .venta-product-item-field input {
+.admin-container.admin-dark .venta-product-item-field input {
   background:
     #181818;
 
@@ -1380,7 +1380,7 @@
 }
 
 
-[data-theme="dark"] .venta-product-item-subtotal strong {
+.admin-container.admin-dark .venta-product-item-subtotal strong {
   background:
     rgba(194, 168, 120, 0.10);
 
@@ -1389,19 +1389,19 @@
 }
 
 
-[data-theme="dark"] .venta-total-box {
+.admin-container.admin-dark .venta-total-box {
   background:
     rgba(194, 168, 120, 0.10);
 }
 
 
-[data-theme="dark"] .venta-total-box strong {
+.admin-container.admin-dark .venta-total-box strong {
   color:
     #ffffff;
 }
 
 
-[data-theme="dark"] .venta-closed-info {
+.admin-container.admin-dark .venta-closed-info {
   background:
     rgba(103, 80, 164, 0.15);
 
@@ -1410,13 +1410,13 @@
 }
 
 
-[data-theme="dark"] .venta-modal-footer {
+.admin-container.admin-dark .venta-modal-footer {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
 
-[data-theme="dark"] .venta-cancel-button {
+.admin-container.admin-dark .venta-cancel-button {
   background:
     transparent;
 

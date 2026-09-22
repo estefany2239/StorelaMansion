@@ -2196,7 +2196,7 @@ export default function Pedidos({ vendedorId }) {
 
               <button
                 type="button"
-                className="pedido-cancel-button"
+                className="pedido-cancel-button detail-cerrar-button"
                 onClick={cerrarDetalle}
               >
 
@@ -2586,7 +2586,7 @@ export default function Pedidos({ vendedorId }) {
 
               <button
                 type="button"
-                className="pedido-cancel-button"
+                className="pedido-cancel-button detail-cerrar-button"
                 onClick={cerrarAbonos}
               >
 

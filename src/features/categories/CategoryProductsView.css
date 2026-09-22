@@ -240,7 +240,8 @@ body.dark .catalog__product-card,
 }
 
 .product__img-wrap {
-  height: 240px;
+  width: 100%;
+  aspect-ratio: 4 / 4.2;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -249,6 +250,7 @@ body.dark .catalog__product-card,
 
 /* Prendas (camisas/camisetas): la foto completa sin recortes */
 .product__img-wrap--camisas {
+  aspect-ratio: auto;
   height: 280px;
   background-size: contain;
   background-repeat: no-repeat;

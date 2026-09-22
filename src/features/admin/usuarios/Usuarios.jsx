@@ -1244,11 +1244,11 @@ export default function Usuarios() {
       {mostrarDetalle &&
         usuarioSeleccionado && (
 
-        <div className="usuario-modal-overlay">
+        <div className="usuario-detail-overlay">
 
-          <div className="usuario-modal">
+          <div className="usuario-detail-modal">
 
-            <div className="usuario-modal-header">
+            <div className="usuario-detail-modal-header">
 
               <h3>
                 Detalle del Usuario
@@ -1256,7 +1256,7 @@ export default function Usuarios() {
 
               <button
                 type="button"
-                className="usuario-modal-close"
+                className="usuario-detail-modal-close"
                 onClick={cerrarDetalle}
               >
 
@@ -1266,33 +1266,11 @@ export default function Usuarios() {
 
             </div>
 
-            <div className="usuario-modal-body">
+            <div className="usuario-detail-modal-body">
 
-              <div className="usuario-detail-header">
+              {/* ID + ESTADO */}
 
-                <div className="usuario-detail-avatar">
-
-                  {usuarioSeleccionado.nombre
-                    .charAt(0)
-                    .toUpperCase()}
-
-                </div>
-
-                <div>
-
-                  <strong>
-                    {usuarioSeleccionado.nombre}
-                  </strong>
-
-                  <span>
-                    {usuarioSeleccionado.correo}
-                  </span>
-
-                </div>
-
-              </div>
-
-              <div className="usuario-detail-grid">
+              <div className="usuario-detail-row">
 
                 <div className="usuario-info-group">
 
@@ -1307,56 +1285,6 @@ export default function Usuarios() {
                 </div>
 
                 <div className="usuario-info-group">
-
-                  <label>
-                    ROL
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.rol}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    TELÉFONO
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.telefono}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    FECHA DE REGISTRO
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {formatearFecha(
-                      usuarioSeleccionado.fecha
-                    )}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group usuario-info-full">
-
-                  <label>
-                    DIRECCIÓN
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.direccion}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group usuario-info-full">
 
                   <label>
                     ESTADO
@@ -1377,6 +1305,98 @@ export default function Usuarios() {
 
                     </span>
 
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* NOMBRE + CORREO */}
+
+              <div className="usuario-detail-row">
+
+                <div className="usuario-info-group">
+
+                  <label>
+                    NOMBRE COMPLETO
+                  </label>
+
+                  <div className="usuario-info-value">
+                    {usuarioSeleccionado.nombre}
+                  </div>
+
+                </div>
+
+                <div className="usuario-info-group">
+
+                  <label>
+                    CORREO ELECTRÓNICO
+                  </label>
+
+                  <div className="usuario-info-value">
+                    {usuarioSeleccionado.correo}
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* TELÉFONO + ROL */}
+
+              <div className="usuario-detail-row">
+
+                <div className="usuario-info-group">
+
+                  <label>
+                    TELÉFONO
+                  </label>
+
+                  <div className="usuario-info-value">
+                    {usuarioSeleccionado.telefono}
+                  </div>
+
+                </div>
+
+                <div className="usuario-info-group">
+
+                  <label>
+                    ROL
+                  </label>
+
+                  <div className="usuario-info-value">
+                    {usuarioSeleccionado.rol}
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* FECHA + DIRECCIÓN */}
+
+              <div className="usuario-detail-row">
+
+                <div className="usuario-info-group">
+
+                  <label>
+                    FECHA DE REGISTRO
+                  </label>
+
+                  <div className="usuario-info-value">
+                    {formatearFecha(
+                      usuarioSeleccionado.fecha
+                    )}
+                  </div>
+
+                </div>
+
+                <div className="usuario-info-group">
+
+                  <label>
+                    DIRECCIÓN
+                  </label>
+
+                  <div className="usuario-info-value">
+                    {usuarioSeleccionado.direccion}
                   </div>
 
                 </div>
@@ -1420,11 +1440,11 @@ export default function Usuarios() {
 
             </div>
 
-            <div className="usuario-modal-footer">
+            <div className="usuario-detail-modal-footer">
 
               <button
                 type="button"
-                className="usuario-cancel-button"
+                className="usuario-cancel-button detail-cerrar-button"
                 onClick={cerrarDetalle}
               >
 

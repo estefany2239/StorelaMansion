@@ -794,6 +794,7 @@ export const allProducts = [
     id: 160, 
     name: 'Gorra Trucker Snapback', 
     categoryId: 'gorras', 
+    gender: 'mujer', 
     price: '$70.000', 
     image: new URL("../assets/img/go.jpeg", import.meta.url).href 
   },
@@ -1547,17 +1548,9 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors) => 
       ['accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
         .some(t => catString.includes(t));
 
-    const esProductoAccesorio = () => {
-      if (
-        ['gorras', 'accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
-          .some(t => prodCat.includes(t))
-      ) {
-        return true;
-      }
-      return ['gorra', 'perfume', 'reloj'].some(kw =>
-        (product.name || '').toLowerCase().includes(kw)
-      );
-    };
+    const esProductoAccesorio = () =>
+      ['gorras', 'accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
+        .some(t => prodCat.includes(t));
 
     let matchCategory;
     if (esCategoriaAccesorios) {
@@ -1576,8 +1569,7 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors) => 
 
     const matchGender =
       !gender ||
-      product.gender === gender ||
-      (isAccessory && (product.gender === 'unisex' || !product.gender));
+      product.gender === gender;
 
     if (!matchCategory || !matchGender) return false;
 

@@ -803,7 +803,7 @@
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .domicilios-search {
+.admin-container.admin-dark .domicilios-search {
   background:
     var(--admin-card);
 
@@ -812,13 +812,13 @@
 }
 
 
-[data-theme="dark"] .domicilios-search input {
+.admin-container.admin-dark .domicilios-search input {
   color:
     var(--admin-text);
 }
 
 
-[data-theme="dark"] .domicilios-table-container {
+.admin-container.admin-dark .domicilios-table-container {
   background:
     var(--admin-card);
 
@@ -827,7 +827,7 @@
 }
 
 
-[data-theme="dark"] .domicilios-table th {
+.admin-container.admin-dark .domicilios-table th {
   color:
     var(--admin-text-secondary);
 
@@ -836,54 +836,54 @@
 }
 
 
-[data-theme="dark"] .domicilios-table td {
+.admin-container.admin-dark .domicilios-table td {
   border-color:
     rgba(255, 255, 255, 0.08);
 }
 
 
-[data-theme="dark"] .domicilio-cliente {
+.admin-container.admin-dark .domicilio-cliente {
   color:
     var(--admin-text);
 }
 
 
-[data-theme="dark"] .domicilio-direccion,
-[data-theme="dark"] .domicilio-ciudad,
-[data-theme="dark"] .domicilio-fecha,
-[data-theme="dark"] .domicilio-id-relacion {
+.admin-container.admin-dark .domicilio-direccion,
+.admin-container.admin-dark .domicilio-ciudad,
+.admin-container.admin-dark .domicilio-fecha,
+.admin-container.admin-dark .domicilio-id-relacion {
   color:
     var(--admin-text-secondary);
 }
 
 
-[data-theme="dark"] .domicilio-modal {
+.admin-container.admin-dark .domicilio-modal {
   background:
     #1e1e1e;
 }
 
 
-[data-theme="dark"] .domicilio-modal-header {
+.admin-container.admin-dark .domicilio-modal-header {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
 
-[data-theme="dark"] .domicilio-modal-header h3 {
+.admin-container.admin-dark .domicilio-modal-header h3 {
   color:
     #ffffff;
 }
 
 
-[data-theme="dark"] .domicilio-form-group label,
-[data-theme="dark"] .domicilio-info-group label {
+.admin-container.admin-dark .domicilio-form-group label,
+.admin-container.admin-dark .domicilio-info-group label {
   color:
     #b0b0b0;
 }
 
 
-[data-theme="dark"] .domicilio-form-group input,
-[data-theme="dark"] .domicilio-form-group select {
+.admin-container.admin-dark .domicilio-form-group input,
+.admin-container.admin-dark .domicilio-form-group select {
   background:
     #181818;
 
@@ -895,7 +895,7 @@
 }
 
 
-[data-theme="dark"] .domicilio-info-value {
+.admin-container.admin-dark .domicilio-info-value {
   background:
     #181818;
 
@@ -907,13 +907,13 @@
 }
 
 
-[data-theme="dark"] .domicilio-modal-footer {
+.admin-container.admin-dark .domicilio-modal-footer {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
 
-[data-theme="dark"] .domicilio-cancel-button {
+.admin-container.admin-dark .domicilio-cancel-button {
   background:
     transparent;
 

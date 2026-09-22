@@ -586,60 +586,60 @@
    DARK MODE
    ========================================================= */
 
-[data-theme="dark"] .dashboard-indicator,
-[data-theme="dark"] .dashboard-panel {
+.admin-container.admin-dark .dashboard-indicator,
+.admin-container.admin-dark .dashboard-panel {
   background: var(--admin-card);
 
   border-color:
     rgba(194, 168, 120, 0.18);
 }
 
-[data-theme="dark"] .dashboard-indicator-info strong,
-[data-theme="dark"] .dashboard-product-top strong,
-[data-theme="dark"] .dashboard-inventory-item strong {
+.admin-container.admin-dark .dashboard-indicator-info strong,
+.admin-container.admin-dark .dashboard-product-top strong,
+.admin-container.admin-dark .dashboard-inventory-item strong {
   color: var(--admin-text);
 }
 
-[data-theme="dark"] .dashboard-indicator-info span,
-[data-theme="dark"] .dashboard-product-top span,
-[data-theme="dark"] .dashboard-payment-info span,
-[data-theme="dark"] .dashboard-inventory-item span,
-[data-theme="dark"] .dashboard-bar-column > span {
+.admin-container.admin-dark .dashboard-indicator-info span,
+.admin-container.admin-dark .dashboard-product-top span,
+.admin-container.admin-dark .dashboard-payment-info span,
+.admin-container.admin-dark .dashboard-inventory-item span,
+.admin-container.admin-dark .dashboard-bar-column > span {
   color: var(--admin-text-secondary);
 }
 
-[data-theme="dark"] .dashboard-panel-header h3 {
+.admin-container.admin-dark .dashboard-panel-header h3 {
   color: #ffffff;
 }
 
-[data-theme="dark"] .dashboard-panel-header p,
-[data-theme="dark"] .dashboard-indicator-info small {
+.admin-container.admin-dark .dashboard-panel-header p,
+.admin-container.admin-dark .dashboard-indicator-info small {
   color: var(--admin-text-secondary);
 }
 
-[data-theme="dark"] .dashboard-progress,
-[data-theme="dark"] .dashboard-payment-bar {
+.admin-container.admin-dark .dashboard-progress,
+.admin-container.admin-dark .dashboard-payment-bar {
   background: #333333;
 }
 
-[data-theme="dark"] .dashboard-inventory-item {
+.admin-container.admin-dark .dashboard-inventory-item {
   border-color:
     rgba(255, 255, 255, 0.10);
 }
 
-[data-theme="dark"] .inventory-ok {
+.admin-container.admin-dark .inventory-ok {
   background: rgba(12, 166, 83, 0.15);
 
   color: #5fd38a;
 }
 
-[data-theme="dark"] .inventory-warning {
+.admin-container.admin-dark .inventory-warning {
   background: rgba(179, 122, 0, 0.15);
 
   color: #e8b84d;
 }
 
-[data-theme="dark"] .inventory-danger {
+.admin-container.admin-dark .inventory-danger {
   background: rgba(229, 57, 53, 0.15);
 
   color: #ff6b6b;

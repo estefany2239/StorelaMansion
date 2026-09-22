@@ -1486,7 +1486,7 @@ export default function Ventas({ vendedorId }) {
 
               <button
                 type="button"
-                className="venta-cancel-button"
+                className="venta-cancel-button detail-cerrar-button"
                 onClick={cerrarDetalle}
               >
                 Cerrar

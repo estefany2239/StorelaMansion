@@ -1276,7 +1276,7 @@ if (modoEdicion) {
 
               <button
                 type="button"
-                className="cliente-cancel-button"
+                className="cliente-cancel-button detail-cerrar-button"
                 onClick={cerrarDetalle}
               >
 
