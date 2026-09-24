@@ -362,7 +362,7 @@
 }
 
 
-.venta-estado.cerrada {
+.venta-estado.anulada {
   background:
     #e9e5f8;
 
@@ -371,7 +371,7 @@
 }
 
 
-.venta-estado.anulada {
+.venta-estado.cancelada {
   background:
     #fde5e5;
 

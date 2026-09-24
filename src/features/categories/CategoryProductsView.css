@@ -32,7 +32,7 @@ body.dark .category-catalog-section,
 /* Botón de volver */
 .catalog__back-btn {
   background: transparent;
-  border: 1px solid rgba(201, 162, 39, 0.4);
+  border: 1px solid rgba(216, 180, 56, 0.4);
   color: inherit;
   padding: 8px 16px;
   border-radius: 8px;
@@ -46,8 +46,8 @@ body.dark .category-catalog-section,
 }
 
 .catalog__back-btn:hover {
-  background: rgba(201, 162, 39, 0.2);
-  border-color: #c9a227;
+  background: rgba(216, 180, 56, 0.2);
+  border-color: #d8b438;
 }
 
 /* Cabecera */
@@ -56,7 +56,7 @@ body.dark .category-catalog-section,
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 30px;
-  border-bottom: 1px solid rgba(201, 162, 39, 0.4);
+  border-bottom: 1px solid rgba(216, 180, 56, 0.4);
   padding-bottom: 15px;
 }
 
@@ -83,7 +83,7 @@ body.dark .category-catalog-section,
    ========================================== */
 .catalog__sidebar {
   background: var(--bg-main, #f5ead6);
-  border: 1px solid rgba(201, 162, 39, 0.4);
+  border: 1px solid rgba(216, 180, 56, 0.4);
   padding: 20px;
   border-radius: 12px;
   height: fit-content;
@@ -104,9 +104,9 @@ body.dark .catalog__sidebar,
   font-weight: 600;
   font-size: 1.1rem;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(201, 162, 39, 0.4);
+  border-bottom: 2px solid rgba(216, 180, 56, 0.45);
   padding-bottom: 10px;
-  color: #c9a227;
+  color: #d8b438;
 }
 
 .filter__group {
@@ -134,7 +134,7 @@ body.dark .catalog__sidebar,
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(201, 162, 39, 0.4);
+  border: 2px solid rgba(216, 180, 56, 0.4);
   border-radius: 4px;
   outline: none;
   cursor: pointer;
@@ -145,8 +145,8 @@ body.dark .catalog__sidebar,
 }
 
 .filter__checkbox-label input[type="checkbox"]:checked {
-  background-color: #c9a227;
-  border-color: #c9a227;
+  background-color: #d8b438;
+  border-color: #d8b438;
 }
 
 .filter__checkbox-label input[type="checkbox"]:checked::before {
@@ -166,7 +166,7 @@ body.dark .catalog__sidebar,
 
 .filter__size-btn {
   background: transparent;
-  border: 1px solid rgba(201, 162, 39, 0.4);
+  border: 1px solid rgba(216, 180, 56, 0.4);
   color: inherit;
   padding: 6px 12px;
   border-radius: 6px;
@@ -176,12 +176,12 @@ body.dark .catalog__sidebar,
 }
 
 .filter__size-btn:hover {
-  border-color: #c9a227;
+  border-color: #d8b438;
 }
 
 .filter__size-btn.active {
-  background: #c9a227;
-  border-color: #c9a227;
+  background: #d8b438;
+  border-color: #d8b438;
   color: #121212;
   font-weight: bold;
 }
@@ -201,7 +201,7 @@ body.dark .catalog__sidebar,
 
 .filter__color-dot.active {
   transform: scale(1.2);
-  box-shadow: 0 0 0 2px #c9a227;
+  box-shadow: 0 0 0 2px #d8b438;
 }
 
 /* ==========================================
@@ -217,11 +217,12 @@ body.dark .catalog__sidebar,
 
 .catalog__product-card {
   background-color: var(--card-bg, #ffffff);
-  border: 1px solid rgba(201, 162, 39, 0.25);
-  border-radius: 12px;
+  border: 1px solid rgba(216, 180, 56, 0.25);
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -231,12 +232,13 @@ body.dark .catalog__product-card,
 .dark-mode .catalog__product-card,
 .dark-mode-active .catalog__product-card {
   background-color: var(--card-bg) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .catalog__product-card:hover {
   transform: translateY(-4px);
-  border-color: #c9a227;
-  box-shadow: 0 10px 25px rgba(201, 162, 39, 0.15);
+  border-color: #d8b438;
+  box-shadow: 0 12px 28px rgba(216, 180, 56, 0.18);
 }
 
 .product__img-wrap {
@@ -246,18 +248,16 @@ body.dark .catalog__product-card,
   background-position: center;
   position: relative;
   background-color: rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
-/* Prendas (camisas/camisetas): la foto completa sin recortes */
+/* Prendas (camisas/camisetas): la foto llena el contenedor (cover) */
 .product__img-wrap--camisas {
   aspect-ratio: auto;
   height: 280px;
-  background-size: contain;
-  background-repeat: no-repeat;
+  background-size: cover;
   background-position: center;
   background-color: #ffffff;
-  padding: 12px;
-  box-sizing: border-box;
 }
 
 [data-theme="dark"] .product__img-wrap--camisas,
@@ -288,7 +288,7 @@ body.dark .product__img-wrap--camisas,
   right: 12px;
   background: rgba(0, 0, 0, 0.6);
   border: none;
-  color: #ffffff;
+  color: #d8b438;
   padding: 8px;
   border-radius: 50%;
   cursor: pointer;
@@ -300,8 +300,63 @@ body.dark .product__img-wrap--camisas,
 
 .product__like-btn:hover,
 .product__like-btn.active {
-  color: #c9a227;
+  color: #d8b438;
   background: rgba(0, 0, 0, 0.85);
+}
+
+.product__btn-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.product__view-btn,
+.product__add-btn {
+  flex: 1;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.product__view-btn {
+  background: var(--card-bg);
+  color: var(--ink);
+  border: 2px solid var(--gold);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.product__view-btn:hover {
+  border-color: var(--gold-dark, #b19128);
+  background: rgba(216, 180, 56, 0.12);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .product__footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .product__btn-pair {
+    width: 100%;
+  }
+
+  .product__btn-pair > button {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 .product__info {
@@ -313,24 +368,37 @@ body.dark .product__img-wrap--camisas,
 }
 
 .product__info h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
   font-family: var(--font-display);
 }
 
 .product__details {
   font-size: 0.85rem;
-  opacity: 0.7;
+  color: var(--text-secondary, #555555);
+}
+
+.product__details-divider {
+  display: block;
+  height: 1px;
+  background: var(--border-soft, rgba(26, 26, 26, 0.08));
+  margin: 4px 0 10px;
+}
+
+.product__card-price {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
 }
 
 .product__footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid rgba(201, 162, 39, 0.2);
+  padding-top: 14px;
 }
 
 .product__price {
@@ -342,16 +410,21 @@ body.dark .product__img-wrap--camisas,
 .product__add-btn {
   background: var(--gold);
   color: #121212;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
+  border: 2px solid transparent;
+  padding: 10px 16px;
+  border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 12px;
   transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .product__add-btn {
+  color: #121212;
 }
 
 .product__add-btn:hover {
@@ -428,7 +501,7 @@ body.dark .product__img-wrap--camisas,
   position: relative;
   min-height: 480px;
   border-radius: 20px;
-  border: 1px solid rgba(201, 162, 39, 0.25);
+  border: 1px solid rgba(216, 180, 56, 0.25);
   cursor: pointer;
   overflow: hidden;
   display: flex;
@@ -472,7 +545,7 @@ body.dark .product__img-wrap--camisas,
 .gender-card:hover {
   transform: translateY(-8px);
   border-color: var(--gold);
-  box-shadow: 0 22px 50px rgba(201, 162, 39, 0.22);
+  box-shadow: 0 22px 50px rgba(216, 180, 56, 0.22);
 }
 
 .gender-card:hover::before {

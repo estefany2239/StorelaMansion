@@ -20,9 +20,11 @@ import {
   Truck,
   Smartphone,
   Building2,
-  Wallet
+  Wallet,
+  Eye
 } from "lucide-react";
 
+import ProductDetailModal from "../../components/ProductDetailModal";
 import "./StoreDashboard.css";
 import CategoryProductsView from "../categories/CategoryProductsView";
 import MisPedidos from "./MisPedidos";
@@ -46,6 +48,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
   // Estados globales de navegación y tienda
   const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" | "products" | "favorites" | "cart" | "checkout" | "success" | "mis-pedidos" | "configuracion"
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   
   // Estados de Pago / Checkout
   const [paymentMethod, setPaymentMethod] = useState("efectivo");
@@ -432,23 +435,31 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                   return (
                     <div key={product.id} className="catalog__product-card">
                       <div className="product__img-wrap" style={{ backgroundImage: `url(${product.image})` }}>
-                        <span className="product__brand-tag">{product.brand}</span>
+                        {product.brand ? (
+                          <span className="product__brand-tag">{product.brand}</span>
+                        ) : null}
                         <button 
                           className={`product__like-btn ${isLiked ? 'active' : ''}`}
                           onClick={() => handleToggleLike(product)}
                           title="Quitar de favoritos"
                         >
-                          <Heart size={16} fill={isLiked ? "#c9a227" : "none"} />
+                          <Heart size={16} fill={isLiked ? "#d8b438" : "none"} />
                         </button>
                       </div>
                       <div className="product__info">
                         <h4>{product.name}</h4>
                         <p className="product__details">Talla: {product.size} | Color: {product.color}</p>
+                        <span className="product__details-divider" />
+                        <span className="product__card-price">{product.price}</span>
                         <div className="product__footer">
-                          <span className="product__price">{product.price}</span>
-                          <button className="product__add-btn" onClick={() => handleAddToCart(product)}>
-                            <ShoppingBag size={16} /> Comprar
-                          </button>
+                          <div className="product__btn-pair">
+                            <button className="product__view-btn" onClick={() => setProductoSeleccionado(product)}>
+                              <Eye size={15} /> Ver
+                            </button>
+                            <button className="product__add-btn" onClick={() => handleAddToCart(product)}>
+                              <ShoppingBag size={16} /> Comprar
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -498,7 +509,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                         <div className="product__footer">
                           <span className="product__price">{product.price}</span>
                           <button className="product__add-btn remove-btn-cart" onClick={() => handleRemoveFromCart(product.id)}>
-                            <Trash2 size={16} /> Eliminar
+                            <Trash2 size={13} /> Eliminar
                           </button>
                         </div>
                       </div>
@@ -568,7 +579,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                     className={`payment-option-card ${paymentMethod === 'efectivo' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('efectivo')}
                   >
-                    <Wallet size={22} color="#c9a227" />
+                    <Wallet size={20} color="#d8b438" />
                     <span>Efectivo</span>
                   </div>
 
@@ -576,7 +587,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                     className={`payment-option-card ${paymentMethod === 'transferencia' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('transferencia')}
                   >
-                    <Building2 size={22} color="#c9a227" />
+                    <Building2 size={20} color="#d8b438" />
                     <span>Transferencia</span>
                   </div>
 
@@ -584,7 +595,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                     className={`payment-option-card ${paymentMethod === 'credito' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('credito')}
                   >
-                    <CreditCard size={22} color="#c9a227" />
+                    <CreditCard size={20} color="#d8b438" />
                     <span>Crédito</span>
                   </div>
                 </div>
@@ -605,7 +616,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                       className={`payment-option-card ${transferenciaTipo === 'nequi' ? 'selected' : ''}`}
                       onClick={() => setTransferenciaTipo('nequi')}
                     >
-                      <Smartphone size={22} color="#c9a227" />
+                      <Smartphone size={20} color="#d8b438" />
                       <span>Nequi</span>
                     </div>
 
@@ -613,7 +624,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                       className={`payment-option-card ${transferenciaTipo === 'bancolombia' ? 'selected' : ''}`}
                       onClick={() => setTransferenciaTipo('bancolombia')}
                     >
-                      <Building2 size={22} color="#c9a227" />
+                      <Building2 size={20} color="#d8b438" />
                       <span>Bancolombia</span>
                     </div>
                   </div>
@@ -659,7 +670,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                     className={`payment-option-card ${tipoPago === 'completo' ? 'selected' : ''}`}
                     onClick={() => setTipoPago('completo')}
                   >
-                    <CreditCard size={22} color="#c9a227" />
+                    <CreditCard size={20} color="#d8b438" />
                     <span>Pagar el total</span>
                   </div>
 
@@ -667,7 +678,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
                     className={`payment-option-card ${tipoPago === 'parcial' ? 'selected' : ''}`}
                     onClick={() => setTipoPago('parcial')}
                   >
-                    <Wallet size={22} color="#c9a227" />
+                    <Wallet size={20} color="#d8b438" />
                     <span>Abonar una parte</span>
                   </div>
                 </div>
@@ -729,6 +740,14 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {productoSeleccionado && (
+        <ProductDetailModal
+          product={productoSeleccionado}
+          onClose={() => setProductoSeleccionado(null)}
+          onAddToCart={handleAddToCart}
+        />
       )}
 
     </div>

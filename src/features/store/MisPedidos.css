@@ -348,38 +348,43 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 10px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
 .mp-btn-primary {
   background-color: var(--gold);
-  border: none;
-  color: #000000;
+  border: 2px solid transparent;
+  color: #121212;
 }
 
 .mp-btn-primary:hover {
   background-color: var(--gold-light);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(212, 175, 55, 0.28);
 }
 
 .mp-btn-outline {
-  background-color: transparent;
-  border: 1px solid var(--gold);
-  color: var(--gold);
+  background-color: var(--card-bg);
+  border: 2px solid var(--gold);
+  color: var(--ink);
 }
 
 .mp-btn-outline:hover {
-  background-color: rgba(212, 175, 55, 0.12);
-  color: var(--gold-light);
+  border-color: var(--gold-dark, #b19128);
+  background-color: rgba(216, 180, 56, 0.12);
+  color: var(--ink);
+  transform: translateY(-1px);
 }
 
 /* =========================================================

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart } from "lucide-react";
+import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye } from "lucide-react";
 import { getFilteredProducts } from '../../data/productsData';
+import ProductDetailModal from '../../components/ProductDetailModal';
 import "./CategoryProductsView.css";
 
 export default function CategoryProductsView({ category, onBack, addToCart, likedProducts = [], toggleLike }) {
@@ -8,6 +9,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -303,7 +305,9 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                         className={`product__img-wrap ${isCamisas ? 'product__img-wrap--camisas' : ''}`}
                         style={{ backgroundImage: `url(${product.image})` }}
                       >
-                        <span className="product__brand-tag">{product.brand}</span>
+                        {product.brand ? (
+                          <span className="product__brand-tag">{product.brand}</span>
+                        ) : null}
                         
                         {/* BOTÓN FAVORITOS */}
                         <button 
@@ -312,7 +316,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                           onClick={() => toggleLike(product)}
                           title={isLiked ? "Quitar de favoritos" : "Añadir a favoritos"}
                         >
-                          <Heart size={16} fill={isLiked ? "#c9a227" : "none"} />
+                          <Heart size={16} fill={isLiked ? "#d8b438" : "none"} />
                         </button>
                       </div>
 
@@ -321,17 +325,29 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                         <p className="product__details">
                           {isGorras ? `Marca: ${product.brand}` : `Talla: ${product.size} | Color: ${product.color}`}
                         </p>
+                        <span className="product__details-divider" />
+                        <span className="product__card-price">{product.price}</span>
                         <div className="product__footer">
-                          <span className="product__price">{product.price}</span>
-                          
-                          {/* BOTÓN COMPRAR / CARRITO */}
-                          <button 
-                            type="button"
-                            className="product__add-btn"
-                            onClick={() => addToCart(product)}
-                          >
-                            <ShoppingBag size={16} /> Comprar
-                          </button>
+                          <div className="product__btn-pair">
+                            {/* BOTÓN VER DETALLE */}
+                            <button 
+                              type="button"
+                              className="product__view-btn"
+                              onClick={() => setProductoSeleccionado(product)}
+                              title="Ver detalle"
+                            >
+                              <Eye size={15} /> Ver
+                            </button>
+
+                            {/* BOTÓN COMPRAR / CARRITO */}
+                            <button 
+                              type="button"
+                              className="product__add-btn"
+                              onClick={() => addToCart(product)}
+                            >
+                              <ShoppingBag size={16} /> Comprar
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -348,6 +364,15 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
         )}
 
       </div>
+
+      {productoSeleccionado && (
+        <ProductDetailModal
+          product={productoSeleccionado}
+          categoryTitle={category?.title}
+          onClose={() => setProductoSeleccionado(null)}
+          onAddToCart={addToCart}
+        />
+      )}
     </div>
   );
 }

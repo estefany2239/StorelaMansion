@@ -72,7 +72,7 @@ export default function Ventas({ vendedorId }) {
       fecha: "2026-09-05",
       total: 320000,
       metodoPago: "Transferencia",
-      estado: "Cerrada",
+      estado: "Anulada",
 
       productos: [
         {
@@ -95,7 +95,7 @@ export default function Ventas({ vendedorId }) {
       fecha: "2026-09-04",
       total: 485000,
       metodoPago: "Transferencia",
-      estado: "Cerrada",
+      estado: "Anulada",
 
       productos: [
         {
@@ -118,7 +118,7 @@ export default function Ventas({ vendedorId }) {
       fecha: "2026-08-28",
       total: 620000,
       metodoPago: "Crédito",
-      estado: "Cerrada",
+      estado: "Anulada",
 
       productos: [
         {
@@ -136,7 +136,7 @@ export default function Ventas({ vendedorId }) {
       fecha: "2026-08-21",
       total: 280000,
       metodoPago: "Efectivo",
-      estado: "Cerrada",
+      estado: "Anulada",
 
       productos: [
         {
@@ -154,7 +154,7 @@ export default function Ventas({ vendedorId }) {
       fecha: "2026-08-15",
       total: 340000,
       metodoPago: "Transferencia",
-      estado: "Anulada",
+      estado: "Cancelada",
 
       productos: [
         {
@@ -528,7 +528,7 @@ export default function Ventas({ vendedorId }) {
 
           return {
             ...venta,
-            estado: "Cerrada"
+            estado: "Anulada"
           };
 
         }
@@ -548,8 +548,8 @@ export default function Ventas({ vendedorId }) {
   // =========================================================
 
   const anularVenta = (venta) => {
-    if (venta.estado === "Anulada") {
-      alert("Esta venta ya está anulada.");
+    if (venta.estado === "Cancelada") {
+      alert("Esta venta ya está cancelada.");
       return;
     }
     const confirmar = window.confirm(
@@ -558,7 +558,7 @@ export default function Ventas({ vendedorId }) {
     if (!confirmar) return;
     setVentas((prev) =>
       prev.map((item) =>
-        item.id === venta.id ? { ...item, estado: "Anulada" } : item
+        item.id === venta.id ? { ...item, estado: "Cancelada" } : item
       )
     );
   };
@@ -753,11 +753,11 @@ export default function Ventas({ vendedorId }) {
                     <span
                       className={
                         venta.estado ===
-                        "Cerrada"
-                          ? "venta-estado cerrada"
-                          : venta.estado ===
-                            "Anulada"
+                        "Anulada"
                           ? "venta-estado anulada"
+                          : venta.estado ===
+                            "Cancelada"
+                          ? "venta-estado cancelada"
                           : "venta-estado completada"
                       }
                       onClick={() =>
@@ -799,17 +799,17 @@ export default function Ventas({ vendedorId }) {
                         type="button"
                         className={
                           venta.estado ===
-                            "Anulada" ||
+                            "Cancelada" ||
                           venta.estado ===
-                            "Cerrada"
+                            "Anulada"
                             ? "venta-anular-button disabled"
                             : "venta-anular-button"
                         }
                         title={
                           venta.estado ===
-                            "Anulada" ||
+                            "Cancelada" ||
                           venta.estado ===
-                            "Cerrada"
+                            "Anulada"
                             ? "Esta venta no se puede anular"
                             : "Anular venta"
                         }
@@ -820,9 +820,9 @@ export default function Ventas({ vendedorId }) {
                         }
                         disabled={
                           venta.estado ===
-                            "Anulada" ||
+                            "Cancelada" ||
                           venta.estado ===
-                            "Cerrada"
+                            "Anulada"
                         }
                       >
 
@@ -1020,8 +1020,8 @@ export default function Ventas({ vendedorId }) {
                     Completada
                   </option>
 
-                  <option value="Cerrada">
-                    Cerrada
+                  <option value="Anulada">
+                    Anulada
                   </option>
 
                 </select>
@@ -1509,11 +1509,11 @@ export default function Ventas({ vendedorId }) {
                 <span
                   className={
                     ventaSeleccionada.estado ===
-                    "Cerrada"
-                      ? "venta-estado cerrada"
-                      : ventaSeleccionada.estado ===
-                        "Anulada"
+                    "Anulada"
                       ? "venta-estado anulada"
+                      : ventaSeleccionada.estado ===
+                        "Cancelada"
+                      ? "venta-estado cancelada"
                       : "venta-estado completada"
                   }
                 >
@@ -1526,13 +1526,13 @@ export default function Ventas({ vendedorId }) {
               {/* REGLA DE NEGOCIO */}
 
               {ventaSeleccionada.estado ===
-                "Cerrada" && (
+                "Anulada" && (
 
                 <div className="venta-closed-info">
 
-                  Esta venta se encuentra cerrada.
+                  Esta venta se encuentra anulada.
                   Solo está disponible para consulta
-                  y no puede ser modificada ni anulada.
+                  y no puede ser modificada.
 
                 </div>
 
