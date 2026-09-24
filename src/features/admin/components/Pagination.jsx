@@ -1,7 +1,11 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "./Pagination.css";
 
-function Pagination({ currentPage, totalPages, onPageChange }) {
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}) {
   const obtenerPaginas = () => {
     const MAX_VISIBLES = 5;
     const paginas = [];
@@ -38,54 +42,58 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   return (
     <nav className="pagination" aria-label="Paginación de tabla">
 
-      <button
-        type="button"
-        className="pagination-button"
-        aria-label="Página anterior"
-        disabled={currentPage <= 1}
-        onClick={() => onPageChange(currentPage - 1)}
-      >
-        <ChevronLeft size={18} />
-      </button>
+      <div className="pagination-controls">
 
-      <div className="pagination-pages">
+        <button
+          type="button"
+          className="pagination-button"
+          aria-label="Página anterior"
+          disabled={currentPage <= 1}
+          onClick={() => onPageChange(currentPage - 1)}
+        >
+          <ChevronLeft size={18} />
+        </button>
 
-        {obtenerPaginas().map((item, index) =>
-          item === "..." ? (
-            <span
-              key={`pagination-ellipsis-${index}`}
-              className="pagination-ellipsis"
-            >
-              ...
-            </span>
-          ) : (
-            <button
-              key={item}
-              type="button"
-              className={`pagination-number ${
-                item === currentPage ? "active" : ""
-              }`}
-              aria-current={
-                item === currentPage ? "page" : undefined
-              }
-              onClick={() => onPageChange(item)}
-            >
-              {item}
-            </button>
-          )
-        )}
+        <div className="pagination-pages">
+
+          {obtenerPaginas().map((item, index) =>
+            item === "..." ? (
+              <span
+                key={`pagination-ellipsis-${index}`}
+                className="pagination-ellipsis"
+              >
+                ...
+              </span>
+            ) : (
+              <button
+                key={item}
+                type="button"
+                className={`pagination-number ${
+                  item === currentPage ? "active" : ""
+                }`}
+                aria-current={
+                  item === currentPage ? "page" : undefined
+                }
+                onClick={() => onPageChange(item)}
+              >
+                {item}
+              </button>
+            )
+          )}
+
+        </div>
+
+        <button
+          type="button"
+          className="pagination-button"
+          aria-label="Página siguiente"
+          disabled={currentPage >= totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+        >
+          <ChevronRight size={18} />
+        </button>
 
       </div>
-
-      <button
-        type="button"
-        className="pagination-button"
-        aria-label="Página siguiente"
-        disabled={currentPage >= totalPages}
-        onClick={() => onPageChange(currentPage + 1)}
-      >
-        <ChevronRight size={18} />
-      </button>
 
     </nav>
   );

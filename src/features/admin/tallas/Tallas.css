@@ -27,22 +27,16 @@
 
 .tallas-title h2 {
   margin: 0;
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: var(--font-display);
   font-size: 38px;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1.2;
   color: var(--admin-text);
 }
 
 .tallas-title p {
   margin: 14px 0 0;
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 15px;
   color: var(--admin-text-secondary);
 }
@@ -391,10 +385,7 @@
 
 .talla-modal-header h3 {
   margin: 0;
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 25px;
   font-weight: 500;
   color: #1a1a1a;

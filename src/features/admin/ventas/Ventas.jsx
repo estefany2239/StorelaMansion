@@ -14,6 +14,9 @@ import Pagination from "../components/Pagination";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+const REGISTROS_POR_PAGINA = 6;
+
+
 export default function Ventas({ vendedorId }) {
 
   // =========================================================
@@ -272,7 +275,6 @@ export default function Ventas({ vendedorId }) {
   // PAGINACIÓN DE LA TABLA
   // =========================================================
 
-  const REGISTROS_POR_PAGINA = 6;
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(
@@ -280,7 +282,8 @@ export default function Ventas({ vendedorId }) {
     Math.ceil(ventasFiltradas.length / REGISTROS_POR_PAGINA)
   );
 
-  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const inicio =
+    (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const ventasPaginadas = ventasFiltradas.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
@@ -541,6 +544,27 @@ export default function Ventas({ vendedorId }) {
 
 
   // =========================================================
+  // ANULAR VENTA
+  // =========================================================
+
+  const anularVenta = (venta) => {
+    if (venta.estado === "Anulada") {
+      alert("Esta venta ya está anulada.");
+      return;
+    }
+    const confirmar = window.confirm(
+      `¿Deseas anular la venta "${venta.id}"? Esta acción no se puede deshacer.`
+    );
+    if (!confirmar) return;
+    setVentas((prev) =>
+      prev.map((item) =>
+        item.id === venta.id ? { ...item, estado: "Anulada" } : item
+      )
+    );
+  };
+
+
+  // =========================================================
   // VER DETALLE
   // =========================================================
 
@@ -669,7 +693,7 @@ export default function Ventas({ vendedorId }) {
               </th>
 
               <th>
-                DETALLE
+                ACCIONES
               </th>
 
             </tr>
@@ -750,24 +774,63 @@ export default function Ventas({ vendedorId }) {
                   </td>
 
 
-                  {/* DETALLE */}
+                  {/* ACCIONES */}
 
                   <td>
 
-                    <button
-                      type="button"
-                      className="venta-detail-button"
-                      onClick={() =>
-                        verDetalle(
-                          venta
-                        )
-                      }
-                      title="Ver detalle"
-                    >
+                    <div className="venta-actions">
 
-                      <Eye size={18} />
+                      <button
+                        type="button"
+                        className="venta-detail-button"
+                        onClick={() =>
+                          verDetalle(
+                            venta
+                          )
+                        }
+                        title="Ver detalle"
+                      >
 
-                    </button>
+                        <Eye size={18} />
+
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          venta.estado ===
+                            "Anulada" ||
+                          venta.estado ===
+                            "Cerrada"
+                            ? "venta-anular-button disabled"
+                            : "venta-anular-button"
+                        }
+                        title={
+                          venta.estado ===
+                            "Anulada" ||
+                          venta.estado ===
+                            "Cerrada"
+                            ? "Esta venta no se puede anular"
+                            : "Anular venta"
+                        }
+                        onClick={() =>
+                          anularVenta(
+                            venta
+                          )
+                        }
+                        disabled={
+                          venta.estado ===
+                            "Anulada" ||
+                          venta.estado ===
+                            "Cerrada"
+                        }
+                      >
+
+                        <X size={18} />
+
+                      </button>
+
+                    </div>
 
                   </td>
 
@@ -799,13 +862,11 @@ export default function Ventas({ vendedorId }) {
 
         </table>
 
-        {totalPaginas > 1 && (
-          <Pagination
-            currentPage={paginaActual}
-            totalPages={totalPaginas}
-            onPageChange={setPaginaActual}
-          />
-        )}
+        <Pagination
+          currentPage={paginaActual}
+          totalPages={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
 
       </div>
 

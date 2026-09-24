@@ -26,13 +26,10 @@
 .ventas-title h2 {
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: var(--font-display);
 
   font-size: 38px;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1.2;
 
   color: var(--admin-text);
@@ -42,10 +39,7 @@
 .ventas-title p {
   margin: 14px 0 0;
 
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
+  font-family: var(--font-body, "Inter", sans-serif);
 
   font-size: 15px;
 
@@ -387,6 +381,21 @@
 
 
 /* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.venta-actions {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 6px;
+}
+
+
+/* =========================================================
    BOTÓN VER
    ========================================================= */
 
@@ -423,6 +432,64 @@
 
   background:
     rgba(201, 162, 39, 0.08);
+}
+
+
+/* =========================================================
+   BOTÓN ANULAR VENTA
+   ========================================================= */
+
+.venta-anular-button {
+  width: 32px;
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color:
+    #e53935;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.venta-anular-button:hover {
+  color:
+    #c62828;
+
+  background:
+    rgba(229, 57, 53, 0.10);
+}
+
+
+.venta-anular-button.disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+
+  color:
+    #70798a;
+}
+
+
+.venta-anular-button.disabled:hover {
+  color:
+    #70798a;
+
+  background: transparent;
 }
 
 
@@ -511,10 +578,7 @@
 .venta-modal-header h3 {
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: Georgia, "Times New Roman", serif;
 
   font-size: 25px;
 

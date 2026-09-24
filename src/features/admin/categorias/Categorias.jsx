@@ -16,6 +16,9 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+const REGISTROS_POR_PAGINA = 6;
+
+
 export default function Categorias() {
 
   /* =====================================================
@@ -72,7 +75,6 @@ export default function Categorias() {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const REGISTROS_POR_PAGINA = 6;
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(
@@ -80,7 +82,8 @@ export default function Categorias() {
     Math.ceil(categoriasFiltradas.length / REGISTROS_POR_PAGINA)
   );
 
-  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const inicio =
+    (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const categoriasPaginadas = categoriasFiltradas.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
@@ -459,13 +462,11 @@ export default function Categorias() {
 
         </table>
 
-        {totalPaginas > 1 && (
-          <Pagination
-            currentPage={paginaActual}
-            totalPages={totalPaginas}
-            onPageChange={setPaginaActual}
-          />
-        )}
+        <Pagination
+          currentPage={paginaActual}
+          totalPages={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
 
       </div>
 

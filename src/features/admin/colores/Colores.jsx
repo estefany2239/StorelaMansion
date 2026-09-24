@@ -15,6 +15,9 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+const REGISTROS_POR_PAGINA = 6;
+
+
 export default function Colores() {
 
   /* =====================================================
@@ -68,7 +71,6 @@ export default function Colores() {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const REGISTROS_POR_PAGINA = 6;
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(
@@ -76,7 +78,8 @@ export default function Colores() {
     Math.ceil(coloresFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
-  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const inicio =
+    (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const coloresPaginados = coloresFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
@@ -422,13 +425,11 @@ export default function Colores() {
 
         </table>
 
-        {totalPaginas > 1 && (
-          <Pagination
-            currentPage={paginaActual}
-            totalPages={totalPaginas}
-            onPageChange={setPaginaActual}
-          />
-        )}
+        <Pagination
+          currentPage={paginaActual}
+          totalPages={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
 
       </div>
 

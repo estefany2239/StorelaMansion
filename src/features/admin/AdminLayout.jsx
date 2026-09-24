@@ -9,6 +9,7 @@ import {
   UserRound,
   Truck,
   LogOut,
+  Menu,
   Store,
   Moon,
   ChevronDown,
@@ -44,6 +45,11 @@ export default function AdminLayout({ user, onLogout }) {
   const [darkMode, setDarkMode] = useState(() => {
     const guardado = localStorage.getItem("sla-admin-theme");
     return guardado === "dark";
+  });
+
+  const [sidebarColapsado, setSidebarColapsado] = useState(() => {
+    const guardado = localStorage.getItem("sla-admin-sidebar");
+    return guardado === "colapsado";
   });
 
   const [gestionProductosAbierto, setGestionProductosAbierto] =
@@ -174,6 +180,21 @@ export default function AdminLayout({ user, onLogout }) {
 
 
   /* =====================================================
+     ALTERNAR SIDEBAR COLAPSADO
+     ===================================================== */
+
+  const alternarSidebar = () => {
+
+    setSidebarColapsado((actual) => {
+      const nuevo = !actual;
+      localStorage.setItem("sla-admin-sidebar", nuevo ? "colapsado" : "expandido");
+      return nuevo;
+    });
+
+  };
+
+
+  /* =====================================================
      DATOS DEL USUARIO
      ===================================================== */
 
@@ -254,7 +275,13 @@ export default function AdminLayout({ user, onLogout }) {
           SIDEBAR
           ===================================================== */}
 
-      <aside className="admin-sidebar">
+      <aside
+        className={
+          sidebarColapsado
+            ? "admin-sidebar admin-sidebar--collapsed"
+            : "admin-sidebar"
+        }
+      >
 
 
         {/* =================================================
@@ -262,6 +289,21 @@ export default function AdminLayout({ user, onLogout }) {
             ================================================= */}
 
         <div className="admin-logo">
+
+          <button
+            type="button"
+            className="admin-sidebar-toggle"
+            title={
+              sidebarColapsado
+                ? "Expandir menú"
+                : "Colapsar menú"
+            }
+            onClick={alternarSidebar}
+          >
+
+            <Menu size={20} />
+
+          </button>
 
           <div className="admin-logo-icon">
 
@@ -312,6 +354,11 @@ export default function AdminLayout({ user, onLogout }) {
                     ? "admin-link active"
                     : "admin-link"
                 }
+                title={
+                  sidebarColapsado
+                    ? item.nombre
+                    : undefined
+                }
                 onClick={() =>
                   setAdminView(item.vista)
                 }
@@ -344,6 +391,11 @@ export default function AdminLayout({ user, onLogout }) {
                 gestionProductosAbierto
                   ? "admin-link admin-accordion-toggle open"
                   : "admin-link admin-accordion-toggle"
+              }
+              title={
+                sidebarColapsado
+                  ? "Gestión de Productos"
+                  : undefined
               }
               onClick={() =>
                 setGestionProductosAbierto(
@@ -386,6 +438,11 @@ export default function AdminLayout({ user, onLogout }) {
                           ? "admin-link admin-submenu-link active"
                           : "admin-link admin-submenu-link"
                       }
+                      title={
+                        sidebarColapsado
+                          ? item.nombre
+                          : undefined
+                      }
                       onClick={() =>
                         setAdminView(item.vista)
                       }
@@ -424,6 +481,11 @@ export default function AdminLayout({ user, onLogout }) {
                 gestionVentasAbierto
                   ? "admin-link admin-accordion-toggle open"
                   : "admin-link admin-accordion-toggle"
+              }
+              title={
+                sidebarColapsado
+                  ? "Gestión de Ventas"
+                  : undefined
               }
               onClick={() =>
                 setGestionVentasAbierto(
@@ -466,6 +528,11 @@ export default function AdminLayout({ user, onLogout }) {
                           ? "admin-link admin-submenu-link active"
                           : "admin-link admin-submenu-link"
                       }
+                      title={
+                        sidebarColapsado
+                          ? item.nombre
+                          : undefined
+                      }
                       onClick={() =>
                         setAdminView(item.vista)
                       }
@@ -504,6 +571,11 @@ export default function AdminLayout({ user, onLogout }) {
           <button
             type="button"
             className="admin-profile-link"
+            title={
+              sidebarColapsado
+                ? "Perfil"
+                : undefined
+            }
             onClick={() =>
               setAdminView("perfil")
             }

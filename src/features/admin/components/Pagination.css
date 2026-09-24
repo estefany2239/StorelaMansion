@@ -1,100 +1,170 @@
 /* =========================================================
    PAGINACIÓN - PANEL ADMINISTRATIVO
+   Footer de la tabla: vive DENTRO del mismo contenedor de la
+   tarjeta (.-table-container), así que se dibuja como una
+   CONTINUACIÓN de esa misma superficie, no como una cápsula
+   flotante: mismo background que la tarjeta, sin sombra propia
+   y solo un borde superior sutil que la separa de las filas.
+
+   Colores 100% por variables de tema del panel (--admin-*),
+   que ya conmutan solos con .admin-container.admin-dark.
+   Mapeamos esas variables a los nombres de tema globales
+   (--card-bg, --text-primary, --gold, --border-color, etc.)
+   dentro del bloque .pagination para no afectar a otros
+   componentes y mantener un único punto de lectura.
    ========================================================= */
 
 .pagination {
+  /* Paleta del panel -> nombres de variables de tema */
+  --card-bg: var(--admin-card);
+  --text-primary: var(--admin-text);
+  --text-secondary: var(--admin-text-secondary);
+  --text-muted: var(--admin-text-muted);
+  --border-color: var(--admin-border);
+  --gold: var(--admin-cta-gold);
+  --gold-deep: var(--admin-cta-gold-dark);
+  /* Texto del número activo: siempre oscuro sobre dorado,
+     igual en Light y Dark (valor fijo e independiente del tema). */
+  --gold-ink: #1a1a1a;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  background: var(--card-bg);
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0;
+  box-shadow: none;
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------
+   CONTROLES (centrados)
+   --------------------------------------------------------- */
+
+.pagination-controls {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
-  padding: 18px 20px;
-  box-sizing: border-box;
 }
 
 .pagination-pages {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.pagination-button,
-.pagination-number {
-  min-width: 38px;
+/* Anterior / Siguiente: fondo neutro y borde sutil dorado */
+.pagination-button {
+  width: 38px;
   height: 38px;
-  padding: 0 13px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #1f2937;
+  border: 1px solid
+    color-mix(in srgb, var(--gold) 35%, var(--border-color));
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.pagination-button {
-  width: 38px;
-  padding: 0;
   flex-shrink: 0;
+  box-sizing: border-box;
+  transition: all 0.18s ease;
 }
 
-.pagination-button:hover:not(:disabled),
+/* Números de página: texto plano, círculo redondeado */
+.pagination-number {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.18s ease;
+}
+
+/* Página activa: fondo dorado sólido, número oscuro y negrita */
+.pagination-number.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--gold-ink);
+  font-weight: 800;
+  box-shadow: 0 2px 10px
+    color-mix(in srgb, var(--gold) 35%, transparent);
+}
+
+.pagination-button:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+}
+
 .pagination-number:hover:not(.active) {
-  background: #f7f3ea;
-  border-color: #D4AF37;
-  color: #D4AF37;
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  color: var(--gold-deep);
 }
 
 .pagination-button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
-}
-
-.pagination-number.active {
-  background: #D4AF37;
-  border-color: #D4AF37;
-  color: #111111;
-  font-weight: 600;
+  background: var(--card-bg);
+  color: var(--text-muted);
+  border-color: var(--border-color);
 }
 
 .pagination-ellipsis {
-  color: #858585;
+  color: var(--text-muted);
   padding: 0 3px;
   font-size: 14px;
+  line-height: 1;
+  user-select: none;
 }
 
-/* =========================================================
+/* ---------------------------------------------------------
    MODO OSCURO DEL PANEL ADMINISTRATIVO
-   ========================================================= */
+   Los --admin-* ya cambian solos con .admin-container.admin-dark,
+   así que aquí solo ajustamos lo que depende del navegador.
+   --------------------------------------------------------- */
 
-.admin-container.admin-dark .pagination-button,
-.admin-container.admin-dark .pagination-number {
-  background: #171717 !important;
-  border-color: rgba(255, 255, 255, 0.13) !important;
-  color: #e6e6e6 !important;
+.admin-container.admin-dark .pagination {
+  color-scheme: dark;
 }
 
-.admin-container.admin-dark .pagination-button:hover:not(:disabled),
-.admin-container.admin-dark .pagination-number:hover:not(.active) {
-  background: rgba(194, 168, 120, 0.10) !important;
-  border-color: rgba(194, 168, 120, 0.45) !important;
-  color: #d4bc94 !important;
-}
+/* ---------------------------------------------------------
+   MÓVIL
+   --------------------------------------------------------- */
 
-.admin-container.admin-dark .pagination-number.active {
-  background: #D4AF37 !important;
-  border-color: #D4AF37 !important;
-  color: #111111 !important;
-}
+@media (max-width: 640px) {
+  .pagination {
+    border-radius: 0;
+    gap: 8px;
+    padding: 10px 12px;
+  }
 
-.admin-container.admin-dark .pagination-ellipsis {
-  color: #858585 !important;
+  .pagination-controls,
+  .pagination-pages {
+    gap: 6px;
+  }
 }

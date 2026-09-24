@@ -28,13 +28,10 @@
 .dashboard-title h2 {
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: var(--font-display);
 
   font-size: 38px;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1.2;
 
   color: var(--admin-text);
@@ -43,10 +40,7 @@
 .dashboard-title p {
   margin: 14px 0 0;
 
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
+  font-family: var(--font-body, "Inter", sans-serif);
 
   font-size: 15px;
 
@@ -215,10 +209,7 @@
 .dashboard-panel-header h3 {
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: Georgia, "Times New Roman", serif;
 
   font-size: 20px;
 

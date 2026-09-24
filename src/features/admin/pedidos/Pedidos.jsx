@@ -4,6 +4,7 @@ import {
   Plus,
   Search,
   Eye,
+  ChevronDown,
   Pencil,
   X,
   Trash2,
@@ -17,6 +18,41 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+
+
+const ESTADOS_PEDIDO = [
+  "Registrado",
+  "En preparación",
+  "Despachado",
+  "Entregado"
+];
+
+
+const claseEstado = (estado) => {
+
+  switch (estado) {
+
+    case "Entregado":
+      return "entregado";
+
+    case "Despachado":
+      return "despachado";
+
+    case "En preparación":
+      return "preparacion";
+
+    case "Cancelado":
+      return "cancelado";
+
+    default:
+      return "registrado";
+
+  }
+
+};
+
+const REGISTROS_POR_PAGINA = 6;
+
 
 export default function Pedidos({ vendedorId }) {
 
@@ -265,6 +301,19 @@ export default function Pedidos({ vendedorId }) {
   const { toast, mostrarToast } = useToast();
 
 
+  // =========================================================
+  // DROPDOWN CAMBIAR ESTADO
+  // =========================================================
+
+  const [estadoAbiertoId, setEstadoAbiertoId] =
+    useState(null);
+
+  const [menuPos, setMenuPos] = useState({
+    top: 0,
+    left: 0
+  });
+
+
   // =====================================================
   // ABONOS
   // =====================================================
@@ -423,7 +472,6 @@ export default function Pedidos({ vendedorId }) {
   // PAGINACIÓN DE LA TABLA
   // =====================================================
 
-  const REGISTROS_POR_PAGINA = 6;
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(
@@ -431,7 +479,8 @@ export default function Pedidos({ vendedorId }) {
     Math.ceil(pedidosFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
-  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const inicio =
+    (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const pedidosPaginados = pedidosFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
@@ -446,6 +495,48 @@ export default function Pedidos({ vendedorId }) {
       setPaginaActual(totalPaginas);
     }
   }, [paginaActual, totalPaginas]);
+
+
+  // =========================================================
+  // CERRAR DROPDOWN AL CLIC FUERA O AL HACER SCROLL
+  // =========================================================
+
+  useEffect(() => {
+
+    const manejarClicFuera = (evento) => {
+
+      if (
+        evento.target.closest &&
+        evento.target.closest(".pedido-estado-dropdown")
+      ) {
+        return;
+      }
+
+      setEstadoAbiertoId(null);
+
+    };
+
+    const cerrarPorScroll = () => {
+      setEstadoAbiertoId(null);
+    };
+
+    document.addEventListener("click", manejarClicFuera);
+
+    window.addEventListener("scroll", cerrarPorScroll, true);
+
+    window.addEventListener("resize", cerrarPorScroll);
+
+    return () => {
+
+      document.removeEventListener("click", manejarClicFuera);
+
+      window.removeEventListener("scroll", cerrarPorScroll, true);
+
+      window.removeEventListener("resize", cerrarPorScroll);
+
+    };
+
+  }, []);
 
 
   // =====================================================
@@ -859,6 +950,87 @@ export default function Pedidos({ vendedorId }) {
   };
 
 
+  // =========================================================
+  // CANCELAR PEDIDO
+  // =========================================================
+
+  const cancelarPedido = (pedido) => {
+    if (pedido.estado === "Entregado" || pedido.estado === "Cancelado") {
+      alert(
+        pedido.estado === "Cancelado"
+          ? "Este pedido ya está cancelado."
+          : "No se puede cancelar un pedido que ya fue entregado."
+      );
+      return;
+    }
+    const confirmar = window.confirm(
+      `¿Deseas cancelar el pedido "${pedido.id}"?`
+    );
+    if (!confirmar) return;
+    setPedidos((prev) =>
+      prev.map((item) =>
+        item.id === pedido.id ? { ...item, estado: "Cancelado" } : item
+      )
+    );
+  };
+
+
+  // =========================================================
+  // ABRIR DROPDOWN CAMBIAR ESTADO
+  // =========================================================
+
+  const abrirCambiarEstado = (pedido, evento) => {
+
+    evento.stopPropagation();
+
+    if (estadoAbiertoId === pedido.id) {
+
+      setEstadoAbiertoId(null);
+
+      return;
+
+    }
+
+    const rect =
+      evento.currentTarget.getBoundingClientRect();
+
+    setMenuPos({
+      top: rect.bottom + 6,
+      left: Math.max(10, rect.right - 170)
+    });
+
+    setEstadoAbiertoId(pedido.id);
+
+  };
+
+
+  // =========================================================
+  // CAMBIAR ESTADO DESDE EL DROPDOWN
+  // =========================================================
+
+  const cambiarEstadoPedido = (pedido, nuevoEstado) => {
+
+    setEstadoAbiertoId(null);
+
+    if (nuevoEstado === "Cancelado") {
+
+      cancelarPedido(pedido);
+
+      return;
+
+    }
+
+    setPedidos((prev) =>
+      prev.map((item) =>
+        item.id === pedido.id
+          ? { ...item, estado: nuevoEstado }
+          : item
+      )
+    );
+
+  };
+
+
   // =====================================================
   // VER DETALLE
   // =====================================================
@@ -1197,40 +1369,119 @@ export default function Pedidos({ vendedorId }) {
 
                   <td>
 
-                    <span
-                      className={
-                        pedido.estado ===
-                        "Entregado"
-
-                          ? "pedido-estado entregado"
-
-                          : pedido.estado ===
-                            "Despachado"
-
-                          ? "pedido-estado despachado"
-
-                          : pedido.estado ===
-                            "En preparación"
-
-                          ? "pedido-estado preparacion"
-
-                          : pedido.estado ===
-                            "Cancelado"
-
-                          ? "pedido-estado cancelado"
-
-                          : "pedido-estado registrado"
-                      }
-                      onClick={() =>
-                        avanzarEstado(
-                          pedido.id
-                        )
-                      }
+                    <div
+                      className="pedido-estado-cell"
                     >
 
-                      {pedido.estado}
+                      <span
+                        className={
+                          pedido.estado ===
+                          "Entregado"
 
-                    </span>
+                            ? "pedido-estado entregado"
+
+                            : pedido.estado ===
+                              "Despachado"
+
+                            ? "pedido-estado despachado"
+
+                            : pedido.estado ===
+                              "En preparación"
+
+                            ? "pedido-estado preparacion"
+
+                            : pedido.estado ===
+                              "Cancelado"
+
+                            ? "pedido-estado cancelado"
+
+                            : "pedido-estado registrado"
+                        }
+                        onClick={() =>
+                          avanzarEstado(
+                            pedido.id
+                          )
+                        }
+                      >
+
+                        {pedido.estado}
+
+                      </span>
+
+
+                      {pedido.estado !== "Entregado" &&
+                        pedido.estado !== "Cancelado" && (
+
+                        <button
+                          type="button"
+                          className={
+                            "pedido-estado-toggle" +
+                            (estadoAbiertoId ===
+                            pedido.id
+                              ? " abierto"
+                              : "")
+                          }
+                          title="Cambiar estado"
+                          onClick={(evento) =>
+                            abrirCambiarEstado(
+                              pedido,
+                              evento
+                            )
+                          }
+                        >
+
+                          <ChevronDown size={14} />
+
+                        </button>
+
+                        )}
+
+
+                      {(pedido.estado !== "Entregado" &&
+                        pedido.estado !== "Cancelado") &&
+                        estadoAbiertoId ===
+                        pedido.id && (
+
+                        <div
+                          className="pedido-estado-dropdown"
+                          style={{
+                            top: menuPos.top,
+                            left: menuPos.left
+                          }}
+                        >
+
+                          {ESTADOS_PEDIDO.map(
+                            (estado) => (
+                              <button
+                                key={estado}
+                                type="button"
+                                className={
+                                  "pedido-estado-option " +
+                                  claseEstado(estado) +
+                                  (estado ===
+                                  pedido.estado
+                                    ? " activo"
+                                    : "")
+                                }
+                                onClick={() =>
+                                  cambiarEstadoPedido(
+                                    pedido,
+                                    estado
+                                  )
+                                }
+                              >
+
+                                {estado}
+
+                              </button>
+                            )
+                          )}
+
+                        </div>
+
+                      )}
+
+                    </div>
 
                   </td>
 
@@ -1302,6 +1553,39 @@ export default function Pedidos({ vendedorId }) {
                         </button>
 
 
+                      {/* CANCELAR */}
+
+                        <button
+                          type="button"
+                          className={
+                            pedido.estado ===
+                            "Entregado" ||
+                            pedido.estado ===
+                            "Cancelado"
+                              ? "pedido-cancel-button disabled"
+                              : "pedido-cancel-button"
+                          }
+                          title={
+                            pedido.estado ===
+                            "Entregado"
+                              ? "Pedido entregado: no se puede cancelar"
+                              : pedido.estado ===
+                                "Cancelado"
+                              ? "Este pedido ya está cancelado"
+                              : "Cancelar pedido"
+                          }
+                          onClick={() =>
+                            cancelarPedido(
+                              pedido
+                            )
+                          }
+                        >
+
+                          <X size={18} />
+
+                        </button>
+
+
                       {/* ELIMINAR */}
 
                         <button
@@ -1351,13 +1635,11 @@ export default function Pedidos({ vendedorId }) {
 
         </table>
 
-        {totalPaginas > 1 && (
-          <Pagination
-            currentPage={paginaActual}
-            totalPages={totalPaginas}
-            onPageChange={setPaginaActual}
-          />
-        )}
+        <Pagination
+          currentPage={paginaActual}
+          totalPages={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
 
       </div>
 

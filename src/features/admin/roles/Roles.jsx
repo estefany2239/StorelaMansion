@@ -25,6 +25,9 @@ const PERMISOS = [
   "Gestionar domicilios",
 ];
 
+const REGISTROS_POR_PAGINA = 6;
+
+
 export default function Roles() {
   const [roles, setRoles] = useState([
     {
@@ -111,7 +114,6 @@ export default function Roles() {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const REGISTROS_POR_PAGINA = 6;
   const [paginaActual, setPaginaActual] = useState(1);
 
   const totalPaginas = Math.max(
@@ -119,7 +121,8 @@ export default function Roles() {
     Math.ceil(rolesFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
-  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const inicio =
+    (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const rolesPaginados = rolesFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
@@ -572,13 +575,11 @@ export default function Roles() {
 
         </table>
 
-        {totalPaginas > 1 && (
-          <Pagination
-            currentPage={paginaActual}
-            totalPages={totalPaginas}
-            onPageChange={setPaginaActual}
-          />
-        )}
+        <Pagination
+          currentPage={paginaActual}
+          totalPages={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
 
       </div>
 

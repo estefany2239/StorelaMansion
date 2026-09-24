@@ -75,13 +75,14 @@
   box-sizing: border-box;
   overflow: hidden;
   z-index: 1000;
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, width 0.25s ease;
 }
 
 /* =========================================================
    LOGO
    ========================================================= */
 .admin-logo {
+  position: relative;
   height: 105px;
   min-height: 105px;
   padding: 12px 18px;
@@ -125,6 +126,38 @@
   text-transform: uppercase;
   color: var(--admin-gold);
   white-space: nowrap;
+}
+
+/* =========================================================
+   BOTÓN COLAPSAR / EXPANDIR
+   ========================================================= */
+.admin-sidebar-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  background: var(--admin-card);
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-sidebar-toggle:hover {
+  background: var(--admin-hover);
+  border-color: var(--admin-gold);
+  color: var(--admin-gold);
+}
+
+.admin-sidebar-toggle svg {
+  flex-shrink: 0;
 }
 
 /* =========================================================
@@ -395,7 +428,7 @@
   background: var(--admin-bg);
   box-sizing: border-box;
   overflow-x: hidden;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, width 0.25s ease, margin-left 0.25s ease;
 }
 
 .admin-content {
@@ -567,5 +600,133 @@
 
   .admin-content {
     padding: 16px;
+  }
+}
+
+/* =========================================================
+   SIDEBAR COLAPSADO (SOLO EN PANTALLAS ANCHAS)
+   ========================================================= */
+@media (min-width: 651px) {
+  .admin-sidebar--collapsed {
+    width: 80px;
+  }
+
+  .admin-sidebar--collapsed + .admin-main {
+    width: calc(100% - 80px);
+    margin-left: 80px;
+  }
+
+  .admin-sidebar--collapsed .admin-logo {
+    padding: 58px 12px 10px;
+    align-items: center;
+  }
+
+  .admin-sidebar--collapsed .admin-sidebar-toggle {
+    top: 10px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .admin-sidebar--collapsed .admin-logo h2 {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-logo > span {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-menu {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .admin-sidebar--collapsed .menu-title {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-link,
+  .admin-sidebar--collapsed .admin-link.active {
+    width: 36px;
+    min-width: 36px;
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+    gap: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .admin-sidebar--collapsed .admin-link span {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-accordion-arrow {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-submenu {
+    border-left: none;
+    padding-left: 0;
+    align-items: center;
+  }
+
+  .admin-sidebar--collapsed .admin-submenu .admin-link {
+    width: 30px;
+    min-width: 30px;
+    justify-content: center;
+  }
+
+  .admin-container .admin-sidebar--collapsed .admin-menu .admin-link.active {
+    --gold: var(--admin-gold);
+    background-color: var(--gold) !important;
+    color: #1a1a1a !important;
+    border-left: none !important;
+    border-radius: 10px !important;
+  }
+
+  .admin-container .admin-sidebar--collapsed .admin-menu .admin-link.active svg {
+    color: #1a1a1a !important;
+    stroke: #1a1a1a !important;
+  }
+
+  .admin-sidebar--collapsed .admin-sidebar-bottom {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .admin-sidebar--collapsed .admin-profile-link {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .admin-sidebar--collapsed .admin-profile-link span {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-profile-divider {
+    width: calc(100% - 8px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .admin-sidebar--collapsed .admin-user-info {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .admin-sidebar--collapsed .admin-user-data {
+    display: none;
+  }
+
+  .admin-sidebar--collapsed .admin-bottom-actions {
+    flex-direction: column;
   }
 }

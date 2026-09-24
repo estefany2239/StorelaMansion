@@ -32,14 +32,11 @@
 
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: var(--font-display);
 
   font-size: 34px;
 
-  font-weight: 500;
+  font-weight: 600;
 
   color: #171717;
 }
@@ -149,10 +146,7 @@
 
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: Georgia, "Times New Roman", serif;
 
   font-size: 26px;
 
@@ -316,10 +310,7 @@
 
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: Georgia, "Times New Roman", serif;
 
   font-size: 25px;
 

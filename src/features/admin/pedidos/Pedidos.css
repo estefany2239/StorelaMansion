@@ -29,13 +29,10 @@
 .pedidos-title h2 {
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: var(--font-display);
 
   font-size: 38px;
-  font-weight: 400;
+  font-weight: 600;
 
   line-height: 1.2;
 
@@ -47,10 +44,7 @@
 .pedidos-title p {
   margin: 14px 0 0;
 
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
+  font-family: var(--font-body, "Inter", sans-serif);
 
   font-size: 15px;
 
@@ -392,6 +386,202 @@
 }
 
 
+.pedido-estado.cancelado {
+  background:
+    #fde5e5;
+
+  color:
+    #e53935;
+}
+
+
+/* =========================================================
+   DROPDOWN CAMBIAR ESTADO
+   ========================================================= */
+
+.pedido-estado-cell {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 5px;
+}
+
+
+.pedido-estado-toggle {
+  width: 24px;
+  height: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: transparent;
+
+  color:
+    #8a94a6;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.pedido-estado-toggle:hover {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(201, 162, 39, 0.08);
+}
+
+
+.pedido-estado-toggle.abierto {
+  transform: rotate(180deg);
+}
+
+
+.pedido-estado-dropdown {
+  position: fixed;
+
+  z-index: 999;
+
+  min-width: 170px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+
+  padding: 6px;
+
+  box-sizing: border-box;
+
+  background:
+    var(--admin-card);
+
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--admin-text) 15%,
+      transparent
+    );
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 12px 32px
+    rgba(0, 0, 0, 0.16);
+}
+
+
+.pedido-estado-option {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  padding: 7px 10px;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: transparent;
+
+  font-family: var(--font-body);
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  text-align: left;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition: filter 0.15s ease;
+}
+
+
+.pedido-estado-option:hover {
+  filter: brightness(0.93);
+}
+
+
+.pedido-estado-option.entregado {
+  background:
+    #dff5e8;
+
+  color:
+    #0ca653;
+}
+
+
+.pedido-estado-option.preparacion {
+  background:
+    #eee1ff;
+
+  color:
+    #7542d8;
+}
+
+
+.pedido-estado-option.despachado {
+  background:
+    #e1ebff;
+
+  color:
+    #2867d8;
+}
+
+
+.pedido-estado-option.registrado {
+  background:
+    #fff2d2;
+
+  color:
+    #c68a00;
+}
+
+
+.pedido-estado-option.cancelado {
+  background:
+    #fde5e5;
+
+  color:
+    #e53935;
+}
+
+
+.pedido-estado-option.activo {
+  box-shadow:
+    inset 0 0 0 1.5px
+    color-mix(
+      in srgb,
+      currentColor 60%,
+      transparent
+    );
+}
+
+
 /* =========================================================
    ACCIONES
    ========================================================= */
@@ -460,6 +650,31 @@
 
 
 .pedido-actions button.disabled:hover {
+  color:
+    #70798a;
+
+  background:
+    transparent;
+}
+
+
+.pedido-actions button.pedido-cancel-button {
+  color:
+    #e53935;
+}
+
+
+.pedido-actions button.pedido-cancel-button:hover {
+  color:
+    #c62828;
+
+  background:
+    rgba(229, 57, 53, 0.08);
+}
+
+
+.pedido-actions button.pedido-cancel-button.disabled,
+.pedido-actions button.pedido-cancel-button.disabled:hover {
   color:
     #70798a;
 
@@ -555,10 +770,7 @@
 .pedido-modal-header h3 {
   margin: 0;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: Georgia, "Times New Roman", serif;
 
   font-size: 22px;
 
