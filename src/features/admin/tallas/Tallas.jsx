@@ -283,7 +283,7 @@ export default function Tallas() {
             <Plus size={19} />
 
             <span>
-              Agregar talla
+              Registrar talla
             </span>
 
           </button>
@@ -379,7 +379,7 @@ export default function Tallas() {
 
                       <button
                         type="button"
-                        title="Editar"
+                        title="Actualizar talla"
                         onClick={() =>
                           abrirEditar(talla)
                         }
@@ -454,8 +454,8 @@ export default function Tallas() {
 
               <h3>
                 {modoEdicion
-                  ? "Editar Talla"
-                  : "Nueva Talla"}
+                  ? "Actualizar Talla"
+                  : "Registrar Talla"}
               </h3>
 
               <button

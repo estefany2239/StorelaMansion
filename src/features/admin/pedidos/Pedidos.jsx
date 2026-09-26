@@ -1288,7 +1288,7 @@ export default function Pedidos({ vendedorId }) {
 
             <Plus size={18} />
 
-            Agregar pedido
+            Registrar pedido
 
           </button>
 
@@ -1533,7 +1533,7 @@ export default function Pedidos({ vendedorId }) {
                             pedido.estado ===
                             "Entregado"
                               ? "Pedido entregado: no se puede modificar"
-                              : "Editar pedido"
+                              : "Actualizar pedido"
                           }
                           className={
                             pedido.estado ===
@@ -1660,8 +1660,8 @@ export default function Pedidos({ vendedorId }) {
               <h3>
 
                 {modoEdicion
-                  ? "Editar Pedido"
-                  : "Agregar Pedido"}
+                  ? "Actualizar Pedido"
+                  : "Registrar Pedido"}
 
               </h3>
 

@@ -283,7 +283,7 @@ export default function Colores() {
             <Plus size={19} />
 
             <span>
-              Agregar color
+              Registrar color
             </span>
 
           </button>
@@ -379,7 +379,7 @@ export default function Colores() {
 
                       <button
                         type="button"
-                        title="Editar"
+                        title="Actualizar color"
                         onClick={() =>
                           abrirEditar(color)
                         }
@@ -454,8 +454,8 @@ export default function Colores() {
 
               <h3>
                 {modoEdicion
-                  ? "Editar Color"
-                  : "Nuevo Color"}
+                  ? "Actualizar Color"
+                  : "Registrar Color"}
               </h3>
 
               <button

@@ -602,7 +602,7 @@ if (modoEdicion) {
 
             <Plus size={18} />
 
-            Agregar cliente
+            Registrar cliente
 
           </button>
 
@@ -757,7 +757,7 @@ if (modoEdicion) {
 
                       <button
                         type="button"
-                        title="Editar cliente"
+                        title="Actualizar cliente"
                         onClick={() =>
                           abrirEditar(
                             cliente
@@ -840,8 +840,8 @@ if (modoEdicion) {
 
               <h3>
                 {modoEdicion
-                  ? "Editar Cliente"
-                  : "Agregar Cliente"}
+                  ? "Actualizar Cliente"
+                  : "Registrar Cliente"}
               </h3>
 
 

@@ -778,7 +778,7 @@ export default function Domicilios() {
 
             <Plus size={18} />
 
-            Agregar domicilio
+            Registrar domicilio
 
           </button>
 
@@ -921,7 +921,7 @@ export default function Domicilios() {
                           domicilio.estado ===
                           "Entregado"
                             ? "No se puede modificar"
-                            : "Editar domicilio"
+                            : "Actualizar domicilio"
                         }
                         className={
                           domicilio.estado ===
@@ -1011,8 +1011,8 @@ export default function Domicilios() {
               <h3>
 
                 {modoEdicion
-                  ? "Editar Domicilio"
-                  : "Agregar Domicilio"}
+                  ? "Actualizar Domicilio"
+                  : "Registrar Domicilio"}
 
               </h3>
 

@@ -308,7 +308,7 @@ export default function Categorias() {
             <Plus size={19} />
 
             <span>
-              Agregar categoría
+              Registrar categoría
             </span>
 
           </button>
@@ -416,7 +416,7 @@ export default function Categorias() {
 
                       <button
                         type="button"
-                        title="Editar"
+                        title="Actualizar categoría"
                         onClick={() =>
                           abrirEditar(categoria)
                         }
@@ -491,8 +491,8 @@ export default function Categorias() {
 
               <h3>
                 {modoEdicion
-                  ? "Editar Categoría"
-                  : "Nueva Categoría"}
+                  ? "Actualizar Categoría"
+                  : "Registrar Categoría"}
               </h3>
 
               <button

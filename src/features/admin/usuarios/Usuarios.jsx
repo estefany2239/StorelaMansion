@@ -707,7 +707,7 @@ export default function Usuarios() {
 
             <Plus size={18} />
 
-            Agregar usuario
+            Registrar usuario
 
           </button>
 
@@ -842,7 +842,7 @@ export default function Usuarios() {
 
                       <button
                         type="button"
-                        title="Editar usuario"
+                        title="Actualizar usuario"
                         onClick={() =>
                           abrirEditar(
                             usuario
@@ -939,8 +939,8 @@ export default function Usuarios() {
               <h3>
 
                 {modoEdicion
-                  ? "Editar Usuario"
-                  : "Agregar Usuario"}
+                  ? "Actualizar Usuario"
+                  : "Registrar Usuario"}
 
               </h3>
 

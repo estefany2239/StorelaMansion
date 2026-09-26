@@ -154,7 +154,7 @@ export default function Perfil({
 
             <Pencil size={17} />
 
-            Editar perfil
+            Actualizar perfil
 
           </button>
 
@@ -362,7 +362,7 @@ export default function Perfil({
             <div className="rol-modal-header">
 
               <h3>
-                Editar perfil
+                Actualizar perfil
               </h3>
 
               <button

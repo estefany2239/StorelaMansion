@@ -531,7 +531,7 @@ export default function Productos() {
             onClick={abrirAgregar}
           >
             <Plus size={18} />
-            Agregar producto
+            Registrar producto
           </button>
 
         </div>
@@ -664,7 +664,7 @@ export default function Productos() {
 
                     <button
                       type="button"
-                      title="Editar producto"
+                      title="Actualizar producto"
                       onClick={() =>
                         abrirEditar(producto)
                       }
@@ -724,8 +724,8 @@ export default function Productos() {
 
               <h3>
                 {modoEdicion
-                  ? "Editar Producto"
-                  : "Agregar Producto"}
+                  ? "Actualizar Producto"
+                  : "Registrar Producto"}
               </h3>
 
               <button

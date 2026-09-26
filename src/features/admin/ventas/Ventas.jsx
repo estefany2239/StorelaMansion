@@ -655,7 +655,7 @@ export default function Ventas({ vendedorId }) {
 
             <Plus size={18} />
 
-            Agregar venta
+            Registrar venta
 
           </button>
 
@@ -887,7 +887,7 @@ export default function Ventas({ vendedorId }) {
             <div className="venta-modal-header">
 
               <h3>
-                Agregar Venta
+                Registrar Venta
               </h3>
 
               <button

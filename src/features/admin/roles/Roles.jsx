@@ -410,7 +410,7 @@ export default function Roles() {
             onClick={abrirCrear}
           >
             <Plus size={19} />
-            Agregar rol
+            Registrar rol
           </button>
 
         </div>
@@ -519,8 +519,8 @@ export default function Roles() {
                         }
                         title={
                           rol.estado !== "Activo"
-                            ? "No se puede editar un rol inactivo"
-                            : "Editar rol"
+                            ? "No se puede actualizar un rol inactivo"
+                            : "Actualizar rol"
                         }
                         onClick={() =>
                           abrirEditar(rol)
@@ -606,8 +606,8 @@ export default function Roles() {
 
               <h3>
                 {modal === "crear"
-                  ? "Agregar rol"
-                  : "Editar rol"}
+                  ? "Registrar rol"
+                  : "Actualizar rol"}
               </h3>
 
               <button
