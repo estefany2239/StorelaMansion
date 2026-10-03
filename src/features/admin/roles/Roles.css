@@ -52,7 +52,9 @@
    ========================================================= */
 
 .roles-search {
-  width: 265px;
+  flex: 1 1 auto;
+  max-width: 420px;
+  min-width: 220px;
   height: 45px;
   display: flex;
   align-items: center;
@@ -87,77 +89,6 @@
   box-shadow:
     0 0 0 3px
     rgba(201, 162, 39, 0.10);
-}
-
-/* =========================================================
-   FILTRO DE ESTADO
-   ========================================================= */
-
-.roles-filter {
-  width: 145px;
-  height: 45px;
-  padding: 0 38px 0 14px;
-  box-sizing: border-box;
-  border: 1px solid #d8dce2;
-  border-radius: 9px;
-  background-color: #ffffff;
-  color: #626d7d;
-  font-family:
-    var(--font-body,
-    "Inter",
-    sans-serif);
-  font-size: 13px;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-
-  background-image:
-    linear-gradient(
-      45deg,
-      transparent 50%,
-      #70798a 50%
-    ),
-    linear-gradient(
-      135deg,
-      #70798a 50%,
-      transparent 50%
-    );
-
-  background-position:
-    calc(100% - 17px) 19px,
-    calc(100% - 12px) 19px;
-
-  background-size:
-    5px 5px,
-    5px 5px;
-
-  background-repeat: no-repeat;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    color 0.2s ease;
-}
-
-.roles-filter:hover {
-  border-color: var(--admin-gold);
-  color: var(--admin-gold-dark);
-  background-color:
-    rgba(201, 162, 39, 0.03);
-}
-
-.roles-filter:focus {
-  border-color: var(--admin-gold);
-  box-shadow:
-    0 0 0 3px
-    rgba(201, 162, 39, 0.10);
-}
-
-.roles-filter option {
-  background: var(--admin-card);
-  color: var(--admin-text);
-  font-size: 13px;
 }
 
 /* =========================================================
@@ -323,19 +254,18 @@
    ESTADO - SWITCH
    ========================================================= */
 
-.switch-estado {
+.switch-usuario-estado {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   user-select: none;
 }
 
 /* Ocultamos el checkbox original */
 
-.switch-estado input {
+.switch-usuario-estado input {
   position: absolute;
   opacity: 0;
   width: 0;
@@ -344,79 +274,69 @@
 
 /* Interruptor */
 
-.slider {
+.slider-usuario {
   position: relative;
-  display: block;
+  display: inline-block;
   width: 40px;
   height: 22px;
+  background-color: #cbd5e1;
   border-radius: 22px;
-  background: #d1d5db;
-  transition:
-    background 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
 /* Círculo blanco */
 
-.slider::before {
+.slider-usuario::before {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
-
-  width: 16px;
   height: 16px;
-
-  background: #ffffff;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
   border-radius: 50%;
-
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.20);
-
-  transition:
-    transform 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 /* Switch activo */
 
-.switch-estado input:checked + .slider {
-  background: #16a34a;
+.switch-usuario-estado input:checked + .slider-usuario {
+  background-color: #16a34a;
 }
 
 /* Mover círculo cuando está activo */
 
-.switch-estado
+.switch-usuario-estado
   input:checked
-  + .slider::before {
+  + .slider-usuario::before {
   transform: translateX(18px);
 }
 
 /* Texto del estado */
 
-.estado-texto {
+.estado-usuario-texto {
   font-size: 11px;
   font-weight: 400;
-  line-height: 1;
   letter-spacing: 0.5px;
 }
 
 /* Texto ACTIVO */
 
-.estado-texto.activo {
-  color: #16a34a;
+.estado-usuario-texto.activo {
+  color: #15803d;
 }
 
 /* Texto INACTIVO */
 
-.estado-texto.inactivo {
-  color: #9ca3af;
+.estado-usuario-texto.inactivo {
+  color: #494747;
 }
 
 /* Efecto al enfocar con teclado */
 
-.switch-estado
+.switch-usuario-estado
   input:focus-visible
-  + .slider {
+  + .slider-usuario {
   box-shadow:
     0 0 0 3px
     rgba(22, 163, 74, 0.20);
@@ -678,92 +598,114 @@
 }
 
 /* =========================================================
-   PERMISOS
-   ========================================================= */
+    PERMISOS - NIVEL 3 (MÓDULO + PRIVILEGIOS)
+    ========================================================= */
 
-.rol-permisos-section {
-  margin-top: 20px;
-  padding-top: 22px;
-
-  border-top:
-    1px solid var(--admin-border);
-}
-
-.rol-permisos-header {
+.rol-permisos-list-nivel3 {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 15px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.rol-permisos-header h4 {
-  margin: 0;
-
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
-
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--admin-text);
-}
-
-.rol-permisos-header span {
-  font-size: 12px;
-  color: var(--admin-text-secondary);
-}
-
-.rol-permisos-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.rol-permiso-item {
-  min-height: 45px;
-
+.rol-modulo-card {
   display: flex;
-  align-items: center;
-
-  gap: 10px;
-  padding: 0 13px;
-  box-sizing: border-box;
-
-  border:
-    1px solid var(--admin-border);
-
-  border-radius: 9px;
-
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
   background: var(--admin-card);
+}
+
+.rol-modulo-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease;
 }
 
-.rol-permiso-item:hover {
-  border-color: var(--admin-gold);
-
-  background:
-    rgba(201, 162, 39, 0.04);
-}
-
-.rol-permiso-item input {
-  width: 16px;
-  height: 16px;
-
+.rol-modulo-header input {
+  width: 18px;
+  height: 18px;
   accent-color: var(--admin-gold);
   cursor: pointer;
 }
 
-.rol-permiso-item span {
-  color: var(--admin-text);
-  font-size: 13px;
-  font-weight: 500;
+.rol-modulo-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
 }
+
+.rol-modulo-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.rol-modulo-contador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(201, 162, 39, 0.10);
+  color: var(--admin-gold-dark);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.rol-privilegios-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(210, 210, 210, 0.8);
+}
+
+.rol-privilegio-item {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  background: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.rol-privilegio-item:hover {
+  border-color: var(--admin-gold);
+  background: rgba(201, 162, 39, 0.04);
+}
+
+.rol-privilegio-item.activo {
+  border-color: var(--admin-gold);
+  background: rgba(201, 162, 39, 0.10);
+  color: var(--admin-gold-dark);
+}
+
+.rol-privilegio-item input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--admin-gold);
+  cursor: pointer;
+}
+
+.rol-privilegio-item span {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 
 /* =========================================================
    FOOTER MODAL
@@ -947,6 +889,74 @@
   color: var(--admin-text);
 }
 
+/* =========================================================
+    PERMISOS DEL DETALLE (TABLA)
+    ========================================================= */
+
+.rol-detail-permisos-tabla {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.rol-detail-permisos-thead {
+  display: grid;
+  grid-template-columns: 1.8fr repeat(4, 1fr);
+  background: #f7f7f7;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.rol-detail-permisos-th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-align: center;
+  color: #667085;
+}
+
+.rol-detail-permisos-th.modulo {
+  text-align: left;
+}
+
+.rol-detail-permisos-row {
+  display: grid;
+  grid-template-columns: 1.8fr repeat(4, 1fr);
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.rol-detail-permisos-row:last-child {
+  border-bottom: none;
+}
+
+.rol-detail-permisos-td {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  min-height: 46px;
+}
+
+.rol-detail-permisos-td.modulo {
+  justify-content: flex-start;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.priv-check.activo {
+  color: #16a34a;
+}
+
+.priv-check.inactivo {
+  color: #9ca3af;
+  opacity: 0.8;
+}
+
 .rol-detail-permisos-list {
   display: flex;
   flex-wrap: wrap;
@@ -1045,73 +1055,23 @@
 }
 
 @media (max-width: 900px) {
-  .roles-actions {
-    flex-wrap: wrap;
+  .rol-privilegios-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .roles-search {
-    flex: 1;
-    min-width: 220px;
-  }
-
-  .roles-table {
-    min-width: 680px;
-  }
-
-  .rol-form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .rol-detail-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .rol-info-full {
-    grid-column: auto;
+  .rol-detail-permisos-thead,
+  .rol-detail-permisos-row {
+    grid-template-columns: 1.5fr repeat(4, 0.9fr);
   }
 }
 
 @media (max-width: 600px) {
-  .roles-title h2 {
-    font-size: 32px;
-  }
-
-  .roles-actions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .roles-search,
-  .roles-filter,
-  .roles-add-button {
-    width: 100%;
-  }
-
-  .rol-permisos-list {
+  .rol-privilegios-grid {
     grid-template-columns: 1fr;
   }
 
-  .rol-modal-overlay {
-    padding: 12px;
-  }
-
-  .rol-modal {
-    max-height:
-      calc(100vh - 24px);
-  }
-
-  .rol-modal-header {
-    min-height: 70px;
-    padding: 0 20px;
-  }
-
-  .rol-modal-body {
-    padding: 22px 20px;
-  }
-
-  .rol-modal-footer {
-    min-height: 82px;
-    padding: 0 20px;
+  .rol-detail-permisos-thead,
+  .rol-detail-permisos-row {
+    grid-template-columns: 1.2fr repeat(4, 0.8fr);
   }
 }

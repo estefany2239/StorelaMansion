@@ -12,59 +12,135 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { tienePrivilegio } from "../utils/permisos";
+
 import "./Roles.css";
 
 import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 
-const PERMISOS = [
-  "Gestionar usuarios",
-  "Gestionar productos",
-  "Gestionar ventas",
-  "Gestionar pedidos",
-  "Gestionar domicilios",
+/* =====================================================
+   NIVEL 3 DE SEGURIDAD
+   Rol -> Permiso (módulo) -> Privilegio (acción CRUD)
+   ===================================================== */
+
+const MODULOS = [
+  "Dashboard",
+  "Roles",
+  "Usuarios",
+  "Productos",
+  "Categorías",
+  "Tallas",
+  "Colores",
+  "Ventas",
+  "Clientes",
+  "Pedidos",
+  "Domicilios",
 ];
+
+const PRIVILEGIOS = [
+  "Crear",
+  "Consultar",
+  "Actualizar",
+  "Eliminar",
+];
+
+/* Privilegio marcado por defecto al activar un módulo */
+
+const PRIVILEGIO_POR_DEFECTO = "Consultar";
 
 const REGISTROS_POR_PAGINA = 6;
 
+/* =====================================================
+   HELPERS DE ESTRUCTURA
+   ===================================================== */
 
-export default function Roles() {
+/* Mantiene los privilegios en el orden canónico
+   (Crear, Consultar, Actualizar, Eliminar) */
+
+const ordenarPrivilegios = (privilegios = []) =>
+  PRIVILEGIOS.filter((privilegio) =>
+    privilegios.includes(privilegio)
+  );
+
+const totalPrivilegios = (permisos = []) =>
+  permisos.reduce(
+    (total, permiso) =>
+      total + (permiso.privilegios?.length || 0),
+    0
+  );
+
+/* =====================================================
+   ROLES MOCK (MIGRADOS A LA NUEVA ESTRUCTURA)
+   ===================================================== */
+
+const PERMISOS_ADMINISTRADOR = MODULOS.map(
+  (modulo) => ({
+    modulo,
+    privilegios: [...PRIVILEGIOS],
+  })
+);
+
+const PERMISOS_VENDEDOR = [
+  {
+    modulo: "Dashboard",
+    privilegios: ["Consultar"],
+  },
+  {
+    modulo: "Productos",
+    privilegios: ["Consultar"],
+  },
+  {
+    modulo: "Ventas",
+    privilegios: ["Crear", "Consultar", "Actualizar"],
+  },
+  {
+    modulo: "Clientes",
+    privilegios: ["Consultar", "Actualizar"],
+  },
+  {
+    modulo: "Pedidos",
+    privilegios: ["Crear", "Consultar", "Actualizar"],
+  },
+  {
+    modulo: "Domicilios",
+    privilegios: ["Consultar", "Actualizar"],
+  },
+];
+
+/* El Cliente no ingresa al panel administrativo,
+   por eso no tiene módulos asignados */
+
+const PERMISOS_CLIENTE = [];
+
+
+export default function Roles({ rolesDisponibles = [], user }) {
+  const rolUsuario = user?.rol;
   const [roles, setRoles] = useState([
     {
       id: "ROL-001",
       nombre: "Administrador",
-      permisos: [
-        "Gestionar usuarios",
-        "Gestionar productos",
-        "Gestionar ventas",
-        "Gestionar pedidos",
-        "Gestionar domicilios",
-      ],
+      permisos: PERMISOS_ADMINISTRADOR,
       usuarios: 1,
       estado: "Activo",
     },
     {
       id: "ROL-002",
       nombre: "Vendedor",
-      permisos: [
-        "Gestionar productos",
-        "Gestionar ventas",
-        "Gestionar pedidos",
-      ],
+      permisos: PERMISOS_VENDEDOR,
       usuarios: 2,
       estado: "Activo",
     },
     {
       id: "ROL-003",
       nombre: "Cliente",
-      permisos: ["Gestionar pedidos"],
+      permisos: PERMISOS_CLIENTE,
       usuarios: 12,
       estado: "Activo",
     },
   ]);
 
   const [busqueda, setBusqueda] = useState("");
-  const [filtroEstado, setFiltroEstado] = useState("Todos");
 
   const [modal, setModal] = useState(null);
 
@@ -97,17 +173,20 @@ export default function Roles() {
       rol.estado
         .toLowerCase()
         .includes(texto) ||
-      rol.permisos.some((permiso) =>
-        permiso
-          .toLowerCase()
-          .includes(texto)
+      rol.permisos.some(
+        (permiso) =>
+          permiso.modulo
+            .toLowerCase()
+            .includes(texto) ||
+          (permiso.privilegios || []).some(
+            (privilegio) =>
+              privilegio
+                .toLowerCase()
+                .includes(texto)
+          )
       );
 
-    const coincideEstado =
-      filtroEstado === "Todos" ||
-      rol.estado === filtroEstado;
-
-    return coincideBusqueda && coincideEstado;
+    return coincideBusqueda;
   });
 
   /* =====================================================
@@ -130,7 +209,7 @@ export default function Roles() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroEstado]);
+  }, [busqueda]);
 
   useEffect(() => {
     if (paginaActual > totalPaginas) {
@@ -145,7 +224,7 @@ export default function Roles() {
     ) {
       mostrarToast("Rol no encontrado en el sistema", "error");
     }
-  }, [busqueda, filtroEstado, rolesFiltrados.length]);
+  }, [busqueda, rolesFiltrados.length]);
 
   /* =====================================================
      ABRIR CREAR
@@ -177,7 +256,14 @@ export default function Roles() {
     setRolForm({
       id: rol.id,
       nombre: rol.nombre,
-      permisos: [...rol.permisos],
+      permisos: Array.isArray(rol.permisos)
+        ? rol.permisos.map((p) => ({
+            modulo: p.modulo,
+            privilegios: ordenarPrivilegios(
+              p.privilegios || []
+            ),
+          }))
+        : [],
     });
 
     setModal("editar");
@@ -216,21 +302,119 @@ export default function Roles() {
   };
 
   /* =====================================================
-     MANEJAR PERMISOS
-     ===================================================== */
+      MANEJAR PERMISOS (NIVEL 3)
+      Cada módulo puede tener privilegios CRUD
+      ===================================================== */
 
-  const manejarPermiso = (permiso) => {
+  const obtenerPrivilegiosModulo = (modulo) =>
+    rolForm.permisos.find(
+      (permiso) => permiso.modulo === modulo
+    )?.privilegios || [];
+
+  const moduloTieneAcceso = (modulo) =>
+    obtenerPrivilegiosModulo(modulo).length > 0;
+
+  const manejarAccesoModulo = (modulo) => {
     setRolForm((prev) => {
-      const yaExiste = prev.permisos.includes(permiso);
+      const permisosActuales = Array.isArray(prev.permisos)
+        ? prev.permisos
+        : [];
 
+      const yaExiste = permisosActuales.some(
+        (permiso) => permiso.modulo === modulo
+      );
+
+      if (yaExiste) {
+        /* Desmarca: elimina el módulo del array de permisos */
+        return {
+          ...prev,
+          permisos: permisosActuales.filter(
+            (permiso) => permiso.modulo !== modulo
+          ),
+        };
+      }
+
+      /* Activa: agrega el módulo con "Consultar" por defecto */
       return {
         ...prev,
-        permisos: yaExiste
-          ? prev.permisos.filter((item) => item !== permiso)
-          : [...prev.permisos, permiso],
+        permisos: [
+          ...permisosActuales,
+          {
+            modulo,
+            privilegios: [
+              PRIVILEGIO_POR_DEFECTO,
+            ],
+          },
+        ],
       };
     });
   };
+
+  const manejarPrivilegio = (modulo, privilegio) => {
+    setRolForm((prev) => {
+      const permisosActuales = Array.isArray(prev.permisos)
+        ? prev.permisos
+        : [];
+
+      const yaExisteModulo = permisosActuales.some(
+        (permiso) => permiso.modulo === modulo
+      );
+
+      if (!yaExisteModulo) {
+        /* Si no tiene acceso, lo activamos con este privilegio */
+        return {
+          ...prev,
+          permisos: [
+            ...permisosActuales,
+            {
+              modulo,
+              privilegios: ordenarPrivilegios([
+                PRIVILEGIO_POR_DEFECTO,
+                privilegio,
+              ]).filter(
+                (p, i, arr) => arr.indexOf(p) === i
+              ),
+            },
+          ],
+        };
+      }
+
+      /* Actualiza privilegios del módulo existente */
+      return {
+        ...prev,
+        permisos: permisosActuales.map((permiso) => {
+          if (permiso.modulo !== modulo) {
+            return permiso;
+          }
+
+          const privilegiosActuales =
+            permiso.privilegios || [];
+
+          const yaTiene = privilegiosActuales.includes(
+            privilegio
+          );
+
+          const nuevosPrivilegios = yaTiene
+            ? privilegiosActuales.filter(
+                (p) => p !== privilegio
+              )
+            : [
+                ...privilegiosActuales,
+                privilegio,
+              ];
+
+          /* Ordena según orden canónico */
+          return {
+            ...permiso,
+            privilegios: ordenarPrivilegios(
+              nuevosPrivilegios
+            ),
+          };
+        }),
+      };
+    });
+  };
+
 
   /* =====================================================
      GUARDAR ROL
@@ -252,7 +436,7 @@ export default function Roles() {
       return;
     }
 
-    if (rolForm.permisos.length === 0) {
+    if (!Array.isArray(rolForm.permisos) || rolForm.permisos.length === 0) {
       alert("Debe seleccionar al menos un permiso.");
       return;
     }
@@ -344,6 +528,22 @@ export default function Roles() {
     mostrarToast("Rol eliminado con éxito");
   };
 
+  if (
+    !tienePrivilegio(rolUsuario, rolesDisponibles, "Roles", "Consultar")
+  ) {
+    return (
+      <div className="roles-page">
+        <div className="roles-header">
+          <div className="roles-title">
+            <h2>Roles</h2>
+            <p>No tienes permisos para acceder a este módulo.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <div className="roles-page">
 
@@ -380,38 +580,23 @@ export default function Roles() {
 
           </div>
 
-          {/* FILTRO */}
-
-          <select
-            className="roles-filter"
-            value={filtroEstado}
-            onChange={(e) =>
-              setFiltroEstado(e.target.value)
-            }
-          >
-            <option value="Todos">
-              Todos
-            </option>
-
-            <option value="Activo">
-              Activos
-            </option>
-
-            <option value="Inactivo">
-              Inactivos
-            </option>
-          </select>
-
           {/* AGREGAR */}
 
-          <button
-            type="button"
-            className="roles-add-button"
-            onClick={abrirCrear}
-          >
-            <Plus size={19} />
-            Registrar rol
-          </button>
+          {(tienePrivilegio(
+            rolUsuario,
+            rolesDisponibles,
+            "Roles",
+            "Crear"
+          ) || rolUsuario === "Administrador") && (
+            <button
+              type="button"
+              className="roles-add-button"
+              onClick={abrirCrear}
+            >
+              <Plus size={19} />
+              Registrar rol
+            </button>
+          )}
 
         </div>
       </div>
@@ -466,7 +651,7 @@ export default function Roles() {
 
                   <td>
 
-                    <label className="switch-estado">
+                    <label className="switch-usuario-estado">
 
                       <input
                         type="checkbox"
@@ -476,10 +661,10 @@ export default function Roles() {
                         }
                       />
 
-                      <span className="slider"></span>
+                      <span className="slider-usuario"></span>
 
                       <span
-                        className={`estado-texto ${
+                        className={`estado-usuario-texto ${
                           rol.estado === "Activo"
                             ? "activo"
                             : "inactivo"
@@ -510,43 +695,57 @@ export default function Roles() {
                         <Eye size={18} />
                       </button>
 
-                      <button
-                        type="button"
-                        className={
-                          rol.estado !== "Activo"
-                            ? "disabled"
-                            : ""
-                        }
-                        title={
-                          rol.estado !== "Activo"
-                            ? "No se puede actualizar un rol inactivo"
-                            : "Actualizar rol"
-                        }
-                        onClick={() =>
-                          abrirEditar(rol)
-                        }
-                      >
-                        <Pencil size={18} />
-                      </button>
+                      {tienePrivilegio(
+                        rolUsuario,
+                        rolesDisponibles,
+                        "Roles",
+                        "Actualizar"
+                      ) && (
+                        <button
+                          type="button"
+                          className={
+                            rol.estado !== "Activo"
+                              ? "disabled"
+                              : ""
+                          }
+                          title={
+                            rol.estado !== "Activo"
+                              ? "No se puede actualizar un rol inactivo"
+                              : "Actualizar rol"
+                          }
+                          onClick={() =>
+                            abrirEditar(rol)
+                          }
+                        >
+                          <Pencil size={18} />
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        className={
-                          rol.estado !== "Inactivo"
-                            ? "disabled"
-                            : ""
-                        }
-                        title={
-                          rol.estado !== "Inactivo"
-                            ? "Solo se pueden eliminar roles inactivos"
-                            : "Eliminar rol"
-                        }
-                        onClick={() =>
-                          eliminarRol(rol)
-                        }
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {tienePrivilegio(
+                        rolUsuario,
+                        rolesDisponibles,
+                        "Roles",
+                        "Eliminar"
+                      ) && (
+                        <button
+                          type="button"
+                          className={
+                            rol.estado !== "Inactivo"
+                              ? "disabled"
+                              : ""
+                          }
+                          title={
+                            rol.estado !== "Inactivo"
+                              ? "Solo se pueden eliminar roles inactivos"
+                              : "Eliminar rol"
+                          }
+                          onClick={() =>
+                            eliminarRol(rol)
+                          }
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
 
                     </div>
 
@@ -658,52 +857,105 @@ export default function Roles() {
                   </div>
 
                 </div>
-                {/* PERMISOS */}
+                 {/* PERMISOS */}
+ 
+                 <div className="rol-permisos-section">
+ 
+                   <div className="rol-permisos-header">
+ 
+                     <h4>
+                       Permisos del rol
+                     </h4>
+ 
+                     <span>
+                       Selecciona los módulos y sus privilegios
+                     </span>
+ 
+                   </div>
+ 
+                   <div className="rol-permisos-list-nivel3">
+ 
+                     {MODULOS.map((modulo) => {
+                       const tieneAcceso =
+                         moduloTieneAcceso(modulo);
+                       const privilegiosModulo =
+                         obtenerPrivilegiosModulo(modulo);
+ 
+                       return (
+                         <div
+                           className="rol-modulo-card"
+                           key={modulo}
+                         >
+                           <label className="rol-modulo-header">
+ 
+                             <input
+                               type="checkbox"
+                               checked={tieneAcceso}
+                               onChange={() =>
+                                 manejarAccesoModulo(modulo)
+                               }
+                             />
+ 
+                             <div className="rol-modulo-info">
+                               <span className="rol-modulo-nombre">
+                                 {modulo}
+                               </span>
+                               {tieneAcceso && (
+                                 <span className="rol-modulo-contador">
+                                   {privilegiosModulo.length}{" "}
+                                   privilegio
+                                   {privilegiosModulo.length === 1
+                                     ? ""
+                                     : "s"}
+                                 </span>
+                               )}
+                             </div>
+ 
+                           </label>
+ 
+                           {tieneAcceso && (
+                             <div className="rol-privilegios-grid">
+                               {PRIVILEGIOS.map((privilegio) => {
+                                 const activo =
+                                   privilegiosModulo.includes(
+                                     privilegio
+                                   );
+ 
+                                 return (
+                                   <label
+                                     className={`rol-privilegio-item ${
+                                       activo ? "activo" : ""
+                                     }`}
+                                     key={`${modulo}-${privilegio}`}
+                                   >
+ 
+                                     <input
+                                       type="checkbox"
+                                       checked={activo}
+                                       onChange={() =>
+                                         manejarPrivilegio(
+                                           modulo,
+                                           privilegio
+                                         )
+                                       }
+                                     />
+ 
+                                     <span>{privilegio}</span>
+ 
+                                   </label>
+                                 );
+                               })}
+                             </div>
+                           )}
+ 
+                         </div>
+                       );
+                     })}
+ 
+                   </div>
+ 
+                 </div>
 
-                <div className="rol-permisos-section">
-
-                  <div className="rol-permisos-header">
-
-                    <h4>
-                      Permisos del rol
-                    </h4>
-
-                    <span>
-                      Selecciona los permisos
-                    </span>
-
-                  </div>
-
-                  <div className="rol-permisos-list">
-
-                    {PERMISOS.map((permiso) => (
-
-                      <label
-                        className="rol-permiso-item"
-                        key={permiso}
-                      >
-
-                        <input
-                          type="checkbox"
-                          checked={rolForm.permisos.includes(
-                            permiso
-                          )}
-                          onChange={() =>
-                            manejarPermiso(permiso)
-                          }
-                        />
-
-                        <span>
-                          {permiso}
-                        </span>
-
-                      </label>
-
-                    ))}
-
-                  </div>
-
-                </div>
 
               </div>
 
@@ -846,38 +1098,113 @@ export default function Roles() {
                     Total permisos
                   </label>
 
-                  <div className="rol-info-value">
-                    {modal.rol.permisos.length}
-                  </div>
+                   <div className="rol-info-value">
+                     {totalPrivilegios(modal.rol.permisos)}
+                   </div>
+
 
                 </div>
 
               </div>
 
-              <div className="rol-detail-permisos">
+               <div className="rol-detail-permisos">
+ 
+                 <h4 className="rol-detail-permisos-title">
+                   Permisos asignados
+                 </h4>
+ 
+                 <div className="rol-detail-permisos-tabla">
+                   <div className="rol-detail-permisos-thead">
+                     <div className="rol-detail-permisos-th modulo">
+                       Módulo
+                     </div>
+                     <div className="rol-detail-permisos-th">
+                       Crear
+                     </div>
+                     <div className="rol-detail-permisos-th">
+                       Consultar
+                     </div>
+                     <div className="rol-detail-permisos-th">
+                       Actualizar
+                     </div>
+                     <div className="rol-detail-permisos-th">
+                       Eliminar
+                     </div>
+                   </div>
+ 
+                   {(modal.rol.permisos || []).map(
+                     (permiso) => {
+                       const privilegios =
+                         permiso.privilegios || [];
+ 
+                       return (
+                         <div
+                           className="rol-detail-permisos-row"
+                           key={permiso.modulo}
+                         >
+                           <div className="rol-detail-permisos-td modulo">
+                             {permiso.modulo}
+                           </div>
+                           <div className="rol-detail-permisos-td">
+                             {privilegios.includes("Crear") ? (
+                               <CheckCircle
+                                 size={18}
+                                 className="priv-check activo"
+                               />
+                             ) : (
+                               <XCircle
+                                 size={18}
+                                 className="priv-check inactivo"
+                               />
+                             )}
+                           </div>
+                           <div className="rol-detail-permisos-td">
+                             {privilegios.includes("Consultar") ? (
+                               <CheckCircle
+                                 size={18}
+                                 className="priv-check activo"
+                               />
+                             ) : (
+                               <XCircle
+                                 size={18}
+                                 className="priv-check inactivo"
+                               />
+                             )}
+                           </div>
+                           <div className="rol-detail-permisos-td">
+                             {privilegios.includes("Actualizar") ? (
+                               <CheckCircle
+                                 size={18}
+                                 className="priv-check activo"
+                               />
+                             ) : (
+                               <XCircle
+                                 size={18}
+                                 className="priv-check inactivo"
+                               />
+                             )}
+                           </div>
+                           <div className="rol-detail-permisos-td">
+                             {privilegios.includes("Eliminar") ? (
+                               <CheckCircle
+                                 size={18}
+                                 className="priv-check activo"
+                               />
+                             ) : (
+                               <XCircle
+                                 size={18}
+                                 className="priv-check inactivo"
+                               />
+                             )}
+                           </div>
+                         </div>
+                       );
+                     }
+                   )}
+                 </div>
+ 
+               </div>
 
-                <h4 className="rol-detail-permisos-title">
-                  Permisos asignados
-                </h4>
-
-                <div className="rol-detail-permisos-list">
-
-                  {modal.rol.permisos.map(
-                    (permiso) => (
-
-                      <span
-                        className="rol-detail-permiso"
-                        key={permiso}
-                      >
-                        {permiso}
-                      </span>
-
-                    )
-                  )}
-
-                </div>
-
-              </div>
 
             </div>
 

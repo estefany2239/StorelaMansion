@@ -31,12 +31,17 @@ import Pedidos from "./pedidos/Pedidos";
 import Domicilios from "./domicilios/Domicilios";
 import Perfil from "./perfil/Perfil";
 
+import { tienePrivilegio } from "./utils/permisos";
+import ROLES_MOCK from "./data/rolesMock";
+
 import "./AdminLayout.css";
 import "./AdminTheme.css";
 
 export default function AdminLayout({ user, onLogout }) {
 
   const esVendedor = user?.rol === "Vendedor";
+  const rolUsuario = user?.rol || "Administrador";
+  const rolesDisponibles = ROLES_MOCK;
 
   const [adminView, setAdminView] = useState(
     esVendedor ? "ventas" : "dashboard"
@@ -81,7 +86,14 @@ export default function AdminLayout({ user, onLogout }) {
           vista: "usuarios",
           icono: Users
         }
-      ];
+      ].filter((item) =>
+        tienePrivilegio(
+          rolUsuario,
+          rolesDisponibles,
+          item.nombre,
+          "Consultar"
+        )
+      );
 
   /* =====================================================
      SUBMENÚ GESTIÓN DE PRODUCTOS
@@ -108,7 +120,14 @@ export default function AdminLayout({ user, onLogout }) {
       vista: "colores",
       icono: Palette
     }
-  ];
+  ].filter((item) =>
+    tienePrivilegio(
+      rolUsuario,
+      rolesDisponibles,
+      item.nombre,
+      "Consultar"
+    )
+  );
 
   /* =====================================================
      SUBMENÚ GESTIÓN DE VENTAS
@@ -148,7 +167,14 @@ export default function AdminLayout({ user, onLogout }) {
           vista: "domicilios",
           icono: Truck
         }
-      ];
+      ].filter((item) =>
+    tienePrivilegio(
+      rolUsuario,
+      rolesDisponibles,
+      item.nombre,
+      "Consultar"
+    )
+  );
 
 
   /* =====================================================
@@ -201,10 +227,6 @@ export default function AdminLayout({ user, onLogout }) {
   const nombreUsuario =
     user?.nombre || "Carlos Rodríguez";
 
-  const rolUsuario =
-    user?.rol || "Administrador";
-
-
   /* =====================================================
      CONTENIDO
      ===================================================== */
@@ -214,37 +236,37 @@ export default function AdminLayout({ user, onLogout }) {
     switch (adminView) {
 
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "roles":
-        return <Roles />;
+        return <Roles rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "usuarios":
-        return <Usuarios />;
+        return <Usuarios rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "productos":
-        return <Productos />;
+        return <Productos rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "categorias":
-        return <Categorias />;
+        return <Categorias rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "tallas":
-        return <Tallas />;
+        return <Tallas rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "colores":
-        return <Colores />;
+        return <Colores rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "ventas":
-        return <Ventas vendedorId={user?.vendedorId} />;
+        return <Ventas vendedorId={user?.vendedorId} rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "clientes":
-        return <Clientes />;
+        return <Clientes rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "pedidos":
-        return <Pedidos vendedorId={user?.vendedorId} />;
+        return <Pedidos vendedorId={user?.vendedorId} rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "domicilios":
-        return <Domicilios />;
+        return <Domicilios rolesDisponibles={rolesDisponibles} user={user} />;
 
       case "perfil":
         return (
@@ -305,11 +327,13 @@ export default function AdminLayout({ user, onLogout }) {
 
           </button>
 
-          <div className="admin-logo-icon">
+          {!sidebarColapsado && (
+            <div className="admin-logo-icon">
 
-            <Store size={25} />
+              <Store size={25} />
 
-          </div>
+            </div>
+          )}
 
           <h2>
             Store La Mansión
@@ -682,3 +706,4 @@ export default function AdminLayout({ user, onLogout }) {
     );
 
 }
+
