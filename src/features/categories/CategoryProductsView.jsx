@@ -1,8 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye } from "lucide-react";
-import { getFilteredProducts } from '../../data/productsData';
-import ProductDetailModal from '../../components/ProductDetailModal';
+import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye, ChevronDown, X } from "lucide-react";
+import { getFilteredProducts, allProducts, getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
+import ProductDetailPage from '../product/ProductDetailPage';
 import "./CategoryProductsView.css";
+
+// Hex de apoyo para los swatches. El filtro del cliente se arma con los
+// colores ÚNICOS reales del catálogo (campo `color` de cada producto), no
+// con esta paleta fija: por eso un color combinado como "Blanco / Azul"
+// aparece tal cual en cuanto algún producto lo tenga.
+const PALETA_COLORES = [
+  { nombre: 'Negro', hex: '#000000' },
+  { nombre: 'Blanco', hex: '#ffffff', borde: true },
+  { nombre: 'Café', hex: '#8a5a44' },
+  { nombre: 'Beige', hex: '#dcc8a2' },
+  { nombre: 'Gris', hex: '#808080' },
+  { nombre: 'Azul', hex: '#2b5fa8' },
+  { nombre: 'Rojo', hex: '#e74c3c' }
+];
+
+const ORDEN_COLORES = ['negro', 'blanco', 'café', 'beige', 'gris', 'azul', 'rojo', 'dorado'];
+
+const MAX_MARCAS_VISIBLES = 5;
+
+const normalizarTalla = (t) => String(t).trim().toUpperCase();
+const tallasVisiblesPara = (tallas) => [
+  ...TALLAS_ESTANDAR,
+  ...tallas.filter((t) => !TALLAS_ESTANDAR.includes(normalizarTalla(t)))
+];
+const getColorHex = (nombre) => {
+  const conocido = PALETA_COLORES.find((c) => c.nombre === nombre);
+  if (conocido) return conocido.hex;
+  if (nombre === 'Dorado') return '#c9a227';
+  return '#9aa0a6';
+};
+
+const getColorStyle = (nombre) => {
+  const partes = String(nombre || '')
+    .split('/')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (partes.length >= 2) {
+    const hexes = partes.map((p) => getColorHex(p));
+    return {
+      background: `linear-gradient(135deg, ${hexes[0]} 0%, ${hexes[0]} 50%, ${hexes[1]} 50%, ${hexes[1]} 100%)`
+    };
+  }
+  if (partes.length === 1 && /multicolor/i.test(partes[0])) {
+    return {
+      background: 'linear-gradient(90deg, #e74c3c 0%, #c9a227 25%, #2b5fa8 50%, #000000 75%, #ffffff 100%)'
+    };
+  }
+  return { backgroundColor: getColorHex(nombre) };
+};
 
 export default function CategoryProductsView({ category, onBack, addToCart, likedProducts = [], toggleLike }) {
   const [selectedGender, setSelectedGender] = useState(null);
@@ -10,7 +59,9 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
-  
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(true);
+  const [verMasMarcas, setVerMasMarcas] = useState(false);
+  const [overlayComprar, setOverlayComprar] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Detector automático del tema oscuro
@@ -31,6 +82,17 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
     return () => observer.disconnect();
   }, []);
+
+  // Colores disponibles para el grupoId del producto (usando getVariantesPorColor)
+  const getColoresDisponibles = (prod) => {
+    const vars = getVariantesPorColor(prod, allProducts);
+    const colores = [];
+    const seen = new Set();
+    const agregar = (c) => { if (c && !seen.has(c)) { seen.add(c); colores.push(c); } };
+    agregar(prod.color);
+    vars.forEach((v) => agregar(v.color));
+    return { colores, total: colores.length };
+  };
 
   // ==========================================
   // (El carrito y los favoritos se manejan arriba:
@@ -54,14 +116,77 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                     category?.id === 'camisetas' || 
                     category?.id === 'camisas';
 
+  // Obtener marcas reales de productsData para la categoría+género seleccionados
+  const productosCategoriaGenero = getFilteredProducts(
+    category,
+    selectedGender,
+    [],
+    [],
+    []
+  );
+
+  const getMarcasReales = (productos) => {
+    const marcas = [];
+    for (const prod of productos) {
+      if (prod && prod.brand) {
+        marcas.push(prod.brand);
+      }
+    }
+    const unicas = Array.from(new Set(marcas));
+    return unicas;
+  };
+
+  const marcasReales = getMarcasReales(productosCategoriaGenero);
+
+  // Para el filtro de marcas, usar las marcas reales (no inventar)
+  const marcasFiltrables = marcasReales;
+
+  const marcasVisibles = verMasMarcas ? marcasFiltrables : marcasFiltrables.slice(0, MAX_MARCAS_VISIBLES);
+
   // CORREGIDO: Se limpian las marcas solo en gorras y se ajustan las tallas para que los tenis no se bloqueen.
   // En accesorios los "sizes" son los tipos (Gorras, Perfumes, Relojes) y se filtran por nombre en getFilteredProducts.
+  // Las marcas se filtran con las marcas reales disponibles para esta categoría/género.
   const filteredProducts = getFilteredProducts(
     category, 
     selectedGender, 
-    isGorras ? selectedBrands : [], 
+    marcasFiltrables.length > 0 ? selectedBrands : [],
     selectedSizes, 
-    isTenis ? [] : selectedColors
+    selectedColors
+  );
+
+  // Colores ÚNICOS reales del catálogo para la categoría/género actuales
+  // (el filtro del cliente se arma desde el campo `color` de los productos,
+  //  por eso un color combinado como "Blanco / Azul" aparece tal cual).
+  const coloresReales = (() => {
+    const vistos = new Set();
+    const lista = [];
+    for (const p of productosCategoriaGenero) {
+      const nombre = p && p.color ? String(p.color).trim() : "";
+      const clave = nombre.toLowerCase();
+      if (clave && !vistos.has(clave)) {
+        vistos.add(clave);
+        lista.push(nombre);
+      }
+    }
+    return lista.sort((a, b) => {
+      const ia = ORDEN_COLORES.indexOf(a.toLowerCase());
+      const ib = ORDEN_COLORES.indexOf(b.toLowerCase());
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  })();
+
+  // Colores con producto real para la categoría/género/talla/marcas actuales
+  const coloresDisponibles = coloresReales.filter((nombre) =>
+    getFilteredProducts(
+      category,
+      selectedGender,
+      marcasFiltrables.length > 0 ? selectedBrands : [],
+      selectedSizes,
+      [nombre]
+    ).length > 0
   );
 
   const toggleSize = (size) => {
@@ -75,6 +200,28 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const toggleColor = (color) => {
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
   };
+
+  useEffect(() => {
+    const handler = (e) => {
+      const v = e.detail;
+      if (v) {
+        setProductoSeleccionado(v);
+      }
+    };
+    window.addEventListener('pdp-navigate-variant', handler);
+    return () => window.removeEventListener('pdp-navigate-variant', handler);
+  }, []);
+
+  if (productoSeleccionado) {
+    return (
+      <ProductDetailPage
+        product={productoSeleccionado}
+        catalogoCompleto={allProducts}
+        onBack={() => setProductoSeleccionado(null)}
+        addToCart={addToCart}
+      />
+    );
+  }
 
   return (
     <div className={`category-catalog-section ${isDarkMode ? 'dark-mode-active' : ''}`}>
@@ -137,28 +284,50 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
             
             {/* BARRA LATERAL CON CADA FILTRO SEPARADO */}
             <aside className="catalog__sidebar">
-              <div className="sidebar__title">
-                <SlidersHorizontal size={18} />
-                <span>Filtros ({selectedGender.toUpperCase()})</span>
+              <div
+                className="sidebar__title"
+                style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                onClick={() => setFiltrosAbiertos((prev) => !prev)}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <SlidersHorizontal size={18} />
+                  <span>Filtros ({selectedGender.toUpperCase()})</span>
+                </div>
+                <ChevronDown size={18} style={{ transform: filtrosAbiertos ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
               </div>
 
-              {/* 1. SI ES GORRAS */}
-              {isGorras ? (
-                <div className="filter__group">
-                  <h4>Marcas de Gorras</h4>
-                  <div className="filter__sizes-grid">
-                    {['Boss', 'Calvin Klein', 'Guess', 'Lacoste', 'Pyscho Bunny'].map(brand => (
-                      <button 
-                        key={brand}
-                        className={`filter__size-btn ${selectedBrands.includes(brand) ? 'active' : ''}`}
-                        onClick={() => toggleBrand(brand)}
-                      >
-                        {brand}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : isAccesorios ? (
+              {/* FILTROS COLAPSABLES */}
+              {filtrosAbiertos && (
+                <>
+                  {/* 1. SI ES GORRAS */}
+                  {isGorras ? (
+                    marcasFiltrables.length > 0 ? (
+                    <div className="filter__group">
+                      <h4>Marcas de Gorras</h4>
+                      <div className="filter__sizes-grid">
+                        {marcasVisibles.map(brand => (
+                          <button 
+                            key={brand}
+                            className={`filter__size-btn ${selectedBrands.includes(brand) ? 'active' : ''}`}
+                            onClick={() => toggleBrand(brand)}
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                      </div>
+                      {marcasFiltrables.length > MAX_MARCAS_VISIBLES && (
+                        <button
+                          type="button"
+                          className="filter__show-more"
+                          onClick={() => setVerMasMarcas((prev) => !prev)}
+                          style={{ marginTop: '8px', background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}
+                        >
+                          {verMasMarcas ? 'Ver menos' : 'Ver más'}
+                        </button>
+                      )}
+                    </div>
+                    ) : null
+                  ) : isAccesorios ? (
                 /* 2. SI ES ACCESORIOS */
                 <div className="filter__group">
                   <h4>Tipo de Accesorio</h4>
@@ -274,22 +443,83 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                     ))}
                   </div>
                 </div>
-              ) : (
-                /* 8. TALLAS PARA OTRAS ROPAS GENERALES */
-                <div className="filter__group">
-                  <h4>Tallas</h4>
-                  <div className="filter__sizes-grid">
-                    {(selectedGender === 'hombre' ? ['S', 'M', 'L', 'XL', 'XXL'] : ['XS', 'S', 'M', 'L', 'Única']).map(size => (
-                      <button 
-                        key={size}
-                        className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
-                        onClick={() => toggleSize(size)}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  ) : (
+                    /* 8. TALLAS PARA OTRAS ROPAS GENERALES */
+                    <div className="filter__group">
+                      <h4>Tallas</h4>
+                      <div className="filter__sizes-grid">
+                        {(selectedGender === 'hombre' ? ['S', 'M', 'L', 'XL', 'XXL'] : ['XS', 'S', 'M', 'L', 'Única']).map(size => (
+                          <button 
+                            key={size}
+                            className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
+                            onClick={() => toggleSize(size)}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* COLORES - Checklist con los colores reales del catálogo */}
+                  {coloresReales.length > 0 && (
+                    <div className="filter__group">
+                      <h4>Colores</h4>
+                      <div className="filter__colors-list">
+                        {coloresReales.map((nombre) => {
+                          const isSelected = selectedColors.includes(nombre);
+                          const disponible = coloresDisponibles.includes(nombre);
+                          return (
+                            <label
+                              key={nombre}
+                              className={`filter__checkbox-label${disponible ? '' : ' is-disabled'}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={!disponible}
+                                onChange={() => toggleColor(nombre)}
+                              />
+                              <span
+                                className="filter__color-swatch"
+                                style={getColorStyle(nombre)}
+                              />
+                              <span className="filter__color-name">{nombre}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MARCAS PARA OTRAS CATEGORÍAS (si existen marcas reales) */}
+                  {!isGorras && !isAccesorios && marcasFiltrables.length > 0 && (
+                    <div className="filter__group">
+                      <h4>Marcas</h4>
+                      <div className="filter__sizes-grid">
+                        {marcasVisibles.map((brand) => (
+                          <button
+                            key={brand}
+                            className={`filter__size-btn ${selectedBrands.includes(brand) ? 'active' : ''}`}
+                            onClick={() => toggleBrand(brand)}
+                          >
+                            {brand}
+                          </button>
+                        ))}
+                      </div>
+                      {marcasFiltrables.length > MAX_MARCAS_VISIBLES && (
+                        <button
+                          type="button"
+                          className="filter__show-more"
+                          onClick={() => setVerMasMarcas((prev) => !prev)}
+                          style={{ marginTop: '8px', background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}
+                        >
+                          {verMasMarcas ? 'Ver menos' : 'Ver más'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </aside>
 
@@ -298,6 +528,27 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(product => {
                   const isLiked = (likedProducts || []).some(item => String(item.id) === String(product.id));
+
+                  // Tallas reales del grupoId: si hay más de una se muestra el selector
+                  const tallas = getTallasDisponibles(product, allProducts);
+                  const tallaUnica = tallas.length <= 1;
+                  const overlayAbierto = overlayComprar === String(product.id);
+                  const tallasNorm = new Set(tallas.map(normalizarTalla));
+                  const tallaPropia = product.size && tallasNorm.has(normalizarTalla(product.size));
+
+                  const agregarTallaAlCarrito = (size) => {
+                    setOverlayComprar(null);
+                    addToCart({ ...product, size });
+                  };
+
+                  const manejarComprar = () => {
+                    if (tallaUnica) {
+                      if (tallas.length > 0) agregarTallaAlCarrito(tallas[0]);
+                      else addToCart({ ...product });
+                    } else {
+                      setOverlayComprar((prev) => (prev === String(product.id) ? null : String(product.id)));
+                    }
+                  };
 
                   return (
                     <div key={product.id} className="catalog__product-card">
@@ -318,13 +569,59 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                         >
                           <Heart size={16} fill={isLiked ? "#d8b438" : "none"} />
                         </button>
+
+                        {/* SELECCIÓN DE TALLA (solo si el grupo tiene más de una talla real) */}
+                        {tallaUnica ? null : (
+                          <div className={`product__size-overlay${overlayAbierto ? ' is-open' : ''}`}>
+                            <button
+                              type="button"
+                              className="product__size-overlay-close"
+                              onClick={(e) => { e.stopPropagation(); setOverlayComprar(null); }}
+                              aria-label="Cerrar selector de talla"
+                            >
+                              <X size={13} />
+                            </button>
+                            <span className="product__size-overlay-title">Elige una talla</span>
+                            <div className="product__size-overlay-sizes">
+                              {tallasVisiblesPara(tallas).map((s) => {
+                                const disponible = tallasNorm.has(normalizarTalla(s));
+                                const activa = disponible && tallaPropia && normalizarTalla(product.size) === normalizarTalla(s);
+                                return (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    className={`product__size-btn${activa ? ' active' : ''}${disponible ? '' : ' disabled'}`}
+                                    disabled={!disponible}
+                                    title={disponible ? `Agregar en talla ${s}` : `Talla ${s} no disponible`}
+                                    onClick={(e) => { e.stopPropagation(); if (disponible) agregarTallaAlCarrito(s); }}
+                                  >
+                                    {s}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="product__info">
                         <h4>{product.name}</h4>
                         <p className="product__details">
-                          {isGorras ? `Marca: ${product.brand}` : `Talla: ${product.size} | Color: ${product.color}`}
+                          {isGorras ? `Marca: ${product.brand}` : `Talla: ${product.size}`}
                         </p>
+                        {/* PUNTOS DE COLOR DE LOS DISPONIBLES EN EL GRUPO */}
+                        {(() => {
+                          const cc = getColoresDisponibles(product);
+                          if (cc.colores.length === 0) return null;
+                          return (
+                            <div className="product__color-dots">
+                              {cc.colores.slice(0, 4).map(c => (
+                                <span key={c} className="product__color-dot" style={getColorStyle(c)} title={c} />
+                              ))}
+                              {cc.total > 4 && <span className="product__color-dots-more">+{cc.total - 4}</span>}
+                            </div>
+                          );
+                        })()}
                         <span className="product__details-divider" />
                         <span className="product__card-price">{product.price}</span>
                         <div className="product__footer">
@@ -343,9 +640,10 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                             <button 
                               type="button"
                               className="product__add-btn"
-                              onClick={() => addToCart(product)}
+                              onClick={manejarComprar}
+                              title={tallaUnica ? (tallas.length > 0 ? `Agregar en talla ${tallas[0]}` : "Agregar al carrito") : "Elegir talla"}
                             >
-                              <ShoppingBag size={16} /> Comprar
+                              <ShoppingBag size={16} /> {tallaUnica ? "Comprar" : "Elige talla"}
                             </button>
                           </div>
                         </div>
@@ -365,14 +663,6 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
       </div>
 
-      {productoSeleccionado && (
-        <ProductDetailModal
-          product={productoSeleccionado}
-          categoryTitle={category?.title}
-          onClose={() => setProductoSeleccionado(null)}
-          onAddToCart={addToCart}
-        />
-      )}
     </div>
   );
 }

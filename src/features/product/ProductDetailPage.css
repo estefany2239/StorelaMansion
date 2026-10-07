@@ -1,0 +1,253 @@
+.pdp-section {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 40px 20px;
+  background-color: var(--bg-main, #f5ead6) !important;
+  color: var(--text-main, #1a1a1a) !important;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .pdp-section,
+body.dark-mode .pdp-section,
+body.dark .pdp-section,
+.dark-mode .pdp-section,
+.category-catalog-section.dark-mode-active .pdp-section,
+.pdp-section.dark-mode-active {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+.pdp-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pdp-back-btn {
+  background: transparent;
+  border: 1px solid rgba(216, 180, 56, 0.4);
+  color: inherit;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.pdp-back-btn:hover {
+  background: rgba(216, 180, 56, 0.2);
+  border-color: #d8b438;
+}
+
+.pdp-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.pdp-gallery {
+  display: flex;
+  gap: 16px;
+}
+
+.pdp-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 80px;
+}
+
+.pdp-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.pdp-thumb.active {
+  box-shadow: 0 0 0 2px #d8b438;
+}
+
+.pdp-main-image {
+  flex: 1;
+  aspect-ratio: 4/4.2;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  border: 1px solid rgba(216, 180, 56, 0.25);
+  background-color: #fff;
+}
+
+[data-theme="dark"] .pdp-main-image,
+body.dark-mode .pdp-main-image {
+  background-color: #1e1e1e;
+  border-color: rgba(216, 180, 56, 0.35);
+}
+
+.pdp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pdp-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.pdp-price {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d8b438;
+}
+
+.pdp-rating {
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+
+.pdp-description p {
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.pdp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdp-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+.pdp-colors,
+.pdp-sizes,
+.pdp-qty {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pdp-color-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(216, 180, 56, 0.4);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdp-color-btn.active {
+  background: #d8b438;
+  color: #121212;
+  font-weight: 600;
+  border-color: #d8b438;
+}
+
+.pdp-size-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(216, 180, 56, 0.4);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.pdp-size-btn.active {
+  background: #d8b438;
+  color: #121212;
+  font-weight: 600;
+  border-color: #d8b438;
+}
+
+.pdp-size-btn.disabled,
+.pdp-size-btn:disabled {
+  background: transparent;
+  color: inherit;
+  cursor: not-allowed;
+  opacity: 0.4;
+  border-color: rgba(128, 128, 128, 0.45);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.pdp-qty button {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(216, 180, 56, 0.4);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdp-qty span {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.pdp-addtocart {
+  background: linear-gradient(90deg, #d8b438, #f3d77a);
+  color: #121212;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pdp-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+.pdp-benefit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .pdp-grid {
+    grid-template-columns: 1fr;
+  }
+  .pdp-gallery {
+    flex-direction: column-reverse;
+  }
+  .pdp-thumbs {
+    flex-direction: row;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

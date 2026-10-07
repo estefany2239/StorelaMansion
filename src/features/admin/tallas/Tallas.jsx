@@ -58,6 +58,8 @@ export default function Tallas() {
     nombre: ""
   });
 
+  const [errores, setErrores] = useState({});
+
   /* =====================================================
      FILTRAR TALLAS POR NOMBRE
      ===================================================== */
@@ -111,6 +113,7 @@ export default function Tallas() {
       estado: "Activo"
     });
 
+    setErrores({});
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -125,6 +128,7 @@ export default function Tallas() {
       nombre: talla.nombre
     });
 
+    setErrores({});
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -138,6 +142,16 @@ export default function Tallas() {
       ...actual,
       [campo]: valor
     }));
+
+    if (String(valor).trim()) {
+      setErrores((actuales) => {
+        if (!actuales[campo]) return actuales;
+
+        const nuevos = { ...actuales };
+        delete nuevos[campo];
+        return nuevos;
+      });
+    }
   };
 
   /* =====================================================
@@ -145,10 +159,34 @@ export default function Tallas() {
      ===================================================== */
 
   const guardarTalla = () => {
+    const nuevosErrores = {};
+
     if (!formulario.nombre.trim()) {
-      alert("Completa todos los campos obligatorios.");
-      return;
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+      const nombreNormalizado =
+        formulario.nombre.trim().toLowerCase();
+
+      const yaExiste = tallas.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombreNormalizado &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
     }
+
+    if (formulario.nombre.trim().length > 20) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
@@ -156,13 +194,13 @@ export default function Tallas() {
     }
 
     setTallas((actuales) => [
-      ...actuales,
       {
         id: formulario.id,
         nombre: formulario.nombre.trim(),
         enUso: false,
         estado: "Activo"
-      }
+      },
+      ...actuales
     ]);
 
     mostrarToast("Talla creada con éxito");
@@ -499,11 +537,25 @@ export default function Tallas() {
                 <input
                   type="text"
                   placeholder="Ej: M"
+                  maxLength={20}
                   value={formulario.nombre}
+                  className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
-                    cambiarCampo("nombre", e.target.value)
+                    cambiarCampo(
+                      "nombre",
+                      e.target.value.replace(
+                        /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                        ""
+                      )
+                    )
                   }
                 />
+
+                {errores.nombre && (
+                  <span className="error-text">
+                    {errores.nombre}
+                  </span>
+                )}
 
               </div>
 

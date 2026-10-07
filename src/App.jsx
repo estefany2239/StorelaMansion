@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 
 import SplashScreen from "./components/splash/SplashScreen";
 
 import Navbar from "./components/layout/Navbar";
+import ClientNavbar from "./components/layout/ClientNavbar";
 import Hero from "./features/home/Hero";
 import Categories from "./features/categories/Categories";
 import FeaturedProducts from "./features/home/products/FeaturedProducts";
@@ -17,9 +19,21 @@ import MenCollection from "./features/Hombre/MenCollection";
 
 import StoreDashboard from "./features/store/StoreDashboard";
 import CartDrawer from "./components/cart/CartDrawer";
+import PaymentView from "./components/payment/PaymentView";
+import CategoryProductsView from "./features/categories/CategoryProductsView";
 
 // PANEL ADMINISTRATIVO
 import AdminLayout from "./features/admin/AdminLayout";
+
+// Helpers de precio para el gate de compra (misma lógica que el CartDrawer)
+const obtenerPrecio = (precio) => {
+  if (typeof precio === "number") return precio;
+  if (!precio) return 0;
+  const numero = Number(String(precio).replace(/[\$COP.,\s]/gi, "").trim());
+  return Number.isNaN(numero) ? 0 : numero;
+};
+
+const formatoPrecio = (valor) => `$${valor.toLocaleString("es-CO")} COP`;
 
 
 export default function App() {
@@ -29,6 +43,12 @@ export default function App() {
   // ==========================================
 
   const [currentView, setCurrentView] = useState("home");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Vista específica en la que debe abrir el dashboard cliente.
+  // Solo el dropdown del perfil en pago la fija ("mis-pedidos"/"configuracion");
+  // cualquier otra entrada al dashboard la resetea a "dashboard".
+  const [dashInitView, setDashInitView] = useState("dashboard");
 
 
   // ==========================================
@@ -102,6 +122,19 @@ export default function App() {
 
 
   // ==========================================
+  // FLUJO DE COMPRA (gate de inicio de sesión)
+  // ==========================================
+
+  // Indica que se viene del "Continuar compra" sin sesión:
+  // tras un login/registro exitoso se vuelve al pago.
+  const [flujoCheckout, setFlujoCheckout] = useState(false);
+
+  // Vista en la que estaba el usuario antes de abrir el gate
+  // (para regresar sin perder el carrito).
+  const [viewAnterior, setViewAnterior] = useState("home");
+
+
+  // ==========================================
   // AGREGAR PRODUCTO AL CARRITO
   // ==========================================
 
@@ -155,6 +188,62 @@ export default function App() {
 
 
   // ==========================================
+  // ACTUALIZAR CANTIDAD DE UN PRODUCTO
+  // ==========================================
+
+  const updateQuantity = (productId, quantity) => {
+
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId
+          ? {
+              ...item,
+              quantity: Math.max(1, Number(quantity) || 1)
+            }
+          : item
+      )
+    );
+
+  };
+
+
+  // ==========================================
+  // AGREGAR AL CARRITO Y ABRIR EL DRAWER
+  // ==========================================
+
+  const handleAddToCart = (product) => {
+
+    addToCart(product);
+
+    setIsCartOpen(true);
+
+  };
+
+
+  // ==========================================
+  // CONTINUAR COMPRA (siguiente paso pendiente)
+  // ==========================================
+
+  const handleContinuarCompra = () => {
+
+    // Cerramos el drawer en todos los casos
+    setIsCartOpen(false);
+
+    // Si ya hay sesión iniciada, ir directo al pago
+    if (user) {
+      setCurrentView("pago");
+      return;
+    }
+
+    // Sin sesión: abrimos el gate "Iniciar sesión para continuar"
+    setViewAnterior(currentView === "checkout-login" ? viewAnterior : currentView);
+    setFlujoCheckout(true);
+    setCurrentView("checkout-login");
+
+  };
+
+
+  // ==========================================
   // VISTAS DE AUTENTICACIÓN
   // ==========================================
 
@@ -179,6 +268,14 @@ export default function App() {
     setUser(userData);
 
 
+    // Si venía del flujo de compra (gate), avanzar al pago
+    if (flujoCheckout) {
+      setFlujoCheckout(false);
+      setCurrentView("pago");
+      return;
+    }
+
+
     // Si es administrador o vendedor
     if (
       userData.rol === "Administrador" ||
@@ -194,6 +291,7 @@ export default function App() {
       // Si es cliente
       console.log("Entrando como cliente");
 
+      setDashInitView("dashboard");
       setCurrentView("dashboard");
 
     }
@@ -211,6 +309,23 @@ export default function App() {
     setCurrentView("home");
 
   };
+
+
+  // ==========================================
+  // TOTALES DEL CARRITO (para el gate de compra)
+  // ==========================================
+
+  const subtotalCarrito = cart.reduce(
+    (acumulado, item) =>
+      acumulado +
+      obtenerPrecio(item.price) * (Number(item.quantity) || 1),
+    0
+  );
+
+  const totalItemsCarrito = cart.reduce(
+    (acumulado, item) => acumulado + (Number(item.quantity) || 1),
+    0
+  );
 
 
   // ==========================================
@@ -243,19 +358,53 @@ export default function App() {
         currentView !== "dashboard" &&
         currentView !== "admin" && (
 
-        <Navbar
-          onLoginClick={() =>
-            setCurrentView("login")
-          }
+        currentView === "pago" && user ? (
 
-          onNavigate={(view) =>
-            setCurrentView(view)
-          }
+          <ClientNavbar
+            user={user}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            cartCount={totalItemsCarrito}
+            onCartClick={() => setIsCartOpen(true)}
+            onNavigate={(vista) => {
+              setDashInitView(vista);
+              setCurrentView("dashboard");
+            }}
+            onLogout={() => {
+              alert("Sesión cerrada");
+              handleLogout();
+            }}
+            onBrandClick={() => {
+              setDashInitView("dashboard");
+              setCurrentView("dashboard");
+            }}
+            currentView="pago"
+          />
 
-          theme={theme}
+        ) : (
 
-          onToggleTheme={toggleTheme}
-        />
+          <Navbar
+            isLoggedIn={!!user}
+            userName={user?.nombre || ""}
+            onLoginClick={() =>
+              setCurrentView("login")
+            }
+
+            onAccountClick={() => {
+              setDashInitView("dashboard");
+              setCurrentView("dashboard");
+            }}
+
+            onNavigate={(view) =>
+              setCurrentView(view)
+            }
+
+            theme={theme}
+
+            onToggleTheme={toggleTheme}
+          />
+
+        )
 
       )}
 
@@ -312,39 +461,90 @@ export default function App() {
 
           <Hero />
 
-          <Categories
+           <Categories
 
-            onViewCollection={(gender) => {
+             onSelectCategory={(cat) => {
+               setSelectedCategory({
+                 id: cat.id,
+                 title: cat.name,
+                 image: cat.image
+               });
+               setCurrentView("categoria-genero");
+               window.scrollTo({
+                 top: 0,
+                 behavior: "smooth"
+               });
+             }}
 
-              if (gender === "mujer") {
+             onViewCollection={(gender) => {
 
-                setCurrentView("mujer");
+               if (gender === "mujer") {
 
-              } else if (gender === "hombre") {
+                 setCurrentView("mujer");
 
-                setCurrentView("hombre");
+               } else if (gender === "hombre") {
 
-              }
+                 setCurrentView("hombre");
 
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-              });
+               }
 
-            }}
+               window.scrollTo({
+                 top: 0,
+                 behavior: "smooth"
+               });
 
-          />
+             }}
+
+           />
 
           <FeaturedProducts />
 
         </main>
 
+       )}
+
+
+       {/* ======================================
+           SELECCIÓN GÉNERO POR CATEGORÍA (PÚBLICO)
+       ====================================== */}
+
+       {currentView === "categoria-genero" && selectedCategory && (
+
+         <CategoryProductsView
+           category={selectedCategory}
+           onBack={() => {
+             setSelectedCategory(null);
+             setCurrentView("home");
+           }}
+           addToCart={handleAddToCart}
+           likedProducts={[]}
+           toggleLike={() => {}}
+         />
+
+       )}
+
+
+       {/* ======================================
+           PAGO / CHECKOUT
+       ====================================== */}
+
+      {currentView === "pago" && (
+
+        <PaymentView
+          cart={cart}
+          darkMode={theme === "dark"}
+          onBack={() => {
+            setCurrentView("home");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
+
       )}
 
 
       {/* ======================================
-          DASHBOARD CLIENTE
-      ====================================== */}
+           DASHBOARD CLIENTE
+       ====================================== */}
 
       {currentView === "dashboard" && (
 
@@ -355,6 +555,8 @@ export default function App() {
           cart={cart}
 
           addToCart={addToCart}
+
+          initialView={dashInitView}
 
           onOpenCart={() =>
             setIsCartOpen(true)
@@ -389,6 +591,145 @@ export default function App() {
 
 
       {/* ======================================
+           GATE: INICIAR SESIÓN PARA CONTINUAR LA COMPRA
+       ====================================== */}
+
+      {currentView === "checkout-login" && (
+
+        <section className="checkout-login-page">
+
+          <button
+            type="button"
+            className="checkout-login-back"
+            onClick={() => {
+              setFlujoCheckout(false);
+              setCurrentView(viewAnterior);
+            }}
+          >
+            <ArrowLeft size={16} />
+            Seguir comprando
+          </button>
+
+          <div className="checkout-login-wrap">
+
+            {/* RESUMEN DEL CARRITO */}
+            <div className="checkout-login-summary">
+
+              <h2 className="checkout-login-title">
+                Iniciar sesión para continuar
+              </h2>
+
+              <p className="checkout-login-subtitle">
+                Tienes {totalItemsCarrito}{" "}
+                {totalItemsCarrito === 1 ? "producto" : "productos"} en tu carrito
+              </p>
+
+              <div className="checkout-login-items">
+                {cart.length === 0 ? (
+                  <p className="checkout-login-empty">
+                    Tu carrito está vacío.
+                  </p>
+                ) : (
+                  cart.map((item) => (
+                    <div
+                      key={`${item.id}-${item.size || "sin-talla"}`}
+                      className="checkout-login-item"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="checkout-login-item-img"
+                      />
+                      <div className="checkout-login-item-info">
+                        <span className="checkout-login-item-name">
+                          {item.name}
+                        </span>
+                        <span className="checkout-login-item-specs">
+                          Color: {item.color || "—"} | Talla:{" "}
+                          {item.size || "—"} · x{Number(item.quantity) || 1}
+                        </span>
+                      </div>
+                      <span className="checkout-login-item-price">
+                        {formatoPrecio(
+                          obtenerPrecio(item.price) *
+                            (Number(item.quantity) || 1)
+                        )}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="checkout-login-totals">
+                <div className="checkout-login-row">
+                  <span>Subtotal</span>
+                  <span>{formatoPrecio(subtotalCarrito)}</span>
+                </div>
+                <div className="checkout-login-row">
+                  <span>Envío</span>
+                  <span>{formatoPrecio(0)}</span>
+                </div>
+                <div className="checkout-login-total">
+                  <span>Total</span>
+                  <strong>{formatoPrecio(subtotalCarrito)}</strong>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="checkout-login-btn-primary"
+                onClick={() => setCurrentView("login")}
+              >
+                Iniciar sesión para continuar
+              </button>
+
+            </div>
+
+            {/* PANEL OSCURO CON LA MARCA */}
+            <div className="checkout-login-panel">
+
+              <h1 className="checkout-login-logo">
+                LA MANSI<span>ÓN</span>
+              </h1>
+
+              <p className="checkout-login-headline">
+                Último paso antes de tu pedido
+              </p>
+
+              <p className="checkout-login-copy">
+                Por tu seguridad, necesitamos que inicies sesión
+                para procesar tu compra. No perderás los productos
+                que tienes en tu carrito.
+              </p>
+
+              <div className="checkout-login-actions">
+                <button
+                  type="button"
+                  className="checkout-login-btn-primary"
+                  onClick={() => setCurrentView("login")}
+                >
+                  Iniciar sesión
+                </button>
+
+                <button
+                  type="button"
+                  className="checkout-login-btn-secondary"
+                  onClick={() => setCurrentView("register")}
+                >
+                  Crear cuenta
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      )}
+
+
+      {/* ======================================
           LOGIN
       ====================================== */}
 
@@ -397,7 +738,7 @@ export default function App() {
         <Login
 
           onBackToHome={() =>
-            setCurrentView("home")
+            setCurrentView(flujoCheckout ? "checkout-login" : "home")
           }
 
           onNavigateRegister={() =>
@@ -424,11 +765,11 @@ export default function App() {
         <Register
 
           onBackToLogin={() =>
-            setCurrentView("login")
+            setCurrentView(flujoCheckout ? "checkout-login" : "login")
           }
 
           onRegisterSuccess={() =>
-            setCurrentView("login")
+            setCurrentView(flujoCheckout ? "checkout-login" : "login")
           }
 
         />
@@ -468,6 +809,12 @@ export default function App() {
         cart={cart}
 
         removeFromCart={removeFromCart}
+
+        updateQuantity={updateQuantity}
+
+        onContinuarCompra={handleContinuarCompra}
+
+        darkMode={theme === "dark"}
 
       />
 

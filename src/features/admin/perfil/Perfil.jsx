@@ -35,6 +35,8 @@ export default function Perfil({
 
   const [form, setForm] = useState(perfil);
 
+  const [errores, setErrores] = useState({});
+
   const [confirmarEdicion, setConfirmarEdicion] =
     useState(false);
 
@@ -44,6 +46,7 @@ export default function Perfil({
 
   const abrirEditar = () => {
     setForm({ ...perfil });
+    setErrores({});
     setModalAbierto(true);
   };
 
@@ -62,10 +65,30 @@ export default function Perfil({
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
+    const valorFiltrado =
+      name === "nombre"
+        ? value.replace(
+            /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+            ""
+          )
+        : name === "telefono"
+          ? value.replace(/[^0-9]/g, "")
+          : value;
+
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: valorFiltrado,
     }));
+
+    if (String(valorFiltrado).trim()) {
+      setErrores((prev) => {
+        if (!prev[name]) return prev;
+
+        const nuevos = { ...prev };
+        delete nuevos[name];
+        return nuevos;
+      });
+    }
   };
 
   /* =====================================================
@@ -75,10 +98,15 @@ export default function Perfil({
   const guardarPerfil = (e) => {
     e.preventDefault();
 
+    const nuevosErrores = {};
+
     if (!form.nombre.trim()) {
-      alert("El nombre no puede estar vacío.");
-      return;
+      nuevosErrores.nombre = "Este campo es obligatorio.";
     }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
 
     setConfirmarEdicion(true);
   };
@@ -408,8 +436,15 @@ export default function Perfil({
                       placeholder="Tu nombre completo"
                       value={form.nombre}
                       onChange={manejarCambio}
+                      className={`input ${errores.nombre ? "input-error" : ""}`}
                       required
                     />
+
+                    {errores.nombre && (
+                      <span className="error-text">
+                        {errores.nombre}
+                      </span>
+                    )}
 
                   </div>
 

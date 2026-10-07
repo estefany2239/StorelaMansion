@@ -31,7 +31,11 @@ export default function Colores() {
     { id: "COL-004", nombre: "Beige", enUso: false, estado: "Activo" },
     { id: "COL-005", nombre: "Gris", enUso: false, estado: "Activo" },
     { id: "COL-006", nombre: "Azul", enUso: false, estado: "Activo" },
-    { id: "COL-007", nombre: "Rojo", enUso: false, estado: "Activo" }
+    { id: "COL-007", nombre: "Rojo", enUso: false, estado: "Activo" },
+    { id: "COL-008", nombre: "Blanco / Azul", enUso: false, estado: "Activo" },
+    { id: "COL-009", nombre: "Rojo / Negro", enUso: false, estado: "Activo" },
+    { id: "COL-010", nombre: "Negro / Dorado", enUso: false, estado: "Activo" },
+    { id: "COL-011", nombre: "Multicolor", enUso: false, estado: "Activo" }
   ]);
 
   /* =====================================================
@@ -57,6 +61,8 @@ export default function Colores() {
     id: "",
     nombre: ""
   });
+
+  const [errores, setErrores] = useState({});
 
   /* =====================================================
      FILTRAR COLORES POR NOMBRE
@@ -111,6 +117,7 @@ export default function Colores() {
       estado: "Activo"
     });
 
+    setErrores({});
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -125,6 +132,7 @@ export default function Colores() {
       nombre: color.nombre
     });
 
+    setErrores({});
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -138,6 +146,16 @@ export default function Colores() {
       ...actual,
       [campo]: valor
     }));
+
+    if (String(valor).trim()) {
+      setErrores((actuales) => {
+        if (!actuales[campo]) return actuales;
+
+        const nuevos = { ...actuales };
+        delete nuevos[campo];
+        return nuevos;
+      });
+    }
   };
 
   /* =====================================================
@@ -145,10 +163,35 @@ export default function Colores() {
      ===================================================== */
 
   const guardarColor = () => {
+    const nuevosErrores = {};
+
     if (!formulario.nombre.trim()) {
-      alert("Completa todos los campos obligatorios.");
-      return;
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+      const normalizarNombre = (nombre) =>
+        String(nombre).trim().toLowerCase().replace(/\s+/g, " ");
+
+      const nombreNormalizado = normalizarNombre(formulario.nombre);
+
+      const yaExiste = colores.some(
+        (item) =>
+          normalizarNombre(item.nombre) === nombreNormalizado &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
     }
+
+    if (formulario.nombre.trim().length > 20) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
@@ -156,13 +199,13 @@ export default function Colores() {
     }
 
     setColores((actuales) => [
-      ...actuales,
       {
         id: formulario.id,
         nombre: formulario.nombre.trim(),
         enUso: false,
         estado: "Activo"
-      }
+      },
+      ...actuales
     ]);
 
     mostrarToast("Color creado con éxito");
@@ -499,11 +542,25 @@ export default function Colores() {
                 <input
                   type="text"
                   placeholder="Ej: Café"
+                  maxLength={20}
                   value={formulario.nombre}
+                  className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
-                    cambiarCampo("nombre", e.target.value)
+                    cambiarCampo(
+                      "nombre",
+                      e.target.value.replace(
+                        /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s/]/g,
+                        ""
+                      )
+                    )
                   }
                 />
+
+                {errores.nombre && (
+                  <span className="error-text">
+                    {errores.nombre}
+                  </span>
+                )}
 
               </div>
 

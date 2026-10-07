@@ -1,0 +1,310 @@
+/* ============================================================
+   NAVBAR DEL CLIENTE LOGUEADO
+   (vista dashboard / checkout / mis-pedidos / configuración)
+============================================================ */
+
+.top-navbar {
+  width: 100%;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 44px;
+  background-color: var(--navbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+/* ============================================================
+   PARTE IZQUIERDA NAVBAR
+============================================================ */
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.brand-logo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brand-logo h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 2px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.brand-logo span {
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   BUSCADOR
+============================================================ */
+
+.nav-search-bar {
+  width: 470px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  border-radius: 30px;
+  border: 1px solid var(--border-color);
+  background-color: var(--search-bg);
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.search-icon {
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.nav-search-bar input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.nav-search-bar input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   ICONOS DERECHA
+============================================================ */
+
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  position: relative;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.icon-btn:hover {
+  background-color: rgba(212, 175, 55, 0.14);
+  color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.theme-button {
+  background-color: rgba(212, 175, 55, 0.12);
+}
+
+.theme-button:hover {
+  background-color: rgba(212, 175, 55, 0.22);
+}
+
+.cart-btn {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background-color: var(--gold);
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ============================================================
+   PROFILE
+============================================================ */
+
+.profile-menu-container {
+  position: relative;
+}
+
+.profile-dropdown-card {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  width: 240px;
+  padding: 16px;
+  border-radius: 13px;
+  background-color: var(--dropdown-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 50px var(--shadow-color);
+  z-index: 2000;
+}
+
+.profile-header-info {
+  padding: 2px 4px 4px;
+}
+
+.profile-welcome {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.profile-email {
+  margin: 0;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-divider {
+  width: 100%;
+  height: 1px;
+  margin: 13px 0;
+  background-color: var(--border-color);
+}
+
+.profile-options-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.profile-options-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.profile-options-list li:hover {
+  background-color: rgba(212, 175, 55, 0.12);
+  color: var(--gold);
+}
+
+.profile-options-list .profile-option-active {
+  background-color: rgba(212, 175, 55, 0.14);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.profile-options-list .logout-option {
+  color: #e85d5d;
+  margin-top: 4px;
+}
+
+.profile-options-list .logout-option:hover {
+  background-color: rgba(232, 93, 93, 0.12);
+  color: #ff6969;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 1100px) {
+  .top-navbar {
+    padding: 0 25px;
+  }
+
+  .nav-search-bar {
+    width: 380px;
+  }
+}
+
+@media (max-width: 800px) {
+  .top-navbar {
+    height: auto;
+    min-height: 76px;
+    padding: 12px 18px;
+    gap: 15px;
+  }
+
+  .navbar-left {
+    gap: 12px;
+  }
+
+  .brand-logo h1 {
+    font-size: 19px;
+  }
+
+  .brand-logo span {
+    font-size: 8px;
+  }
+
+  .nav-search-bar {
+    width: 300px;
+  }
+
+  .nav-right-actions {
+    gap: 3px;
+  }
+
+  .icon-btn {
+    width: 37px;
+    height: 37px;
+  }
+}
+
+@media (max-width: 600px) {
+  .top-navbar {
+    flex-wrap: wrap;
+    padding: 12px 15px;
+  }
+
+  .navbar-left {
+    flex: 1;
+  }
+
+  .nav-right-actions {
+    margin-left: auto;
+  }
+
+  .nav-search-bar {
+    order: 3;
+    width: 100%;
+    height: 42px;
+  }
+}

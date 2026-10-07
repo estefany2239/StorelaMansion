@@ -62,6 +62,8 @@ export default function Categorias() {
     estado: "Activo"
   });
 
+  const [errores, setErrores] = useState({});
+
   /* =====================================================
      FILTRAR CATEGORÍAS POR NOMBRE
      ===================================================== */
@@ -116,6 +118,7 @@ export default function Categorias() {
       estado: "Activo"
     });
 
+    setErrores({});
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -132,6 +135,7 @@ export default function Categorias() {
       estado: categoria.estado
     });
 
+    setErrores({});
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -145,6 +149,16 @@ export default function Categorias() {
       ...actual,
       [campo]: valor
     }));
+
+    if (String(valor).trim()) {
+      setErrores((actuales) => {
+        if (!actuales[campo]) return actuales;
+
+        const nuevos = { ...actuales };
+        delete nuevos[campo];
+        return nuevos;
+      });
+    }
   };
 
   /* =====================================================
@@ -152,10 +166,38 @@ export default function Categorias() {
      ===================================================== */
 
   const guardarCategoria = () => {
+    const nuevosErrores = {};
+
     if (!formulario.nombre.trim()) {
-      alert("Completa todos los campos obligatorios.");
-      return;
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+      const nombreNormalizado =
+        formulario.nombre.trim().toLowerCase();
+
+      const yaExiste = categorias.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombreNormalizado &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
     }
+
+    if (formulario.nombre.trim().length > 20) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    }
+
+    if (formulario.descripcion.trim().length > 200) {
+      nuevosErrores.descripcion = "La descripción no puede superar los 200 caracteres.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
@@ -163,14 +205,14 @@ export default function Categorias() {
     }
 
     setCategorias((actuales) => [
-      ...actuales,
       {
         id: formulario.id,
         nombre: formulario.nombre.trim(),
         descripcion: formulario.descripcion.trim(),
         estado: formulario.estado,
         enUso: false
-      }
+      },
+      ...actuales
     ]);
 
     mostrarToast("Categoría creada con éxito");
@@ -561,11 +603,25 @@ export default function Categorias() {
                 <input
                   type="text"
                   placeholder="Ej: Camisetas"
+                  maxLength={20}
                   value={formulario.nombre}
+                  className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
-                    cambiarCampo("nombre", e.target.value)
+                    cambiarCampo(
+                      "nombre",
+                      e.target.value.replace(
+                        /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                        ""
+                      )
+                    )
                   }
                 />
+
+                {errores.nombre && (
+                  <span className="error-text">
+                    {errores.nombre}
+                  </span>
+                )}
 
               </div>
 
@@ -578,11 +634,19 @@ export default function Categorias() {
                 <input
                   type="text"
                   placeholder="Ej: Todo tipo de camisetas"
+                  maxLength={200}
                   value={formulario.descripcion}
+                  className={`input ${errores.descripcion ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo("descripcion", e.target.value)
                   }
                 />
+
+                {errores.descripcion && (
+                  <span className="error-text">
+                    {errores.descripcion}
+                  </span>
+                )}
 
               </div>
 

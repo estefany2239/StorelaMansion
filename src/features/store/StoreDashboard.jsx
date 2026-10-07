@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Sun,
-  Moon,
   ShoppingBag,
   Heart,
-  Search,
-  User,
   ArrowRight,
   Sparkles,
-  LogOut,
-  Settings,
-  Package,
   ArrowLeft,
   Trash2,
   Plus,
@@ -24,9 +17,9 @@ import {
   Eye
 } from "lucide-react";
 
+import ClientNavbar from "../../components/layout/ClientNavbar";
 import ProductDetailModal from "../../components/ProductDetailModal";
 import "./StoreDashboard.css";
-import CategoryProductsView from "../categories/CategoryProductsView";
 import MisPedidos from "./MisPedidos";
 import Configuracion from "./Configuracion";
 import { pedidosClienteIniciales } from "./pedidosCliente";
@@ -41,12 +34,11 @@ import bannerImage from "../../assets/img/web.png";
 import bannerImage2 from "../../assets/img/ima.png";
 import bannerImage3 from "../../assets/img/img.png";
 
-const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
+const StoreDashboard = ({ theme, onToggleTheme, onLogout, user, initialView = "dashboard" }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Estados globales de navegación y tienda
-  const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" | "products" | "favorites" | "cart" | "checkout" | "success" | "mis-pedidos" | "configuracion"
+  const [currentView, setCurrentView] = useState(initialView); // "dashboard" | "products" | "favorites" | "cart" | "checkout" | "success" | "mis-pedidos" | "configuracion"
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   
@@ -180,7 +172,6 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
 
   const handleLogout = () => {
     alert("Sesión cerrada");
-    setShowProfileMenu(false);
     onLogout();
   };
 
@@ -273,61 +264,22 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
     <div className="store-dashboard-container">
       
       {/* ================= NAVBAR ================= */}
-      <header className="top-navbar">
-        <div className="navbar-left">
-          <div className="brand-logo" onClick={handleBackToDashboard} style={{ cursor: 'pointer' }}>
-            <h1>LA MANSIÓN</h1>
-            <span>STORE</span>
-          </div>
-        </div>
-
-        <div className="nav-search-bar">
-          <Search size={21} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Buscar productos, marcas y más..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="nav-right-actions">
-          <button className="icon-btn theme-button" onClick={onToggleTheme}>
-            {theme === "dark" ? <Sun size={21} /> : <Moon size={21} />}
-          </button>
-
-          <button className="icon-btn" title="Favoritos" onClick={() => setCurrentView("favorites")}>
-            <Heart size={21} />
-            {favorites.length > 0 && <span className="badge">{favorites.length}</span>}
-          </button>
-
-          <button className="icon-btn cart-btn" title="Carrito" onClick={() => setCurrentView("cart")}>
-            <ShoppingBag size={21} />
-            {totalCartItems > 0 && <span className="badge">{totalCartItems}</span>}
-          </button>
-
-          <div className="profile-menu-container">
-            <button className="icon-btn" onClick={() => setShowProfileMenu((prev) => !prev)}>
-              <User size={21} />
-            </button>
-
-            {showProfileMenu && (
-              <div className="profile-dropdown-card">
-                <div className="profile-header-info">
-                  <p className="profile-welcome">Hola, {user?.nombre}</p>
-                  <p className="profile-email">{user?.email}</p>
-                </div>
-                <div className="profile-divider"></div>
-                <ul className="profile-options-list">
-                  <li className={currentView === "mis-pedidos" ? "profile-option-active" : ""} onClick={() => { setCurrentView("mis-pedidos"); setShowProfileMenu(false); }}><Package size={16} /><span>Mis pedidos</span></li>
-                  <li className={currentView === "configuracion" ? "profile-option-active" : ""} onClick={() => { setCurrentView("configuracion"); setShowProfileMenu(false); }}><Settings size={16} /><span>Configuración</span></li>
-                  <li className="logout-option" onClick={handleLogout}><LogOut size={16} /><span>Salir de la cuenta</span></li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      <ClientNavbar
+        user={user}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+        cartCount={totalCartItems}
+        onCartClick={() => setCurrentView("cart")}
+        currentView={currentView}
+        onNavigate={(vista) => setCurrentView(vista)}
+        onLogout={handleLogout}
+        onBrandClick={handleBackToDashboard}
+        showSearch={true}
+        searchQuery={searchQuery}
+        onSearchChange={(valor) => setSearchQuery(valor)}
+        favoriteCount={favorites.length}
+        onFavoritesClick={() => setCurrentView("favorites")}
+      />
 
       {/* ================= VISTAS CONDICIONALES ================= */}
       {currentView === "dashboard" ? (
@@ -411,13 +363,7 @@ const StoreDashboard = ({ theme, onToggleTheme, onLogout, user }) => {
           </section>
         </main>
       ) : currentView === "products" ? (
-        <CategoryProductsView
-          category={selectedCategory}
-          onBack={handleBackToDashboard}
-          addToCart={handleAddToCart}
-          likedProducts={favorites}
-          toggleLike={handleToggleLike}
-        />
+        null
       ) : currentView === "favorites" ? (
         <div className="category-catalog-section">
           <div className="category-catalog-container">

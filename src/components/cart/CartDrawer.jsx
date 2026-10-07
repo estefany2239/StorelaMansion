@@ -1,4 +1,4 @@
-import { X, Trash2, ShoppingBag } from "lucide-react";
+import { X, Trash2, Minus, Plus } from "lucide-react";
 import "./CartDrawer.css";
 
 export default function CartDrawer({
@@ -6,8 +6,9 @@ export default function CartDrawer({
   onClose,
   cart,
   removeFromCart,
+  updateQuantity,
+  onContinuarCompra,
   darkMode,
-  onCheckout,
 }) {
   if (!isOpen) return null;
 
@@ -38,15 +39,24 @@ export default function CartDrawer({
   };
 
   // =========================================================
-  // CALCULAR TOTAL
+  // CALCULAR SUBTOTAL, ENVÍO Y TOTAL
   // =========================================================
 
-  const total = cart.reduce((acc, item) => {
+  const subtotal = cart.reduce((acc, item) => {
     const precio = obtenerPrecio(item.price);
     const cantidad = Number(item.quantity) || 1;
 
     return acc + precio * cantidad;
   }, 0);
+
+  // No existe lógica real de envío: se muestra $0.
+  const envio = 0;
+  const total = subtotal + envio;
+
+  const totalItems = cart.reduce(
+    (acc, item) => acc + (Number(item.quantity) || 1),
+    0
+  );
 
   // =========================================================
   // FORMATO DE PESOS COLOMBIANOS
@@ -70,8 +80,7 @@ export default function CartDrawer({
 
         <div className="cart-header">
           <h3>
-            <ShoppingBag size={20} />
-            Tu Carrito - La Mansión
+            Tu carrito ({totalItems})
           </h3>
 
           <button
@@ -106,7 +115,7 @@ export default function CartDrawer({
 
               return (
                 <div
-                  key={item.id}
+                  key={`${item.id}-${item.size || ""}-${item.color || ""}`}
                   className="cart-item"
                 >
 
@@ -124,15 +133,34 @@ export default function CartDrawer({
                       {item.name}
                     </h4>
 
+                    <p className="cart-item-specs">
+                      Color: {item.color || "—"} | Talla: {item.size || "—"}
+                    </p>
+
                     <p className="cart-item-price">
                       {formatoPrecio(precio)}
                     </p>
 
                     <div className="cart-item-controls">
 
-                      <span>
-                        Cantidad: {cantidad}
-                      </span>
+                      <div className="cart-qty">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity && updateQuantity(item.id, cantidad - 1)}
+                          disabled={cantidad <= 1}
+                          aria-label="Disminuir cantidad"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span>{cantidad}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity && updateQuantity(item.id, cantidad + 1)}
+                          aria-label="Aumentar cantidad"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
 
                       <button
                         className="remove-item-btn"
@@ -165,35 +193,39 @@ export default function CartDrawer({
           <div className="cart-footer">
 
             <div className="cart-summary-box">
-              <h4 className="cart-summary-title">Resumen del pedido</h4>
 
               <div className="cart-summary-row">
                 <span>Subtotal</span>
-                <span>{formatoPrecio(total)}</span>
+                <span>{formatoPrecio(subtotal)}</span>
               </div>
 
               <div className="cart-summary-row">
                 <span>Envío</span>
-                <span className="free-shipping">Gratis</span>
+                <span>{formatoPrecio(envio)}</span>
               </div>
 
               <div className="cart-total">
-                <span>Total a pagar</span>
+                <span>Total</span>
                 <strong>{formatoPrecio(total)}</strong>
               </div>
             </div>
 
             <button
-              className="checkout-btn"
+              className="continue-btn"
               onClick={() => {
-                onClose();
-
-                if (onCheckout) {
-                  onCheckout();
+                if (onContinuarCompra) {
+                  onContinuarCompra();
                 }
               }}
             >
-              Proceder al pago
+              Continuar compra
+            </button>
+
+            <button
+              className="keep-shopping-btn"
+              onClick={onClose}
+            >
+              Seguir comprando
             </button>
 
           </div>

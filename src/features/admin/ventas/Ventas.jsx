@@ -5,8 +5,11 @@ import {
   Search,
   Eye,
   X,
-  Trash2
+  Trash2,
+  FileText
 } from "lucide-react";
+
+import { jsPDF } from "jspdf";
 
 import "./Ventas.css";
 
@@ -199,6 +202,8 @@ export default function Ventas({ vendedorId }) {
     productos: []
   });
 
+  const [errores, setErrores] = useState({});
+
 
   // =========================================================
   // FORMATEAR PRECIO
@@ -314,6 +319,8 @@ export default function Ventas({ vendedorId }) {
       productos: []
     });
 
+    setErrores({});
+
     setMostrarModal(true);
 
   };
@@ -340,6 +347,20 @@ export default function Ventas({ vendedorId }) {
       ...actual,
       [campo]: valor
     }));
+
+    if (String(valor).trim()) {
+      setErrores(
+        (actuales) => {
+          if (!actuales[campo]) {
+            return actuales;
+          }
+
+          const nuevos = { ...actuales };
+          delete nuevos[campo];
+          return nuevos;
+        }
+      );
+    }
 
   };
 
@@ -438,16 +459,43 @@ export default function Ventas({ vendedorId }) {
 
   const registrarVenta = () => {
 
+    const nuevosErrores = {};
+
     if (
-      !formulario.cliente.trim() ||
+      !formulario.cliente.trim()
+    ) {
+      nuevosErrores.cliente = "Este campo es obligatorio.";
+    }
+
+    if (
+      formulario.cliente.trim().length > 20
+    ) {
+      nuevosErrores.cliente = "El nombre del cliente no puede superar los 20 caracteres.";
+    }
+
+    if (
       !formulario.fecha
     ) {
+      nuevosErrores.fecha = "Selecciona una fecha.";
+    }
 
-      alert(
-        "Completa los campos obligatorios."
-      );
+    const productoNombreLargo = formulario.productos.find(
+      (producto) => producto.nombre.trim().length > 20
+    );
+
+    if (productoNombreLargo) {
+      nuevosErrores.productos =
+        "El nombre de cada producto no puede superar los 20 caracteres.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (
+      Object.keys(nuevosErrores).length > 0
+    ) {
 
       return;
+
     }
 
 
@@ -495,8 +543,8 @@ export default function Ventas({ vendedorId }) {
 
 
     setVentas((actuales) => [
-      ...actuales,
-      nuevaVenta
+      nuevaVenta,
+      ...actuales
     ]);
 
     mostrarToast("Venta registrada con éxito");
@@ -586,6 +634,266 @@ export default function Ventas({ vendedorId }) {
     setMostrarDetalle(false);
 
     setVentaSeleccionada(null);
+
+  };
+
+
+  // =========================================================
+  // GENERAR COMPROBANTE (PDF)
+  // =========================================================
+
+  const generarComprobante = (venta) => {
+
+    const doc = new jsPDF({
+      unit: "mm",
+      format: "a4"
+    });
+
+    const anchoPagina =
+      doc.internal.pageSize.getWidth();
+
+    const altoPagina =
+      doc.internal.pageSize.getHeight();
+
+    const margen = 18;
+
+    let y = 22;
+
+
+    // ENCABEZADO
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(
+      "STORE LA MANSIÓN",
+      anchoPagina / 2,
+      y,
+      { align: "center" }
+    );
+
+    y += 8;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(
+      "Comprobante de Venta",
+      anchoPagina / 2,
+      y,
+      { align: "center" }
+    );
+
+    y += 6;
+
+    doc.setDrawColor(201, 162, 39);
+    doc.setLineWidth(0.8);
+    doc.line(
+      margen,
+      y,
+      anchoPagina - margen,
+      y
+    );
+
+
+    // DATOS DE LA VENTA
+
+    y += 12;
+
+    const dato = (etiqueta, valor) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(etiqueta, margen, y);
+
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        String(valor),
+        margen + 45,
+        y
+      );
+
+      y += 7;
+    };
+
+    dato("Venta N.°:", venta.id);
+    dato("Fecha:", formatearFecha(venta.fecha));
+    dato("Cliente:", venta.cliente);
+    dato("Método de pago:", venta.metodoPago);
+    dato("Estado:", venta.estado);
+
+
+    // TABLA DE PRODUCTOS
+
+    y += 4;
+
+    const colProducto = margen;
+    const colCantidad = margen + 88;
+    const colTalla = margen + 106;
+    const colColor = margen + 128;
+    const colPrecio = margen + 154;
+    const colSubtotal = anchoPagina - margen;
+
+    doc.setFillColor(247, 243, 227);
+    doc.rect(
+      margen,
+      y - 5,
+      anchoPagina - margen * 2,
+      8,
+      "F"
+    );
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+
+    doc.text(
+      "PRODUCTO",
+      colProducto + 2,
+      y
+    );
+    doc.text(
+      "CANT.",
+      colCantidad,
+      y,
+      { align: "right" }
+    );
+    doc.text(
+      "TALLA",
+      colTalla,
+      y,
+      { align: "right" }
+    );
+    doc.text(
+      "COLOR",
+      colColor,
+      y,
+      { align: "right" }
+    );
+    doc.text(
+      "P. UNITARIO",
+      colPrecio,
+      y,
+      { align: "right" }
+    );
+    doc.text(
+      "SUBTOTAL",
+      colSubtotal,
+      y,
+      { align: "right" }
+    );
+
+    y += 9;
+
+
+    // FILAS DE PRODUCTOS
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    venta.productos.forEach((producto) => {
+
+      if (y > altoPagina - 35) {
+        doc.addPage();
+        y = 22;
+      }
+
+      const subtotal =
+        Number(producto.precio) *
+        Number(producto.cantidad);
+
+      doc.text(
+        String(producto.nombre),
+        colProducto + 2,
+        y
+      );
+      doc.text(
+        String(producto.cantidad),
+        colCantidad,
+        y,
+        { align: "right" }
+      );
+      doc.text(
+        producto.talla || "-",
+        colTalla,
+        y,
+        { align: "right" }
+      );
+      doc.text(
+        producto.color || "-",
+        colColor,
+        y,
+        { align: "right" }
+      );
+      doc.text(
+        formatearPrecio(producto.precio),
+        colPrecio,
+        y,
+        { align: "right" }
+      );
+      doc.text(
+        formatearPrecio(subtotal),
+        colSubtotal,
+        y,
+        { align: "right" }
+      );
+
+      y += 7;
+    });
+
+
+    // TOTAL
+
+    y += 4;
+
+    doc.setDrawColor(201, 162, 39);
+    doc.setLineWidth(0.5);
+    doc.line(
+      colPrecio - 42,
+      y,
+      anchoPagina - margen,
+      y
+    );
+
+    y += 9;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+
+    doc.text(
+      "TOTAL:",
+      anchoPagina - margen - 42,
+      y,
+      { align: "right" }
+    );
+    doc.text(
+      formatearPrecio(venta.total),
+      anchoPagina - margen,
+      y,
+      { align: "right" }
+    );
+
+
+    // PIE DE PÁGINA
+
+    y += 18;
+
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(11);
+    doc.setTextColor(105, 105, 105);
+    doc.text(
+      "Gracias por su compra",
+      anchoPagina / 2,
+      y,
+      { align: "center" }
+    );
+
+    doc.setTextColor(0, 0, 0);
+
+
+    // DESCARGA
+
+    doc.save(
+      `comprobante-${venta.id}.pdf`
+    );
+
+    mostrarToast("Comprobante generado con éxito");
 
   };
 
@@ -797,6 +1105,21 @@ export default function Ventas({ vendedorId }) {
 
                       <button
                         type="button"
+                        className="venta-comprobante-button"
+                        onClick={() =>
+                          generarComprobante(
+                            venta
+                          )
+                        }
+                        title="Generar comprobante"
+                      >
+
+                        <FileText size={18} />
+
+                      </button>
+
+                      <button
+                        type="button"
                         className={
                           venta.estado ===
                             "Cancelada" ||
@@ -921,16 +1244,27 @@ export default function Ventas({ vendedorId }) {
                   <input
                     type="text"
                     placeholder="Nombre del cliente"
+                    maxLength={20}
                     value={
                       formulario.cliente
                     }
+                    className={`input ${errores.cliente ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "cliente",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.cliente && (
+                    <span className="error-text">
+                      {errores.cliente}
+                    </span>
+                  )}
 
                 </div>
 
@@ -946,6 +1280,7 @@ export default function Ventas({ vendedorId }) {
                     value={
                       formulario.fecha
                     }
+                    className={`input ${errores.fecha ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "fecha",
@@ -953,6 +1288,12 @@ export default function Ventas({ vendedorId }) {
                       )
                     }
                   />
+
+                  {errores.fecha && (
+                    <span className="error-text">
+                      {errores.fecha}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1053,6 +1394,12 @@ export default function Ventas({ vendedorId }) {
               </div>
 
 
+              {errores.productos && (
+                <span className="error-text">
+                  {errores.productos}
+                </span>
+              )}
+
               {formulario.productos.length ===
                 0 ? (
 
@@ -1111,12 +1458,16 @@ export default function Ventas({ vendedorId }) {
                               value={
                                 producto.nombre
                               }
+                              maxLength={20}
                               placeholder="Nombre del producto"
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,
                                   "nombre",
-                                  e.target.value
+                                  e.target.value.replace(
+                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                                    ""
+                                  )
                                 )
                               }
                             />
@@ -1140,7 +1491,10 @@ export default function Ventas({ vendedorId }) {
                                 actualizarProducto(
                                   index,
                                   "cantidad",
-                                  e.target.value
+                                  e.target.value.replace(
+                                    /[^0-9]/g,
+                                    ""
+                                  )
                                 )
                               }
                             />
@@ -1188,7 +1542,10 @@ export default function Ventas({ vendedorId }) {
                                 actualizarProducto(
                                   index,
                                   "color",
-                                  e.target.value
+                                  e.target.value.replace(
+                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                                    ""
+                                  )
                                 )
                               }
                             />
@@ -1213,6 +1570,14 @@ export default function Ventas({ vendedorId }) {
                                   index,
                                   "precio",
                                   e.target.value
+                                    .replace(
+                                      /[^0-9.]/g,
+                                      ""
+                                    )
+                                    .replace(
+                                      /(\..*)\./g,
+                                      "$1"
+                                    )
                                 )
                               }
                             />

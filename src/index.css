@@ -149,8 +149,9 @@ div[class*="view"] {
 .categories__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  justify-content: center;
   gap: 16px;
-  margin-bottom: 50px;
+  margin-bottom: 0;
 }
 
 .categories__item {
@@ -229,104 +230,6 @@ div[class*="view"] {
   text-align: center;
   letter-spacing: 0.5px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-.categories__banners {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.categories__banner {
-  position: relative;
-  min-height: 460px;
-  border-radius: 16px;
-  overflow: hidden;
-  background-size: cover;
-  background-position: center 30%;
-  background-repeat: no-repeat;
-  background-color: var(--bg-dark, #0a0a0a);
-  display: flex;
-  align-items: flex-end;
-  padding: 40px 36px;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-.categories__banner:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-}
-
-.categories__banner-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.05) 0%,
-    rgba(0, 0, 0, 0.15) 40%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
-  z-index: 1;
-}
-
-.categories__banner-content {
-  position: relative;
-  z-index: 2;
-  color: #ffffff;
-}
-
-.categories__banner-eyebrow {
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-  color: var(--gold);
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.categories__banner h3 {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 2.5vw, 2rem);
-  color: #ffffff;
-  line-height: 1.15;
-  margin-bottom: 24px;
-  font-weight: 600;
-}
-
-.categories__banner button {
-  background: transparent;
-  color: #ffffff;
-  border: 1.5px solid var(--gold);
-  padding: 11px 26px;
-  border-radius: 999px;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: all 0.3s ease;
-}
-
-.categories__banner button svg {
-  stroke: var(--gold);
-  transition: transform 0.3s ease;
-}
-
-.categories__banner button:hover {
-  background-color: var(--gold);
-  color: #000000;
-  border-color: var(--gold);
-}
-
-.categories__banner button:hover svg {
-  stroke: #000000;
-  transform: translateX(3px);
 }
 
 /* ==========================================
@@ -482,20 +385,5 @@ div[class*="view"] {
 @media (max-width: 768px) {
   .categories__grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .categories__banners {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .categories__banner {
-    min-height: 340px;
-    padding: 28px 24px;
-  }
-
-  .categories__banner h3 {
-    font-size: 1.5rem;
-    margin-bottom: 16px;
   }
 }

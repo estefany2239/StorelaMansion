@@ -175,6 +175,8 @@ export default function Usuarios() {
     contraseña: ""
   });
 
+  const [errores, setErrores] = useState({});
+
   // =====================================================
   // ROLES
   // =====================================================
@@ -322,6 +324,8 @@ export default function Usuarios() {
 
     });
 
+    setErrores({});
+
     setModoEdicion(false);
 
     setMostrarModal(true);
@@ -356,6 +360,8 @@ export default function Usuarios() {
 
     });
 
+    setErrores({});
+
     setModoEdicion(true);
 
     setMostrarModal(true);
@@ -377,6 +383,22 @@ export default function Usuarios() {
         [campo]: valor
       })
     );
+
+    if (String(valor).trim()) {
+      setErrores(
+        (actuales) => {
+          if (!actuales[campo]) {
+            return actuales;
+          }
+
+          const nuevos = {
+            ...actuales
+          };
+          delete nuevos[campo];
+          return nuevos;
+        }
+      );
+    }
 
   };
 
@@ -420,30 +442,82 @@ export default function Usuarios() {
 
   const guardarUsuario = () => {
 
-    if (
-      !formulario.nombre.trim() ||
-      !formulario.correo.trim() ||
-      !formulario.telefono.trim() ||
-      !formulario.rol ||
-      !formulario.direccion.trim()
-    ) {
+    const nuevosErrores = {};
 
-      alert(
-        "Completa todos los campos obligatorios."
+    if (
+      !formulario.nombre.trim()
+    ) {
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+
+      const nombreNormalizado =
+        formulario.nombre
+          .trim()
+          .toLowerCase();
+
+      const yaExiste = usuarios.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombreNormalizado &&
+          (!modoEdicion ||
+            item.id !== formulario.id)
       );
 
-      return;
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
 
+    }
+
+    if (
+      formulario.nombre.trim().length > 20
+    ) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    }
+
+    if (
+      !formulario.correo.trim()
+    ) {
+      nuevosErrores.correo = "Este campo es obligatorio.";
+    }
+
+    if (
+      !formulario.telefono.trim()
+    ) {
+      nuevosErrores.telefono = "Este campo es obligatorio.";
+    }
+
+    if (
+      formulario.telefono.length > 10
+    ) {
+      nuevosErrores.telefono = "El teléfono no puede superar los 10 dígitos.";
+    }
+
+    if (
+      !formulario.rol
+    ) {
+      nuevosErrores.rol = "Selecciona un rol.";
+    }
+
+    if (
+      !formulario.direccion.trim()
+    ) {
+      nuevosErrores.direccion = "Este campo es obligatorio.";
     }
 
     if (
       !modoEdicion &&
       !formulario.contraseña.trim()
     ) {
+      nuevosErrores.contraseña = "Ingresa una contraseña para el usuario.";
+    }
 
-      alert(
-        "Ingresa una contraseña para el usuario."
-      );
+    setErrores(nuevosErrores);
+
+    if (
+      Object.keys(nuevosErrores).length > 0
+    ) {
 
       return;
 
@@ -464,7 +538,6 @@ export default function Usuarios() {
 
       setUsuarios(
         (actuales) => [
-          ...actuales,
           {
             id:
               formulario.id,
@@ -491,7 +564,8 @@ export default function Usuarios() {
               formulario.direccion,
 
             permisos
-          }
+          },
+          ...actuales
         ]
       );
 
@@ -1023,16 +1097,27 @@ export default function Usuarios() {
                   <input
                     type="text"
                     placeholder="Nombre completo"
+                    maxLength={20}
                     value={
                       formulario.nombre
                     }
+                    className={`input ${errores.nombre ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "nombre",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.nombre && (
+                    <span className="error-text">
+                      {errores.nombre}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1048,6 +1133,7 @@ export default function Usuarios() {
                     value={
                       formulario.correo
                     }
+                    className={`input ${errores.correo ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "correo",
@@ -1055,6 +1141,12 @@ export default function Usuarios() {
                       )
                     }
                   />
+
+                  {errores.correo && (
+                    <span className="error-text">
+                      {errores.correo}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1073,16 +1165,27 @@ export default function Usuarios() {
                   <input
                     type="text"
                     placeholder="+57 300 000 0000"
+                    maxLength={10}
                     value={
                       formulario.telefono
                     }
+                    className={`input ${errores.telefono ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "telefono",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^0-9]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.telefono && (
+                    <span className="error-text">
+                      {errores.telefono}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1096,6 +1199,7 @@ export default function Usuarios() {
                     value={
                       formulario.rol
                     }
+                    className={`input ${errores.rol ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "rol",
@@ -1121,6 +1225,12 @@ export default function Usuarios() {
 
                   </select>
 
+                  {errores.rol && (
+                    <span className="error-text">
+                      {errores.rol}
+                    </span>
+                  )}
+
                 </div>
 
               </div>
@@ -1145,6 +1255,7 @@ export default function Usuarios() {
                     value={
                       formulario.contraseña
                     }
+                    className={`input ${errores.contraseña ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "contraseña",
@@ -1152,6 +1263,12 @@ export default function Usuarios() {
                       )
                     }
                   />
+
+                  {errores.contraseña && (
+                    <span className="error-text">
+                      {errores.contraseña}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1192,6 +1309,7 @@ export default function Usuarios() {
                   value={
                     formulario.direccion
                   }
+                  className={`input ${errores.direccion ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "direccion",
@@ -1199,6 +1317,12 @@ export default function Usuarios() {
                     )
                   }
                 />
+
+                {errores.direccion && (
+                  <span className="error-text">
+                    {errores.direccion}
+                  </span>
+                )}
 
               </div>
 

@@ -148,6 +148,8 @@ id: "CLI-005",
     fecha: "2026-09-07"
   });
 
+  const [errores, setErrores] = useState({});
+
 
   // =====================================================
   // BUSCAR CLIENTES
@@ -260,6 +262,8 @@ id: "CLI-005",
 
     });
 
+    setErrores({});
+
     setModoEdicion(false);
 
     setMostrarModal(true);
@@ -291,6 +295,8 @@ id: "CLI-005",
 
     });
 
+    setErrores({});
+
     setModoEdicion(true);
 
     setMostrarModal(true);
@@ -313,6 +319,22 @@ id: "CLI-005",
         [campo]: valor
       })
     );
+
+    if (String(valor).trim()) {
+      setErrores(
+        (actuales) => {
+          if (!actuales[campo]) {
+            return actuales;
+          }
+
+          const nuevos = {
+            ...actuales
+          };
+          delete nuevos[campo];
+          return nuevos;
+        }
+      );
+    }
 
   };
 
@@ -367,16 +389,69 @@ id: "CLI-005",
 
   const guardarCliente = () => {
 
+    const nuevosErrores = {};
+
     if (
-      !formulario.nombre.trim() ||
-      !formulario.correo.trim() ||
-      !formulario.telefono.trim() ||
+      !formulario.nombre.trim()
+    ) {
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+
+      const nombreNormalizado =
+        formulario.nombre
+          .trim()
+          .toLowerCase();
+
+      const yaExiste = clientes.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombreNormalizado &&
+          (!modoEdicion ||
+            item.id !== formulario.id)
+      );
+
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
+
+    }
+
+    if (
+      formulario.nombre.trim().length > 20
+    ) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    }
+
+    if (
+      !formulario.correo.trim()
+    ) {
+      nuevosErrores.correo = "Este campo es obligatorio.";
+    }
+
+    if (
+      !formulario.telefono.trim()
+    ) {
+      nuevosErrores.telefono = "Este campo es obligatorio.";
+    }
+
+    if (
+      formulario.telefono.length > 10
+    ) {
+      nuevosErrores.telefono = "El teléfono no puede superar los 10 dígitos.";
+    }
+
+    if (
       !formulario.direccion.trim()
     ) {
+      nuevosErrores.direccion = "Este campo es obligatorio.";
+    }
 
-      alert(
-        "Completa los campos obligatorios."
-      );
+    setErrores(nuevosErrores);
+
+    if (
+      Object.keys(nuevosErrores).length > 0
+    ) {
 
       return;
 
@@ -420,8 +495,8 @@ if (modoEdicion) {
 
       setClientes(
         (actuales) => [
-          ...actuales,
-          nuevoCliente
+          nuevoCliente,
+          ...actuales
         ]
       );
 
@@ -928,16 +1003,27 @@ if (modoEdicion) {
                   <input
                     type="text"
                     placeholder="Nombre completo"
+                    maxLength={20}
                     value={
                       formulario.nombre
                     }
+                    className={`input ${errores.nombre ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "nombre",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.nombre && (
+                    <span className="error-text">
+                      {errores.nombre}
+                    </span>
+                  )}
 
                 </div>
 
@@ -954,6 +1040,7 @@ if (modoEdicion) {
                     value={
                       formulario.correo
                     }
+                    className={`input ${errores.correo ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "correo",
@@ -961,6 +1048,12 @@ if (modoEdicion) {
                       )
                     }
                   />
+
+                  {errores.correo && (
+                    <span className="error-text">
+                      {errores.correo}
+                    </span>
+                  )}
 
                 </div>
 
@@ -980,16 +1073,27 @@ if (modoEdicion) {
                   <input
                     type="text"
                     placeholder="+57 300 000 0000"
+                    maxLength={10}
                     value={
                       formulario.telefono
                     }
+                    className={`input ${errores.telefono ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "telefono",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^0-9]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.telefono && (
+                    <span className="error-text">
+                      {errores.telefono}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1032,6 +1136,7 @@ if (modoEdicion) {
                   value={
                     formulario.direccion
                   }
+                  className={`input ${errores.direccion ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "direccion",
@@ -1039,6 +1144,12 @@ if (modoEdicion) {
                     )
                   }
                 />
+
+                {errores.direccion && (
+                  <span className="error-text">
+                    {errores.direccion}
+                  </span>
+                )}
 
               </div>
 

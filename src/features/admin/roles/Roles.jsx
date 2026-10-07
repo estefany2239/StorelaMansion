@@ -156,6 +156,8 @@ export default function Roles({ rolesDisponibles = [], user }) {
     permisos: [],
   });
 
+  const [errores, setErrores] = useState({});
+
   /* =====================================================
      FILTRADO
      ===================================================== */
@@ -237,6 +239,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
       permisos: [],
     });
 
+    setErrores({});
     setModal("crear");
   };
 
@@ -266,6 +269,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
         : [],
     });
 
+    setErrores({});
     setModal("editar");
   };
 
@@ -292,13 +296,35 @@ export default function Roles({ rolesDisponibles = [], user }) {
      MANEJAR CAMPOS
      ===================================================== */
 
+  const limpiarError = (campo) => {
+    setErrores((prev) => {
+      if (!prev[campo]) return prev;
+
+      const nuevos = { ...prev };
+      delete nuevos[campo];
+      return nuevos;
+    });
+  };
+
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
+    const valorFiltrado =
+      name === "nombre"
+        ? value.replace(
+            /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+            ""
+          )
+        : value;
+
     setRolForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: valorFiltrado,
     }));
+
+    if (String(valorFiltrado).trim()) {
+      limpiarError(name);
+    }
   };
 
   /* =====================================================
@@ -315,6 +341,8 @@ export default function Roles({ rolesDisponibles = [], user }) {
     obtenerPrivilegiosModulo(modulo).length > 0;
 
   const manejarAccesoModulo = (modulo) => {
+    limpiarError("permisos");
+
     setRolForm((prev) => {
       const permisosActuales = Array.isArray(prev.permisos)
         ? prev.permisos
@@ -351,6 +379,8 @@ export default function Roles({ rolesDisponibles = [], user }) {
   };
 
   const manejarPrivilegio = (modulo, privilegio) => {
+    limpiarError("permisos");
+
     setRolForm((prev) => {
       const permisosActuales = Array.isArray(prev.permisos)
         ? prev.permisos
@@ -431,15 +461,39 @@ export default function Roles({ rolesDisponibles = [], user }) {
   const guardarRol = (e) => {
     e.preventDefault();
 
+    const nuevosErrores = {};
+
     if (!rolForm.nombre.trim()) {
-      alert("Ingrese el nombre del rol.");
-      return;
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+      const nombreNormalizado =
+        rolForm.nombre.trim().toLowerCase();
+
+      const yaExiste = roles.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombreNormalizado &&
+          (modal !== "editar" ||
+            item.id !== rolForm.id)
+      );
+
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
+    }
+
+    if (rolForm.nombre.trim().length > 20) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
     }
 
     if (!Array.isArray(rolForm.permisos) || rolForm.permisos.length === 0) {
-      alert("Debe seleccionar al menos un permiso.");
-      return;
+      nuevosErrores.permisos = "Debe seleccionar al menos un permiso.";
     }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
 
     if (modal === "editar") {
       setConfirmarEdicion(true);
@@ -455,7 +509,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
         estado: "Activo",
       };
 
-      setRoles((prev) => [...prev, nuevoRol]);
+      setRoles((prev) => [nuevoRol, ...prev]);
 
       mostrarToast("Rol creado con éxito");
     }
@@ -850,9 +904,17 @@ export default function Roles({ rolesDisponibles = [], user }) {
                       type="text"
                       name="nombre"
                       placeholder="Ej. Vendedor"
+                      maxLength={20}
                       value={rolForm.nombre}
                       onChange={manejarCambio}
+                      className={`input ${errores.nombre ? "input-error" : ""}`}
                     />
+
+                    {errores.nombre && (
+                      <span className="error-text">
+                        {errores.nombre}
+                      </span>
+                    )}
 
                   </div>
 
@@ -951,9 +1013,15 @@ export default function Roles({ rolesDisponibles = [], user }) {
                          </div>
                        );
                      })}
- 
+
                    </div>
- 
+
+                   {errores.permisos && (
+                     <span className="error-text">
+                       {errores.permisos}
+                     </span>
+                   )}
+
                  </div>
 
 

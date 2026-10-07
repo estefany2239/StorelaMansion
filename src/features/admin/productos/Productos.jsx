@@ -179,6 +179,8 @@ export default function Productos() {
     imagen: ""
   });
 
+  const [errores, setErrores] = useState({});
+
   // =====================================================
   // OPCIONES
   // =====================================================
@@ -298,6 +300,7 @@ export default function Productos() {
       imagen: ""
     });
 
+    setErrores({});
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -319,6 +322,7 @@ export default function Productos() {
       imagen: producto.imagen
     });
 
+    setErrores({});
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -332,6 +336,16 @@ export default function Productos() {
       ...actual,
       [campo]: valor
     }));
+
+    if (String(valor).trim()) {
+      setErrores((actuales) => {
+        if (!actuales[campo]) return actuales;
+
+        const nuevos = { ...actuales };
+        delete nuevos[campo];
+        return nuevos;
+      });
+    }
   };
 
   // =====================================================
@@ -339,18 +353,46 @@ export default function Productos() {
   // =====================================================
 
   const guardarProducto = () => {
-    if (
-      !formulario.nombre.trim() ||
-      !formulario.categoria ||
-      !formulario.talla ||
-      !formulario.color
-    ) {
-      alert(
-        "Completa todos los campos obligatorios."
+    const nuevosErrores = {};
+
+    if (!formulario.nombre.trim()) {
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else {
+      const nombreNormalizado =
+        formulario.nombre.trim().toLowerCase();
+
+      const yaExiste = productos.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombreNormalizado &&
+          (!modoEdicion || item.id !== formulario.id)
       );
 
-      return;
+      if (yaExiste) {
+        nuevosErrores.nombre =
+          "Ya existe un registro con este nombre.";
+      }
     }
+
+    if (formulario.nombre.trim().length > 20) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    }
+
+    if (!formulario.categoria) {
+      nuevosErrores.categoria = "Selecciona una categoría.";
+    }
+
+    if (!formulario.talla) {
+      nuevosErrores.talla = "Selecciona una talla.";
+    }
+
+    if (!formulario.color) {
+      nuevosErrores.color = "Selecciona un color.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
 
     // STOCK NO NEGATIVO
     if (Number(formulario.stock) < 0) {
@@ -376,7 +418,6 @@ export default function Productos() {
     }
 
     setProductos((actuales) => [
-      ...actuales,
       {
         id: formulario.id,
         nombre: formulario.nombre,
@@ -387,7 +428,8 @@ export default function Productos() {
         stock: Number(formulario.stock),
         estado: formulario.estado,
         imagen: formulario.imagen
-      }
+      },
+      ...actuales
     ]);
 
     mostrarToast("Producto creado con éxito");
@@ -566,8 +608,10 @@ export default function Productos() {
 
           <thead>
             <tr>
+              <th>IMAGEN</th>
               <th>ID PRODUCTO</th>
               <th>NOMBRE</th>
+              <th>PRECIO</th>
               <th>STOCK</th>
               <th>ESTADO</th>
               <th>ACCIONES</th>
@@ -580,6 +624,19 @@ export default function Productos() {
               <tr key={producto.id}>
 
                 <td>
+                  {producto.imagen ? (
+                    <img
+                      className="producto-image"
+                      src={producto.imagen}
+                      alt={producto.nombre}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="producto-image producto-image-empty"></div>
+                  )}
+                </td>
+
+                <td>
                   <strong className="producto-id">
                     {producto.id}
                   </strong>
@@ -588,6 +645,12 @@ export default function Productos() {
                 <td>
                   <span className="producto-nombre">
                     {producto.nombre}
+                  </span>
+                </td>
+
+                <td>
+                  <span className="producto-price">
+                    {formatearPrecio(producto.precio)}
                   </span>
                 </td>
 
@@ -691,7 +754,7 @@ export default function Productos() {
             {productosFiltrados.length === 0 && (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="7"
                   className="productos-empty"
                 >
                   Producto no encontrado en el sistema.
@@ -793,14 +856,25 @@ export default function Productos() {
                 <input
                   type="text"
                   placeholder="Nombre del producto"
+                  maxLength={20}
                   value={formulario.nombre}
+                  className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "nombre",
-                      e.target.value
+                      e.target.value.replace(
+                        /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                        ""
+                      )
                     )
                   }
                 />
+
+                {errores.nombre && (
+                  <span className="error-text">
+                    {errores.nombre}
+                  </span>
+                )}
 
               </div>
 
@@ -814,6 +888,7 @@ export default function Productos() {
 
                   <select
                     value={formulario.categoria}
+                    className={`input ${errores.categoria ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "categoria",
@@ -835,6 +910,12 @@ export default function Productos() {
                     ))}
                   </select>
 
+                  {errores.categoria && (
+                    <span className="error-text">
+                      {errores.categoria}
+                    </span>
+                  )}
+
                 </div>
 
               </div>
@@ -849,6 +930,7 @@ export default function Productos() {
 
                   <select
                     value={formulario.talla}
+                    className={`input ${errores.talla ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "talla",
@@ -870,6 +952,12 @@ export default function Productos() {
                     ))}
                   </select>
 
+                  {errores.talla && (
+                    <span className="error-text">
+                      {errores.talla}
+                    </span>
+                  )}
+
                 </div>
 
                 <div className="producto-form-group">
@@ -878,6 +966,7 @@ export default function Productos() {
 
                   <select
                     value={formulario.color}
+                    className={`input ${errores.color ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "color",
@@ -899,6 +988,12 @@ export default function Productos() {
                     ))}
                   </select>
 
+                  {errores.color && (
+                    <span className="error-text">
+                      {errores.color}
+                    </span>
+                  )}
+
                 </div>
 
               </div>
@@ -917,12 +1012,17 @@ export default function Productos() {
                     type="number"
                     min="0"
                     value={formulario.precio}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "precio",
-                        e.target.value
-                      )
-                    }
+onChange={(e) =>
+                    cambiarCampo(
+                      "precio",
+                      e.target.value
+                        .replace(
+                          /[^0-9.]/g,
+                          ""
+                        )
+                        .replace(/(\..*)\./g, "$1")
+                    )
+                  }
                   />
 
                 </div>
@@ -938,9 +1038,15 @@ export default function Productos() {
                     min="0"
                     value={formulario.stock}
                     onChange={(e) => {
+                      const soloDigitos =
+                        e.target.value.replace(
+                          /[^0-9]/g,
+                          ""
+                        );
+
                       const valor = Math.max(
                         0,
-                        Number(e.target.value)
+                        Number(soloDigitos)
                       );
 
                       cambiarCampo(

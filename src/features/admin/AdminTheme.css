@@ -1166,3 +1166,23 @@
   background: rgba(37, 99, 235, 0.10) !important;
 }
 
+
+/* =========================================================
+   VALIDACION DE FORMULARIOS (CREAR/EDITAR)
+   ========================================================= */
+
+.input-error {
+  border-color: #e53935 !important;
+}
+
+.input-error:focus,
+.input-error:focus-visible {
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+}
+
+.error-text {
+  color: #e53935;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}

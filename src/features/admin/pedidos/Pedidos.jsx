@@ -350,6 +350,8 @@ export default function Pedidos({ vendedorId }) {
     productos: []
   });
 
+  const [errores, setErrores] = useState({});
+
 
   // =====================================================
   // FORMATEAR PRECIO
@@ -572,6 +574,8 @@ export default function Pedidos({ vendedorId }) {
     });
 
 
+    setErrores({});
+
     setModoEdicion(false);
 
     setMostrarModal(true);
@@ -617,6 +621,8 @@ export default function Pedidos({ vendedorId }) {
     });
 
 
+    setErrores({});
+
     setModoEdicion(true);
 
     setMostrarModal(true);
@@ -639,6 +645,20 @@ export default function Pedidos({ vendedorId }) {
         [campo]: valor
       })
     );
+
+    if (String(valor).trim()) {
+      setErrores(
+        (actuales) => {
+          if (!actuales[campo]) {
+            return actuales;
+          }
+
+          const nuevos = { ...actuales };
+          delete nuevos[campo];
+          return nuevos;
+        }
+      );
+    }
 
   };
 
@@ -737,16 +757,38 @@ export default function Pedidos({ vendedorId }) {
 
   const guardarPedido = () => {
 
-    if (
-      !formulario.idCliente ||
-      !formulario.cliente ||
-      !formulario.fecha ||
-      !formulario.direccion
-    ) {
+    const nuevosErrores = {};
 
-      alert(
-        "Completa los campos obligatorios."
-      );
+    if (!formulario.idCliente) {
+      nuevosErrores.idCliente = "Selecciona un cliente.";
+    }
+
+    if (!formulario.cliente) {
+      nuevosErrores.cliente = "Selecciona un cliente válido.";
+    }
+
+    if (!formulario.fecha) {
+      nuevosErrores.fecha = "Selecciona una fecha.";
+    }
+
+    if (!formulario.direccion) {
+      nuevosErrores.direccion = "Este campo es obligatorio.";
+    }
+
+    const productoNombreLargo = formulario.productos.find(
+      (producto) => producto.nombre.trim().length > 20
+    );
+
+    if (productoNombreLargo) {
+      nuevosErrores.productos =
+        "El nombre de cada producto no puede superar los 20 caracteres.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (
+      Object.keys(nuevosErrores).length > 0
+    ) {
 
       return;
 
@@ -808,8 +850,8 @@ export default function Pedidos({ vendedorId }) {
 
       setPedidos(
         (actuales) => [
-          ...actuales,
-          nuevoPedido
+          nuevoPedido,
+          ...actuales
         ]
       );
 
@@ -1762,6 +1804,7 @@ export default function Pedidos({ vendedorId }) {
                     value={
                       formulario.idCliente
                     }
+                    className={`input ${errores.idCliente ? "input-error" : ""}`}
                     onChange={(e) => {
 
                       const cliente =
@@ -1783,6 +1826,15 @@ export default function Pedidos({ vendedorId }) {
                               ? cliente.nombre
                               : ""
                         })
+                      );
+
+                      setErrores(
+                        (actuales) => {
+                          const nuevos = { ...actuales };
+                          delete nuevos.idCliente;
+                          delete nuevos.cliente;
+                          return nuevos;
+                        }
                       );
 
                     }}
@@ -1809,6 +1861,12 @@ export default function Pedidos({ vendedorId }) {
 
                   </select>
 
+                  {errores.idCliente && (
+                    <span className="error-text">
+                      {errores.idCliente}
+                    </span>
+                  )}
+
                 </div>
 
 
@@ -1825,7 +1883,14 @@ export default function Pedidos({ vendedorId }) {
                     }
                     readOnly
                     placeholder="Cliente"
+                    className={`input ${errores.cliente ? "input-error" : ""}`}
                   />
+
+                  {errores.cliente && (
+                    <span className="error-text">
+                      {errores.cliente}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1847,6 +1912,7 @@ export default function Pedidos({ vendedorId }) {
                     value={
                       formulario.fecha
                     }
+                    className={`input ${errores.fecha ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "fecha",
@@ -1854,6 +1920,12 @@ export default function Pedidos({ vendedorId }) {
                       )
                     }
                   />
+
+                  {errores.fecha && (
+                    <span className="error-text">
+                      {errores.fecha}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1909,6 +1981,7 @@ export default function Pedidos({ vendedorId }) {
                   value={
                     formulario.direccion
                   }
+                  className={`input ${errores.direccion ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "direccion",
@@ -1916,6 +1989,12 @@ export default function Pedidos({ vendedorId }) {
                     )
                   }
                 />
+
+                {errores.direccion && (
+                  <span className="error-text">
+                    {errores.direccion}
+                  </span>
+                )}
 
               </div>
 
@@ -1943,6 +2022,12 @@ export default function Pedidos({ vendedorId }) {
 
               </div>
 
+
+              {errores.productos && (
+                <span className="error-text">
+                  {errores.productos}
+                </span>
+              )}
 
               {formulario.productos.length ===
                 0 ? (
@@ -2002,12 +2087,16 @@ export default function Pedidos({ vendedorId }) {
                               value={
                                 producto.nombre
                               }
+                              maxLength={20}
                               placeholder="Nombre del producto"
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,
                                   "nombre",
-                                  e.target.value
+                                  e.target.value.replace(
+                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                                    ""
+                                  )
                                 )
                               }
                             />
@@ -2031,7 +2120,10 @@ export default function Pedidos({ vendedorId }) {
                                 actualizarProducto(
                                   index,
                                   "cantidad",
-                                  e.target.value
+                                  e.target.value.replace(
+                                    /[^0-9]/g,
+                                    ""
+                                  )
                                 )
                               }
                             />
@@ -2079,7 +2171,10 @@ export default function Pedidos({ vendedorId }) {
                                 actualizarProducto(
                                   index,
                                   "color",
-                                  e.target.value
+                                  e.target.value.replace(
+                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                                    ""
+                                  )
                                 )
                               }
                             />
@@ -2104,6 +2199,14 @@ export default function Pedidos({ vendedorId }) {
                                   index,
                                   "precio",
                                   e.target.value
+                                    .replace(
+                                      /[^0-9.]/g,
+                                      ""
+                                    )
+                                    .replace(
+                                      /(\..*)\./g,
+                                      "$1"
+                                    )
                                 )
                               }
                             />
@@ -2802,6 +2905,14 @@ export default function Pedidos({ vendedorId }) {
                             ...actual,
                             valor:
                               e.target.value
+                                .replace(
+                                  /[^0-9.]/g,
+                                  ""
+                                )
+                                .replace(
+                                  /(\..*)\./g,
+                                  "$1"
+                                )
                           })
                         )
                       }

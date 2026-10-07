@@ -165,6 +165,8 @@ export default function Domicilios() {
     fecha: "2026-09-07"
   });
 
+  const [errores, setErrores] = useState({});
+
 
   // =====================================================
   // FORMATEAR PRECIO
@@ -327,6 +329,8 @@ export default function Domicilios() {
     });
 
 
+    setErrores({});
+
     setModoEdicion(false);
 
     setMostrarModal(true);
@@ -376,6 +380,8 @@ export default function Domicilios() {
     });
 
 
+    setErrores({});
+
     setModoEdicion(true);
 
     setMostrarModal(true);
@@ -386,6 +392,20 @@ export default function Domicilios() {
   // =====================================================
   // CAMBIAR CAMPO
   // =====================================================
+
+  const limpiarError = (campo) => {
+    setErrores(
+      (actuales) => {
+        if (!actuales[campo]) {
+          return actuales;
+        }
+
+        const nuevos = { ...actuales };
+        delete nuevos[campo];
+        return nuevos;
+      }
+    );
+  };
 
   const cambiarCampo = (
     campo,
@@ -399,6 +419,10 @@ export default function Domicilios() {
       })
     );
 
+    if (String(valor).trim()) {
+      limpiarError(campo);
+    }
+
   };
 
 
@@ -407,6 +431,16 @@ export default function Domicilios() {
   // =====================================================
 
   const seleccionarPedido = (idPedido) => {
+
+    const camposRelacionados = [
+      "idPedido",
+      "idCliente",
+      "cliente",
+      "direccion",
+      "ciudad"
+    ];
+
+    camposRelacionados.forEach(limpiarError);
 
     const pedido =
       pedidosDisponibles.find(
@@ -465,18 +499,41 @@ export default function Domicilios() {
 
   const guardarDomicilio = () => {
 
-    if (
-      !formulario.idPedido ||
-      !formulario.idCliente ||
-      !formulario.cliente ||
-      !formulario.direccion ||
-      !formulario.ciudad ||
-      !formulario.responsable
-    ) {
+    const nuevosErrores = {};
 
-      alert(
-        "Completa los campos obligatorios."
-      );
+    if (!formulario.idPedido) {
+      nuevosErrores.idPedido = "Selecciona un pedido.";
+    }
+
+    if (!formulario.idCliente) {
+      nuevosErrores.idCliente = "Selecciona un pedido válido.";
+    }
+
+    if (!formulario.cliente) {
+      nuevosErrores.cliente = "Este campo es obligatorio.";
+    }
+
+    if (!formulario.direccion) {
+      nuevosErrores.direccion = "Este campo es obligatorio.";
+    }
+
+    if (!formulario.ciudad) {
+      nuevosErrores.ciudad = "Este campo es obligatorio.";
+    }
+
+    if (!formulario.responsable) {
+      nuevosErrores.responsable = "Este campo es obligatorio.";
+    }
+
+    if (formulario.responsable.trim().length > 20) {
+      nuevosErrores.responsable = "El nombre del responsable no puede superar los 20 caracteres.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (
+      Object.keys(nuevosErrores).length > 0
+    ) {
 
       return;
 
@@ -530,8 +587,8 @@ export default function Domicilios() {
 
       setDomicilios(
         (actuales) => [
-          ...actuales,
-          nuevoDomicilio
+          nuevoDomicilio,
+          ...actuales
         ]
       );
 
@@ -1109,6 +1166,7 @@ export default function Domicilios() {
                     value={
                       formulario.idPedido
                     }
+                    className={`input ${errores.idPedido ? "input-error" : ""}`}
                     onChange={(e) =>
                       seleccionarPedido(
                         e.target.value
@@ -1137,6 +1195,12 @@ export default function Domicilios() {
 
                   </select>
 
+                  {errores.idPedido && (
+                    <span className="error-text">
+                      {errores.idPedido}
+                    </span>
+                  )}
+
                 </div>
 
 
@@ -1153,7 +1217,14 @@ export default function Domicilios() {
                     }
                     readOnly
                     placeholder="ID cliente"
+                    className={`input ${errores.idCliente ? "input-error" : ""}`}
                   />
+
+                  {errores.idCliente && (
+                    <span className="error-text">
+                      {errores.idCliente}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1175,7 +1246,14 @@ export default function Domicilios() {
                   }
                   readOnly
                   placeholder="Cliente"
+                  className={`input ${errores.cliente ? "input-error" : ""}`}
                 />
+
+                {errores.cliente && (
+                  <span className="error-text">
+                    {errores.cliente}
+                  </span>
+                )}
 
               </div>
 
@@ -1196,6 +1274,7 @@ export default function Domicilios() {
                     value={
                       formulario.direccion
                     }
+                    className={`input ${errores.direccion ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "direccion",
@@ -1203,6 +1282,12 @@ export default function Domicilios() {
                       )
                     }
                   />
+
+                  {errores.direccion && (
+                    <span className="error-text">
+                      {errores.direccion}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1219,13 +1304,23 @@ export default function Domicilios() {
                     value={
                       formulario.ciudad
                     }
+                    className={`input ${errores.ciudad ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "ciudad",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.ciudad && (
+                    <span className="error-text">
+                      {errores.ciudad}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1252,6 +1347,11 @@ export default function Domicilios() {
                       cambiarCampo(
                         "valor",
                         e.target.value
+                          .replace(
+                            /[^0-9.]/g,
+                            ""
+                          )
+                          .replace(/(\..*)\./g, "$1")
                       )
                     }
                   />
@@ -1268,16 +1368,27 @@ export default function Domicilios() {
                   <input
                     type="text"
                     placeholder="Nombre del responsable"
+                    maxLength={20}
                     value={
                       formulario.responsable
                     }
+                    className={`input ${errores.responsable ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "responsable",
-                        e.target.value
+                        e.target.value.replace(
+                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                          ""
+                        )
                       )
                     }
                   />
+
+                  {errores.responsable && (
+                    <span className="error-text">
+                      {errores.responsable}
+                    </span>
+                  )}
 
                 </div>
 
