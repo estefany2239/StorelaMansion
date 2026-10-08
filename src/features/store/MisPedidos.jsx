@@ -175,7 +175,7 @@ export default function MisPedidos({ pedidos = [], onBack }) {
 
         <div className="mis-pedidos-topbar">
           <button className="mp-back-btn" onClick={onBack}>
-            <ArrowLeft size={16} /> Volver al inicio
+            <ArrowLeft size={16} /> Seguir comprando
           </button>
         </div>
 

@@ -584,6 +584,21 @@
   background: #c2a878;
 }
 
+/* ---------- SIN BARRA VISIBLE EN EL PANEL (el scroll sigue activo) ---------- */
+.admin-container,
+.admin-container * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.admin-container::-webkit-scrollbar,
+.admin-container ::-webkit-scrollbar,
+.admin-container *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
 /* =========================================================
    CORRECCIONES FINALES
    1. El modo claro conserva el diseño original.

@@ -35,6 +35,20 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ==========================================
+   2b. SCROLL SIN BARRA VISIBLE (la página sigue bajando)
+   ========================================== */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 main {
   width: 100%;
   flex: 1;

@@ -1175,12 +1175,6 @@
 
   flex-direction:
     column;
-
-  max-height:
-    420px;
-
-  overflow-y:
-    auto;
 }
 
 .summary-product {
@@ -1508,29 +1502,6 @@
 
 
 /* =========================================================
-   SCROLL
-========================================================= */
-
-.summary-products::-webkit-scrollbar {
-  width:
-    5px;
-}
-
-.summary-products::-webkit-scrollbar-track {
-  background:
-    transparent;
-}
-
-.summary-products::-webkit-scrollbar-thumb {
-  background:
-    #d4af37;
-
-  border-radius:
-    10px;
-}
-
-
-/* =========================================================
    RESPONSIVE
 ========================================================= */
 
@@ -1635,4 +1606,63 @@
       13px;
   }
 
+}
+
+
+/* =========================================================
+   ERRORES DE VALIDACIÓN
+   (campos en rojo + texto bajo el campo)
+========================================================= */
+
+.payment-page .has-error input {
+  border-color:
+    #d92d20 !important;
+
+  box-shadow:
+    0 0 0 3px rgba(217, 45, 32, 0.15) !important;
+}
+
+.payment-page.payment-light .form-group.has-error input {
+  border-color:
+    #d92d20 !important;
+}
+
+.payment-page.payment-dark .form-group.has-error input {
+  border-color:
+    #f97066 !important;
+}
+
+.payment-page .proof-upload.has-error .upload-proof-btn {
+  border-color:
+    #d92d20 !important;
+
+  box-shadow:
+    0 0 0 3px rgba(217, 45, 32, 0.15) !important;
+}
+
+.payment-page .has-error .payment-method {
+  border-color:
+    #d92d20 !important;
+}
+
+.field-error {
+  display: block;
+
+  margin-top: 8px;
+
+  color: #d92d20;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  line-height: 1.4;
+}
+
+.payment-dark .field-error {
+  color: #f97066;
+}
+
+.payment-page .has-error {
+  scroll-margin-top: 24px;
 }

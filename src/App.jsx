@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 import SplashScreen from "./components/splash/SplashScreen";
 
 import Navbar from "./components/layout/Navbar";
-import ClientNavbar from "./components/layout/ClientNavbar";
 import Hero from "./features/home/Hero";
 import Categories from "./features/categories/Categories";
 import FeaturedProducts from "./features/home/products/FeaturedProducts";
@@ -17,10 +16,24 @@ import ForgotPassword from "./features/auth/ForgotPassword";
 import WomenCollection from "./features/Mujer/WomenCollection";
 import MenCollection from "./features/Hombre/MenCollection";
 
-import StoreDashboard from "./features/store/StoreDashboard";
 import CartDrawer from "./components/cart/CartDrawer";
 import PaymentView from "./components/payment/PaymentView";
+import ClientNavbar from "./components/layout/ClientNavbar";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
+
+// VISTAS DEL CLIENTE LOGUEADO
+import MisPedidos from "./features/store/MisPedidos";
+import Configuracion from "./features/store/Configuracion";
+import CompraExitosa from "./features/store/CompraExitosa";
+import {
+  pedidosClienteIniciales,
+  pedidosDeCliente
+} from "./features/store/pedidosCliente";
+import {
+  cargarPerfilCliente,
+  cargarDireccionesCliente,
+  cargarPreferenciasCliente
+} from "./features/store/configuracionCliente";
 
 // PANEL ADMINISTRATIVO
 import AdminLayout from "./features/admin/AdminLayout";
@@ -44,11 +57,6 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState("home");
   const [selectedCategory, setSelectedCategory] = useState(null);
-
-  // Vista específica en la que debe abrir el dashboard cliente.
-  // Solo el dropdown del perfil en pago la fija ("mis-pedidos"/"configuracion");
-  // cualquier otra entrada al dashboard la resetea a "dashboard".
-  const [dashInitView, setDashInitView] = useState("dashboard");
 
 
   // ==========================================
@@ -82,6 +90,64 @@ export default function App() {
   // ==========================================
 
   const [user, setUser] = useState(null);
+
+
+  // ==========================================
+  // PEDIDOS DEL CLIENTE (estado + localStorage)
+  // Es la MISMA lista que lee MisPedidos.jsx.
+  // El pedido nuevo se agrega al inicio para que aparezca primero.
+  // ==========================================
+
+  const [pedidosCliente, setPedidosCliente] = useState(() => {
+    try {
+      const guardados = JSON.parse(localStorage.getItem("pedidosCliente"));
+      return Array.isArray(guardados) && guardados.length > 0
+        ? guardados
+        : pedidosClienteIniciales;
+    } catch {
+      return pedidosClienteIniciales;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("pedidosCliente", JSON.stringify(pedidosCliente));
+  }, [pedidosCliente]);
+
+
+  // ==========================================
+  // CONFIGURACIÓN DEL CLIENTE
+  // ==========================================
+
+  const [perfilCliente, setPerfilCliente] = useState(() =>
+    cargarPerfilCliente(user)
+  );
+
+  const [direccionesCliente, setDireccionesCliente] = useState(() =>
+    cargarDireccionesCliente()
+  );
+
+  const [preferenciasCliente, setPreferenciasCliente] = useState(() =>
+    cargarPreferenciasCliente()
+  );
+
+  useEffect(() => {
+    localStorage.setItem("perfilCliente", JSON.stringify(perfilCliente));
+  }, [perfilCliente]);
+
+  useEffect(() => {
+    localStorage.setItem("direccionesCliente", JSON.stringify(direccionesCliente));
+  }, [direccionesCliente]);
+
+  useEffect(() => {
+    localStorage.setItem("preferenciasCliente", JSON.stringify(preferenciasCliente));
+  }, [preferenciasCliente]);
+
+
+  // Solo los pedidos hechos por el usuario logueado
+  const pedidosDelCliente = pedidosDeCliente(
+    pedidosCliente,
+    user?.email
+  );
 
 
   // ==========================================
@@ -288,11 +354,10 @@ export default function App() {
 
     } else {
 
-      // Si es cliente
+      // Si es cliente: al landing público
       console.log("Entrando como cliente");
 
-      setDashInitView("dashboard");
-      setCurrentView("dashboard");
+      setCurrentView("home");
 
     }
 
@@ -309,6 +374,62 @@ export default function App() {
     setCurrentView("home");
 
   };
+
+
+  // ==========================================
+  // SEGUIR COMPRANDO (Mis pedidos / Configuración)
+  // Vuelve al landing público y baja a "Nuestras Categorías"
+  // ==========================================
+
+  const handleSeguirComprando = () => {
+
+    setCurrentView("home");
+
+    // Espera a que el landing se renderice antes de bajar
+    window.setTimeout(() => {
+
+      const seccionCategorias =
+        document.getElementById("categorias");
+
+      if (seccionCategorias) {
+        seccionCategorias.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+
+    }, 60);
+
+  };
+
+
+  // ==========================================
+  // CONFIRMAR PAGO: crea el pedido, lo guarda
+  // y vacía el carrito
+  // ==========================================
+
+  const handleConfirmarPedido = (nuevoPedido) => {
+
+    setPedidosCliente((prev) => [nuevoPedido, ...prev]);
+
+    setCart([]);
+
+    setCurrentView("compra-exitosa");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  };
+
+
+  // ==========================================
+  // VISTAS DEL ÁREA DEL CLIENTE LOGUEADO
+  // ==========================================
+
+  const esVistaCliente =
+    currentView === "pago" ||
+    currentView === "compra-exitosa" ||
+    currentView === "mis-pedidos" ||
+    currentView === "configuracion";
 
 
   // ==========================================
@@ -355,49 +476,53 @@ export default function App() {
       ====================================== */}
 
       {!isAuthView &&
-        currentView !== "dashboard" &&
         currentView !== "admin" && (
 
-        currentView === "pago" && user ? (
+        esVistaCliente && user ? (
 
           <ClientNavbar
+
             user={user}
+
             theme={theme}
+
             onToggleTheme={toggleTheme}
-            cartCount={totalItemsCarrito}
-            onCartClick={() => setIsCartOpen(true)}
-            onNavigate={(vista) => {
-              setDashInitView(vista);
-              setCurrentView("dashboard");
-            }}
+
+            onNavigate={(vista) =>
+              setCurrentView(vista)
+            }
+
             onLogout={() => {
               alert("Sesión cerrada");
               handleLogout();
             }}
-            onBrandClick={() => {
-              setDashInitView("dashboard");
-              setCurrentView("dashboard");
-            }}
-            currentView="pago"
+
+            onBrandClick={() =>
+              setCurrentView("home")
+            }
+
+            currentView={currentView}
+
           />
 
         ) : (
 
           <Navbar
-            isLoggedIn={!!user}
-            userName={user?.nombre || ""}
+
+            user={user}
+
             onLoginClick={() =>
               setCurrentView("login")
             }
 
-            onAccountClick={() => {
-              setDashInitView("dashboard");
-              setCurrentView("dashboard");
-            }}
-
-            onNavigate={(view) =>
-              setCurrentView(view)
+            onNavigate={(vista) =>
+              setCurrentView(vista)
             }
+
+            onLogout={() => {
+              alert("Sesión cerrada");
+              handleLogout();
+            }}
 
             theme={theme}
 
@@ -528,11 +653,13 @@ export default function App() {
            PAGO / CHECKOUT
        ====================================== */}
 
-      {currentView === "pago" && (
+      {currentView === "pago" && user && (
 
         <PaymentView
           cart={cart}
+          user={user}
           darkMode={theme === "dark"}
+          onConfirmarPedido={handleConfirmarPedido}
           onBack={() => {
             setCurrentView("home");
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -543,30 +670,72 @@ export default function App() {
 
 
       {/* ======================================
-           DASHBOARD CLIENTE
-       ====================================== */}
+          COMPRA EXITOSA
+      ====================================== */}
 
-      {currentView === "dashboard" && (
+      {currentView === "compra-exitosa" && user && (
 
-        <StoreDashboard
+        <CompraExitosa
+
+          onVerMisPedidos={() => {
+            setCurrentView("mis-pedidos");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+
+        />
+
+      )}
+
+
+      {/* ======================================
+          MIS PEDIDOS
+      ====================================== */}
+
+      {currentView === "mis-pedidos" && user && (
+
+        <MisPedidos
+
+          pedidos={pedidosDelCliente}
+
+          onBack={handleSeguirComprando}
+
+        />
+
+      )}
+
+
+      {/* ======================================
+          CONFIGURACIÓN
+      ====================================== */}
+
+      {currentView === "configuracion" && user && (
+
+        <Configuracion
 
           user={user}
-
-          cart={cart}
-
-          addToCart={addToCart}
-
-          initialView={dashInitView}
-
-          onOpenCart={() =>
-            setIsCartOpen(true)
-          }
-
-          onLogout={handleLogout}
 
           theme={theme}
 
           onToggleTheme={toggleTheme}
+
+          onLogout={() => {
+            alert("Sesión cerrada");
+            handleLogout();
+          }}
+
+          onBack={handleSeguirComprando}
+
+          perfilCliente={perfilCliente}
+
+          setPerfilCliente={setPerfilCliente}
+
+          direccionesCliente={direccionesCliente}
+
+          setDireccionesCliente={setDireccionesCliente}
+
+          preferenciasCliente={preferenciasCliente}
+
+          setPreferenciasCliente={setPreferenciasCliente}
 
         />
 
@@ -824,11 +993,9 @@ export default function App() {
       ====================================== */}
 
       {!isAuthView &&
-        currentView !== "dashboard" &&
         currentView !== "admin" && (
 
         <Footer />
-
       )}
 
     </div>

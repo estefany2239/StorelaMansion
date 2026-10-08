@@ -3,7 +3,7 @@ import "./Categories.css";
 
 export default function Categories({ onSelectCategory }) {
   return (
-    <section className="categories-section">
+    <section className="categories-section" id="categorias">
       <div className="categories">
         <h2 className="categories__title">Nuestras Categorías</h2>
 

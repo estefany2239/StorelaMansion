@@ -35,7 +35,7 @@ button.theme-toggle {
 
 /* 2. Botón Iniciar Sesión (Cápsula Dorada) */
 .header-actions__login,
-.header-actions button:not(.header-actions__theme-toggle) {
+.header-actions button:not(.header-actions__theme-toggle):not(.profile-trigger-btn) {
   background-color: var(--gold, #c9a227) !important;
   color: #000000 !important; /* Texto negro para contraste */
   border: none !important;
@@ -56,18 +56,30 @@ button.theme-toggle {
   transform: translateY(-1px) !important;
 }
 
-/* 3. Botón de Cuenta (Usuario logueado - Borde dorado) */
-.header-actions__account {
+/* 2b. Botón de PERFIL (sesión iniciada) - icono redondo, sin píldora */
+.header-actions .profile-trigger-btn {
   background: transparent !important;
   background-color: transparent !important;
   color: #ffffff !important;
-  border: 1.5px solid var(--gold, #c9a227) !important;
-  padding: 9px 20px !important;
-  border-radius: 999px !important;
-  font-family: var(--font-body, "Inter", sans-serif) !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+
+.header-actions .profile-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--gold, #c9a227) !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* ==========================================
@@ -82,7 +94,10 @@ button.theme-toggle {
   background: rgba(0, 0, 0, 0.06) !important;
 }
 
-:root:not([data-theme="dark"]) .header-actions__account {
+:root:not([data-theme="dark"]) .header-actions .profile-trigger-btn {
   color: #1a1a1a !important;
-  border-color: var(--gold-dark, #a5831c) !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions .profile-trigger-btn:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
 }

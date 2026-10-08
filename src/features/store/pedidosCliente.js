@@ -252,3 +252,98 @@ export const getTotalAbonado = (pedido) =>
 
 export const getSaldoPendiente = (pedido) =>
   pedido.total - getTotalAbonado(pedido);
+
+// Solo los pedidos hechos por el cliente logueado
+export const pedidosDeCliente = (pedidos, email) =>
+  pedidos.filter((pedido) => pedido.clienteEmail === email);
+
+// =========================================================
+// PRECIO (mismo criterio que usa el checkout)
+// =========================================================
+
+export const obtenerPrecio = (precio) => {
+  if (typeof precio === "number") return precio;
+
+  if (!precio) return 0;
+
+  const limpio = String(precio)
+    .replace(/\$/g, "")
+    .replace(/COP/gi, "")
+    .replace(/\./g, "")
+    .replace(/,/g, "")
+    .replace(/\s/g, "")
+    .trim();
+
+  const numero = Number(limpio);
+
+  return Number.isNaN(numero) ? 0 : numero;
+};
+
+// =========================================================
+// CREAR PEDIDO DESDE EL CARRITO
+// =========================================================
+// Devuelve el objeto que se guarda en la lista de pedidos
+// del cliente (la misma que lee MisPedidos.jsx). El pedido
+// nuevo se inserta AL INICIO de la lista para que aparezca
+// primero en "Mis pedidos".
+
+export const crearPedido = ({
+  clienteEmail,
+  cart,
+  direccion = "",
+  paymentMethod = "",
+  transferenciaTipo = "",
+  tipoPago = "completo",
+  montoAbono = ""
+}) => {
+  const total = cart.reduce(
+    (acumulado, item) =>
+      acumulado +
+      obtenerPrecio(item.price) * (Number(item.quantity) || 1),
+    0
+  );
+
+  const montoNum = Number(montoAbono);
+  const abonoValido =
+    tipoPago === "parcial" &&
+    !Number.isNaN(montoNum) &&
+    montoNum > 0 &&
+    montoNum <= total;
+
+  const valorAbonado =
+    tipoPago === "parcial" && abonoValido ? montoNum : total;
+
+  const metodoPagoLabel =
+    paymentMethod === "transferencia"
+      ? transferenciaTipo === "nequi"
+        ? "Transferencia (Nequi)"
+        : "Transferencia (Bancolombia)"
+      : {
+          efectivo: "Efectivo",
+          credito: "Crédito"
+        }[paymentMethod] || "—";
+
+  const fecha = new Date().toISOString().split("T")[0];
+
+  return {
+    id: `PED-${Date.now()}`,
+    clienteEmail,
+    fecha,
+    estado: "En proceso",
+    mensajeEstado: "Estamos preparando tu pedido.",
+    estimadoEntrega: "Nos comunicaremos contigo pronto.",
+    direccion,
+    productos: cart.map((item) => ({
+      nombre: item.name || item.title,
+      imagen: item.image,
+      cantidad: Number(item.quantity) || 1,
+      talla: item.talla || item.size || "-",
+      color: item.color || "-",
+      precio: obtenerPrecio(item.price),
+    })),
+    total,
+    abonos: [
+      { fecha, valor: valorAbonado, metodoPago: metodoPagoLabel }
+    ]
+  };
+};

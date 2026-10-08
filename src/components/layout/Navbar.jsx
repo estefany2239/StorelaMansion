@@ -2,7 +2,14 @@ import { ShoppingBag } from "lucide-react";
 import HeaderActions from "./HeaderActions";
 import "./Navbar.css";
 
-export default function Navbar({ isLoggedIn, userName, onLoginClick, onAccountClick, theme, onToggleTheme }) {
+export default function Navbar({
+  user,
+  onLoginClick,
+  onNavigate,
+  onLogout,
+  theme,
+  onToggleTheme,
+}) {
   return (
     <header className="navbar">
       <div className="navbar__inner">
@@ -20,10 +27,10 @@ export default function Navbar({ isLoggedIn, userName, onLoginClick, onAccountCl
         </nav>
 
         <HeaderActions
-          isLoggedIn={isLoggedIn}
-          userName={userName}
+          user={user}
           onLoginClick={onLoginClick}
-          onAccountClick={onAccountClick}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
           theme={theme}
           onToggleTheme={onToggleTheme}
         />

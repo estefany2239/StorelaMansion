@@ -7,46 +7,60 @@ import {
   Banknote,
   Upload,
   CheckCircle,
-  ShoppingBag,
+  Receipt,
+  Wallet,
   ShieldCheck,
 } from "lucide-react";
 
+import {
+  obtenerPrecio,
+  crearPedido
+} from "../../features/store/pedidosCliente";
+
 import "./PaymentView.css";
+
+const ORDEN_CAMPOS = [
+  "nombre",
+  "telefono",
+  "direccion",
+  "ciudad",
+  "metodo",
+  "transferencia",
+  "comprobante",
+  "abono",
+];
+
+const ID_CAMPO = {
+  nombre: "campo-nombre",
+  telefono: "campo-telefono",
+  direccion: "campo-direccion",
+  ciudad: "campo-ciudad",
+  metodo: "campo-metodo",
+  transferencia: "campo-transferencia",
+  comprobante: "campo-comprobante",
+  abono: "campo-abono",
+};
 
 export default function PaymentView({
   cart,
+  user,
   onBack,
+  onConfirmarPedido,
   darkMode,
 }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transferenciaTipo, setTransferenciaTipo] = useState("");
   const [proofFile, setProofFile] = useState(null);
 
-  /* =========================================================
-     PRECIO
-  ========================================================= */
+  const [direccionEntrega, setDireccionEntrega] = useState("");
+  const [tipoPago, setTipoPago] = useState("completo");
+  const [montoAbono, setMontoAbono] = useState("");
 
-  const obtenerPrecio = (precio) => {
-    if (typeof precio === "number") {
-      return precio;
-    }
+  const [nombreEntrega, setNombreEntrega] = useState("");
+  const [telefonoEntrega, setTelefonoEntrega] = useState("");
+  const [ciudadEntrega, setCiudadEntrega] = useState("");
 
-    if (!precio) {
-      return 0;
-    }
-
-    const precioLimpio = String(precio)
-      .replace(/\$/g, "")
-      .replace(/COP/gi, "")
-      .replace(/\./g, "")
-      .replace(/,/g, "")
-      .replace(/\s/g, "")
-      .trim();
-
-    const numero = Number(precioLimpio);
-
-    return Number.isNaN(numero) ? 0 : numero;
-  };
+  const [errores, setErrores] = useState({});
 
   const formatoPrecio = (valor) => {
     return `$${valor.toLocaleString("es-CO")} COP`;
@@ -75,6 +89,86 @@ export default function PaymentView({
     }
 
     setProofFile(file);
+    limpiarError("comprobante");
+  };
+
+  /* =========================================================
+     VALIDACIÓN
+     Mismas reglas que antes: solo cambia cómo se muestra
+  ========================================================= */
+
+  const limpiarError = (clave) => {
+    setErrores((previos) => {
+      if (!previos[clave]) {
+        return previos;
+      }
+
+      const siguiente = { ...previos };
+      delete siguiente[clave];
+
+      return siguiente;
+    });
+  };
+
+  const irACampo = (id) => {
+    window.setTimeout(() => {
+      const campo = document.getElementById(id);
+
+      if (campo) {
+        campo.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }, 60);
+  };
+
+  const validarPago = () => {
+    const faltan = {};
+
+    const marcar = (clave, texto) => {
+      faltan[clave] = { texto };
+    };
+
+    if (!nombreEntrega.trim()) {
+      marcar("nombre", "Este campo es obligatorio.");
+    }
+
+    if (!telefonoEntrega.trim()) {
+      marcar("telefono", "Este campo es obligatorio.");
+    }
+
+    if (!direccionEntrega.trim()) {
+      marcar("direccion", "Este campo es obligatorio.");
+    }
+
+    if (!ciudadEntrega.trim()) {
+      marcar("ciudad", "Este campo es obligatorio.");
+    }
+
+    if (!paymentMethod) {
+      marcar("metodo", "Selecciona una opción.");
+    }
+
+    if (paymentMethod === "transferencia" && !transferenciaTipo) {
+      marcar("transferencia", "Selecciona un medio.");
+    }
+
+    if (paymentMethod === "transferencia" && !proofFile) {
+      marcar("comprobante", "Adjunta el comprobante.");
+    }
+
+    const montoNum = Number(montoAbono);
+
+    if (tipoPago === "parcial") {
+      if (!montoAbono.trim() || Number.isNaN(montoNum) || montoNum <= 0) {
+        marcar("abono", "Monto no válido.");
+      } else if (montoNum > total) {
+        marcar("abono", "Supera el total.");
+      }
+    }
+
+    return faltan;
   };
 
   /* =========================================================
@@ -82,19 +176,34 @@ export default function PaymentView({
   ========================================================= */
 
   const handleConfirmPayment = () => {
-    if (!paymentMethod) {
-      alert("Selecciona un método de pago.");
+    const faltan = validarPago();
+    const claves = Object.keys(faltan);
+
+    if (claves.length > 0) {
+      const primero = ORDEN_CAMPOS.find((clave) => faltan[clave]);
+
+      setErrores(faltan);
+
+      irACampo(ID_CAMPO[primero]);
+
       return;
     }
 
-    if (paymentMethod === "transferencia" && !proofFile) {
-      alert("Por favor adjunta el comprobante de pago.");
-      return;
-    }
+    setErrores({});
 
-    alert(
-      "¡Compra realizada correctamente en Store La Mansión!"
-    );
+    const nuevoPedido = crearPedido({
+      clienteEmail: user?.email,
+      cart,
+      direccion: direccionEntrega.trim(),
+      paymentMethod,
+      transferenciaTipo,
+      tipoPago,
+      montoAbono
+    });
+
+    if (onConfirmarPedido) {
+      onConfirmarPedido(nuevoPedido);
+    }
   };
 
   /* =========================================================
@@ -133,7 +242,7 @@ export default function PaymentView({
       <div className="payment-title">
 
         <div className="payment-title-icon">
-          <ShoppingBag size={25} />
+          <CreditCard size={25} />
         </div>
 
         <div>
@@ -183,7 +292,10 @@ export default function PaymentView({
 
             <div className="form-grid">
 
-              <div className="form-group">
+              <div
+                className={`form-group ${errores.nombre ? "has-error" : ""}`}
+                id="campo-nombre"
+              >
                 <label>
                   Nombre completo
                 </label>
@@ -191,10 +303,24 @@ export default function PaymentView({
                 <input
                   type="text"
                   placeholder="Ingresa tu nombre"
+                  value={nombreEntrega}
+                  onChange={(e) => {
+                    setNombreEntrega(e.target.value);
+                    limpiarError("nombre");
+                  }}
                 />
+
+                {errores.nombre && (
+                  <span className="field-error">
+                    {errores.nombre.texto}
+                  </span>
+                )}
               </div>
 
-              <div className="form-group">
+              <div
+                className={`form-group ${errores.telefono ? "has-error" : ""}`}
+                id="campo-telefono"
+              >
                 <label>
                   Teléfono
                 </label>
@@ -202,10 +328,24 @@ export default function PaymentView({
                 <input
                   type="tel"
                   placeholder="300 000 0000"
+                  value={telefonoEntrega}
+                  onChange={(e) => {
+                    setTelefonoEntrega(e.target.value);
+                    limpiarError("telefono");
+                  }}
                 />
+
+                {errores.telefono && (
+                  <span className="field-error">
+                    {errores.telefono.texto}
+                  </span>
+                )}
               </div>
 
-              <div className="form-group">
+              <div
+                className={`form-group ${errores.direccion ? "has-error" : ""}`}
+                id="campo-direccion"
+              >
                 <label>
                   Dirección
                 </label>
@@ -213,10 +353,24 @@ export default function PaymentView({
                 <input
                   type="text"
                   placeholder="Calle, carrera, número..."
+                  value={direccionEntrega}
+                  onChange={(e) => {
+                    setDireccionEntrega(e.target.value);
+                    limpiarError("direccion");
+                  }}
                 />
+
+                {errores.direccion && (
+                  <span className="field-error">
+                    {errores.direccion.texto}
+                  </span>
+                )}
               </div>
 
-              <div className="form-group">
+              <div
+                className={`form-group ${errores.ciudad ? "has-error" : ""}`}
+                id="campo-ciudad"
+              >
                 <label>
                   Ciudad
                 </label>
@@ -224,7 +378,18 @@ export default function PaymentView({
                 <input
                   type="text"
                   placeholder="Medellín"
+                  value={ciudadEntrega}
+                  onChange={(e) => {
+                    setCiudadEntrega(e.target.value);
+                    limpiarError("ciudad");
+                  }}
                 />
+
+                {errores.ciudad && (
+                  <span className="field-error">
+                    {errores.ciudad.texto}
+                  </span>
+                )}
               </div>
 
             </div>
@@ -257,7 +422,10 @@ export default function PaymentView({
                 MÉTODOS
             ================================================= */}
 
-            <div className="payment-methods">
+            <div
+              className={`payment-methods ${errores.metodo ? "has-error" : ""}`}
+              id="campo-metodo"
+            >
 
               {/* EFECTIVO */}
 
@@ -268,9 +436,10 @@ export default function PaymentView({
                     ? "selected"
                     : ""
                 }`}
-                onClick={() =>
-                  setPaymentMethod("efectivo")
-                }
+                onClick={() => {
+                  setPaymentMethod("efectivo");
+                  limpiarError("metodo");
+                }}
               >
 
                 <div className="method-icon">
@@ -311,6 +480,9 @@ export default function PaymentView({
                 onClick={() => {
                   setPaymentMethod("transferencia");
                   setTransferenciaTipo("");
+                  limpiarError("metodo");
+                  limpiarError("transferencia");
+                  limpiarError("comprobante");
                 }}
               >
 
@@ -349,9 +521,10 @@ export default function PaymentView({
                     ? "selected"
                     : ""
                 }`}
-                onClick={() =>
-                  setPaymentMethod("credito")
-                }
+                onClick={() => {
+                  setPaymentMethod("credito");
+                  limpiarError("metodo");
+                }}
               >
 
                 <div className="method-icon">
@@ -380,6 +553,12 @@ export default function PaymentView({
               </button>
 
             </div>
+
+            {errores.metodo && (
+              <span className="field-error">
+                {errores.metodo.texto}
+              </span>
+            )}
 
 
             {/* =================================================
@@ -435,7 +614,10 @@ export default function PaymentView({
                     la transferencia.
                   </p>
 
-                  <div className="payment-methods">
+                  <div
+                    className={`payment-methods ${errores.transferencia ? "has-error" : ""}`}
+                    id="campo-transferencia"
+                  >
 
                     {/* NEQUI */}
 
@@ -446,9 +628,10 @@ export default function PaymentView({
                           ? "selected"
                           : ""
                       }`}
-                      onClick={() =>
-                        setTransferenciaTipo("nequi")
-                      }
+                      onClick={() => {
+                        setTransferenciaTipo("nequi");
+                        limpiarError("transferencia");
+                      }}
                     >
 
                       <div className="method-icon">
@@ -486,9 +669,10 @@ export default function PaymentView({
                           ? "selected"
                           : ""
                       }`}
-                      onClick={() =>
-                        setTransferenciaTipo("bancolombia")
-                      }
+                      onClick={() => {
+                        setTransferenciaTipo("bancolombia");
+                        limpiarError("transferencia");
+                      }}
                     >
 
                       <div className="method-icon">
@@ -517,6 +701,12 @@ export default function PaymentView({
                     </button>
 
                   </div>
+
+                  {errores.transferencia && (
+                    <span className="field-error">
+                      {errores.transferencia.texto}
+                    </span>
+                  )}
 
                 </div>
 
@@ -580,7 +770,10 @@ export default function PaymentView({
 
                     {/* COMPROBANTE */}
 
-                    <div className="proof-upload">
+                    <div
+                      className={`proof-upload ${errores.comprobante ? "has-error" : ""}`}
+                      id="campo-comprobante"
+                    >
 
                       <label className="proof-label">
                         Comprobante de pago
@@ -618,6 +811,12 @@ export default function PaymentView({
                       )}
 
                     </div>
+
+                    {errores.comprobante && (
+                      <span className="field-error">
+                        {errores.comprobante.texto}
+                      </span>
+                    )}
 
                   </div>
 
@@ -709,7 +908,10 @@ export default function PaymentView({
 
                     {/* COMPROBANTE */}
 
-                    <div className="proof-upload">
+                    <div
+                      className={`proof-upload ${errores.comprobante ? "has-error" : ""}`}
+                      id="campo-comprobante"
+                    >
 
                       <label className="proof-label">
                         Comprobante de pago
@@ -747,6 +949,12 @@ export default function PaymentView({
                       )}
 
                     </div>
+
+                    {errores.comprobante && (
+                      <span className="field-error">
+                        {errores.comprobante.texto}
+                      </span>
+                    )}
 
                   </div>
 
@@ -848,6 +1056,160 @@ export default function PaymentView({
 
           </section>
 
+
+          {/* =================================================
+              ¿CUÁNTO VAS A PAGAR?
+          ================================================= */}
+
+          <section className="payment-card">
+
+            <div className="section-heading">
+
+              <div className="section-number">
+                3
+              </div>
+
+              <div>
+                <h2>¿Cuánto vas a pagar?</h2>
+
+                <p>
+                  Paga el total del pedido o abona solo una parte hoy.
+                </p>
+              </div>
+
+            </div>
+
+            <div className="payment-methods">
+
+              <button
+                type="button"
+                className={`payment-method ${
+                  tipoPago === "completo" ? "selected" : ""
+                }`}
+                onClick={() => {
+                  setTipoPago("completo");
+                  limpiarError("abono");
+                }}
+              >
+
+                <div className="method-icon">
+                  <CreditCard size={23} />
+                </div>
+
+                <div className="method-info">
+
+                  <strong>
+                    Pagar el total
+                  </strong>
+
+                  <span>
+                    {formatoPrecio(total)}
+                  </span>
+
+                </div>
+
+                {tipoPago === "completo" && (
+                  <CheckCircle
+                    className="method-check"
+                    size={19}
+                  />
+                )}
+
+              </button>
+
+
+              <button
+                type="button"
+                className={`payment-method ${
+                  tipoPago === "parcial" ? "selected" : ""
+                }`}
+                onClick={() => {
+                  setTipoPago("parcial");
+                  limpiarError("abono");
+                }}
+              >
+
+                <div className="method-icon">
+                  <Wallet size={23} />
+                </div>
+
+                <div className="method-info">
+
+                  <strong>
+                    Abonar una parte
+                  </strong>
+
+                  <span>
+                    Define cuánto abonas hoy
+                  </span>
+
+                </div>
+
+                {tipoPago === "parcial" && (
+                  <CheckCircle
+                    className="method-check"
+                    size={19}
+                  />
+                )}
+
+              </button>
+
+            </div>
+
+
+            {tipoPago === "parcial" && (
+
+              <div className="payment-extra">
+
+                <div className="extra-title">
+
+                  <Wallet size={19} />
+
+                  <span>
+                    Abono inicial
+                  </span>
+
+                </div>
+
+                <p className="payment-instruction">
+                  Total del pedido: {formatoPrecio(total)}.
+                  ¿Cuánto deseas abonar hoy?
+                </p>
+
+                <div
+                  className={`form-group ${errores.abono ? "has-error" : ""}`}
+                  id="campo-abono"
+                >
+
+                  <label>
+                    Monto a abonar
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ej. 150000"
+                    value={montoAbono}
+                    onChange={(e) => {
+                      setMontoAbono(e.target.value);
+                      limpiarError("abono");
+                    }}
+                  />
+
+                  {errores.abono && (
+                    <span className="field-error">
+                      {errores.abono.texto}
+                    </span>
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+          </section>
+
         </div>
 
 
@@ -872,7 +1234,7 @@ export default function PaymentView({
 
             </div>
 
-            <ShoppingBag size={23} />
+            <Receipt size={23} />
 
           </div>
 
