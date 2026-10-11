@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye, ChevronDown, X } from "lucide-react";
-import { getFilteredProducts, allProducts, getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
+import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
+import { useCatalogo } from '../../hooks/useCatalogo';
 import ProductDetailPage from '../product/ProductDetailPage';
 import "./CategoryProductsView.css";
 
@@ -53,8 +54,23 @@ const getColorStyle = (nombre) => {
   return { backgroundColor: getColorHex(nombre) };
 };
 
-export default function CategoryProductsView({ category, onBack, addToCart, likedProducts = [], toggleLike }) {
-  const [selectedGender, setSelectedGender] = useState(null);
+export default function CategoryProductsView({ category, onBack, addToCart, likedProducts = [], toggleLike, initialGender = null }) {
+  // Productos que vienen de Neon a través de la API
+  const { catalogo: allProducts, cargando } = useCatalogo();
+  const getFilteredProducts = (cat, gen, marcas, tallas, colores) =>
+    filtrarProductos(cat, gen, marcas, tallas, colores, allProducts);
+
+  const genders =
+    Array.isArray(category?.genders) && category.genders.length > 0
+      ? category.genders
+      : ['hombre', 'mujer'];
+  const puedeCambiarGenero = genders.length > 1;
+  const generoInicial =
+    initialGender && genders.includes(initialGender)
+      ? initialGender
+      : (genders.length === 1 ? genders[0] : null);
+
+  const [selectedGender, setSelectedGender] = useState(generoInicial);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
@@ -82,6 +98,12 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
     return () => observer.disconnect();
   }, []);
+
+  // Si cambia la categoría (o llega un género no permitido), redirige al
+  // género válido sin dejar la pantalla en blanco.
+  useEffect(() => {
+    setSelectedGender(generoInicial);
+  }, [category?.id, generoInicial]);
 
   // Colores disponibles para el grupoId del producto (usando getVariantesPorColor)
   const getColoresDisponibles = (prod) => {
@@ -228,13 +250,13 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
       <div className="category-catalog-container">
         
         <button className="catalog__back-btn" onClick={() => {
-          if (selectedGender) {
+          if (selectedGender && puedeCambiarGenero) {
             setSelectedGender(null);
           } else {
             onBack();
           }
         }}>
-          <ArrowLeft size={16} /> {selectedGender ? "Cambiar género" : "Volver a categorías"}
+          <ArrowLeft size={16} /> {(selectedGender && puedeCambiarGenero) ? "Cambiar género" : "Volver a categorías"}
         </button>
 
         <div className="catalog__header">
@@ -253,29 +275,33 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
             <div className="gender-cards-container">
 
-              <div
-                className="gender-card"
-                style={{ backgroundImage: `url('${new URL("../../assets/img/el.jpeg", import.meta.url).href}')` }}
-                onClick={() => setSelectedGender('hombre')}
-              >
-                <div className="gender-card-content">
-                  <span className="gender-card-title">MODA MASCULINA</span>
-                  <span className="gender-card-divider" />
-                  <span className="gender-card-caption">Premium &amp; urbano</span>
+              {genders.includes('hombre') && (
+                <div
+                  className="gender-card"
+                  style={{ backgroundImage: `url('${new URL("../../assets/img/el.jpeg", import.meta.url).href}')` }}
+                  onClick={() => setSelectedGender('hombre')}
+                >
+                  <div className="gender-card-content">
+                    <span className="gender-card-title">MODA MASCULINA</span>
+                    <span className="gender-card-divider" />
+                    <span className="gender-card-caption">Premium &amp; urbano</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div
-                className="gender-card"
-                style={{ backgroundImage: `url('${new URL("../../assets/img/ell.jpeg", import.meta.url).href}')` }}
-                onClick={() => setSelectedGender('mujer')}
-              >
-                <div className="gender-card-content">
-                  <span className="gender-card-title">MODA FEMENINA</span>
-                  <span className="gender-card-divider" />
-                  <span className="gender-card-caption">Elegante &amp; chic</span>
+              {genders.includes('mujer') && (
+                <div
+                  className="gender-card"
+                  style={{ backgroundImage: `url('${new URL("../../assets/img/ell.jpeg", import.meta.url).href}')` }}
+                  onClick={() => setSelectedGender('mujer')}
+                >
+                  <div className="gender-card-content">
+                    <span className="gender-card-title">MODA FEMENINA</span>
+                    <span className="gender-card-divider" />
+                    <span className="gender-card-caption">Elegante &amp; chic</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
           </div>
@@ -349,7 +375,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
               ) : isBusos ? (
                 /* 3. SI ES BUSOS (INDEPENDIENTE) */
                 <div className="filter__group">
-                  <h4>Tallas de Busos</h4>
+                  <h4>Tallas de Buzos</h4>
                   <div className="filter__sizes-grid">
                     {(selectedGender === 'hombre' 
                       ? ['S', 'M', 'L', 'XL', 'XXL'] 
@@ -653,7 +679,11 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                 })
               ) : (
                 <main className="catalog__no-products">
-                  <p>No se encontraron productos para {selectedGender} con los filtros seleccionados.</p>
+                  <p>
+                    {cargando
+                      ? 'Cargando productos...'
+                      : `No se encontraron productos para ${selectedGender} con los filtros seleccionados.`}
+                  </p>
                 </main>
               )}
             </main>

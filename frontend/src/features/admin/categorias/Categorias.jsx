@@ -32,7 +32,8 @@ export default function Categorias() {
     { id: "CAT-004", nombre: "Pantalones", descripcion: "Jeans y pantalones de vestir.", estado: "Activo", enUso: false },
     { id: "CAT-005", nombre: "Busos", descripcion: "Busos y sudaderas con capota.", estado: "Inactivo", enUso: false },
     { id: "CAT-006", nombre: "Tenis", descripcion: "Tenis urbanos y deportivos.", estado: "Activo", enUso: false },
-    { id: "CAT-007", nombre: "Blazers", descripcion: "Blazers para hombre y mujer.", estado: "Activo", enUso: false }
+    { id: "CAT-007", nombre: "Blazers", descripcion: "Blazers para hombre y mujer.", estado: "Activo", enUso: false },
+    { id: "CAT-008", nombre: "Pantalonetas", descripcion: "Pantalonetas de hombre.", estado: "Activo", enUso: false }
   ]);
 
   /* =====================================================

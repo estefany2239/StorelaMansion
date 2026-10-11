@@ -13,13 +13,12 @@ import Login from "./features/auth/Login";
 import Register from "./features/auth/Register";
 import ForgotPassword from "./features/auth/ForgotPassword";
 
-import WomenCollection from "./features/Mujer/WomenCollection";
-import MenCollection from "./features/Hombre/MenCollection";
-
 import CartDrawer from "./components/cart/CartDrawer";
 import PaymentView from "./components/payment/PaymentView";
 import ClientNavbar from "./components/layout/ClientNavbar";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
+import ProductDetailPage from "./features/product/ProductDetailPage";
+import { allProducts } from "./data/productsData";
 
 // VISTAS DEL CLIENTE LOGUEADO
 import MisPedidos from "./features/store/MisPedidos";
@@ -57,6 +56,9 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState("home");
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Producto de "Destacados" abierto en su detalle (vista propia sobre el home)
+  const [productoDestacado, setProductoDestacado] = useState(null);
 
 
   // ==========================================
@@ -535,52 +537,10 @@ export default function App() {
 
 
       {/* ======================================
-          MUJER
-      ====================================== */}
-
-      {currentView === "mujer" && (
-
-        <WomenCollection
-
-          onBack={() =>
-            setCurrentView("home")
-          }
-
-          onLogin={() =>
-            setCurrentView("login")
-          }
-
-        />
-
-      )}
-
-
-      {/* ======================================
-          HOMBRE
-      ====================================== */}
-
-      {currentView === "hombre" && (
-
-        <MenCollection
-
-          onBack={() =>
-            setCurrentView("home")
-          }
-
-          onLogin={() =>
-            setCurrentView("login")
-          }
-
-        />
-
-      )}
-
-
-      {/* ======================================
           HOME
       ====================================== */}
 
-      {currentView === "home" && (
+      {currentView === "home" && !productoDestacado && (
 
         <main>
 
@@ -589,10 +549,15 @@ export default function App() {
            <Categories
 
              onSelectCategory={(cat) => {
+               const genders =
+                 Array.isArray(cat.genders) && cat.genders.length > 0
+                   ? cat.genders
+                   : ["hombre", "mujer"];
                setSelectedCategory({
                  id: cat.id,
                  title: cat.name,
-                 image: cat.image
+                 image: cat.image,
+                 genders
                });
                setCurrentView("categoria-genero");
                window.scrollTo({
@@ -601,30 +566,35 @@ export default function App() {
                });
              }}
 
-             onViewCollection={(gender) => {
-
-               if (gender === "mujer") {
-
-                 setCurrentView("mujer");
-
-               } else if (gender === "hombre") {
-
-                 setCurrentView("hombre");
-
-               }
-
-               window.scrollTo({
-                 top: 0,
-                 behavior: "smooth"
-               });
-
-             }}
-
            />
 
-          <FeaturedProducts />
+          <FeaturedProducts
+            onViewProduct={(product) => {
+              setProductoDestacado(product);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
 
         </main>
+
+       )}
+
+
+       {/* ======================================
+           DETALLE DE PRODUCTO DESTACADO (PÚBLICO)
+       ====================================== */}
+
+       {currentView === "home" && productoDestacado && (
+
+         <ProductDetailPage
+           product={productoDestacado}
+           catalogoCompleto={allProducts}
+           onBack={() => {
+             setProductoDestacado(null);
+             window.scrollTo({ top: 0, behavior: "smooth" });
+           }}
+           addToCart={handleAddToCart}
+         />
 
        )}
 
@@ -637,6 +607,11 @@ export default function App() {
 
          <CategoryProductsView
            category={selectedCategory}
+           initialGender={
+             selectedCategory.genders?.length === 1
+               ? selectedCategory.genders[0]
+               : null
+           }
            onBack={() => {
              setSelectedCategory(null);
              setCurrentView("home");

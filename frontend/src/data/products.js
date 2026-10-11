@@ -6,34 +6,31 @@
 export const featuredProducts = [
   {
     id: "f1",
-    name: "Blazer Estructurado Beige",
+    name: "Gorras",
     price: 310000,
-    priceFormatted: "$310.000",
     image: new URL("../assets/img/tar.png", import.meta.url).href,
     tag: "Destacado"
   },
 
   {
     id: "f2",
-    name: "Traje Slim Fit Marrón",
+    name: "Tenis",
     price: 420000,
-    priceFormatted: "$420.000",
     image: new URL("../assets/img/jeta.png", import.meta.url).href,
     tag: "Exclusivo"
   },
 
   {
     id: "f3",
-    name: "Vestido Midi Seda Champagne",
+    name: "Top ",
     price: 240000,
-    priceFormatted: "$240.000",
     image: new URL("../assets/img/top.png", import.meta.url).href,
     tag: "Nuevo"
   },
 
   {
     id: "f4",
-    name: "Reloj Minimalista Dorado",
+    name: "Pantaloneta",
     price: 180000,
     priceFormatted: "$180.000",
     image: new URL("../assets/img/lone.png", import.meta.url).href,

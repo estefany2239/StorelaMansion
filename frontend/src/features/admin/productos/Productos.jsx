@@ -171,6 +171,7 @@ export default function Productos() {
     id: "",
     nombre: "",
     categoria: "",
+    genero: "",
     talla: "",
     color: "",
     precio: 0,
@@ -193,12 +194,23 @@ export default function Productos() {
     "Sudaderas",
     "Perfumes",
     "Pantalones",
+    "Pantalonetas",
     "Blazers",
     "Vestidos",
     "Trajes",
     "Abrigos",
     "Busos"
   ];
+
+  // Categorías que existen para un único género: al elegirlas, el campo
+  // género queda fijado a ese valor.
+  const GENERO_POR_CATEGORIA = {
+    Sudaderas: "hombre",
+    Pantalonetas: "hombre",
+    Vestidos: "mujer"
+  };
+
+  const opcionesGenero = ["hombre", "mujer"];
 
   const tallas = [
     "XS",
@@ -292,6 +304,7 @@ export default function Productos() {
       id: `PROD-${numero}`,
       nombre: "",
       categoria: "",
+      genero: "",
       talla: "",
       color: "",
       precio: 0,
@@ -314,6 +327,8 @@ export default function Productos() {
       id: producto.id,
       nombre: producto.nombre,
       categoria: producto.categoria,
+      genero:
+        producto.genero || GENERO_POR_CATEGORIA[producto.categoria] || "",
       talla: producto.talla,
       color: producto.color,
       precio: producto.precio,
@@ -332,20 +347,32 @@ export default function Productos() {
   // =====================================================
 
   const cambiarCampo = (campo, valor) => {
-    setFormulario((actual) => ({
-      ...actual,
-      [campo]: valor
-    }));
+    setFormulario((actual) => {
+      const siguiente = { ...actual, [campo]: valor };
 
-    if (String(valor).trim()) {
-      setErrores((actuales) => {
-        if (!actuales[campo]) return actuales;
+      if (campo === "categoria") {
+        siguiente.genero = GENERO_POR_CATEGORIA[valor] || "";
+      }
 
-        const nuevos = { ...actuales };
-        delete nuevos[campo];
-        return nuevos;
+      return siguiente;
+    });
+
+    const camposAOrdenar =
+      campo === "categoria" ? ["categoria", "genero"] : [campo];
+
+    setErrores((actuales) => {
+      const nuevos = { ...actuales };
+      let cambio = false;
+
+      camposAOrdenar.forEach((c) => {
+        if (nuevos[c] && String(valor).trim()) {
+          delete nuevos[c];
+          cambio = true;
+        }
       });
-    }
+
+      return cambio ? nuevos : actuales;
+    });
   };
 
   // =====================================================
@@ -422,6 +449,7 @@ export default function Productos() {
         id: formulario.id,
         nombre: formulario.nombre,
         categoria: formulario.categoria,
+        genero: formulario.genero,
         talla: formulario.talla,
         color: formulario.color,
         precio: Number(formulario.precio),
@@ -444,6 +472,7 @@ export default function Productos() {
               id: formulario.id,
               nombre: formulario.nombre,
               categoria: formulario.categoria,
+              genero: formulario.genero,
               talla: formulario.talla,
               color: formulario.color,
               precio: Number(formulario.precio),
@@ -918,6 +947,47 @@ export default function Productos() {
 
                 </div>
 
+                <div className="producto-form-group">
+
+                  <label>GÉNERO</label>
+
+                  <select
+                    value={formulario.genero}
+                    className={`input ${errores.genero ? "input-error" : ""}`}
+                    disabled={Boolean(
+                      GENERO_POR_CATEGORIA[formulario.categoria]
+                    )}
+                    onChange={(e) =>
+                      cambiarCampo(
+                        "genero",
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      Seleccionar género
+                    </option>
+
+                    {opcionesGenero
+                      .filter(
+                        (genero) =>
+                          !GENERO_POR_CATEGORIA[formulario.categoria] ||
+                          genero ===
+                            GENERO_POR_CATEGORIA[formulario.categoria]
+                      )
+                      .map((genero) => (
+                        <option
+                          key={genero}
+                          value={genero}
+                        >
+                          {genero.charAt(0).toUpperCase() +
+                            genero.slice(1)}
+                        </option>
+                      ))}
+                  </select>
+
+                </div>
+
               </div>
 
               {/* TALLA + COLOR */}
@@ -1188,6 +1258,18 @@ onChange={(e) =>
 
                     <div className="producto-info-value">
                       {productoSeleccionado.categoria}
+                    </div>
+
+                  </div>
+
+                  <div className="producto-info-group">
+
+                    <label>GÉNERO</label>
+
+                    <div className="producto-info-value">
+                      {productoSeleccionado.genero ||
+                        GENERO_POR_CATEGORIA[productoSeleccionado.categoria] ||
+                        "—"}
                     </div>
 
                   </div>

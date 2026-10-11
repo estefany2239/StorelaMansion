@@ -5,6 +5,10 @@ import "./ProductDetailPage.css";
 
 const normalizarTalla = (t) => String(t).trim().toUpperCase();
 
+const NOMBRES_CATEGORIA = { busos: "Buzos" };
+const nombreCategoria = (catKey) =>
+  NOMBRES_CATEGORIA[catKey] || (catKey ? catKey.charAt(0).toUpperCase() + catKey.slice(1) : "");
+
 export default function ProductDetailPage({ product, onBack, addToCart, catalogoCompleto }) {
   const [cantidad, setCantidad] = useState(1);
   const [imagenPrincipal, setImagenPrincipal] = useState(product?.image);
@@ -99,7 +103,7 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
 
             {!descripcion && (
               <div className="pdp-description">
-                <p>Producto {catKey ? catKey : ''} de alta calidad. Diseño moderno y acabado cuidado.</p>
+                <p>Producto {nombreCategoria(catKey)} de alta calidad. Diseño moderno y acabado cuidado.</p>
               </div>
             )}
 

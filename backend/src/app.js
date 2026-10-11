@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import productosRouter from './routes/productos.js'
 
 const app = express()
 
@@ -11,6 +12,8 @@ app.use(express.json())
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', app: 'Store La Mansión API' })
 })
+
+app.use('/api/productos', productosRouter)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', path: req.originalUrl })

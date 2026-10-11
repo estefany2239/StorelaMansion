@@ -7,7 +7,7 @@ const CATEGORY_TITLES = {
   camisetas: "Camisetas",
   camisas: "Camisas",
   gorras: "Gorras",
-  busos: "Busos",
+  busos: "Buzos",
   sudaderas: "Sudaderas",
   blusas: "Sudaderas",
   pantalones: "Pantalones",
