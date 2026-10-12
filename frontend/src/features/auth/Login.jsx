@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { vendedores } from "../../data/vendedoresData";
+import { iniciarSesion } from "../../services/api";
 
 import "./Login.css";
 
@@ -24,7 +25,6 @@ export default function Login({
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [vendedorSeleccionado, setVendedorSeleccionado] = useState("");
   const [error, setError] = useState("");
 
@@ -89,7 +89,7 @@ export default function Login({
     if (onLoginSuccess) onLoginSuccess(usuario);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -102,61 +102,25 @@ export default function Login({
       setEmailIntento(email);
     }
 
-    if (
-      email === "admin@storelamansion.com" &&
-      password === "Admin123"
-    ) {
+    try {
+      const data = await iniciarSesion(email, password);
+
+      localStorage.setItem("token", data.token);
       registrarAuditoria(email, "Éxito");
       setIntentosFallidos(0);
       setEmailIntento("");
-      const usuario = {
-        nombre: "Administrador",
-        email: email,
-        rol: "Administrador"
-      };
-      guardarSesion(usuario);
-      return;
+      guardarSesion(data.usuario);
+    } catch (err) {
+      registrarAuditoria(email, "Fallido");
+      const nuevosIntentos = intentosFallidos + 1;
+      setIntentosFallidos(nuevosIntentos);
+
+      if (nuevosIntentos >= 3) {
+        setTiempoBloqueo(60);
+      }
+
+      setError(err.message);
     }
-
-    if (
-      email === "cliente@storelamansion.com" &&
-      password === "Cliente123"
-    ) {
-      registrarAuditoria(email, "Éxito");
-      setIntentosFallidos(0);
-      setEmailIntento("");
-      const usuario = {
-        nombre: "Cliente",
-        email: email,
-        rol: "Cliente"
-      };
-      guardarSesion(usuario);
-      return;
-    }
-
-    registrarAuditoria(email, "Fallido");
-    const nuevosIntentos = intentosFallidos + 1;
-    setIntentosFallidos(nuevosIntentos);
-
-    if (nuevosIntentos >= 3) {
-      setTiempoBloqueo(60);
-    }
-
-    setError("Correo o contraseña incorrectos");
-  };
-
-  const fillDemoCredentials = (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setVendedorSeleccionado("");
-    setError("");
-  };
-
-  const fillDemoCuentaVendedor = () => {
-    setEmail("admin@storelamansion.com");
-    setPassword("Admin123");
-    setVendedorSeleccionado(vendedores[0]?.id || "");
-    setError("");
   };
 
   return (
@@ -248,15 +212,6 @@ export default function Login({
             )}
 
             <div className="auth-row-between">
-              <label className="auth-checkbox">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <span className="auth-checkmark" />
-                Recordarme
-              </label>
               <button type="button" onClick={onNavigateForgot} className="auth-link">
                 ¿Olvidaste tu contraseña?
               </button>
@@ -277,31 +232,6 @@ export default function Login({
               </button>
             </div>
           </form>
-
-          <div className="auth-demo">
-            <span className="auth-demo-title">CREDENCIALES DE DEMO</span>
-            <div
-              className="auth-demo-item"
-              onClick={() => fillDemoCredentials("admin@storelamansion.com", "Admin123")}
-            >
-              <strong>Administrador</strong>
-              <span>admin@storelamansion.com · Admin123</span>
-            </div>
-            <div
-              className="auth-demo-item"
-              onClick={() => fillDemoCredentials("cliente@storelamansion.com", "Cliente123")}
-            >
-              <strong>Cliente</strong>
-              <span>cliente@storelamansion.com · Cliente123</span>
-            </div>
-            <div
-              className="auth-demo-item"
-              onClick={fillDemoCuentaVendedor}
-            >
-              <strong>Vendedor</strong>
-              <span>Admin123 + elige vendedor en el selector</span>
-            </div>
-          </div>
 
         </div>
       </div>

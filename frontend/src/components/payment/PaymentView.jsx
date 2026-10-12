@@ -12,12 +12,37 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import {
-  obtenerPrecio,
-  crearPedido
-} from "../../features/store/pedidosCliente";
+import { obtenerPrecio } from "../../features/store/pedidosCliente";
+import { crearPedido } from "../../services/api";
+import { useNotify } from "../notifications/useNotify.js";
 
 import "./PaymentView.css";
+
+// Los abonos todavía no se persisten en el backend (no existe tabla de
+// abonos y Crédito registra monto 0). Se oculta la opción "Abonar una parte"
+// sin borrar el código, para poder reactivarla cuando exista soporte.
+const ABONOS_HABILITADOS = false;
+
+// Largo máximo de la columna domicilio.direccion_entrega (varchar(255)).
+const LARGO_MAX_DIRECCION = 255;
+
+// Une los datos de entrega en un único texto legible para el backend,
+// sin incluir campos vacíos. Formato fijo: "Nombre: X | Teléfono: Y | ...".
+const construirDireccion = ({
+  nombre,
+  telefono,
+  ciudad,
+  direccion,
+}) =>
+  [
+    ["Nombre", nombre],
+    ["Teléfono", telefono],
+    ["Ciudad", ciudad],
+    ["Dirección", direccion],
+  ]
+    .filter(([, valor]) => String(valor || "").trim())
+    .map(([etiqueta, valor]) => `${etiqueta}: ${String(valor).trim()}`)
+    .join(" | ");
 
 const ORDEN_CAMPOS = [
   "nombre",
@@ -43,11 +68,12 @@ const ID_CAMPO = {
 
 export default function PaymentView({
   cart,
-  user,
   onBack,
   onConfirmarPedido,
   darkMode,
 }) {
+  const notify = useNotify();
+  const [enviando, setEnviando] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transferenciaTipo, setTransferenciaTipo] = useState("");
   const [proofFile, setProofFile] = useState(null);
@@ -160,12 +186,28 @@ export default function PaymentView({
 
     const montoNum = Number(montoAbono);
 
-    if (tipoPago === "parcial") {
+    if (ABONOS_HABILITADOS && tipoPago === "parcial") {
       if (!montoAbono.trim() || Number.isNaN(montoNum) || montoNum <= 0) {
         marcar("abono", "Monto no válido.");
       } else if (montoNum > total) {
         marcar("abono", "Supera el total.");
       }
+    }
+
+    // Los datos de entrega se guardan juntos en direccion_entrega (varchar
+    // 255). Antes de enviar comprobamos que no se pase el largo permitido.
+    const direccionFinal = construirDireccion({
+      nombre: nombreEntrega,
+      telefono: telefonoEntrega,
+      ciudad: ciudadEntrega,
+      direccion: direccionEntrega,
+    });
+
+    if (!faltan.direccion && direccionFinal.length > LARGO_MAX_DIRECCION) {
+      marcar(
+        "direccion",
+        `Los datos de entrega superan el máximo permitido (${LARGO_MAX_DIRECCION} caracteres).`
+      );
     }
 
     return faltan;
@@ -175,7 +217,7 @@ export default function PaymentView({
      CONFIRMAR PAGO
   ========================================================= */
 
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     const faltan = validarPago();
     const claves = Object.keys(faltan);
 
@@ -191,18 +233,55 @@ export default function PaymentView({
 
     setErrores({});
 
-    const nuevoPedido = crearPedido({
-      clienteEmail: user?.email,
-      cart,
-      direccion: direccionEntrega.trim(),
-      paymentMethod,
-      transferenciaTipo,
-      tipoPago,
-      montoAbono
+    // Mapa a la nomenclatura del backend.
+    const metodoPago =
+      paymentMethod === "efectivo"
+        ? "Efectivo"
+        : paymentMethod === "credito"
+          ? "Crédito"
+          : "Transferencia";
+
+    const banco =
+      paymentMethod === "transferencia" && transferenciaTipo
+        ? transferenciaTipo === "nequi"
+          ? "Nequi"
+          : "Bancolombia"
+        : undefined;
+
+    const items = cart.map((item) => ({
+      id_variante: Number(item.id),
+      cantidad: Number(item.quantity) || 1,
+    }));
+
+    if (items.some((item) => !Number.isInteger(item.id_variante) || item.id_variante <= 0)) {
+      notify("Hay productos sin una variante válida. Vuelve a agregarlos.", "error");
+      return;
+    }
+
+    const direccion = construirDireccion({
+      nombre: nombreEntrega,
+      telefono: telefonoEntrega,
+      ciudad: ciudadEntrega,
+      direccion: direccionEntrega,
     });
 
-    if (onConfirmarPedido) {
-      onConfirmarPedido(nuevoPedido);
+    setEnviando(true);
+
+    try {
+      const pedido = await crearPedido({
+        items,
+        metodo_pago: metodoPago,
+        ...(banco ? { banco } : {}),
+        direccion,
+      });
+
+      if (onConfirmarPedido) {
+        onConfirmarPedido(pedido);
+      }
+    } catch (error) {
+      notify(error?.message || "No se pudo procesar el pago", "error");
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -1061,6 +1140,7 @@ export default function PaymentView({
               ¿CUÁNTO VAS A PAGAR?
           ================================================= */}
 
+          {ABONOS_HABILITADOS && (
           <section className="payment-card">
 
             <div className="section-heading">
@@ -1209,6 +1289,7 @@ export default function PaymentView({
             )}
 
           </section>
+          )}
 
         </div>
 
@@ -1334,6 +1415,7 @@ export default function PaymentView({
             type="button"
             className="confirm-payment-btn"
             onClick={handleConfirmPayment}
+            disabled={enviando}
           >
             Confirmar y pagar
           </button>

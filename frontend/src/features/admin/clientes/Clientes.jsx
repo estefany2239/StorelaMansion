@@ -16,6 +16,14 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+import {
+  obtenerClientes,
+  crearCliente,
+  actualizarCliente,
+  cambiarEstadoCliente as cambiarEstadoClienteApi,
+  eliminarCliente as eliminarClienteApi
+} from "../../../services/api";
+
 const REGISTROS_POR_PAGINA = 6;
 
 
@@ -25,84 +33,32 @@ export default function Clientes() {
   // CLIENTES
   // =====================================================
 
-  const [clientes, setClientes] = useState([
-    {
-      id: "CLI-001",
-      nombre: "María García",
-      correo: "cliente@storelamansion.com",
-      telefono: "+57 315 555 0002",
-      direccion: "Medellín, Antioquia",
-      estado: "Activo",
-      fecha: "2024-02-20",
-      pedidos: 5
-    },
+  const [clientes, setClientes] = useState([]);
 
-    {
-      id: "CLI-002",
-      nombre: "Valentina Torres",
-      correo: "valentina@email.com",
-      telefono: "+57 300 555 0004",
-      direccion: "Medellín, Antioquia",
-      estado: "Activo",
-      fecha: "2024-04-05",
-      pedidos: 8
-    },
+  const [cargando, setCargando] = useState(true);
 
-    {
-      id: "CLI-003",
-      nombre: "Sofía Martínez",
-      correo: "sofia@email.com",
-      telefono: "+57 318 555 0006",
-      direccion: "Bello, Antioquia",
-      estado: "Activo",
-      fecha: "2024-05-12",
-      pedidos: 4
-    },
+  const [errorCarga, setErrorCarga] = useState("");
 
-    {
-      id: "CLI-004",
-      nombre: "Camila Reyes",
-      correo: "camila@email.com",
-      telefono: "+57 304 555 0007",
-      direccion: "Envigado, Antioquia",
-      estado: "Activo",
-      fecha: "2024-06-08",
-      pedidos: 6
-    },
+  const mapearCliente = (cliente) => ({
+    ...cliente,
+    id: `CLI-${String(cliente.id).padStart(3, "0")}`
+  });
 
-    {
-id: "CLI-005",
-      nombre: "Santiago Gómez",
-      correo: "santiago@email.com",
-      telefono: "+57 311 555 0005",
-      direccion: "Calle 10 #20-15, Medellín",
-      estado: "Inactivo",
-      fecha: "2024-05-18",
-      pedidos: 0
-    },
+  const idBackend = (id) => Number(String(id).replace(/\D/g, ""));
 
-    {
-      id: "CLI-006",
-      nombre: "Marcela Ríos",
-      correo: "marcela@email.com",
-      telefono: "+57 318 555 0006",
-      direccion: "Carrera 45 #22-40, Cali",
-      estado: "Activo",
-      fecha: "2024-06-10",
-      pedidos: 3
-    },
+  useEffect(() => {
+    obtenerClientes()
+      .then((data) => {
+        setClientes(data.map(mapearCliente));
+      })
+      .catch(() => {
+        setErrorCarga("No se pudo conectar con el servidor");
+      })
+      .finally(() => {
+        setCargando(false);
+      });
+  }, []);
 
-    {
-      id: "CLI-007",
-      nombre: "Diego Muñoz",
-      correo: "diego@email.com",
-      telefono: "+57 320 555 0007",
-      direccion: "Av. 68 #55-10, Bogotá",
-      estado: "Inactivo",
-      fecha: "2024-06-25",
-      pedidos: 0
-    }
-  ]);
 
 
   // =====================================================
@@ -149,6 +105,23 @@ id: "CLI-005",
   });
 
   const [errores, setErrores] = useState({});
+
+  const manejarErrorServidor = (error) => {
+
+    const mensaje =
+      error?.message || "No se pudo completar la operación";
+
+    if (/correo/i.test(mensaje) && /existe|registrado/i.test(mensaje)) {
+
+      setErrores((actuales) => ({ ...actuales, correo: mensaje }));
+
+    } else {
+
+      mostrarToast(mensaje, "error");
+
+    }
+
+  };
 
 
   // =====================================================
@@ -343,40 +316,36 @@ id: "CLI-005",
   // CAMBIAR ESTADO DEL CLIENTE
   // =====================================================
 
-  const cambiarEstadoCliente = (cliente) => {
+  const cambiarEstadoCliente = async (cliente) => {
 
-    setClientes(
-      (actuales) =>
-        actuales.map(
-          (item) =>
-            item.id === cliente.id
-              ? {
-                  ...item,
-                  estado:
-                    item.estado === "Activo"
-                      ? "Inactivo"
-                      : "Activo"
-                }
-              : item
-        )
-    );
+    try {
 
-    // Si el detalle del cliente está abierto,
-    // también actualizamos el cliente seleccionado.
-    if (
-      clienteSeleccionado &&
-      clienteSeleccionado.id === cliente.id
-    ) {
-
-      setClienteSeleccionado(
-        (actual) => ({
-          ...actual,
-          estado:
-            actual.estado === "Activo"
-              ? "Inactivo"
-              : "Activo"
-        })
+      const actualizado = mapearCliente(
+        await cambiarEstadoClienteApi(idBackend(cliente.id))
       );
+
+      setClientes(
+        (actuales) =>
+          actuales.map(
+            (item) =>
+              item.id === cliente.id ? actualizado : item
+          )
+      );
+
+      // Si el detalle del cliente está abierto,
+      // también actualizamos el cliente seleccionado.
+      if (
+        clienteSeleccionado &&
+        clienteSeleccionado.id === cliente.id
+      ) {
+
+        setClienteSeleccionado(actualizado);
+
+      }
+
+    } catch (error) {
+
+      manejarErrorServidor(error);
 
     }
 
@@ -387,7 +356,7 @@ id: "CLI-005",
   // GUARDAR CLIENTE
   // =====================================================
 
-  const guardarCliente = () => {
+  const guardarCliente = async () => {
 
     const nuevosErrores = {};
 
@@ -463,35 +432,23 @@ if (modoEdicion) {
 
       return;
 
-    } else {
+    }
 
-      const nuevoCliente = {
+    try {
 
-        id: formulario.id,
+      const nuevoCliente = mapearCliente(
+        await crearCliente({
 
-        nombre:
-          formulario.nombre,
+          nombre: formulario.nombre,
 
-        correo:
-          formulario.correo,
+          correo: formulario.correo,
 
-        telefono:
-          formulario.telefono,
+          telefono: formulario.telefono,
 
-        direccion:
-          formulario.direccion,
+          direccion: formulario.direccion
 
-        estado:
-          formulario.estado,
-
-
-        fecha:
-          formulario.fecha,
-
-        pedidos: 0
-
-      };
-
+        })
+      );
 
       setClientes(
         (actuales) => [
@@ -502,41 +459,58 @@ if (modoEdicion) {
 
       mostrarToast("Cliente creado con éxito");
 
+      cerrarModal();
+
+    } catch (error) {
+
+      manejarErrorServidor(error);
+
     }
-
-
-    cerrarModal();
 
   };
 
 
-  const confirmarEdicionCliente = () => {
+  const confirmarEdicionCliente = async () => {
 
-    setClientes(
-      (actuales) =>
-        actuales.map(
-          (cliente) =>
-            cliente.id === formulario.id
-              ? {
-                  ...cliente,
-                  nombre:
-                    formulario.nombre,
-                  correo:
-                    formulario.correo,
-                  telefono:
-                    formulario.telefono,
-                  direccion:
-                    formulario.direccion,
-                  estado:
-                    formulario.estado
-                }
-              : cliente
-        )
-    );
+    try {
 
-    setConfirmarEdicion(false);
+      const actualizado = mapearCliente(
+        await actualizarCliente(idBackend(formulario.id), {
 
-    cerrarModal();
+          nombre: formulario.nombre,
+
+          correo: formulario.correo,
+
+          telefono: formulario.telefono,
+
+          direccion: formulario.direccion
+
+        })
+      );
+
+      setClientes(
+        (actuales) =>
+          actuales.map(
+            (cliente) =>
+              cliente.id === formulario.id
+                ? actualizado
+                : cliente
+          )
+      );
+
+      setConfirmarEdicion(false);
+
+      cerrarModal();
+
+      mostrarToast("Cliente actualizado con éxito");
+
+    } catch (error) {
+
+      setConfirmarEdicion(false);
+
+      manejarErrorServidor(error);
+
+    }
 
   };
 
@@ -563,17 +537,31 @@ if (modoEdicion) {
 
   };
 
-  const confirmarEliminarCliente = () => {
+  const confirmarEliminarCliente = async () => {
 
-    setClientes(
-      (actuales) =>
-        actuales.filter(
-          (item) =>
-            item.id !== clienteEliminar.id
-        )
-    );
+    try {
 
-    setClienteEliminar(null);
+      await eliminarClienteApi(idBackend(clienteEliminar.id));
+
+      setClientes(
+        (actuales) =>
+          actuales.filter(
+            (item) =>
+              item.id !== clienteEliminar.id
+          )
+      );
+
+      setClienteEliminar(null);
+
+      mostrarToast("Cliente eliminado con éxito");
+
+    } catch (error) {
+
+      setClienteEliminar(null);
+
+      manejarErrorServidor(error);
+
+    }
 
   };
 
@@ -870,7 +858,45 @@ if (modoEdicion) {
             )}
 
 
-            {clientesFiltrados.length === 0 && (
+            {cargando && (
+
+              <tr>
+
+                <td
+                  colSpan="5"
+                  className="clientes-empty"
+                >
+
+                  Cargando...
+
+                </td>
+
+              </tr>
+
+            )}
+
+
+            {errorCarga && !cargando && (
+
+              <tr>
+
+                <td
+                  colSpan="5"
+                  className="clientes-empty"
+                >
+
+                  {errorCarga}
+
+                </td>
+
+              </tr>
+
+            )}
+
+
+            {!cargando &&
+              !errorCarga &&
+              clientesFiltrados.length === 0 && (
 
               <tr>
 

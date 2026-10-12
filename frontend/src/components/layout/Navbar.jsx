@@ -6,14 +6,28 @@ export default function Navbar({
   user,
   onLoginClick,
   onNavigate,
+  onNavigateSection,
+  onBrandClick,
   onLogout,
   theme,
   onToggleTheme,
 }) {
+  const irA = (seccion) => (evento) => {
+    evento.preventDefault();
+    if (onNavigateSection) onNavigateSection(seccion);
+  };
+
   return (
     <header className="navbar">
       <div className="navbar__inner">
-        <a href="/" className="navbar__logo">
+        <a
+          href="/"
+          className="navbar__logo"
+          onClick={(evento) => {
+            evento.preventDefault();
+            if (onBrandClick) onBrandClick();
+          }}
+        >
           <ShoppingBag size={20} strokeWidth={1.75} color="var(--gold)" />
           <span className="navbar__logo-text">
             Store La Mansión
@@ -22,8 +36,8 @@ export default function Navbar({
         </a>
 
         <nav className="navbar__links">
-          <a href="/productos">Productos</a>
-          <a href="/categorias">Categorías</a>
+          <a href="/productos" onClick={irA("productos")}>Productos</a>
+          <a href="/categorias" onClick={irA("categorias")}>Categorías</a>
         </nav>
 
         <HeaderActions

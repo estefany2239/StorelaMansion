@@ -20,10 +20,13 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
   // Tallas reales del grupo (nunca inventadas) + listado completo del detalle
   const tallasDisponibles = getTallasDisponibles(product, catalogoCompleto || []);
   const disponiblesNorm = new Set(tallasDisponibles.map(normalizarTalla));
-  const tallasVisibles = [
-    ...TALLAS_ESTANDAR,
-    ...tallasDisponibles.filter((t) => !TALLAS_ESTANDAR.includes(normalizarTalla(t)))
-  ];
+    const esRopa = tallasDisponibles.some((t) => TALLAS_ESTANDAR.includes(normalizarTalla(t)));
+  const tallasVisibles = esRopa
+    ? [
+        ...TALLAS_ESTANDAR,
+        ...tallasDisponibles.filter((t) => !TALLAS_ESTANDAR.includes(normalizarTalla(t)))
+      ]
+    : tallasDisponibles;
 
   useEffect(() => {
     setImagenPrincipal(product?.image);

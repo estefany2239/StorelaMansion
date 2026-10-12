@@ -1480,7 +1480,9 @@ const normalizarNombreColor = (color) =>
     relojes: 'reloj',
   };
 
-  return allProducts.filter(product => {
+  const fuente = Array.isArray(catalogo) ? catalogo : allProducts;
+
+  return fuente.filter(product => {
     const prodCat = (product.categoryId || "").toLowerCase().trim();
 
     let catString = "";

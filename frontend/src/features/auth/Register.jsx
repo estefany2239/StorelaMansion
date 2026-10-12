@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight } from 'lucide-react';
+import { registrarUsuario } from '../../services/api';
+import { useNotify } from '../../components/notifications/useNotify.js';
 import './Login.css';
 
 const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
 
 export default function Register({ onBackToLogin }) {
+  const notify = useNotify();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,47 +20,25 @@ export default function Register({ onBackToLogin }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Las contraseñas no coinciden");
+      notify("Las contraseñas no coinciden", "error");
       return;
     }
 
-    const correo = formData.email.trim().toLowerCase();
+    try {
+      await registrarUsuario(
+        formData.name.trim(),
+        formData.email.trim(),
+        formData.password
+      );
 
-    const leerRegistrados = () => {
-      try {
-        return JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
-      } catch {
-        return [];
-      }
-    };
-
-    const fijos = [
-      "admin@storelamansion.com",
-      "cliente@storelamansion.com"
-    ];
-
-    const registrados = [
-      ...fijos,
-      ...leerRegistrados()
-    ];
-
-    const yaExiste = registrados.some(
-      (item) => String(item).toLowerCase() === correo
-    );
-
-    if (yaExiste) {
-      alert("Este correo ya está registrado.");
-      return;
+      notify("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.", "success");
+      onBackToLogin();
+    } catch (error) {
+      notify(error.message, "error");
     }
-
-    const actualizados = [...leerRegistrados(), correo];
-    localStorage.setItem("usuariosRegistrados", JSON.stringify(actualizados));
-
-    alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
-    onBackToLogin();
   };
 
   return (

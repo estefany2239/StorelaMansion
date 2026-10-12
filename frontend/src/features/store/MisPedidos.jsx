@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   X,
@@ -13,7 +13,70 @@ import {
 } from "lucide-react";
 
 import { getTotalAbonado, getSaldoPendiente } from "./pedidosCliente";
+import { obtenerMisPedidos } from "../../services/api";
+import { useCatalogo } from "../../hooks/useCatalogo";
 import "./MisPedidos.css";
+
+// Estados del backend -> estados visuales del cliente.
+const MAPA_ESTADO = {
+  Registrado: "En proceso",
+  "En preparación": "En proceso",
+  Despachado: "En camino",
+  Entregado: "Entregado",
+  Cancelado: "Cancelado"
+};
+
+// Los mensajes son textos informativos del frontend (la base no los guarda);
+// no se muestran fechas estimadas porque el backend no las persiste.
+const MENSAJES_ESTADO = {
+  "En proceso": "Tu pedido está siendo preparado",
+  "En camino": "Tu pedido está en camino",
+  Entregado: "Tu pedido fue entregado",
+  Cancelado: "Tu pedido fue cancelado"
+};
+
+const IMAGEN_FALLBACK =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#e5e5e5"/></svg>'
+  );
+
+// Convierte un pedido del backend al modelo que usa esta pantalla.
+const mapearPedido = (pedido, catalogo) => {
+  const estado = MAPA_ESTADO[pedido.estado] || "En proceso";
+
+  const productos = (pedido.items || []).map((item) => {
+    const variante = (catalogo || []).find(
+      (p) => Number(p.id) === Number(item.id_variante)
+    );
+
+    return {
+      nombre: item.nombre,
+      imagen: variante?.image || IMAGEN_FALLBACK,
+      cantidad: item.cantidad,
+      talla: item.talla || "-",
+      color: item.color || "-",
+      precio: Number(item.precio_unitario) || 0
+    };
+  });
+
+  const montoPagado = Number(pedido.monto_pagado) || 0;
+
+  return {
+    id: pedido.id,
+    fecha: pedido.fecha,
+    estado,
+    mensajeEstado: MENSAJES_ESTADO[estado],
+    estimadoEntrega: null,
+    direccion: pedido.direccion,
+    productos,
+    total: Number(pedido.total) || 0,
+    abonos:
+      montoPagado > 0
+        ? [{ fecha: pedido.fecha, valor: montoPagado, metodoPago: pedido.metodo_pago }]
+        : []
+  };
+};
 
 const formatearPrecio = (valor) =>
   "$" + Number(valor || 0).toLocaleString("es-CO");
@@ -140,14 +203,42 @@ function StepperPedido({ pedido }) {
 }
 
 export default function MisPedidos({ pedidos = [], onBack }) {
+  const { catalogo } = useCatalogo();
   const [filtro, setFiltro] = useState("todos");
   const [modalPedido, setModalPedido] = useState(null);
   const [modalTipo, setModalTipo] = useState(null);
+  const [pedidosApi, setPedidosApi] = useState(null);
+  const [errorPedidos, setErrorPedidos] = useState("");
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerMisPedidos()
+      .then((respuesta) => {
+        if (activo) setPedidosApi(respuesta);
+      })
+      .catch((error) => {
+        if (activo) {
+          setErrorPedidos(error?.message || "No se pudieron cargar tus pedidos");
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  const pedidosMapeados = useMemo(
+    () => (pedidosApi ? pedidosApi.map((p) => mapearPedido(p, catalogo)) : null),
+    [pedidosApi, catalogo]
+  );
+
+  const lista = pedidosMapeados ?? pedidos;
 
   const pedidosFiltrados =
     filtro === "todos"
-      ? pedidos
-      : pedidos.filter((pedido) => pedido.estado === filtro);
+      ? lista
+      : lista.filter((pedido) => pedido.estado === filtro);
 
   const cerrarModal = () => {
     setModalPedido(null);
@@ -186,6 +277,12 @@ export default function MisPedidos({ pedidos = [], onBack }) {
             Aquí puedes ver el estado de tus pedidos y los detalles de cada uno.
           </p>
         </div>
+
+        {errorPedidos && (
+          <p className="mp-subtitle" role="alert">
+            {errorPedidos}
+          </p>
+        )}
 
         <div className="mp-tabs">
           {TABS.map((tab) => (

@@ -256,53 +256,12 @@
   color: var(--gold, #c9a227);
 }
 
-/* --- CHECKBOX + LINKS --- */
+/* --- LINKS --- */
 
 .auth-row-between {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.auth-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  user-select: none;
-}
-
-.auth-checkbox input {
-  display: none;
-}
-
-.auth-checkmark {
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.auth-checkbox input:checked + .auth-checkmark {
-  background: var(--gold, #c9a227);
-  border-color: var(--gold, #c9a227);
-}
-
-.auth-checkbox input:checked + .auth-checkmark::after {
-  content: "";
-  width: 4px;
-  height: 8px;
-  border: solid #000000;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) translateY(-1px);
+  justify-content: flex-end;
 }
 
 .auth-link {

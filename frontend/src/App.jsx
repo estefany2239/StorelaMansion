@@ -15,10 +15,10 @@ import ForgotPassword from "./features/auth/ForgotPassword";
 
 import CartDrawer from "./components/cart/CartDrawer";
 import PaymentView from "./components/payment/PaymentView";
-import ClientNavbar from "./components/layout/ClientNavbar";
+import { useNotify } from "./components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
-import { allProducts } from "./data/productsData";
+import { useCatalogo } from "./hooks/useCatalogo";
 
 // VISTAS DEL CLIENTE LOGUEADO
 import MisPedidos from "./features/store/MisPedidos";
@@ -47,14 +47,74 @@ const obtenerPrecio = (precio) => {
 
 const formatoPrecio = (valor) => `$${valor.toLocaleString("es-CO")} COP`;
 
+// Resuelve un "destacado" del home a un producto real del catálogo (base de
+// datos). Criterio determinista: se toma el nombre del destacado y se busca
+// (sin tildes, en singular y plural) un producto activo cuyo nombre o
+// categoría lo contenga; si hay varios, se elige el de menor id_producto
+// (grupoId) y, dentro de ese grupo, la variante de menor id_variante.
+// Si no existe coincidencia, se devuelve null y el detalle queda sin compra.
+const sinTildes = (texto) =>
+  String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const resolverDestacado = (def, catalogo) => {
+  if (!def || !Array.isArray(catalogo) || catalogo.length === 0) return null;
+
+  const clave = sinTildes(def.name);
+  if (!clave) return null;
+
+  const claves = [clave];
+  if (clave.endsWith("s")) claves.push(clave.slice(0, -1));
+
+  const coincidencias = catalogo.filter((p) => {
+    const nombre = sinTildes(p.name);
+    const categoria = sinTildes(p.categoryId);
+    return claves.some((c) => c && (nombre.includes(c) || categoria.includes(c)));
+  });
+
+  if (coincidencias.length === 0) return null;
+
+  return coincidencias
+    .slice()
+    .sort(
+      (a, b) =>
+        Number(a.grupoId) - Number(b.grupoId) || Number(a.id) - Number(b.id)
+    )[0];
+};
+
+// Recupera la sesión guardada en localStorage (si existe y es válida).
+// El login guarda el usuario bajo la clave "usuario".
+const cargarUsuarioSesion = () => {
+  try {
+    const guardado = JSON.parse(localStorage.getItem("usuario"));
+    if (guardado && guardado.email && guardado.rol) return guardado;
+  } catch {
+    // sesión corrupta: se ignora y se empieza sin usuario
+  }
+  return null;
+};
+
+const esRolInterno = (rol) => rol === "Administrador" || rol === "Vendedor";
+
 
 export default function App() {
+
+  const notify = useNotify();
+
+  // Catálogo real (base de datos) reutilizado por destacados y catálogo.
+  const { catalogo } = useCatalogo();
 
   // ==========================================
   // VISTA ACTUAL
   // ==========================================
 
-  const [currentView, setCurrentView] = useState("home");
+  const [currentView, setCurrentView] = useState(() => {
+    const guardado = cargarUsuarioSesion();
+    return guardado && esRolInterno(guardado.rol) ? "admin" : "home";
+  });
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Producto de "Destacados" abierto en su detalle (vista propia sobre el home)
@@ -91,7 +151,7 @@ export default function App() {
   // USUARIO QUE INICIÓ SESIÓN
   // ==========================================
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(cargarUsuarioSesion);
 
 
   // ==========================================
@@ -156,7 +216,19 @@ export default function App() {
   // CARRITO
   // ==========================================
 
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    try {
+      const guardados = JSON.parse(localStorage.getItem("cartStoremansion"));
+      return Array.isArray(guardados) ? guardados : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persiste el carrito para no perderlo al recargar la página
+  useEffect(() => {
+    localStorage.setItem("cartStoremansion", JSON.stringify(cart));
+  }, [cart]);
 
 
   // ==========================================
@@ -281,6 +353,12 @@ export default function App() {
 
   const handleAddToCart = (product) => {
 
+    // Los destacados sin equivalente real en la base no se pueden comprar.
+    if (product?.sinVariante) {
+      notify("Este producto aún no está disponible para compra", "error");
+      return;
+    }
+
     addToCart(product);
 
     setIsCartOpen(true);
@@ -327,13 +405,22 @@ export default function App() {
 
   const handleLoginSuccess = (userData) => {
 
-    console.log(
-      "Usuario que inició sesión:",
-      userData
-    );
-
-    // Guardamos el usuario
+    // Guardamos el usuario que inició sesión
     setUser(userData);
+
+    // Reflejamos los datos de la cuenta en el perfil del cliente
+    setPerfilCliente((prev) => ({
+      ...prev,
+      nombre: userData.nombre || prev.nombre,
+      email: userData.email || prev.email
+    }));
+
+    // Administrador o vendedor: directo al panel administrativo
+    if (esRolInterno(userData.rol)) {
+      setFlujoCheckout(false);
+      setCurrentView("admin");
+      return;
+    }
 
 
     // Si venía del flujo de compra (gate), avanzar al pago
@@ -344,24 +431,8 @@ export default function App() {
     }
 
 
-    // Si es administrador o vendedor
-    if (
-      userData.rol === "Administrador" ||
-      userData.rol === "Vendedor"
-    ) {
-
-      console.log("Entrando al panel administrativo");
-
-      setCurrentView("admin");
-
-    } else {
-
-      // Si es cliente: al landing público
-      console.log("Entrando como cliente");
-
-      setCurrentView("home");
-
-    }
+    // Cliente: al landing público
+    setCurrentView("home");
 
   };
 
@@ -372,7 +443,11 @@ export default function App() {
 
   const handleLogout = () => {
 
+    localStorage.removeItem("usuario");
+    localStorage.removeItem("token");
+
     setUser(null);
+    setFlujoCheckout(false);
     setCurrentView("home");
 
   };
@@ -406,6 +481,32 @@ export default function App() {
 
 
   // ==========================================
+  // NAVEGACIÓN INTERNA DEL NAVBAR PÚBLICO
+  // Vuelve al landing y baja a la sección pedida
+  // ==========================================
+
+  const irASeccion = (seccionId) => {
+
+    setProductoDestacado(null);
+    setCurrentView("home");
+
+    window.setTimeout(() => {
+
+      const seccion = document.getElementById(seccionId);
+
+      if (seccion) {
+        seccion.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+
+    }, 60);
+
+  };
+
+
+  // ==========================================
   // CONFIRMAR PAGO: crea el pedido, lo guarda
   // y vacía el carrito
   // ==========================================
@@ -421,17 +522,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
   };
-
-
-  // ==========================================
-  // VISTAS DEL ÁREA DEL CLIENTE LOGUEADO
-  // ==========================================
-
-  const esVistaCliente =
-    currentView === "pago" ||
-    currentView === "compra-exitosa" ||
-    currentView === "mis-pedidos" ||
-    currentView === "configuracion";
 
 
   // ==========================================
@@ -480,49 +570,28 @@ export default function App() {
       {!isAuthView &&
         currentView !== "admin" && (
 
-        esVistaCliente && user ? (
-
-          <ClientNavbar
-
-            user={user}
-
-            theme={theme}
-
-            onToggleTheme={toggleTheme}
-
-            onNavigate={(vista) =>
-              setCurrentView(vista)
-            }
-
-            onLogout={() => {
-              alert("Sesión cerrada");
-              handleLogout();
-            }}
-
-            onBrandClick={() =>
-              setCurrentView("home")
-            }
-
-            currentView={currentView}
-
-          />
-
-        ) : (
-
           <Navbar
 
             user={user}
 
-            onLoginClick={() =>
-              setCurrentView("login")
-            }
+            onLoginClick={() => {
+              setFlujoCheckout(false);
+              setCurrentView("login");
+            }}
 
             onNavigate={(vista) =>
               setCurrentView(vista)
             }
 
+            onNavigateSection={irASeccion}
+
+            onBrandClick={() => {
+              setProductoDestacado(null);
+              setCurrentView("home");
+            }}
+
             onLogout={() => {
-              alert("Sesión cerrada");
+              notify("Sesión cerrada", "success");
               handleLogout();
             }}
 
@@ -530,8 +599,6 @@ export default function App() {
 
             onToggleTheme={toggleTheme}
           />
-
-        )
 
       )}
 
@@ -570,7 +637,8 @@ export default function App() {
 
           <FeaturedProducts
             onViewProduct={(product) => {
-              setProductoDestacado(product);
+              const real = resolverDestacado(product, catalogo);
+              setProductoDestacado(real || { ...product, sinVariante: true });
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
@@ -588,7 +656,7 @@ export default function App() {
 
          <ProductDetailPage
            product={productoDestacado}
-           catalogoCompleto={allProducts}
+           catalogoCompleto={catalogo}
            onBack={() => {
              setProductoDestacado(null);
              window.scrollTo({ top: 0, behavior: "smooth" });
@@ -694,7 +762,7 @@ export default function App() {
           onToggleTheme={toggleTheme}
 
           onLogout={() => {
-            alert("Sesión cerrada");
+            notify("Sesión cerrada", "success");
             handleLogout();
           }}
 

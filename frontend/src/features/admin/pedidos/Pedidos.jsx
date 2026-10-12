@@ -19,6 +19,11 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+import {
+  obtenerPedidos,
+  cambiarEstadoPedido as cambiarEstadoPedidoApi
+} from "../../../services/api";
+
 
 const ESTADOS_PEDIDO = [
   "Registrado",
@@ -26,6 +31,38 @@ const ESTADOS_PEDIDO = [
   "Despachado",
   "Entregado"
 ];
+
+
+// Convierte un pedido del backend a la forma que usa esta pantalla.
+const mapearPedidoBackend = (pedido) => ({
+  id: String(pedido.id),
+  idCliente: `CLI-${pedido.id_usuario}`,
+  cliente: pedido.cliente,
+  clienteCorreo: pedido.cliente_correo,
+  vendedor_id: undefined,
+  fecha: pedido.fecha,
+  total: Number(pedido.total) || 0,
+  estado: pedido.estado,
+  metodoPago: pedido.metodo_pago || "—",
+  direccion: pedido.direccion || "",
+  productos: (pedido.items || []).map((item) => ({
+    nombre: item.nombre,
+    cantidad: item.cantidad,
+    talla: item.talla || "-",
+    color: item.color || "-",
+    precio: Number(item.precio_unitario) || 0
+  })),
+  abonos:
+    Number(pedido.monto_pagado) > 0
+      ? [
+          {
+            fecha: pedido.fecha,
+            valor: Number(pedido.monto_pagado),
+            metodoPago: pedido.metodo_pago
+          }
+        ]
+      : []
+});
 
 
 const claseEstado = (estado) => {
@@ -60,218 +97,13 @@ export default function Pedidos({ vendedorId }) {
   // PEDIDOS
   // =====================================================
 
-  const [pedidos, setPedidos] = useState([
-    {
-      id: "PED-001",
-      idCliente: "CLI-001",
-      cliente: "María García",
-      vendedor_id: "USR-003",
-      fecha: "2024-07-10",
-      total: 805000,
-      estado: "Entregado",
-      metodoPago: "Crédito",
-      direccion: "Cll 72 #10-34, Medellín",
+  const [pedidos, setPedidos] = useState([]);
 
-      productos: [
-        {
-          nombre: "Vestido de Noche Premium",
-          cantidad: 1,
-          talla: "M",
-          color: "Negro",
-          precio: 485000
-        },
-        {
-          nombre: "Camiseta Clásica",
-          cantidad: 2,
-          talla: "M",
-          color: "Blanco",
-          precio: 160000
-        }
-      ],
+  // Los pedidos se cargan desde el backend (GET /api/pedidos). El mapeo a la
+  // forma que usa esta pantalla se hace en `mapearPedidoBackend`.
+  const [cargandoPedidos, setCargandoPedidos] = useState(true);
 
-      abonos: [
-        {
-          fecha: "2024-07-05",
-          valor: 300000,
-          metodoPago: "Efectivo"
-        },
-        {
-          fecha: "2024-07-10",
-          valor: 505000,
-          metodoPago: "Crédito"
-        }
-      ]
-    },
-
-    {
-      id: "PED-002",
-      idCliente: "CLI-002",
-      cliente: "Valentina Torres",
-      vendedor_id: "USR-006",
-      fecha: "2024-07-15",
-      total: 1250000,
-      estado: "En preparación",
-      metodoPago: "Transferencia",
-      direccion: "Cll 50 #45-20, Cali",
-
-      productos: [
-        {
-          nombre: "Traje Sastre Masculino",
-          cantidad: 1,
-          talla: "L",
-          color: "Negro",
-          precio: 750000
-        },
-        {
-          nombre: "Abrigo Wool Premium",
-          cantidad: 1,
-          talla: "M",
-          color: "Beige",
-          precio: 500000
-        }
-      ],
-
-      abonos: [
-        {
-          fecha: "2024-07-14",
-          valor: 500000,
-          metodoPago: "Transferencia"
-        }
-      ]
-    },
-
-    {
-      id: "PED-003",
-      idCliente: "CLI-003",
-      cliente: "Sofía Martínez",
-      vendedor_id: "USR-003",
-      fecha: "2024-07-20",
-      total: 395000,
-      estado: "Registrado",
-      metodoPago: "Efectivo",
-      direccion: "Cra 70 #15-30, Bogotá",
-
-      productos: [
-        {
-          nombre: "Vestido Cóctel Elegante",
-          cantidad: 1,
-          talla: "S",
-          color: "Negro",
-          precio: 395000
-        }
-      ],
-
-      abonos: []
-    },
-
-    {
-      id: "PED-004",
-      idCliente: "CLI-004",
-      cliente: "Camila Reyes",
-      vendedor_id: "USR-006",
-      fecha: "2024-07-25",
-      total: 890000,
-      estado: "Despachado",
-      metodoPago: "Crédito",
-      direccion: "Av. 80 #33-15, Medellín",
-
-      productos: [
-        {
-          nombre: "Traje Oscuro Clásico",
-          cantidad: 1,
-          talla: "L",
-          color: "Azul oscuro",
-          precio: 890000
-        }
-      ],
-
-      abonos: [
-        {
-          fecha: "2024-07-22",
-          valor: 400000,
-          metodoPago: "Crédito"
-        }
-      ]
-    },
-
-    {
-      id: "PED-005",
-      idCliente: "CLI-005",
-      cliente: "Santiago Gómez",
-      vendedor_id: "USR-003",
-      fecha: "2024-08-01",
-      total: 340000,
-      estado: "Registrado",
-      metodoPago: "Efectivo",
-      direccion: "Calle 10 #20-15, Medellín",
-
-      productos: [
-        {
-          nombre: "Vestido Cóctel Elegante",
-          cantidad: 1,
-          talla: "S",
-          color: "Negro",
-          precio: 340000
-        }
-      ],
-
-      abonos: []
-    },
-
-    {
-      id: "PED-006",
-      idCliente: "CLI-006",
-      cliente: "Marcela Ríos",
-      vendedor_id: "USR-006",
-      fecha: "2024-08-05",
-      total: 620000,
-      estado: "Despachado",
-      metodoPago: "Crédito",
-      direccion: "Carrera 45 #22-40, Cali",
-
-      productos: [
-        {
-          nombre: "Abrigo Wool Premium",
-          cantidad: 1,
-          talla: "M",
-          color: "Beige",
-          precio: 620000
-        }
-      ],
-
-      abonos: [
-        {
-          fecha: "2024-08-03",
-          valor: 620000,
-          metodoPago: "Crédito"
-        }
-      ]
-    },
-
-    {
-      id: "PED-007",
-      idCliente: "CLI-007",
-      cliente: "Diego Muñoz",
-      vendedor_id: "USR-003",
-      fecha: "2024-08-10",
-      total: 320000,
-      estado: "En preparación",
-      metodoPago: "Transferencia",
-      direccion: "Av. 68 #55-10, Bogotá",
-
-      productos: [
-        {
-          nombre: "Blazer Ejecutivo Femenino",
-          cantidad: 1,
-          talla: "S",
-          color: "Café",
-          precio: 320000
-        }
-      ],
-
-      abonos: []
-    }
-  ]);
+  const [errorPedidos, setErrorPedidos] = useState("");
 
 
   // =====================================================
@@ -299,6 +131,33 @@ export default function Pedidos({ vendedorId }) {
     useState(false);
 
   const { toast, mostrarToast } = useToast();
+
+
+  // =====================================================
+  // CARGA DE PEDIDOS DESDE EL BACKEND
+  // =====================================================
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerPedidos()
+      .then((respuesta) => {
+        if (!activo) return;
+        setPedidos((respuesta || []).map(mapearPedidoBackend));
+        setErrorPedidos("");
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setErrorPedidos(error?.message || "No se pudieron cargar los pedidos");
+      })
+      .finally(() => {
+        if (activo) setCargandoPedidos(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
 
   // =========================================================
@@ -940,54 +799,53 @@ export default function Pedidos({ vendedorId }) {
   // AVANZAR ESTADO
   // =====================================================
 
-  const avanzarEstado = (id) => {
+  // Persiste el nuevo estado en el backend y refresca la fila.
+  const aplicarEstadoBackend = async (pedido, nuevoEstado) => {
 
-    setPedidos((actuales) =>
+    try {
 
-      actuales.map((pedido) => {
+      const actualizado = await cambiarEstadoPedidoApi(
+        pedido.id,
+        nuevoEstado
+      );
 
-        if (pedido.id !== id) {
+      setPedidos((prev) =>
+        prev.map((item) =>
+          item.id === pedido.id
+            ? mapearPedidoBackend(actualizado)
+            : item
+        )
+      );
 
-          return pedido;
+      mostrarToast("Estado actualizado con éxito");
 
-        }
+    } catch (error) {
 
+      mostrarToast(
+        error?.message || "No se pudo cambiar el estado",
+        "error"
+      );
 
-        if (pedido.estado === "Registrado") {
+    }
 
-          return {
-            ...pedido,
-            estado: "En preparación"
-          };
-
-        }
-
-
-        if (pedido.estado === "En preparación") {
-
-          return {
-            ...pedido,
-            estado: "Despachado"
-          };
-
-        }
-
-
-        if (pedido.estado === "Despachado") {
-
-          return {
-            ...pedido,
-            estado: "Entregado"
-          };
-
-        }
+  };
 
 
-        return pedido;
+  const avanzarEstado = async (id) => {
 
-      })
+    const pedido = pedidos.find((item) => item.id === id);
 
-    );
+    if (!pedido) return;
+
+    const siguiente = {
+      "Registrado": "En preparación",
+      "En preparación": "Despachado",
+      "Despachado": "Entregado"
+    }[pedido.estado];
+
+    if (!siguiente) return;
+
+    await aplicarEstadoBackend(pedido, siguiente);
 
   };
 
@@ -1009,11 +867,7 @@ export default function Pedidos({ vendedorId }) {
       `¿Deseas cancelar el pedido "${pedido.id}"?`
     );
     if (!confirmar) return;
-    setPedidos((prev) =>
-      prev.map((item) =>
-        item.id === pedido.id ? { ...item, estado: "Cancelado" } : item
-      )
-    );
+    aplicarEstadoBackend(pedido, "Cancelado");
   };
 
 
@@ -1054,6 +908,12 @@ export default function Pedidos({ vendedorId }) {
 
     setEstadoAbiertoId(null);
 
+    if (nuevoEstado === pedido.estado) {
+
+      return;
+
+    }
+
     if (nuevoEstado === "Cancelado") {
 
       cancelarPedido(pedido);
@@ -1062,13 +922,7 @@ export default function Pedidos({ vendedorId }) {
 
     }
 
-    setPedidos((prev) =>
-      prev.map((item) =>
-        item.id === pedido.id
-          ? { ...item, estado: nuevoEstado }
-          : item
-      )
-    );
+    aplicarEstadoBackend(pedido, nuevoEstado);
 
   };
 
@@ -1665,7 +1519,11 @@ export default function Pedidos({ vendedorId }) {
                   className="pedidos-empty"
                 >
 
-                  Pedido no encontrado en el sistema.
+                  {cargandoPedidos
+                    ? "Cargando pedidos..."
+                    : errorPedidos
+                      ? errorPedidos
+                      : "Pedido no encontrado en el sistema."}
 
                 </td>
 
