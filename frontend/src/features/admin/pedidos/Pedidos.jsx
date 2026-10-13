@@ -136,6 +136,9 @@ export default function Pedidos({ vendedorId }) {
   const [confirmarEdicion, setConfirmarEdicion] =
     useState(false);
 
+  const [pedidoACancelar, setPedidoACancelar] =
+    useState(null);
+
   const { toast, mostrarToast } = useToast();
 
   // Con la edición completa desactivada, al editar solo el estado es editable.
@@ -835,7 +838,11 @@ export default function Pedidos({ vendedorId }) {
   // =====================================================
 
   // Persiste el nuevo estado en el backend y refresca la fila.
-  const aplicarEstadoBackend = async (pedido, nuevoEstado) => {
+  const aplicarEstadoBackend = async (
+    pedido,
+    nuevoEstado,
+    mensajeExito = "Estado actualizado con éxito"
+  ) => {
 
     try {
 
@@ -852,7 +859,7 @@ export default function Pedidos({ vendedorId }) {
         )
       );
 
-      mostrarToast("Estado actualizado con éxito");
+      mostrarToast(mensajeExito);
 
     } catch (error) {
 
@@ -891,18 +898,31 @@ export default function Pedidos({ vendedorId }) {
 
   const cancelarPedido = (pedido) => {
     if (pedido.estado === "Entregado" || pedido.estado === "Cancelado") {
-      alert(
+      mostrarToast(
         pedido.estado === "Cancelado"
           ? "Este pedido ya está cancelado."
-          : "No se puede cancelar un pedido que ya fue entregado."
+          : "No se puede cancelar un pedido que ya fue entregado.",
+        "error"
       );
       return;
     }
-    const confirmar = window.confirm(
-      `¿Deseas cancelar el pedido "${pedido.id}"?`
+    setPedidoACancelar(pedido);
+  };
+
+
+  // Ejecuta la cancelación real cuando el usuario confirma en la tarjeta.
+  const confirmarCancelarPedido = async () => {
+    if (!pedidoACancelar) return;
+
+    const pedido = pedidoACancelar;
+
+    setPedidoACancelar(null);
+
+    await aplicarEstadoBackend(
+      pedido,
+      "Cancelado",
+      "Pedido cancelado correctamente."
     );
-    if (!confirmar) return;
-    aplicarEstadoBackend(pedido, "Cancelado");
   };
 
 
@@ -2937,6 +2957,21 @@ export default function Pedidos({ vendedorId }) {
         variante="info"
         onConfirmar={confirmarEdicionPedido}
         onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+      <ConfirmDialog
+        abierto={!!pedidoACancelar}
+        titulo="Cancelar pedido"
+        mensaje={
+          <>¿Deseas cancelar el pedido "
+            <strong>{pedidoACancelar?.id}</strong>"? Se
+            devolverá el stock de sus productos.</>
+        }
+        textoConfirmar="Sí, cancelar"
+        textoCancelar="Volver"
+        variante="peligro"
+        onConfirmar={confirmarCancelarPedido}
+        onCancelar={() => setPedidoACancelar(null)}
       />
 
       <Toast toast={toast} />

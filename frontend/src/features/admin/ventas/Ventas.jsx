@@ -14,6 +14,7 @@ import { jsPDF } from "jspdf";
 import "./Ventas.css";
 
 import Pagination from "../components/Pagination";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
@@ -185,6 +186,9 @@ export default function Ventas({ vendedorId }) {
 
 
   const [ventaSeleccionada, setVentaSeleccionada] =
+    useState(null);
+
+  const [ventaACancelar, setVentaACancelar] =
     useState(null);
 
   const { toast, mostrarToast } = useToast();
@@ -597,13 +601,21 @@ export default function Ventas({ vendedorId }) {
 
   const anularVenta = (venta) => {
     if (venta.estado === "Cancelada") {
-      alert("Esta venta ya está cancelada.");
+      mostrarToast("Esta venta ya está cancelada.", "error");
       return;
     }
-    const confirmar = window.confirm(
-      `¿Deseas anular la venta "${venta.id}"? Esta acción no se puede deshacer.`
-    );
-    if (!confirmar) return;
+    setVentaACancelar(venta);
+  };
+
+
+  // Ejecuta la anulación real cuando el usuario confirma en la tarjeta.
+  const confirmarAnularVenta = () => {
+    if (!ventaACancelar) return;
+
+    const venta = ventaACancelar;
+
+    setVentaACancelar(null);
+
     setVentas((prev) =>
       prev.map((item) =>
         item.id === venta.id ? { ...item, estado: "Cancelada" } : item
@@ -1925,6 +1937,21 @@ export default function Ventas({ vendedorId }) {
         </div>
 
       )}
+
+      <ConfirmDialog
+        abierto={!!ventaACancelar}
+        titulo="Anular venta"
+        mensaje={
+          <>¿Deseas anular la venta "
+            <strong>{ventaACancelar?.id}</strong>"? Esta
+            acción no se puede deshacer.</>
+        }
+        textoConfirmar="Sí, anular"
+        textoCancelar="Volver"
+        variante="peligro"
+        onConfirmar={confirmarAnularVenta}
+        onCancelar={() => setVentaACancelar(null)}
+      />
 
       <Toast toast={toast} />
 
