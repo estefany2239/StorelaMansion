@@ -25,6 +25,26 @@
   --gold-dark: #b19128;
   --gold-light: #e7c248;
 
+  /* Color base ÚNICO de las secciones contiguas del landing.
+     Todas comparten exactamente este negro en su borde superior e
+     inferior, de modo que no se vea un salto de color entre secciones. */
+  --section-base: #0a0a0a;
+
+  /* Difuminado dorado compartido entre secciones del landing.
+     El glow vive hacia el centro/esquina y se desvanece ANTES de tocar
+     los bordes superior e inferior, para que el color del borde sea
+     siempre --section-base (sin costuras). */
+  --gold-glow-top: radial-gradient(
+    ellipse 75% 65% at 25% 45%,
+    color-mix(in srgb, var(--gold) 10%, transparent) 0%,
+    transparent 68%
+  );
+  --gold-glow-bottom: radial-gradient(
+    ellipse 75% 65% at 80% 58%,
+    color-mix(in srgb, var(--gold) 6%, transparent) 0%,
+    transparent 68%
+  );
+
   /* Layout y tipografía */
   --max-width: 1280px;
   --font-display: "Playfair Display", Georgia, serif;
@@ -67,6 +87,20 @@
   --gold: #d4af37;
   --gold-dark: #e5c158;
   --gold-light: #e7c75c;
+
+  /* Difuminado dorado compartido entre secciones del landing.
+     Mismo criterio que en Light: el glow se aleja de los bordes y
+     termina en --section-base, sin cortes entre secciones. */
+  --gold-glow-top: radial-gradient(
+    ellipse 75% 65% at 25% 45%,
+    color-mix(in srgb, var(--gold) 12%, transparent) 0%,
+    transparent 68%
+  );
+  --gold-glow-bottom: radial-gradient(
+    ellipse 75% 65% at 80% 58%,
+    color-mix(in srgb, var(--gold) 8%, transparent) 0%,
+    transparent 68%
+  );
 
   /* Alias heredados (vistas de cliente / StoreDashboard) */
   --bg-color: var(--bg-main);

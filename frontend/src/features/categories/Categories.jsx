@@ -51,7 +51,7 @@ export default function Categories({ onSelectCategory }) {
   };
 
   return (
-    <section className="categories-section" id="categorias">
+    <section className="categories-section section-glow" id="categorias">
       <div className="categories">
         <h2 className="categories__title">Nuestras Categorías</h2>
 

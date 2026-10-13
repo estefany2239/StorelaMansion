@@ -7,6 +7,7 @@ import Navbar from "./components/layout/Navbar";
 import Hero from "./features/home/Hero";
 import Categories from "./features/categories/Categories";
 import FeaturedProducts from "./features/home/products/FeaturedProducts";
+import About from "./features/home/About";
 import Footer from "./components/layout/Footer";
 
 import Login from "./features/auth/Login";
@@ -642,6 +643,8 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
+
+          <About />
 
         </main>
 

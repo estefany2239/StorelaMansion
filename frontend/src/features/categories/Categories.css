@@ -3,12 +3,11 @@
    ========================================== */
 .categories-section {
   width: 100%;
-  background-color: var(--cream, #f5ead6) !important;
+  /* Color base único compartido con las secciones contiguas: el fondo
+     coincide exactamente con el de Productos Destacados y "Sobre
+     nosotros", así no hay salto de color entre secciones. */
+  background-color: var(--section-base, #0a0a0a) !important;
   transition: background-color 0.3s ease;
-}
-
-[data-theme="dark"] .categories-section {
-  background-color: var(--bg-dark, #0a0a0a) !important;
 }
 
 /* ==========================================
@@ -25,13 +24,9 @@
   text-align: center;
   font-family: var(--font-display, "Playfair Display", serif);
   font-size: 2.2rem;
-  color: var(--ink, #1a1a1a);
+  color: #f0f0f0;
   margin-bottom: 40px;
   font-weight: 600;
-}
-
-[data-theme="dark"] .categories__title {
-  color: #f0f0f0;
 }
 
 /* ==========================================

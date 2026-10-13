@@ -3,7 +3,9 @@
    ========================================== */
 
 .featured {
-  background: var(--cream); /* Fondo beige de la sección */
+  /* Color base único compartido con las secciones contiguas (sin cortes).
+     background-color (no shorthand) para no pisar el glow de .section-glow. */
+  background-color: var(--section-base, #0a0a0a) !important;
   padding: 60px 24px; /* Reducido ligeramente de 80px a 60px */
   transition: background-color 0.3s ease;
 }
@@ -24,7 +26,7 @@
   font-size: 11.5px; /* Ligeramente más pequeño */
   font-weight: 600;
   letter-spacing: 0.14em;
-  color: var(--gold-dark);
+  color: var(--gold);
   margin-bottom: 8px;
   text-transform: uppercase;
 }
@@ -33,7 +35,7 @@
   font-family: var(--font-display);
   font-size: clamp(24px, 3vw, 32px); /* Un poco más estilizado y ajustado */
   font-weight: 500;
-  color: var(--ink);
+  color: #f0f0f0;
   margin: 0;
 }
 
@@ -136,15 +138,10 @@
    SOPORTE MODO OSCURO ([data-theme="dark"])
    ========================================== */
 
-[data-theme="dark"] .featured {
-  background: var(--bg-dark, #0a0a0a);
-}
-
 [data-theme="dark"] .product-card {
   background-color: var(--card-bg, #141414) !important;
 }
 
-[data-theme="dark"] .featured__title,
 [data-theme="dark"] .product-card__name {
   color: #f0f0f0;
 }

@@ -1,0 +1,476 @@
+/* ==========================================
+   SECCIÓN "SOBRE NOSOTROS"
+   Panel oscuro y dorado (siempre oscura, en
+   Light y Dark mode, como el Hero).
+   ========================================== */
+
+.about {
+  position: relative;
+  width: 100%;
+  padding: 72px 20px;
+  background-color: var(--section-base, #0a0a0a) !important;
+  /* El difuminado dorado (glow arriba y abajo) se aplica con la
+     clase compartida .section-glow--both definida en index.css. */
+  color: #f4f4f4 !important;
+}
+
+.about__inner {
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+}
+
+/* ---------- Panel superior: 3 columnas ---------- */
+.about__panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(240px, 30%) 1fr auto minmax(220px, 26%);
+  align-items: stretch;
+  /* Sin contorno dorado (la franja inferior sí lo conserva). */
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #151515 0%, #0e0e0e 55%, #0a0a0a 100%);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+/* Columna izquierda: foto a toda la altura */
+.about__media {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.about__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Degradado oscuro hacia el borde derecho para fundirse con el panel */
+.about__media-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0) 45%,
+    rgba(13, 13, 13, 0.7) 78%,
+    #101010 100%
+  );
+  pointer-events: none;
+}
+
+/* Columna central: texto */
+.about__main {
+  padding: 46px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.about__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold, #d8b438);
+}
+
+.about__eyebrow::before {
+  content: "";
+  width: 30px;
+  height: 2px;
+  background: var(--gold, #d8b438);
+  border-radius: 2px;
+}
+
+.about__title {
+  margin-bottom: 22px;
+  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  font-weight: 600;
+  line-height: 1.18;
+  color: #ffffff;
+}
+
+.about__title-gold {
+  color: var(--gold, #d8b438);
+  font-style: italic;
+}
+
+.about__text {
+  margin-bottom: 16px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #d8d8d8;
+}
+
+.about__text:last-of-type {
+  margin-bottom: 26px;
+}
+
+/* Frase manuscrita (2 líneas, inclinada) + subrayado curvo */
+.about__signature {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 8px;
+  transform: rotate(-5deg);
+  transform-origin: left center;
+}
+
+.about__signature-text {
+  display: inline-block;
+  font-family: "Allura", "Great Vibes", cursive;
+  font-size: 2.05rem;
+  line-height: 1.05;
+  color: var(--gold-light, #e7c248);
+}
+
+.about__signature-line {
+  width: 210px;
+  max-width: 100%;
+  height: 12px;
+  margin-top: 2px;
+}
+
+.about__signature-line path {
+  fill: none;
+  stroke: var(--gold, #d8b438);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Divisor vertical dorado */
+.about__divider {
+  justify-self: center;
+  width: 1px;
+  margin: 30px 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(216, 180, 56, 0.55) 50%,
+    transparent 100%
+  );
+}
+
+/* Columna derecha: beneficios */
+.about__benefits-col {
+  padding: 46px 36px 46px 30px;
+  display: flex;
+  align-items: center;
+}
+
+.about__benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+
+.about__benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.about__benefit-icon {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(216, 180, 56, 0.55);
+  background: rgba(216, 180, 56, 0.08);
+  color: var(--gold, #d8b438);
+}
+
+.about__benefit-title {
+  margin: 0 0 4px;
+  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.about__benefit-text {
+  margin: 0;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #bdbdbd;
+}
+
+/* ---------- Franja inferior de datos ---------- */
+.about__stats {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: minmax(120px, 20%) 1fr auto;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border: 1px solid rgba(216, 180, 56, 0.28);
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #131313 0%, #0b0b0b 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+/* Foto decorativa a la izquierda (~20%), oscurecida y difuminada a la derecha */
+.about__stats-photo {
+  position: relative;
+  overflow: hidden;
+  min-height: 96px;
+}
+
+.about__stats-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.28;
+  filter: saturate(0.85);
+}
+
+.about__stats-photo-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(19, 19, 19, 0) 0%,
+    rgba(19, 19, 19, 0.55) 55%,
+    rgba(19, 19, 19, 0.96) 100%
+  );
+  pointer-events: none;
+}
+
+.about__stats-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  width: 100%;
+  padding: 26px 20px 26px 10px;
+}
+
+.about__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 0 18px;
+  border-left: 1px solid rgba(216, 180, 56, 0.18);
+}
+
+.about__stat:first-child {
+  border-left: none;
+}
+
+.about__stat-icon {
+  color: var(--gold, #d8b438);
+  display: inline-flex;
+}
+
+.about__stat-value {
+  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold-light, #e7c248);
+  line-height: 1.2;
+  white-space: pre-line; /* respeta el salto de línea de la fecha */
+}
+
+.about__stat-label {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+
+/* Frase manuscrita (2 líneas, inclinada) + subrayado curvo */
+.about__stats-signature {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: "Allura", "Great Vibes", cursive;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  color: var(--gold-light, #e7c248);
+  white-space: nowrap;
+  padding: 22px 34px 22px 20px;
+  transform: rotate(-4deg);
+  transform-origin: left center;
+}
+
+.about__stats-signature-line {
+  width: 190px;
+  max-width: 100%;
+  height: 12px;
+  margin-top: 2px;
+}
+
+.about__stats-signature-line path {
+  fill: none;
+  stroke: var(--gold, #d8b438);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* ==========================================
+   TABLET
+   ========================================== */
+@media (max-width: 1024px) {
+  .about {
+    padding: 56px 18px;
+  }
+
+  .about__panel {
+    grid-template-columns: 1fr;
+  }
+
+  .about__media {
+    min-height: 0;
+  }
+
+  .about__img {
+    height: 300px;
+    min-height: 0;
+  }
+
+  /* Ahora la foto va arriba: el desvanecido apunta hacia abajo */
+  .about__media-fade {
+    background: linear-gradient(
+      180deg,
+      rgba(10, 10, 10, 0) 55%,
+      rgba(13, 13, 13, 0.85) 100%
+    );
+  }
+
+  .about__main {
+    padding: 34px 32px 30px;
+  }
+
+  .about__divider {
+    display: none;
+  }
+
+  .about__benefits-col {
+    padding: 30px 32px 38px;
+    border-top: 1px solid rgba(216, 180, 56, 0.18);
+  }
+
+  .about__benefits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 28px;
+  }
+
+  .about__stats {
+    grid-template-columns: minmax(96px, 24%) 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  .about__stats-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px 0;
+    padding: 24px 18px;
+  }
+
+  .about__stat:nth-child(odd) {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .about__stats-signature {
+    grid-column: 1 / -1;
+    justify-self: center;
+    align-items: center;
+    text-align: center;
+    white-space: normal;
+    padding: 6px 20px 22px;
+  }
+}
+
+/* ==========================================
+   CELULAR
+   ========================================== */
+@media (max-width: 640px) {
+  .about {
+    padding: 44px 14px;
+  }
+
+  .about__img {
+    height: 230px;
+  }
+
+  .about__main {
+    padding: 28px 20px 24px;
+  }
+
+  .about__title {
+    font-size: 1.9rem;
+  }
+
+  .about__benefits-col {
+    padding: 24px 20px 30px;
+  }
+
+  .about__benefits {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .about__stats {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .about__stats-photo {
+    min-height: 84px;
+  }
+
+  .about__stats-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 0;
+    padding: 20px 12px;
+  }
+
+  .about__stat {
+    padding: 0 12px;
+  }
+
+  .about__stat-value {
+    font-size: 1rem;
+  }
+
+  .about__stats-signature {
+    justify-self: center;
+    align-items: center;
+    text-align: center;
+    font-size: 1.5rem;
+    white-space: normal;
+    padding: 4px 16px 20px;
+  }
+}
+
+/* Movimiento reducido: sin transiciones */
+@media (prefers-reduced-motion: reduce) {
+  .about * {
+    transition: none !important;
+  }
+}

@@ -401,3 +401,23 @@ div[class*="view"] {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ==========================================
+   9. DIFUMINADO DORADO COMPARTIDO ENTRE SECCIONES
+   Se aplica a las secciones oscuras del landing
+   (excepto Hero y Footer). Al ser degradados que
+   terminan en transparente, se funden con el fondo
+   sin cortes entre una sección y la siguiente.
+   ========================================== */
+.section-glow {
+  background-image: var(--gold-glow-top) !important;
+  background-repeat: no-repeat;
+}
+
+.section-glow--bottom {
+  background-image: var(--gold-glow-bottom) !important;
+}
+
+.section-glow--both {
+  background-image: var(--gold-glow-top), var(--gold-glow-bottom) !important;
+}

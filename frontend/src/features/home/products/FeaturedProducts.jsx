@@ -30,7 +30,7 @@ const obtenerDescripcion = (product) => {
 
 export default function FeaturedProducts({ onViewProduct }) {
   return (
-    <section className="featured" id="productos">
+    <section className="featured section-glow section-glow--bottom" id="productos">
       <div className="featured__inner">
         <div className="featured__header">
           <span className="featured__eyebrow">Lo más destacado</span>
