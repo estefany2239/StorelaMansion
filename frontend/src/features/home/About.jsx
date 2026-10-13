@@ -1,13 +1,3 @@
-import {
-  Gem,
-  Truck,
-  ShieldCheck,
-  Users,
-  Calendar,
-  Crown,
-  MapPin,
-  Heart,
-} from "lucide-react";
 import fotoTienda from "../../assets/img/tienda-la-mansion.png";
 import "./About.css";
 
@@ -47,53 +37,11 @@ const CONTENIDO = {
   ],
   // Cada frase manuscrita se parte en dos líneas (mismo texto).
   firma: ["Gracias por ser parte", "de esta historia"],
-  beneficios: [
-    {
-      icono: Gem,
-      titulo: "Calidad garantizada",
-      texto:
-        "Trabajamos con las mejores marcas y productos, para que siempre luzcas lo mejor.",
-    },
-    {
-      icono: Truck,
-      titulo: "Variedad y estilo",
-      texto:
-        "Encuentra gorras, tenis, relojes, accesorios, camisetas, sudaderas y más. Todo en un solo lugar.",
-    },
-    {
-      icono: ShieldCheck,
-      titulo: "Confianza",
-      texto:
-        "Tu compra es segura. Contamos con métodos de pago confiables y atención personalizada.",
-    },
-    {
-      icono: Users,
-      titulo: "Cercanía",
-      texto:
-        "Somos un equipo de 2 personas en tienda y 1 en domicilios, siempre atentos a lo que necesites.",
-    },
-  ],
   datos: [
-    {
-      icono: Calendar,
-      valor: "4 de diciembre\n2019",
-      etiqueta: "FECHA DE FUNDACIÓN",
-    },
-    {
-      icono: Crown,
-      valor: `${ANIOS_TEXTO} años`,
-      etiqueta: "EN EL COMERCIO",
-    },
-    {
-      icono: MapPin,
-      valor: "Medellín Villa Hermosa",
-      etiqueta: "LA MANSIÓN",
-    },
-    {
-      icono: Heart,
-      valor: "Miles",
-      etiqueta: "DE CLIENTES SATISFECHOS",
-    },
+    { valor: "4 de diciembre\n2019", etiqueta: "FECHA DE FUNDACIÓN" },
+    { valor: `${ANIOS_TEXTO} años`, etiqueta: "EN EL COMERCIO" },
+    { valor: "Medellín Villa Hermosa", etiqueta: "LA MANSIÓN" },
+    { valor: "Miles", etiqueta: "DE CLIENTES SATISFECHOS" },
   ],
   firmaFranja: ["Tu estilo,", "nuestra pasión."],
 };
@@ -145,27 +93,6 @@ export default function About() {
               </svg>
             </p>
           </div>
-
-          <span className="about__divider" aria-hidden="true" />
-
-          <div className="about__benefits-col">
-            <ul className="about__benefits">
-              {CONTENIDO.beneficios.map((beneficio, i) => {
-                const Icono = beneficio.icono;
-                return (
-                  <li className="about__benefit" key={i}>
-                    <span className="about__benefit-icon" aria-hidden="true">
-                      <Icono size={20} strokeWidth={1.75} />
-                    </span>
-                    <div className="about__benefit-body">
-                      <h3 className="about__benefit-title">{beneficio.titulo}</h3>
-                      <p className="about__benefit-text">{beneficio.texto}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
         </div>
 
         <div className="about__stats">
@@ -175,18 +102,12 @@ export default function About() {
           </div>
 
           <ul className="about__stats-list">
-            {CONTENIDO.datos.map((dato, i) => {
-              const Icono = dato.icono;
-              return (
-                <li className="about__stat" key={i}>
-                  <span className="about__stat-icon" aria-hidden="true">
-                    <Icono size={18} strokeWidth={1.75} />
-                  </span>
-                  <span className="about__stat-value">{dato.valor}</span>
-                  <span className="about__stat-label">{dato.etiqueta}</span>
-                </li>
-              );
-            })}
+            {CONTENIDO.datos.map((dato, i) => (
+              <li className="about__stat" key={i}>
+                <span className="about__stat-value">{dato.valor}</span>
+                <span className="about__stat-label">{dato.etiqueta}</span>
+              </li>
+            ))}
           </ul>
 
           <p className="about__stats-signature">

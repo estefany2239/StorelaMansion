@@ -1,17 +1,18 @@
 /* ==========================================
    SECCIÓN "SOBRE NOSOTROS"
-   Panel oscuro y dorado (siempre oscura, en
-   Light y Dark mode, como el Hero).
+   Light: sobre el beige/crema de la página.
+   Dark: fondo oscuro (como el Hero).
    ========================================== */
 
 .about {
   position: relative;
   width: 100%;
   padding: 72px 20px;
-  background-color: var(--section-base, #0a0a0a) !important;
-  /* El difuminado dorado (glow arriba y abajo) se aplica con la
-     clase compartida .section-glow--both definida en index.css. */
-  color: #f4f4f4 !important;
+  /* Mismo fondo que las secciones vecinas (crema en Light, negro en Dark). */
+  background-color: var(--bg-main);
+  color: var(--ink);
+  /* El difuminado dorado compartido (glow arriba y abajo) se aplica con
+     la clase .section-glow--both definida en index.css. */
 }
 
 .about__inner {
@@ -20,17 +21,14 @@
   margin: 0 auto;
 }
 
-/* ---------- Panel superior: 3 columnas ---------- */
+/* ---------- Panel superior: foto (~40%) + texto (~60%) ---------- */
 .about__panel {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(240px, 30%) 1fr auto minmax(220px, 26%);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   align-items: stretch;
-  /* Sin contorno dorado (la franja inferior sí lo conserva). */
   border-radius: 22px;
   overflow: hidden;
-  background: linear-gradient(135deg, #151515 0%, #0e0e0e 55%, #0a0a0a 100%);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
 }
 
 /* Columna izquierda: foto a toda la altura */
@@ -49,20 +47,12 @@
   object-position: center;
 }
 
-/* Degradado oscuro hacia el borde derecho para fundirse con el panel */
+/* En Light la foto termina en borde nítido (sin degradado oscuro). */
 .about__media-fade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(10, 10, 10, 0) 45%,
-    rgba(13, 13, 13, 0.7) 78%,
-    #101010 100%
-  );
-  pointer-events: none;
+  display: none;
 }
 
-/* Columna central: texto */
+/* Columna derecha: bloque de texto centrado verticalmente */
 .about__main {
   padding: 46px 40px;
   display: flex;
@@ -80,14 +70,14 @@
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--gold, #d8b438);
+  color: var(--gold-dark);
 }
 
 .about__eyebrow::before {
   content: "";
   width: 30px;
   height: 2px;
-  background: var(--gold, #d8b438);
+  background: var(--gold-dark);
   border-radius: 2px;
 }
 
@@ -97,11 +87,11 @@
   font-size: clamp(1.9rem, 3vw, 2.7rem);
   font-weight: 600;
   line-height: 1.18;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .about__title-gold {
-  color: var(--gold, #d8b438);
+  color: var(--gold-dark);
   font-style: italic;
 }
 
@@ -110,7 +100,7 @@
   font-family: var(--font-body, "Inter", sans-serif);
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #d8d8d8;
+  color: var(--ink);
 }
 
 .about__text:last-of-type {
@@ -132,7 +122,7 @@
   font-family: "Allura", "Great Vibes", cursive;
   font-size: 2.05rem;
   line-height: 1.05;
-  color: var(--gold-light, #e7c248);
+  color: var(--gold-dark);
 }
 
 .about__signature-line {
@@ -144,71 +134,9 @@
 
 .about__signature-line path {
   fill: none;
-  stroke: var(--gold, #d8b438);
+  stroke: var(--gold-dark);
   stroke-width: 2;
   stroke-linecap: round;
-}
-
-/* Divisor vertical dorado */
-.about__divider {
-  justify-self: center;
-  width: 1px;
-  margin: 30px 0;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(216, 180, 56, 0.55) 50%,
-    transparent 100%
-  );
-}
-
-/* Columna derecha: beneficios */
-.about__benefits-col {
-  padding: 46px 36px 46px 30px;
-  display: flex;
-  align-items: center;
-}
-
-.about__benefits {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  width: 100%;
-}
-
-.about__benefit {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.about__benefit-icon {
-  flex: none;
-  width: 42px;
-  height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid rgba(216, 180, 56, 0.55);
-  background: rgba(216, 180, 56, 0.08);
-  color: var(--gold, #d8b438);
-}
-
-.about__benefit-title {
-  margin: 0 0 4px;
-  font-family: var(--font-display, "Playfair Display", Georgia, serif);
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.about__benefit-text {
-  margin: 0;
-  font-family: var(--font-body, "Inter", sans-serif);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: #bdbdbd;
 }
 
 /* ---------- Franja inferior de datos ---------- */
@@ -219,14 +147,14 @@
   align-items: stretch;
   gap: 0;
   padding: 0;
-  border: 1px solid rgba(216, 180, 56, 0.28);
+  border: 1px solid color-mix(in srgb, var(--gold-dark) 40%, transparent);
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(90deg, #131313 0%, #0b0b0b 100%);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  background-color: var(--card-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 }
 
-/* Foto decorativa a la izquierda (~20%), oscurecida y difuminada a la derecha */
+/* Foto decorativa a la izquierda, difuminada hacia el beige */
 .about__stats-photo {
   position: relative;
   overflow: hidden;
@@ -239,8 +167,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  opacity: 0.28;
-  filter: saturate(0.85);
+  opacity: 0.9;
 }
 
 .about__stats-photo-fade {
@@ -248,9 +175,9 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(19, 19, 19, 0) 0%,
-    rgba(19, 19, 19, 0.55) 55%,
-    rgba(19, 19, 19, 0.96) 100%
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 55%,
+    rgba(255, 255, 255, 0.96) 100%
   );
   pointer-events: none;
 }
@@ -270,23 +197,18 @@
   text-align: center;
   gap: 6px;
   padding: 0 18px;
-  border-left: 1px solid rgba(216, 180, 56, 0.18);
+  border-left: 1px solid color-mix(in srgb, var(--gold-dark) 30%, transparent);
 }
 
 .about__stat:first-child {
   border-left: none;
 }
 
-.about__stat-icon {
-  color: var(--gold, #d8b438);
-  display: inline-flex;
-}
-
 .about__stat-value {
   font-family: var(--font-display, "Playfair Display", Georgia, serif);
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--gold-light, #e7c248);
+  color: var(--gold-dark);
   line-height: 1.2;
   white-space: pre-line; /* respeta el salto de línea de la fecha */
 }
@@ -297,7 +219,7 @@
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #9a9a9a;
+  color: var(--ink-soft);
 }
 
 /* Frase manuscrita (2 líneas, inclinada) + subrayado curvo */
@@ -309,7 +231,7 @@
   font-family: "Allura", "Great Vibes", cursive;
   font-size: 1.9rem;
   line-height: 1.05;
-  color: var(--gold-light, #e7c248);
+  color: var(--gold-dark);
   white-space: nowrap;
   padding: 22px 34px 22px 20px;
   transform: rotate(-4deg);
@@ -325,9 +247,93 @@
 
 .about__stats-signature-line path {
   fill: none;
-  stroke: var(--gold, #d8b438);
+  stroke: var(--gold-dark);
   stroke-width: 2;
   stroke-linecap: round;
+}
+
+/* ==========================================
+   MODO OSCURO (mismo aspecto que antes)
+   ========================================== */
+[data-theme="dark"] .about {
+  color: #f4f4f4;
+}
+
+[data-theme="dark"] .about__panel {
+  background: linear-gradient(135deg, #151515 0%, #0e0e0e 55%, #0a0a0a 100%);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .about__media-fade {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0) 45%,
+    rgba(13, 13, 13, 0.7) 78%,
+    #101010 100%
+  );
+}
+
+[data-theme="dark"] .about__eyebrow,
+[data-theme="dark"] .about__title-gold {
+  color: var(--gold);
+}
+
+[data-theme="dark"] .about__eyebrow::before {
+  background: var(--gold);
+}
+
+[data-theme="dark"] .about__title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .about__text {
+  color: #d8d8d8;
+}
+
+[data-theme="dark"] .about__signature-text {
+  color: var(--gold-light);
+}
+
+[data-theme="dark"] .about__signature-line path {
+  stroke: var(--gold);
+}
+
+[data-theme="dark"] .about__stats {
+  border-color: rgba(216, 180, 56, 0.28);
+  background: linear-gradient(90deg, #131313 0%, #0b0b0b 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .about__stats-photo img {
+  opacity: 0.28;
+  filter: saturate(0.85);
+}
+
+[data-theme="dark"] .about__stats-photo-fade {
+  background: linear-gradient(
+    90deg,
+    rgba(19, 19, 19, 0) 0%,
+    rgba(19, 19, 19, 0.55) 55%,
+    rgba(19, 19, 19, 0.96) 100%
+  );
+}
+
+[data-theme="dark"] .about__stat {
+  border-left-color: rgba(216, 180, 56, 0.18);
+}
+
+[data-theme="dark"] .about__stat-value,
+[data-theme="dark"] .about__stats-signature {
+  color: var(--gold-light);
+}
+
+[data-theme="dark"] .about__stat-label {
+  color: #9a9a9a;
+}
+
+[data-theme="dark"] .about__stats-signature-line path {
+  stroke: var(--gold);
 }
 
 /* ==========================================
@@ -351,8 +357,8 @@
     min-height: 0;
   }
 
-  /* Ahora la foto va arriba: el desvanecido apunta hacia abajo */
-  .about__media-fade {
+  /* En Dark la foto va arriba: el desvanecido apunta hacia abajo */
+  [data-theme="dark"] .about__media-fade {
     background: linear-gradient(
       180deg,
       rgba(10, 10, 10, 0) 55%,
@@ -362,21 +368,6 @@
 
   .about__main {
     padding: 34px 32px 30px;
-  }
-
-  .about__divider {
-    display: none;
-  }
-
-  .about__benefits-col {
-    padding: 30px 32px 38px;
-    border-top: 1px solid rgba(216, 180, 56, 0.18);
-  }
-
-  .about__benefits {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px 28px;
   }
 
   .about__stats {
@@ -424,15 +415,6 @@
 
   .about__title {
     font-size: 1.9rem;
-  }
-
-  .about__benefits-col {
-    padding: 24px 20px 30px;
-  }
-
-  .about__benefits {
-    grid-template-columns: 1fr;
-    gap: 20px;
   }
 
   .about__stats {
