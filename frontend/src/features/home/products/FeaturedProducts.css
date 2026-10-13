@@ -3,9 +3,9 @@
    ========================================== */
 
 .featured {
-  /* Color base único compartido con las secciones contiguas (sin cortes).
-     background-color (no shorthand) para no pisar el glow de .section-glow. */
-  background-color: var(--section-base, #0a0a0a) !important;
+  /* Fondo por tema (crema en Light, negro en Dark), reutilizando la misma
+     variable del resto de la página, `--bg-main`. */
+  background-color: var(--bg-main);
   padding: 60px 24px; /* Reducido ligeramente de 80px a 60px */
   transition: background-color 0.3s ease;
 }
@@ -26,7 +26,7 @@
   font-size: 11.5px; /* Ligeramente más pequeño */
   font-weight: 600;
   letter-spacing: 0.14em;
-  color: var(--gold);
+  color: var(--gold-dark);
   margin-bottom: 8px;
   text-transform: uppercase;
 }

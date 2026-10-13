@@ -3,10 +3,10 @@
    ========================================== */
 .categories-section {
   width: 100%;
-  /* Color base único compartido con las secciones contiguas: el fondo
-     coincide exactamente con el de Productos Destacados y "Sobre
-     nosotros", así no hay salto de color entre secciones. */
-  background-color: var(--section-base, #0a0a0a) !important;
+  /* Fondo por tema (crema en Light, negro en Dark), reutilizando la misma
+     variable del resto de la página. La regla global `section` de index.css
+     ya aplica var(--bg-main) con !important. */
+  background-color: var(--bg-main);
   transition: background-color 0.3s ease;
 }
 
@@ -24,7 +24,7 @@
   text-align: center;
   font-family: var(--font-display, "Playfair Display", serif);
   font-size: 2.2rem;
-  color: #f0f0f0;
+  color: var(--ink, #1a1a1a);
   margin-bottom: 40px;
   font-weight: 600;
 }
