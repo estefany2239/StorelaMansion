@@ -5,11 +5,9 @@ import {
   EyeOff,
   Lock,
   Mail,
-  UserRound,
   ArrowRight
 } from "lucide-react";
 
-import { vendedores } from "../../data/vendedoresData";
 import { iniciarSesion } from "../../services/api";
 
 import "./Login.css";
@@ -25,7 +23,6 @@ export default function Login({
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [vendedorSeleccionado, setVendedorSeleccionado] = useState("");
   const [error, setError] = useState("");
 
   const [intentosFallidos, setIntentosFallidos] = useState(0);
@@ -69,22 +66,7 @@ export default function Login({
     return () => clearInterval(intervalo);
   }, [tiempoBloqueo]);
 
-  const guardarSesion = (usuarioBase) => {
-    const vendedorElegido =
-      vendedores.find(
-        (vendedor) =>
-          vendedor.id === vendedorSeleccionado
-      );
-
-    const usuario = vendedorElegido
-      ? {
-          nombre: vendedorElegido.nombre,
-          email: vendedorElegido.correo,
-          rol: "Vendedor",
-          vendedorId: vendedorElegido.id
-        }
-      : usuarioBase;
-
+  const guardarSesion = (usuario) => {
     localStorage.setItem("usuario", JSON.stringify(usuario));
     if (onLoginSuccess) onLoginSuccess(usuario);
   };
@@ -182,24 +164,6 @@ export default function Login({
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
-              </div>
-            </div>
-
-            <div className="auth-field">
-              <label>VENDEDOR (OPCIONAL)</label>
-              <div className="auth-input-wrap">
-                <UserRound size={16} className="auth-input-icon" />
-                <select
-                  value={vendedorSeleccionado}
-                  onChange={(e) => setVendedorSeleccionado(e.target.value)}
-                >
-                  <option value="">Sin vendedor</option>
-                  {vendedores.map((vendedor) => (
-                    <option key={vendedor.id} value={vendedor.id}>
-                      {vendedor.nombre}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
 

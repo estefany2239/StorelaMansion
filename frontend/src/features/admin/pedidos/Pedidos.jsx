@@ -32,6 +32,12 @@ const ESTADOS_PEDIDO = [
   "Entregado"
 ];
 
+// El backend solo persiste el campo `estado` (PATCH /api/pedidos/:id/estado).
+// Mientras esté en false, el modal de edición deja editable SOLO el estado y
+// muestra el resto de campos en solo lectura, para no ofrecer cambios que el
+// servidor ignora. Ponlo en true para reactivar la edición completa.
+const EDICION_COMPLETA_PEDIDO = false;
+
 
 // Convierte un pedido del backend a la forma que usa esta pantalla.
 const mapearPedidoBackend = (pedido) => ({
@@ -131,6 +137,9 @@ export default function Pedidos({ vendedorId }) {
     useState(false);
 
   const { toast, mostrarToast } = useToast();
+
+  // Con la edición completa desactivada, al editar solo el estado es editable.
+  const soloEstadoEditable = modoEdicion && !EDICION_COMPLETA_PEDIDO;
 
 
   // =====================================================
@@ -618,29 +627,35 @@ export default function Pedidos({ vendedorId }) {
 
     const nuevosErrores = {};
 
-    if (!formulario.idCliente) {
-      nuevosErrores.idCliente = "Selecciona un cliente.";
-    }
+    // Con la edición completa desactivada solo se cambia el estado: no se
+    // validan (ni se envían) el resto de campos, que están en solo lectura.
+    if (!soloEstadoEditable) {
 
-    if (!formulario.cliente) {
-      nuevosErrores.cliente = "Selecciona un cliente válido.";
-    }
+      if (!formulario.idCliente) {
+        nuevosErrores.idCliente = "Selecciona un cliente.";
+      }
 
-    if (!formulario.fecha) {
-      nuevosErrores.fecha = "Selecciona una fecha.";
-    }
+      if (!formulario.cliente) {
+        nuevosErrores.cliente = "Selecciona un cliente válido.";
+      }
 
-    if (!formulario.direccion) {
-      nuevosErrores.direccion = "Este campo es obligatorio.";
-    }
+      if (!formulario.fecha) {
+        nuevosErrores.fecha = "Selecciona una fecha.";
+      }
 
-    const productoNombreLargo = formulario.productos.find(
-      (producto) => producto.nombre.trim().length > 20
-    );
+      if (!formulario.direccion) {
+        nuevosErrores.direccion = "Este campo es obligatorio.";
+      }
 
-    if (productoNombreLargo) {
-      nuevosErrores.productos =
-        "El nombre de cada producto no puede superar los 20 caracteres.";
+      const productoNombreLargo = formulario.productos.find(
+        (producto) => producto.nombre.trim().length > 20
+      );
+
+      if (productoNombreLargo) {
+        nuevosErrores.productos =
+          "El nombre de cada producto no puede superar los 20 caracteres.";
+      }
+
     }
 
     setErrores(nuevosErrores);
@@ -724,7 +739,27 @@ export default function Pedidos({ vendedorId }) {
   };
 
 
-  const confirmarEdicionPedido = () => {
+  const confirmarEdicionPedido = async () => {
+
+    // Solo el estado es persistible en el backend. Si el estado no cambió no
+    // se llama a la API; si cambió se actualiza y se refresca la fila.
+    if (!EDICION_COMPLETA_PEDIDO) {
+
+      const pedidoActual = pedidos.find(
+        (pedido) => pedido.id === formulario.id
+      );
+
+      setConfirmarEdicion(false);
+
+      if (pedidoActual && formulario.estado !== pedidoActual.estado) {
+        await aplicarEstadoBackend(pedidoActual, formulario.estado);
+      }
+
+      cerrarModal();
+
+      return;
+
+    }
 
     const total =
       formulario.productos.reduce(
@@ -1663,6 +1698,7 @@ export default function Pedidos({ vendedorId }) {
                       formulario.idCliente
                     }
                     className={`input ${errores.idCliente ? "input-error" : ""}`}
+                    disabled={soloEstadoEditable}
                     onChange={(e) => {
 
                       const cliente =
@@ -1771,6 +1807,7 @@ export default function Pedidos({ vendedorId }) {
                       formulario.fecha
                     }
                     className={`input ${errores.fecha ? "input-error" : ""}`}
+                    disabled={soloEstadoEditable}
                     onChange={(e) =>
                       cambiarCampo(
                         "fecha",
@@ -1798,6 +1835,7 @@ export default function Pedidos({ vendedorId }) {
                     value={
                       formulario.metodoPago
                     }
+                    disabled={soloEstadoEditable}
                     onChange={(e) =>
                       cambiarCampo(
                         "metodoPago",
@@ -1840,6 +1878,7 @@ export default function Pedidos({ vendedorId }) {
                     formulario.direccion
                   }
                   className={`input ${errores.direccion ? "input-error" : ""}`}
+                  readOnly={soloEstadoEditable}
                   onChange={(e) =>
                     cambiarCampo(
                       "direccion",
@@ -1866,17 +1905,21 @@ export default function Pedidos({ vendedorId }) {
                 </label>
 
 
-                <button
-                  type="button"
-                  className="pedido-add-product"
-                  onClick={agregarProducto}
-                >
+                {!soloEstadoEditable && (
 
-                  <Plus size={16} />
+                  <button
+                    type="button"
+                    className="pedido-add-product"
+                    onClick={agregarProducto}
+                  >
 
-                  Agregar producto
+                    <Plus size={16} />
 
-                </button>
+                    Agregar producto
+
+                  </button>
+
+                )}
 
               </div>
 
@@ -1914,20 +1957,24 @@ export default function Pedidos({ vendedorId }) {
                             Producto #{index + 1}
                           </span>
 
-                          <button
-                            type="button"
-                            className="pedido-product-delete"
-                            title="Eliminar producto"
-                            onClick={() =>
-                              eliminarProducto(
-                                index
-                              )
-                            }
-                          >
+                          {!soloEstadoEditable && (
 
-                            <Trash2 size={16} />
+                            <button
+                              type="button"
+                              className="pedido-product-delete"
+                              title="Eliminar producto"
+                              onClick={() =>
+                                eliminarProducto(
+                                  index
+                                )
+                              }
+                            >
 
-                          </button>
+                              <Trash2 size={16} />
+
+                            </button>
+
+                          )}
 
                         </div>
 
@@ -1947,6 +1994,7 @@ export default function Pedidos({ vendedorId }) {
                               }
                               maxLength={20}
                               placeholder="Nombre del producto"
+                              readOnly={soloEstadoEditable}
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,
@@ -1974,6 +2022,7 @@ export default function Pedidos({ vendedorId }) {
                               value={
                                 producto.cantidad
                               }
+                              readOnly={soloEstadoEditable}
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,
@@ -2001,6 +2050,7 @@ export default function Pedidos({ vendedorId }) {
                                 producto.talla
                               }
                               placeholder="Talla"
+                              readOnly={soloEstadoEditable}
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,
@@ -2025,6 +2075,7 @@ export default function Pedidos({ vendedorId }) {
                                 producto.color
                               }
                               placeholder="Color"
+                              readOnly={soloEstadoEditable}
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,
@@ -2052,6 +2103,7 @@ export default function Pedidos({ vendedorId }) {
                               value={
                                 producto.precio
                               }
+                              readOnly={soloEstadoEditable}
                               onChange={(e) =>
                                 actualizarProducto(
                                   index,

@@ -34,7 +34,7 @@ export default function Register({ onBackToLogin }) {
         formData.password
       );
 
-      notify("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.", "success");
+      notify("¡Cuenta creada correctamente!", "success");
       onBackToLogin();
     } catch (error) {
       notify(error.message, "error");

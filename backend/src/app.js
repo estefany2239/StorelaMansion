@@ -7,9 +7,15 @@ import pedidosRouter from './routes/pedidos.js'
 
 const app = express()
 
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
+// CORS_ORIGIN admite una lista separada por comas (varios dominios:
+// producción de Vercel + http://localhost:5173, etc.). Si no se define,
+// se conserva el valor por defecto de desarrollo.
+const origenesPermitidos = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origen) => origen.trim())
+  .filter(Boolean)
 
-app.use(cors({ origin: corsOrigin }))
+app.use(cors({ origin: origenesPermitidos }))
 app.use(express.json())
 
 app.get('/api/health', (req, res) => {

@@ -309,7 +309,7 @@ export default function PaymentView({
         >
           <ArrowLeft size={18} />
 
-          Volver al carrito
+          Seguir comprando
         </button>
 
       </div>

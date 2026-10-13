@@ -703,10 +703,7 @@ export default function App() {
           user={user}
           darkMode={theme === "dark"}
           onConfirmarPedido={handleConfirmarPedido}
-          onBack={() => {
-            setCurrentView("home");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
+          onBack={handleSeguirComprando}
         />
 
       )}

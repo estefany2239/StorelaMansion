@@ -21,7 +21,7 @@ export default function Navbar({
     <header className="navbar">
       <div className="navbar__inner">
         <a
-          href="/"
+          href="#inicio"
           className="navbar__logo"
           onClick={(evento) => {
             evento.preventDefault();
@@ -36,8 +36,8 @@ export default function Navbar({
         </a>
 
         <nav className="navbar__links">
-          <a href="/productos" onClick={irA("productos")}>Productos</a>
-          <a href="/categorias" onClick={irA("categorias")}>Categorías</a>
+          <a href="#productos" onClick={irA("productos")}>Productos</a>
+          <a href="#categorias" onClick={irA("categorias")}>Categorías</a>
         </nav>
 
         <HeaderActions
