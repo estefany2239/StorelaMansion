@@ -4,4 +4,8 @@ const imagenes = import.meta.glob('../assets/img/*', {
   import: 'default',
 })
 
-export const urlImagen = (nombre) => imagenes[`../assets/img/${nombre}`] || ''
+export const urlImagen = (nombre) => {
+  if (!nombre) return ''
+  if (/^https?:\/\//.test(nombre)) return nombre
+  return imagenes[`../assets/img/${nombre}`] || ''
+}

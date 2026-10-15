@@ -17,6 +17,17 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+import {
+  obtenerProductosAdmin,
+  obtenerCatalogosAdmin,
+  crearProductoAdmin,
+  actualizarProductoAdmin,
+  cambiarEstadoProductoAdmin,
+  eliminarProductoAdmin
+} from "../../../services/api";
+
+import { urlImagen } from "../../../utils/imagenes";
+
 const REGISTROS_POR_PAGINA = 6;
 
 
@@ -25,111 +36,7 @@ export default function Productos() {
   // PRODUCTOS
   // =====================================================
 
-  const [productos, setProductos] = useState([
-    {
-      id: "PROD-001",
-      nombre: "Vestido de Noche Premium",
-      categoria: "Vestidos",
-      talla: "M",
-      color: "Negro",
-      precio: 485000,
-      stock: 12,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1566174053879-31528523f8ae"
-    },
-
-    {
-      id: "PROD-002",
-      nombre: "Blazer Ejecutivo Femenino",
-      categoria: "Blazers",
-      talla: "S",
-      color: "Café",
-      precio: 320000,
-      stock: 8,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3"
-    },
-
-    {
-      id: "PROD-003",
-      nombre: "Traje Sastre Masculino",
-      categoria: "Trajes",
-      talla: "L",
-      color: "Negro",
-      precio: 750000,
-      stock: 5,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1598808503746-f34c53b9323e"
-    },
-
-    {
-      id: "PROD-004",
-      nombre: "Abrigo Wool Premium",
-      categoria: "Abrigos",
-      talla: "M",
-      color: "Beige",
-      precio: 620000,
-      stock: 7,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1543076447-215ad9ba6923"
-    },
-
-    {
-      id: "PROD-005",
-      nombre: "Vestido Cóctel Elegante",
-      categoria: "Vestidos",
-      talla: "S",
-      color: "Negro",
-      precio: 395000,
-      stock: 15,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1539008835657-9e8e9680c956"
-    },
-
-    {
-      id: "PROD-006",
-      nombre: "Traje Oscuro Clásico",
-      categoria: "Trajes",
-      talla: "L",
-      color: "Azul oscuro",
-      precio: 890000,
-      stock: 3,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35"
-    },
-
-    {
-      id: "PROD-007",
-      nombre: "Camiseta Básica",
-      categoria: "Camisetas",
-      talla: "M",
-      color: "Blanco",
-      precio: 95000,
-      stock: 20,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"
-    },
-
-    {
-      id: "PROD-008",
-      nombre: "Tenis Urbanos",
-      categoria: "Tenis",
-      talla: "40",
-      color: "Blanco",
-      precio: 280000,
-      stock: 2,
-      estado: "Activo",
-      imagen:
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
-    }
-  ]);
+  const [productos, setProductos] = useState([]);
 
   // =====================================================
   // CONSTANTES
@@ -186,21 +93,9 @@ export default function Productos() {
   // OPCIONES
   // =====================================================
 
-  const categorias = [
-    "Camisetas",
-    "Gorras",
-    "Relojes",
-    "Tenis",
-    "Sudaderas",
-    "Perfumes",
-    "Pantalones",
-    "Pantalonetas",
-    "Blazers",
-    "Vestidos",
-    "Trajes",
-    "Abrigos",
-    "Busos"
-  ];
+  const [categorias, setCategorias] = useState([]);
+  const [tallas, setTallas] = useState([]);
+  const [colores, setColores] = useState([]);
 
   // Categorías que existen para un único género: al elegirlas, el campo
   // género queda fijado a ese valor.
@@ -210,32 +105,27 @@ export default function Productos() {
     Vestidos: "mujer"
   };
 
-  const opcionesGenero = ["hombre", "mujer"];
+  const opcionesGenero = ["hombre", "mujer", "unisex"];
 
-  const tallas = [
-    "XS",
-    "S",
-    "M",
-    "L",
-    "XL",
-    "38",
-    "39",
-    "40",
-    "41",
-    "42",
-    "43"
-  ];
+  // Formatea el id numérico de la variante solo para mostrarlo en el panel.
+  const formatearId = (id) =>
+    Number.isFinite(Number(id))
+      ? `PROD-${String(id).padStart(3, "0")}`
+      : id;
 
-  const colores = [
-    "Negro",
-    "Blanco",
-    "Café",
-    "Beige",
-    "Azul oscuro",
-    "Rojo",
-    "Gris",
-    "Verde"
-  ];
+  // Carga inicial: productos y catálogos para los selects del formulario.
+  useEffect(() => {
+    Promise.all([obtenerProductosAdmin(), obtenerCatalogosAdmin()])
+      .then(([filas, opciones]) => {
+        setProductos(filas);
+        setCategorias(opciones.categorias);
+        setTallas(opciones.tallas);
+        setColores(opciones.colores);
+      })
+      .catch((error) => {
+        mostrarToast(error.message, "error");
+      });
+  }, []);
 
   // =====================================================
   // PRECIO
@@ -296,12 +186,8 @@ export default function Productos() {
   // =====================================================
 
   const abrirAgregar = () => {
-    const numero = String(
-      productos.length + 1
-    ).padStart(3, "0");
-
     setFormulario({
-      id: `PROD-${numero}`,
+      id: "",
       nombre: "",
       categoria: "",
       genero: "",
@@ -379,30 +265,15 @@ export default function Productos() {
   // GUARDAR PRODUCTO
   // =====================================================
 
-  const guardarProducto = () => {
+  const guardarProducto = async () => {
     const nuevosErrores = {};
 
     if (!formulario.nombre.trim()) {
       nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else {
-      const nombreNormalizado =
-        formulario.nombre.trim().toLowerCase();
-
-      const yaExiste = productos.some(
-        (item) =>
-          item.nombre.trim().toLowerCase() ===
-            nombreNormalizado &&
-          (!modoEdicion || item.id !== formulario.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
-      }
     }
 
-    if (formulario.nombre.trim().length > 20) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+    if (formulario.nombre.trim().length > 150) {
+      nuevosErrores.nombre = "El nombre no puede superar los 150 caracteres.";
     }
 
     if (!formulario.categoria) {
@@ -444,9 +315,8 @@ export default function Productos() {
       return;
     }
 
-    setProductos((actuales) => [
-      {
-        id: formulario.id,
+    try {
+      const fila = await crearProductoAdmin({
         nombre: formulario.nombre,
         categoria: formulario.categoria,
         genero: formulario.genero,
@@ -456,58 +326,76 @@ export default function Productos() {
         stock: Number(formulario.stock),
         estado: formulario.estado,
         imagen: formulario.imagen
-      },
-      ...actuales
-    ]);
+      });
 
-    mostrarToast("Producto creado con éxito");
-    cerrarModal();
+      setProductos((actuales) => [fila, ...actuales]);
+
+      mostrarToast("Producto creado con éxito");
+      cerrarModal();
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
-  const confirmarEdicionProducto = () => {
-    setProductos((actuales) =>
-      actuales.map((producto) =>
-        producto.id === formulario.id
-          ? {
-              id: formulario.id,
-              nombre: formulario.nombre,
-              categoria: formulario.categoria,
-              genero: formulario.genero,
-              talla: formulario.talla,
-              color: formulario.color,
-              precio: Number(formulario.precio),
-              stock: Number(formulario.stock),
-              estado: formulario.estado,
-              imagen: formulario.imagen
-            }
-          : producto
-      )
-    );
+  const confirmarEdicionProducto = async () => {
+    try {
+      const fila = await actualizarProductoAdmin(formulario.id, {
+        nombre: formulario.nombre,
+        categoria: formulario.categoria,
+        genero: formulario.genero,
+        talla: formulario.talla,
+        color: formulario.color,
+        precio: Number(formulario.precio),
+        stock: Number(formulario.stock),
+        estado: formulario.estado,
+        imagen: formulario.imagen
+      });
 
-    setConfirmarEdicion(false);
-    cerrarModal();
+      setProductos((actuales) =>
+        actuales.map((producto) =>
+          producto.id === fila.id ? fila : producto
+        )
+      );
+
+      setConfirmarEdicion(false);
+      cerrarModal();
+      mostrarToast("Producto actualizado con éxito");
+    } catch (error) {
+      setConfirmarEdicion(false);
+      mostrarToast(error.message, "error");
+    }
   };
 
   // =====================================================
   // CAMBIAR ESTADO
   // =====================================================
 
-  const cambiarEstado = (producto) => {
+  const cambiarEstado = async (producto) => {
     const nuevoEstado =
       producto.estado === "Activo"
         ? "Inactivo"
         : "Activo";
 
-    setProductos((actuales) =>
-      actuales.map((item) =>
-        item.id === producto.id
-          ? {
-              ...item,
-              estado: nuevoEstado
-            }
-          : item
-      )
-    );
+    try {
+      const fila = await cambiarEstadoProductoAdmin(
+        producto.id,
+        nuevoEstado
+      );
+
+      setProductos((actuales) =>
+        actuales.map((item) =>
+          item.id === fila.id ? fila : item
+        )
+      );
+
+      // Si el detalle del producto está abierto,
+      // también actualizamos el producto seleccionado.
+      setProductoSeleccionado((actual) =>
+        actual && actual.id === fila.id ? fila : actual
+      );
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
   // =====================================================
@@ -518,14 +406,28 @@ export default function Productos() {
     setProductoEliminar(producto);
   };
 
-  const confirmarEliminarProducto = () => {
-    setProductos((actuales) =>
-      actuales.filter(
-        (item) => item.id !== productoEliminar.id
-      )
-    );
+  const confirmarEliminarProducto = async () => {
+    try {
+      await eliminarProductoAdmin(productoEliminar.id);
 
-    setProductoEliminar(null);
+      setProductos((actuales) =>
+        actuales.filter(
+          (item) => item.id !== productoEliminar.id
+        )
+      );
+
+      setProductoSeleccionado((actual) =>
+        actual && actual.id === productoEliminar.id
+          ? null
+          : actual
+      );
+
+      setProductoEliminar(null);
+      mostrarToast("Producto eliminado con éxito");
+    } catch (error) {
+      setProductoEliminar(null);
+      mostrarToast(error.message, "error");
+    }
   };
 
   // =====================================================
@@ -653,10 +555,10 @@ export default function Productos() {
               <tr key={producto.id}>
 
                 <td>
-                  {producto.imagen ? (
+                  {urlImagen(producto.imagen) ? (
                     <img
                       className="producto-image"
-                      src={producto.imagen}
+                      src={urlImagen(producto.imagen)}
                       alt={producto.nombre}
                       loading="lazy"
                     />
@@ -667,7 +569,7 @@ export default function Productos() {
 
                 <td>
                   <strong className="producto-id">
-                    {producto.id}
+                    {formatearId(producto.id)}
                   </strong>
                 </td>
 
@@ -842,7 +744,11 @@ export default function Productos() {
 
                   <input
                     type="text"
-                    value={formulario.id}
+                    value={
+                      formulario.id
+                        ? formatearId(formulario.id)
+                        : ""
+                    }
                     disabled
                   />
 
@@ -882,10 +788,10 @@ export default function Productos() {
                   NOMBRE DEL PRODUCTO
                 </label>
 
-                <input
-                  type="text"
-                  placeholder="Nombre del producto"
-                  maxLength={20}
+                  <input
+                    type="text"
+                    placeholder="Nombre del producto"
+                    maxLength={150}
                   value={formulario.nombre}
                   className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
@@ -1135,12 +1041,12 @@ onChange={(e) =>
               <div className="producto-form-group">
 
                 <label>
-                  URL DE IMAGEN
+                  IMAGEN
                 </label>
 
                 <input
-                  type="url"
-                  placeholder="https://..."
+                  type="text"
+                  placeholder="roj.png o https://..."
                   value={formulario.imagen}
                   onChange={(e) =>
                     cambiarCampo(
@@ -1149,6 +1055,19 @@ onChange={(e) =>
                     )
                   }
                 />
+
+                {urlImagen(formulario.imagen) && (
+                  <img
+                    className="producto-image"
+                    src={urlImagen(formulario.imagen)}
+                    alt="Vista previa"
+                  />
+                )}
+
+                <span className="producto-secondary">
+                  Escribe el nombre de un archivo de assets/img
+                  (por ejemplo roj.png) o una URL completa.
+                </span>
 
               </div>
 
@@ -1229,7 +1148,9 @@ onChange={(e) =>
 
                   <img
                     src={
-                      productoSeleccionado.imagen
+                      urlImagen(
+                        productoSeleccionado.imagen
+                      )
                     }
                     alt={
                       productoSeleccionado.nombre
@@ -1243,7 +1164,9 @@ onChange={(e) =>
                     </strong>
 
                     <span>
-                      {productoSeleccionado.id}
+                      {formatearId(
+                        productoSeleccionado.id
+                      )}
                     </span>
 
                   </div>
@@ -1360,17 +1283,6 @@ onChange={(e) =>
                         onClick={() => {
                           cambiarEstado(
                             productoSeleccionado
-                          );
-
-                          setProductoSeleccionado(
-                            (actual) => ({
-                              ...actual,
-                              estado:
-                                actual.estado ===
-                                "Activo"
-                                  ? "Inactivo"
-                                  : "Activo"
-                            })
                           );
                         }}
                         title="Cambiar estado"

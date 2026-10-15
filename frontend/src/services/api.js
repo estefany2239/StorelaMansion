@@ -79,6 +79,23 @@ const procesarRespuesta = async (respuesta, mensajeError) => {
   return respuesta.json()
 }
 
+const peticionAdmin = async (ruta, { metodo = 'GET', cuerpo, mensajeError } = {}) => {
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}${ruta}`, {
+      method: metodo,
+      headers: {
+        ...(cuerpo ? { 'Content-Type': 'application/json' } : {}),
+        ...authHeaders()
+      },
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+  return procesarRespuesta(respuesta, mensajeError)
+}
+
 export async function crearCliente(datos) {
   const respuesta = await fetch(`${API_URL}/api/clientes`, {
     method: 'POST',
@@ -155,4 +172,47 @@ export async function cambiarEstadoPedido(id, estado) {
     body: JSON.stringify({ estado })
   })
   return procesarRespuesta(respuesta, 'No se pudo cambiar el estado del pedido')
+}
+
+export async function obtenerProductosAdmin() {
+  return peticionAdmin('/api/admin/productos', {
+    mensajeError: 'No se pudieron cargar los productos'
+  })
+}
+
+export async function obtenerCatalogosAdmin() {
+  return peticionAdmin('/api/admin/productos/catalogos', {
+    mensajeError: 'No se pudieron cargar las opciones'
+  })
+}
+
+export async function crearProductoAdmin(datos) {
+  return peticionAdmin('/api/admin/productos', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el producto'
+  })
+}
+
+export async function actualizarProductoAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/productos/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el producto'
+  })
+}
+
+export async function cambiarEstadoProductoAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/productos/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado del producto'
+  })
+}
+
+export async function eliminarProductoAdmin(id) {
+  return peticionAdmin(`/api/admin/productos/${id}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar el producto'
+  })
 }
