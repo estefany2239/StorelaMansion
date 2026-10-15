@@ -20,7 +20,11 @@ app.use(cors({ origin: origenesPermitidos }))
 app.use(express.json())
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', app: 'Store La Mansión API' })
+  res.json({
+    status: 'ok',
+    app: 'Store La Mansión API',
+    commit: (process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7),
+  })
 })
 
 app.use('/api/productos', productosRouter)
