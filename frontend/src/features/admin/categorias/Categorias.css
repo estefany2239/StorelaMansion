@@ -493,6 +493,59 @@
 }
 
 /* =========================================================
+   GÉNEROS - CASILLAS
+   ========================================================= */
+
+.categoria-generos-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.categoria-genero-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: 1px solid #d7d7d7;
+  border-radius: 9px;
+  background: #ffffff;
+  font-size: 14px;
+  color: #222222;
+  cursor: pointer;
+  user-select: none;
+}
+
+.categoria-genero-opcion input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--admin-gold);
+  cursor: pointer;
+}
+
+/* =========================================================
+   IMAGEN - VISTA PREVIA Y AYUDA
+   ========================================================= */
+
+.categoria-imagen-preview {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid #d7d7d7;
+  background: #f7f7f7;
+}
+
+.categoria-ayuda {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #738096;
+}
+
+/* =========================================================
    DETALLE - CABECERA
    ========================================================= */
 
@@ -732,6 +785,23 @@
 .admin-container.admin-dark .categoria-form-group input:disabled {
   background: #222222;
   color: #888888;
+}
+
+.admin-container.admin-dark .categoria-genero-opcion {
+  background: #181818;
+  border-color:
+    rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .categoria-imagen-preview {
+  border-color:
+    rgba(255, 255, 255, 0.15);
+  background: #181818;
+}
+
+.admin-container.admin-dark .categoria-ayuda {
+  color: #b0b0b0;
 }
 
 .admin-container.admin-dark .categoria-modal-footer {

@@ -37,6 +37,7 @@ export default function Navbar({
 
         <nav className="navbar__links">
           <a href="#productos" onClick={irA("productos")}>Productos</a>
+          <a href="#nosotros" onClick={irA("nosotros")}>Sobre nosotros</a>
           <a href="#categorias" onClick={irA("categorias")}>Categorías</a>
         </nav>
 

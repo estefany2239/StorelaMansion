@@ -1,5 +1,5 @@
 import fotoTienda from "../../assets/img/tienda-la-mansion.png";
-import "./About.css";
+import "./Nosotros.css";
 
 // ==========================================
 // FECHA DE FUNDACIÓN Y AÑOS EN EL COMERCIO
@@ -46,7 +46,7 @@ const CONTENIDO = {
   firmaFranja: ["Tu estilo,", "nuestra pasión."],
 };
 
-export default function About() {
+export default function Nosotros() {
   return (
     <section className="about section-glow section-glow--both" id="nosotros">
       <div className="about__inner">

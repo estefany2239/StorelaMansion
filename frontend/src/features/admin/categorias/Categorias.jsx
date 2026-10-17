@@ -16,25 +16,50 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+import {
+  obtenerCategoriasAdmin,
+  crearCategoriaAdmin,
+  actualizarCategoriaAdmin,
+  cambiarEstadoCategoriaAdmin,
+  eliminarCategoriaAdmin
+} from "../../../services/api";
+
+import { urlImagen } from "../../../utils/imagenes";
+
 const REGISTROS_POR_PAGINA = 6;
 
+const GENEROS = [
+  { valor: "hombre", etiqueta: "Hombre" },
+  { valor: "mujer", etiqueta: "Mujer" }
+];
+
+const FORMULARIO_VACIO = {
+  id: "",
+  nombre: "",
+  descripcion: "",
+  generos: [],
+  imagen: "",
+  estado: "Activo"
+};
 
 export default function Categorias() {
 
   /* =====================================================
-     CATEGORÍAS DE PRODUCTOS
+     CATEGORÍAS (desde la API)
      ===================================================== */
 
-  const [categorias, setCategorias] = useState([
-    { id: "CAT-001", nombre: "Camisetas", descripcion: "Camisetas básicas y estampadas para hombre y mujer.", estado: "Activo", enUso: true },
-    { id: "CAT-002", nombre: "Gorras", descripcion: "Gorras y viseras de diferentes estilos.", estado: "Activo", enUso: true },
-    { id: "CAT-003", nombre: "Relojes", descripcion: "Relojes de pulso ejecutivos y deportivos.", estado: "Activo", enUso: true },
-    { id: "CAT-004", nombre: "Pantalones", descripcion: "Jeans y pantalones de vestir.", estado: "Activo", enUso: false },
-    { id: "CAT-005", nombre: "Busos", descripcion: "Busos y sudaderas con capota.", estado: "Inactivo", enUso: false },
-    { id: "CAT-006", nombre: "Tenis", descripcion: "Tenis urbanos y deportivos.", estado: "Activo", enUso: false },
-    { id: "CAT-007", nombre: "Blazers", descripcion: "Blazers para hombre y mujer.", estado: "Activo", enUso: false },
-    { id: "CAT-008", nombre: "Pantalonetas", descripcion: "Pantalonetas de hombre.", estado: "Activo", enUso: false }
-  ]);
+  const [categorias, setCategorias] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
+  const { toast, mostrarToast } = useToast();
+
+  useEffect(() => {
+    obtenerCategoriasAdmin()
+      .then(setCategorias)
+      .catch((error) => mostrarToast(error.message, "error"))
+      .finally(() => setCargando(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* =====================================================
      ESTADOS DE LA VISTA
@@ -50,19 +75,11 @@ export default function Categorias() {
 
   const [confirmarEdicion, setConfirmarEdicion] = useState(false);
 
-  const { toast, mostrarToast } = useToast();
-
   /* =====================================================
      FORMULARIO
      ===================================================== */
 
-  const [formulario, setFormulario] = useState({
-    id: "",
-    nombre: "",
-    descripcion: "",
-    estado: "Activo"
-  });
-
+  const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
   const [errores, setErrores] = useState({});
 
   /* =====================================================
@@ -85,8 +102,7 @@ export default function Categorias() {
     Math.ceil(categoriasFiltradas.length / REGISTROS_POR_PAGINA)
   );
 
-  const inicio =
-    (paginaActual - 1) * REGISTROS_POR_PAGINA;
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const categoriasPaginadas = categoriasFiltradas.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
@@ -107,18 +123,7 @@ export default function Categorias() {
      ===================================================== */
 
   const abrirAgregar = () => {
-    const siguienteNumero = categorias.reduce((max, item) => {
-      const numero = Number(item.id.split("-")[1]) || 0;
-      return Math.max(max, numero);
-    }, 0) + 1;
-
-    setFormulario({
-      id: `CAT-${String(siguienteNumero).padStart(3, "0")}`,
-      nombre: "",
-      descripcion: "",
-      estado: "Activo"
-    });
-
+    setFormulario({ ...FORMULARIO_VACIO });
     setErrores({});
     setModoEdicion(false);
     setMostrarModal(true);
@@ -132,7 +137,9 @@ export default function Categorias() {
     setFormulario({
       id: categoria.id,
       nombre: categoria.nombre,
-      descripcion: categoria.descripcion,
+      descripcion: categoria.descripcion || "",
+      generos: Array.isArray(categoria.generos) ? [...categoria.generos] : [],
+      imagen: categoria.imagen || "",
       estado: categoria.estado
     });
 
@@ -162,97 +169,130 @@ export default function Categorias() {
     }
   };
 
+  const alternarGenero = (genero) => {
+    setFormulario((actual) => {
+      const yaEsta = actual.generos.includes(genero);
+      const generos = yaEsta
+        ? actual.generos.filter((g) => g !== genero)
+        : [...actual.generos, genero];
+      return { ...actual, generos };
+    });
+
+    setErrores((actuales) => {
+      if (!actuales.generos) return actuales;
+      const nuevos = { ...actuales };
+      delete nuevos.generos;
+      return nuevos;
+    });
+  };
+
   /* =====================================================
-     GUARDAR CATEGORÍA
+     VALIDAR FORMULARIO (mismos límites que antes + géneros)
      ===================================================== */
 
-  const guardarCategoria = () => {
+  const validarFormulario = () => {
     const nuevosErrores = {};
 
     if (!formulario.nombre.trim()) {
       nuevosErrores.nombre = "Este campo es obligatorio.";
+    } else if (formulario.nombre.trim().length > 20) {
+      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
     } else {
-      const nombreNormalizado =
-        formulario.nombre.trim().toLowerCase();
-
+      const nombreNormalizado = formulario.nombre.trim().toLowerCase();
       const yaExiste = categorias.some(
         (item) =>
-          item.nombre.trim().toLowerCase() ===
-            nombreNormalizado &&
+          item.nombre.trim().toLowerCase() === nombreNormalizado &&
           (!modoEdicion || item.id !== formulario.id)
       );
 
       if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
+        nuevosErrores.nombre = "Ya existe un registro con este nombre.";
       }
-    }
-
-    if (formulario.nombre.trim().length > 20) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
     }
 
     if (formulario.descripcion.trim().length > 200) {
       nuevosErrores.descripcion = "La descripción no puede superar los 200 caracteres.";
     }
 
-    setErrores(nuevosErrores);
+    if (formulario.generos.length === 0) {
+      nuevosErrores.generos = "Selecciona al menos un género.";
+    }
 
-    if (Object.keys(nuevosErrores).length > 0) return;
+    setErrores(nuevosErrores);
+    return Object.keys(nuevosErrores).length === 0;
+  };
+
+  /* =====================================================
+     GUARDAR CATEGORÍA
+     ===================================================== */
+
+  const guardarCategoria = async () => {
+    if (!validarFormulario()) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
       return;
     }
 
-    setCategorias((actuales) => [
-      {
-        id: formulario.id,
-        nombre: formulario.nombre.trim(),
-        descripcion: formulario.descripcion.trim(),
-        estado: formulario.estado,
-        enUso: false
-      },
-      ...actuales
-    ]);
+    const datos = {
+      nombre: formulario.nombre.trim(),
+      descripcion: formulario.descripcion.trim(),
+      generos: formulario.generos,
+      imagen: formulario.imagen.trim(),
+      estado: formulario.estado
+    };
 
-    mostrarToast("Categoría creada con éxito");
-    cerrarModal();
+    try {
+      const fila = await crearCategoriaAdmin(datos);
+      setCategorias((actuales) => [...actuales, fila]);
+      mostrarToast("Categoría creada con éxito");
+      cerrarModal();
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
-  const confirmarEdicionCategoria = () => {
-    setCategorias((actuales) =>
-      actuales.map((categoria) =>
-        categoria.id === formulario.id
-          ? {
-              ...categoria,
-              nombre: formulario.nombre.trim(),
-              descripcion: formulario.descripcion.trim(),
-              estado: formulario.estado
-            }
-          : categoria
-      )
-    );
+  const confirmarEdicionCategoria = async () => {
+    const datos = {
+      nombre: formulario.nombre.trim(),
+      descripcion: formulario.descripcion.trim(),
+      generos: formulario.generos,
+      imagen: formulario.imagen.trim(),
+      estado: formulario.estado
+    };
 
-    setConfirmarEdicion(false);
-    cerrarModal();
+    try {
+      const fila = await actualizarCategoriaAdmin(formulario.id, datos);
+      setCategorias((actuales) =>
+        actuales.map((categoria) => (categoria.id === fila.id ? fila : categoria))
+      );
+      setConfirmarEdicion(false);
+      cerrarModal();
+      mostrarToast("Categoría actualizada con éxito");
+    } catch (error) {
+      setConfirmarEdicion(false);
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
      CAMBIAR ESTADO ACTIVO / INACTIVO
      ===================================================== */
 
-  const cambiarEstado = (categoria) => {
-    const nuevoEstado =
-      categoria.estado === "Activo" ? "Inactivo" : "Activo";
+  const cambiarEstado = async (categoria) => {
+    const nuevoEstado = categoria.estado === "Activo" ? "Inactivo" : "Activo";
 
-    setCategorias((actuales) =>
-      actuales.map((item) =>
-        item.id === categoria.id
-          ? { ...item, estado: nuevoEstado }
-          : item
-      )
-    );
+    try {
+      const fila = await cambiarEstadoCategoriaAdmin(categoria.id, nuevoEstado);
+      setCategorias((actuales) =>
+        actuales.map((item) => (item.id === fila.id ? fila : item))
+      );
+      setCategoriaSeleccionada((actual) =>
+        actual && actual.id === fila.id ? fila : actual
+      );
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
@@ -260,9 +300,9 @@ export default function Categorias() {
      ===================================================== */
 
   const eliminarCategoria = (categoria) => {
-    if (categoria.enUso) {
+    if (categoria.productos > 0) {
       setAviso(
-        "No se puede eliminar la categoría porque está asociada a productos existentes."
+        "No se puede eliminar la categoría porque está asociada a productos existentes. Puedes desactivarla."
       );
       return;
     }
@@ -270,12 +310,18 @@ export default function Categorias() {
     setCategoriaEliminar(categoria);
   };
 
-  const confirmarEliminarCategoria = () => {
-    setCategorias((actuales) =>
-      actuales.filter((item) => item.id !== categoriaEliminar.id)
-    );
-
-    setCategoriaEliminar(null);
+  const confirmarEliminarCategoria = async () => {
+    try {
+      await eliminarCategoriaAdmin(categoriaEliminar.id);
+      setCategorias((actuales) =>
+        actuales.filter((item) => item.id !== categoriaEliminar.id)
+      );
+      setCategoriaEliminar(null);
+      mostrarToast("Categoría eliminada con éxito");
+    } catch (error) {
+      setCategoriaEliminar(null);
+      setAviso(error.message);
+    }
   };
 
   /* =====================================================
@@ -299,6 +345,13 @@ export default function Categorias() {
     setCategoriaSeleccionada(null);
   };
 
+  const textoGeneros = (categoria) => {
+    const generos = Array.isArray(categoria?.generos) ? categoria.generos : [];
+    if (generos.length === 0) return "—";
+    return generos
+      .map((g) => g.charAt(0).toUpperCase() + g.slice(1))
+      .join(" · ");
+  };
 
   /* =====================================================
      RENDER
@@ -307,39 +360,25 @@ export default function Categorias() {
   return (
     <div className="categorias-page">
 
-      {/* =================================================
-          ENCABEZADO
-          ================================================= */}
+      {/* ENCABEZADO */}
 
       <div className="categorias-header">
 
         <div className="categorias-title">
-
-          <h2>
-            Categorías
-          </h2>
-
-          <p>
-            Administra las categorías de los productos.
-          </p>
-
+          <h2>Categorías</h2>
+          <p>Administra las categorías de los productos.</p>
         </div>
 
         <div className="categorias-actions">
 
           <div className="categorias-search">
-
             <Search size={18} />
-
             <input
               type="text"
               placeholder="Buscar por nombre..."
               value={busqueda}
-              onChange={(e) =>
-                setBusqueda(e.target.value)
-              }
+              onChange={(e) => setBusqueda(e.target.value)}
             />
-
           </div>
 
           <button
@@ -347,142 +386,80 @@ export default function Categorias() {
             className="categorias-add-button"
             onClick={abrirAgregar}
           >
-
             <Plus size={19} />
-
-            <span>
-              Registrar categoría
-            </span>
-
+            <span>Registrar categoría</span>
           </button>
 
         </div>
 
       </div>
 
-
-      {/* =================================================
-          TABLA DE CATEGORÍAS
-          ================================================= */}
+      {/* TABLA */}
 
       <div className="categorias-table-container">
 
         <table className="categorias-table">
 
           <thead>
-
             <tr>
-
-              <th>
-                ID CATEGORÍA
-              </th>
-
-              <th>
-                NOMBRE
-              </th>
-
-              <th>
-                ESTADO
-              </th>
-
-              <th>
-                ACCIONES
-              </th>
-
+              <th>ID CATEGORÍA</th>
+              <th>NOMBRE</th>
+              <th>ESTADO</th>
+              <th>ACCIONES</th>
             </tr>
-
           </thead>
 
           <tbody>
 
-            {categoriasFiltradas.length > 0 ? (
+            {categoriasPaginadas.length > 0 ? (
               categoriasPaginadas.map((categoria) => (
 
                 <tr key={categoria.id}>
 
                   <td>
-                    <span className="categoria-id">
-                      {categoria.id}
+                    <span className="categoria-id">{categoria.id}</span>
+                  </td>
+
+                  <td>
+                    <span className="categoria-nombre">{categoria.nombre}</span>
+                    <span className="categoria-descripcion">
+                      {textoGeneros(categoria)}
                     </span>
                   </td>
 
                   <td>
-                    <span className="categoria-nombre">
-                      {categoria.nombre}
-                    </span>
-                  </td>
-
-                  <td>
-
                     <label
                       className="switch-categoria-estado"
-                      title={
-                        categoria.estado === "Activo"
-                          ? "Hacer Inactiva"
-                          : "Hacer Activa"
-                      }
+                      title={categoria.estado === "Activo" ? "Hacer Inactiva" : "Hacer Activa"}
                     >
-
                       <input
                         type="checkbox"
                         checked={categoria.estado === "Activo"}
-                        onChange={() =>
-                          cambiarEstado(categoria)
-                        }
+                        onChange={() => cambiarEstado(categoria)}
                       />
-
                       <span className="slider-categoria"></span>
-
                       <span className={`estado-categoria-texto ${categoria.estado === "Activo" ? "activo" : "inactivo"}`}>
                         {categoria.estado.toUpperCase()}
                       </span>
-
                     </label>
-
                   </td>
 
                   <td>
-
                     <div className="categoria-actions">
 
-                      <button
-                        type="button"
-                        title="Ver"
-                        onClick={() =>
-                          verDetalle(categoria)
-                        }
-                      >
-
+                      <button type="button" title="Ver" onClick={() => verDetalle(categoria)}>
                         <Eye size={15} />
-
                       </button>
 
-                      <button
-                        type="button"
-                        title="Actualizar categoría"
-                        onClick={() =>
-                          abrirEditar(categoria)
-                        }
-                      >
-
+                      <button type="button" title="Actualizar categoría" onClick={() => abrirEditar(categoria)}>
                         <Pencil size={15} />
-
                       </button>
 
-                      <button
-                        type="button"
-                        title="Eliminar"
-                        onClick={() =>
-                          eliminarCategoria(categoria)
-                        }
-                      >
-
+                      <button type="button" title="Eliminar" onClick={() => eliminarCategoria(categoria)}>
                         <Trash2 size={15} />
-
                       </button>
 
                     </div>
-
                   </td>
 
                 </tr>
@@ -490,14 +467,9 @@ export default function Categorias() {
               ))
             ) : (
               <tr>
-
-                <td
-                  colSpan="4"
-                  className="categorias-empty"
-                >
-                  Categoría no encontrada en el sistema.
+                <td colSpan="4" className="categorias-empty">
+                  {cargando ? "Cargando categorías..." : "Categoría no encontrada en el sistema."}
                 </td>
-
               </tr>
             )}
 
@@ -513,41 +485,19 @@ export default function Categorias() {
 
       </div>
 
-
-      {/* =================================================
-          MODAL AGREGAR / EDITAR
-          ================================================= */}
+      {/* MODAL AGREGAR / EDITAR */}
 
       {mostrarModal && (
 
-        <div
-          className="categoria-modal-overlay"
-          onClick={cerrarModal}
-        >
+        <div className="categoria-modal-overlay" onClick={cerrarModal}>
 
-          <div
-            className="categoria-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="categoria-modal" onClick={(e) => e.stopPropagation()}>
 
             <div className="categoria-modal-header">
-
-              <h3>
-                {modoEdicion
-                  ? "Actualizar Categoría"
-                  : "Registrar Categoría"}
-              </h3>
-
-              <button
-                type="button"
-                className="categoria-modal-close"
-                onClick={cerrarModal}
-              >
-
+              <h3>{modoEdicion ? "Actualizar Categoría" : "Registrar Categoría"}</h3>
+              <button type="button" className="categoria-modal-close" onClick={cerrarModal}>
                 <X size={19} />
-
               </button>
-
             </div>
 
             <div className="categoria-modal-body">
@@ -555,52 +505,29 @@ export default function Categorias() {
               <div className="categoria-form-row">
 
                 <div className="categoria-form-group">
-
-                  <label>
-                    IDENTIFICADOR
-                  </label>
-
+                  <label>IDENTIFICADOR</label>
                   <input
                     type="text"
-                    value={formulario.id}
+                    value={formulario.id || "Se genera automáticamente"}
                     disabled
                   />
-
                 </div>
 
                 <div className="categoria-form-group">
-
-                  <label>
-                    ESTADO
-                  </label>
-
+                  <label>ESTADO</label>
                   <select
                     value={formulario.estado}
-                    onChange={(e) =>
-                      cambiarCampo("estado", e.target.value)
-                    }
+                    onChange={(e) => cambiarCampo("estado", e.target.value)}
                   >
-
-                    <option value="Activo">
-                      Activo
-                    </option>
-
-                    <option value="Inactivo">
-                      Inactivo
-                    </option>
-
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
                   </select>
-
                 </div>
 
               </div>
 
               <div className="categoria-form-group">
-
-                <label>
-                  NOMBRE
-                </label>
-
+                <label>NOMBRE</label>
                 <input
                   type="text"
                   placeholder="Ej: Camisetas"
@@ -610,67 +537,76 @@ export default function Categorias() {
                   onChange={(e) =>
                     cambiarCampo(
                       "nombre",
-                      e.target.value.replace(
-                        /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                        ""
-                      )
+                      e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "")
                     )
                   }
                 />
-
-                {errores.nombre && (
-                  <span className="error-text">
-                    {errores.nombre}
-                  </span>
-                )}
-
+                {errores.nombre && <span className="error-text">{errores.nombre}</span>}
               </div>
 
               <div className="categoria-form-group">
-
-                <label>
-                  DESCRIPCIÓN
-                </label>
-
+                <label>DESCRIPCIÓN</label>
                 <input
                   type="text"
                   placeholder="Ej: Todo tipo de camisetas"
                   maxLength={200}
                   value={formulario.descripcion}
                   className={`input ${errores.descripcion ? "input-error" : ""}`}
-                  onChange={(e) =>
-                    cambiarCampo("descripcion", e.target.value)
-                  }
+                  onChange={(e) => cambiarCampo("descripcion", e.target.value)}
                 />
-
                 {errores.descripcion && (
-                  <span className="error-text">
-                    {errores.descripcion}
-                  </span>
+                  <span className="error-text">{errores.descripcion}</span>
                 )}
+              </div>
 
+              <div className="categoria-form-group">
+                <label>GÉNEROS PERMITIDOS</label>
+                <div className="categoria-generos-checks">
+                  {GENEROS.map((genero) => (
+                    <label key={genero.valor} className="categoria-genero-opcion">
+                      <input
+                        type="checkbox"
+                        checked={formulario.generos.includes(genero.valor)}
+                        onChange={() => alternarGenero(genero.valor)}
+                      />
+                      <span>{genero.etiqueta}</span>
+                    </label>
+                  ))}
+                </div>
+                {errores.generos && <span className="error-text">{errores.generos}</span>}
+              </div>
+
+              <div className="categoria-form-group">
+                <label>IMAGEN</label>
+                <input
+                  type="text"
+                  placeholder="camisa.png o https://..."
+                  value={formulario.imagen}
+                  onChange={(e) => cambiarCampo("imagen", e.target.value)}
+                />
+                {urlImagen(formulario.imagen) && (
+                  <img
+                    className="categoria-imagen-preview"
+                    src={urlImagen(formulario.imagen)}
+                    alt="Vista previa"
+                  />
+                )}
+                <span className="categoria-ayuda">
+                  Nombre de un archivo de assets/img (por ejemplo camisa.png)
+                  o una URL completa. Si se deja vacía, la categoría no aparece
+                  en el carrusel del inicio.
+                </span>
               </div>
 
             </div>
 
             <div className="categoria-modal-footer">
-
-              <button
-                type="button"
-                className="categoria-cancel-button"
-                onClick={cerrarModal}
-              >
+              <button type="button" className="categoria-cancel-button" onClick={cerrarModal}>
                 Cancelar
               </button>
-
-              <button
-                type="button"
-                className="categoria-create-button"
-                onClick={guardarCategoria}
-              >
+              <button type="button" className="categoria-create-button" onClick={guardarCategoria}>
                 {modoEdicion ? "Guardar" : "Crear"}
               </button>
-
             </div>
 
           </div>
@@ -679,106 +615,56 @@ export default function Categorias() {
 
       )}
 
-
-      {/* =================================================
-          MODAL VER DETALLE
-          ================================================= */}
+      {/* MODAL VER DETALLE */}
 
       {categoriaSeleccionada && (
 
-        <div
-          className="categoria-modal-overlay"
-          onClick={cerrarDetalle}
-        >
+        <div className="categoria-modal-overlay" onClick={cerrarDetalle}>
 
-          <div
-            className="categoria-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="categoria-modal" onClick={(e) => e.stopPropagation()}>
 
             <div className="categoria-modal-header">
-
-              <h3>
-                Detalle de la Categoría
-              </h3>
-
-              <button
-                type="button"
-                className="categoria-modal-close"
-                onClick={cerrarDetalle}
-              >
-
+              <h3>Detalle de la Categoría</h3>
+              <button type="button" className="categoria-modal-close" onClick={cerrarDetalle}>
                 <X size={19} />
-
               </button>
-
             </div>
 
             <div className="categoria-modal-body">
 
               <div className="categoria-detail-top">
-
                 <div className="categoria-detail-avatar">
-
                   {categoriaSeleccionada.nombre.charAt(0)}
-
                 </div>
-
                 <div>
-
-                  <strong>
-                    {categoriaSeleccionada.nombre}
-                  </strong>
-
-                  <span>
-                    {categoriaSeleccionada.id}
-                  </span>
-
+                  <strong>{categoriaSeleccionada.nombre}</strong>
+                  <span>{categoriaSeleccionada.id}</span>
                 </div>
-
               </div>
 
               <div className="categoria-form-row">
 
                 <div className="categoria-info-group">
-
-                  <label>
-                    IDENTIFICADOR
-                  </label>
-
-                  <div className="categoria-info-value">
-                    {categoriaSeleccionada.id}
-                  </div>
-
+                  <label>IDENTIFICADOR</label>
+                  <div className="categoria-info-value">{categoriaSeleccionada.id}</div>
                 </div>
 
                 <div className="categoria-info-group">
-
-                  <label>
-                    ESTADO
-                  </label>
-
+                  <label>ESTADO</label>
                   <div className="categoria-info-value">
-
                     <label className="switch-categoria-estado">
-
                       <input
                         type="checkbox"
                         checked={categoriaSeleccionada.estado === "Activo"}
                         disabled
                         readOnly
                       />
-
                       <span className="slider-categoria"></span>
-
                       <span className={`estado-categoria-texto ${categoriaSeleccionada.estado === "Activo" ? "activo" : "inactivo"}`}>
                         {categoriaSeleccionada.estado.toUpperCase()}
                       </span>
-
                     </label>
-
                   </div>
-
                 </div>
 
               </div>
@@ -786,47 +672,49 @@ export default function Categorias() {
               <div className="categoria-form-row">
 
                 <div className="categoria-info-group">
-
-                  <label>
-                    NOMBRE
-                  </label>
-
-                  <div className="categoria-info-value">
-                    {categoriaSeleccionada.nombre}
-                  </div>
-
+                  <label>NOMBRE</label>
+                  <div className="categoria-info-value">{categoriaSeleccionada.nombre}</div>
                 </div>
 
                 <div className="categoria-info-group">
-
-                  <label>
-                    EN USO POR PRODUCTOS
-                  </label>
-
+                  <label>EN USO POR PRODUCTOS</label>
                   <div className="categoria-info-value">
-                    {categoriaSeleccionada.enUso ? "Sí" : "No"}
+                    {categoriaSeleccionada.productos > 0
+                      ? `Sí (${categoriaSeleccionada.productos})`
+                      : "No"}
                   </div>
+                </div>
 
+              </div>
+
+              <div className="categoria-form-row">
+
+                <div className="categoria-info-group">
+                  <label>GÉNEROS</label>
+                  <div className="categoria-info-value">
+                    {textoGeneros(categoriaSeleccionada)}
+                  </div>
+                </div>
+
+                <div className="categoria-info-group">
+                  <label>IMAGEN</label>
+                  <div className="categoria-info-value">
+                    {categoriaSeleccionada.imagen || "Sin imagen"}
+                  </div>
                 </div>
 
               </div>
 
               <div className="categoria-info-group">
-
-                <label>
-                  DESCRIPCIÓN
-                </label>
-
+                <label>DESCRIPCIÓN</label>
                 <div className="categoria-info-value">
-                  {categoriaSeleccionada.descripcion}
+                  {categoriaSeleccionada.descripcion || "—"}
                 </div>
-
               </div>
 
             </div>
 
             <div className="categoria-modal-footer">
-
               <button
                 type="button"
                 className="categoria-cancel-button detail-cerrar-button"
@@ -834,7 +722,6 @@ export default function Categorias() {
               >
                 Cerrar
               </button>
-
             </div>
 
           </div>
@@ -856,9 +743,7 @@ export default function Categorias() {
           textoCancelar="Cancelar"
           variante="peligro"
           onConfirmar={confirmarEliminarCategoria}
-          onCancelar={() =>
-            setCategoriaEliminar(null)
-          }
+          onCancelar={() => setCategoriaEliminar(null)}
         />
       )}
 

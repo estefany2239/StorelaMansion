@@ -5,6 +5,9 @@ import authRouter from './routes/auth.js'
 import clientesRouter from './routes/clientes.js'
 import pedidosRouter from './routes/pedidos.js'
 import productosAdminRouter from './routes/productosAdmin.js'
+import usuariosAdminRouter from './routes/usuariosAdmin.js'
+import categoriasRouter from './routes/categorias.js'
+import categoriasAdminRouter from './routes/categoriasAdmin.js'
 
 const app = express()
 
@@ -32,6 +35,9 @@ app.use('/api/auth', authRouter)
 app.use('/api/clientes', clientesRouter)
 app.use('/api/pedidos', pedidosRouter)
 app.use('/api/admin/productos', productosAdminRouter)
+app.use('/api/admin/usuarios', usuariosAdminRouter)
+app.use('/api/categorias', categoriasRouter)
+app.use('/api/admin/categorias', categoriasAdminRouter)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', path: req.originalUrl })

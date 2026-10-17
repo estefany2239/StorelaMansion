@@ -10,9 +10,8 @@ const CATEGORY_TITLES = {
   busos: "Buzos",
   sudaderas: "Sudaderas",
   blusas: "Sudaderas",
-  pantalones: "Pantalones",
-  accesorios: "Accesorios",
-  relojes: "Relojes"
+  relojes: "Relojes",
+  perfumes: "Perfumes"
 };
 
 export default function ProductDetailModal({ product, onClose, onAddToCart, categoryTitle }) {

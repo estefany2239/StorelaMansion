@@ -125,14 +125,11 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   // DETECCIÓN INDEPENDIENTE PARA CADA CATEGORÍA
   const isTenis = category?.title?.toLowerCase().includes('tenis') || category?.id === 'tenis';
   const isGorras = category?.title?.toLowerCase().includes('gorra') || category?.id === 'gorras';
-  const isAccesorios = category?.title?.toLowerCase().includes('accesorio') || category?.id === 'accesorios' ||
-                       category?.title?.toLowerCase().includes('reloj') || category?.id === 'relojes';
-  
+
   const isBusos = category?.title?.toLowerCase().includes('buso') || category?.id === 'busos';
   const isSudaderas = category?.title?.toLowerCase().includes('sudadera') || category?.id === 'sudaderas';
   const isPantalones = category?.title?.toLowerCase().includes('pantalon') || 
-                       category?.title?.toLowerCase().includes('pantalón') || 
-                       category?.id === 'pantalones';
+                       category?.title?.toLowerCase().includes('pantalón');
   const isCamisas = category?.title?.toLowerCase().includes('camiseta') || 
                     category?.title?.toLowerCase().includes('camisa') || 
                     category?.id === 'camisetas' || 
@@ -166,7 +163,8 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const marcasVisibles = verMasMarcas ? marcasFiltrables : marcasFiltrables.slice(0, MAX_MARCAS_VISIBLES);
 
   // CORREGIDO: Se limpian las marcas solo en gorras y se ajustan las tallas para que los tenis no se bloqueen.
-  // En accesorios los "sizes" son los tipos (Gorras, Perfumes, Relojes) y se filtran por nombre en getFilteredProducts.
+  // En las categorías de tipo complemento (gorras, relojes y perfumes) los "sizes"
+  // no son tallas de ropa y se filtran por tipo en getFilteredProducts.
   // Las marcas se filtran con las marcas reales disponibles para esta categoría/género.
   const filteredProducts = getFilteredProducts(
     category, 
@@ -353,26 +351,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                       )}
                     </div>
                     ) : null
-                  ) : isAccesorios ? (
-                /* 2. SI ES ACCESORIOS */
-                <div className="filter__group">
-                  <h4>Tipo de Accesorio</h4>
-                  <p className="product__details" style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
-                    Accesorios para {selectedGender}
-                  </p>
-                  <div className="filter__sizes-grid">
-                    {['Gorras', 'Perfumes', 'Relojes'].map(tipo => (
-                      <button 
-                        key={tipo}
-                        className={`filter__size-btn ${selectedSizes.includes(tipo) ? 'active' : ''}`}
-                        onClick={() => toggleSize(tipo)}
-                      >
-                        {tipo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : isBusos ? (
+                  ) : isBusos ? (
                 /* 3. SI ES BUSOS (INDEPENDIENTE) */
                 <div className="filter__group">
                   <h4>Tallas de Buzos</h4>
@@ -519,7 +498,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                   )}
 
                   {/* MARCAS PARA OTRAS CATEGORÍAS (si existen marcas reales) */}
-                  {!isGorras && !isAccesorios && marcasFiltrables.length > 0 && (
+                  {!isGorras && marcasFiltrables.length > 0 && (
                     <div className="filter__group">
                       <h4>Marcas</h4>
                       <div className="filter__sizes-grid">

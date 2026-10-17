@@ -42,6 +42,7 @@
   font-family: var(--font-body);
   font-size: 9.5px;
   letter-spacing: 0.18em;
+  word-spacing: 0.28em;
   font-weight: 500;
   color: var(--gold);
   margin-top: 1px;

@@ -6,7 +6,6 @@ import { urlImagen } from '../utils/imagenes'
 const ID_CATEGORIA = {
   camisetas: 'camisetas',
   buzos: 'busos',
-  accesorios: 'accesorios',
   tenis: 'tenis',
   sudaderas: 'blusas',
 }

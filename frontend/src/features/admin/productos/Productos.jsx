@@ -97,12 +97,13 @@ export default function Productos() {
   const [tallas, setTallas] = useState([]);
   const [colores, setColores] = useState([]);
 
-  // Categorías que existen para un único género: al elegirlas, el campo
-  // género queda fijado a ese valor.
-  const GENERO_POR_CATEGORIA = {
-    Sudaderas: "hombre",
-    Pantalonetas: "hombre",
-    Vestidos: "mujer"
+  // Categorías con un único género permitido (según la base de datos): al
+  // elegirlas, el campo género queda fijado a ese valor.
+  const generoFijo = (nombreCategoria) => {
+    const categoria = categorias.find((c) => c.nombre === nombreCategoria);
+    return categoria && categoria.generos.length === 1
+      ? categoria.generos[0]
+      : "";
   };
 
   const opcionesGenero = ["hombre", "mujer", "unisex"];
@@ -214,7 +215,7 @@ export default function Productos() {
       nombre: producto.nombre,
       categoria: producto.categoria,
       genero:
-        producto.genero || GENERO_POR_CATEGORIA[producto.categoria] || "",
+        producto.genero || generoFijo(producto.categoria) || "",
       talla: producto.talla,
       color: producto.color,
       precio: producto.precio,
@@ -237,7 +238,7 @@ export default function Productos() {
       const siguiente = { ...actual, [campo]: valor };
 
       if (campo === "categoria") {
-        siguiente.genero = GENERO_POR_CATEGORIA[valor] || "";
+        siguiente.genero = generoFijo(valor);
       }
 
       return siguiente;
@@ -837,10 +838,10 @@ export default function Productos() {
 
                     {categorias.map((categoria) => (
                       <option
-                        key={categoria}
-                        value={categoria}
+                        key={categoria.id}
+                        value={categoria.nombre}
                       >
-                        {categoria}
+                        {categoria.nombre}
                       </option>
                     ))}
                   </select>
@@ -860,9 +861,9 @@ export default function Productos() {
                   <select
                     value={formulario.genero}
                     className={`input ${errores.genero ? "input-error" : ""}`}
-                    disabled={Boolean(
-                      GENERO_POR_CATEGORIA[formulario.categoria]
-                    )}
+                      disabled={Boolean(
+                        generoFijo(formulario.categoria)
+                      )}
                     onChange={(e) =>
                       cambiarCampo(
                         "genero",
@@ -877,9 +878,8 @@ export default function Productos() {
                     {opcionesGenero
                       .filter(
                         (genero) =>
-                          !GENERO_POR_CATEGORIA[formulario.categoria] ||
-                          genero ===
-                            GENERO_POR_CATEGORIA[formulario.categoria]
+                          !generoFijo(formulario.categoria) ||
+                          genero === generoFijo(formulario.categoria)
                       )
                       .map((genero) => (
                         <option
@@ -1191,7 +1191,7 @@ onChange={(e) =>
 
                     <div className="producto-info-value">
                       {productoSeleccionado.genero ||
-                        GENERO_POR_CATEGORIA[productoSeleccionado.categoria] ||
+                        generoFijo(productoSeleccionado.categoria) ||
                         "—"}
                     </div>
 

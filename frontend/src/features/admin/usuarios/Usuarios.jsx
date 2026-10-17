@@ -16,6 +16,14 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import {
+  obtenerUsuariosAdmin,
+  obtenerRolesAdmin,
+  crearUsuarioAdmin,
+  actualizarUsuarioAdmin,
+  cambiarEstadoUsuarioAdmin,
+  eliminarUsuarioAdmin
+} from "../../../services/api";
 
 const REGISTROS_POR_PAGINA = 6;
 
@@ -26,112 +34,7 @@ export default function Usuarios() {
   // USUARIOS
   // =====================================================
 
-  const [usuarios, setUsuarios] = useState([
-    {
-      id: "USR-001",
-      nombre: "Carlos Rodríguez",
-      correo: "admin@storelamansion.com",
-      rol: "Administrador",
-      telefono: "+57 310 555 0001",
-      estado: "Activo",
-      fecha: "2024-01-15",
-      direccion: "Calle 50 #45-20, Medellín",
-      permisos: [
-        "Gestionar usuarios",
-        "Gestionar productos",
-        "Gestionar ventas",
-        "Gestionar pedidos",
-        "Gestionar domicilios"
-      ]
-    },
-
-    {
-      id: "USR-002",
-      nombre: "María García",
-      correo: "cliente@storelamansion.com",
-      rol: "Cliente",
-      telefono: "+57 315 555 0002",
-      estado: "Activo",
-      fecha: "2024-02-20",
-      direccion: "Cll 72 #10-34, Medellín",
-      permisos: [
-        "Gestionar pedidos"
-      ]
-    },
-
-    {
-      id: "USR-003",
-      nombre: "Andrés López",
-      correo: "andres@storelamansion.com",
-      rol: "Vendedor",
-      telefono: "+57 320 555 0003",
-      estado: "Activo",
-      fecha: "2024-03-10",
-      direccion: "Cra 70 #15-30, Bogotá",
-      permisos: [
-        "Gestionar productos",
-        "Gestionar ventas",
-        "Gestionar pedidos"
-      ]
-    },
-
-    {
-      id: "USR-004",
-      nombre: "Valentina Torres",
-      correo: "valentina@email.com",
-      rol: "Cliente",
-      telefono: "+57 300 555 0004",
-      estado: "Activo",
-      fecha: "2024-04-05",
-      direccion: "Av. 80 #33-15, Medellín",
-      permisos: [
-        "Gestionar pedidos"
-      ]
-    },
-
-    {
-      id: "USR-005",
-      nombre: "Santiago Gómez",
-      correo: "santiago@email.com",
-      rol: "Cliente",
-      telefono: "+57 311 555 0005",
-      estado: "Inactivo",
-      fecha: "2024-05-18",
-      direccion: "Calle 10 #20-15, Medellín",
-      permisos: [
-        "Gestionar pedidos"
-      ]
-    },
-
-    {
-      id: "USR-006",
-      nombre: "Marcela Ríos",
-      correo: "marcela@email.com",
-      rol: "Vendedor",
-      telefono: "+57 318 555 0006",
-      estado: "Activo",
-      fecha: "2024-06-10",
-      direccion: "Carrera 45 #22-40, Cali",
-      permisos: [
-        "Gestionar ventas",
-        "Gestionar pedidos"
-      ]
-    },
-
-    {
-      id: "USR-007",
-      nombre: "Diego Muñoz",
-      correo: "diego@email.com",
-      rol: "Cliente",
-      telefono: "+57 320 555 0007",
-      estado: "Inactivo",
-      fecha: "2024-06-25",
-      direccion: "Av. 68 #55-10, Bogotá",
-      permisos: [
-        "Gestionar pedidos"
-      ]
-    }
-  ]);
+  const [usuarios, setUsuarios] = useState([]);
 
   // =====================================================
   // ESTADOS
@@ -181,11 +84,7 @@ export default function Usuarios() {
   // ROLES
   // =====================================================
 
-  const roles = [
-    "Administrador",
-    "Vendedor",
-    "Cliente"
-  ];
+  const [roles, setRoles] = useState([]);
 
   // =====================================================
   // FECHA ACTUAL
@@ -296,14 +195,9 @@ export default function Usuarios() {
 
   const abrirAgregar = () => {
 
-    const numero =
-      String(
-        usuarios.length + 1
-      ).padStart(3, "0");
-
     setFormulario({
 
-      id: `USR-${numero}`,
+      id: "",
 
       nombre: "",
 
@@ -311,7 +205,7 @@ export default function Usuarios() {
 
       telefono: "",
 
-      rol: "Cliente",
+      rol: roles.length > 0 ? roles[0] : "Cliente",
 
       estado: "Activo",
 
@@ -440,7 +334,7 @@ export default function Usuarios() {
   // GUARDAR USUARIO
   // =====================================================
 
-  const guardarUsuario = () => {
+  const guardarUsuario = async () => {
 
     const nuevosErrores = {};
 
@@ -448,32 +342,12 @@ export default function Usuarios() {
       !formulario.nombre.trim()
     ) {
       nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else {
-
-      const nombreNormalizado =
-        formulario.nombre
-          .trim()
-          .toLowerCase();
-
-      const yaExiste = usuarios.some(
-        (item) =>
-          item.nombre.trim().toLowerCase() ===
-            nombreNormalizado &&
-          (!modoEdicion ||
-            item.id !== formulario.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
-      }
-
     }
 
     if (
-      formulario.nombre.trim().length > 20
+      formulario.nombre.trim().length > 100
     ) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
+      nuevosErrores.nombre = "El nombre no puede superar los 100 caracteres.";
     }
 
     if (
@@ -489,9 +363,9 @@ export default function Usuarios() {
     }
 
     if (
-      formulario.telefono.length > 10
+      formulario.telefono.length > 30
     ) {
-      nuevosErrores.telefono = "El teléfono no puede superar los 10 dígitos.";
+      nuevosErrores.telefono = "El teléfono es demasiado largo.";
     }
 
     if (
@@ -511,6 +385,10 @@ export default function Usuarios() {
       !formulario.contraseña.trim()
     ) {
       nuevosErrores.contraseña = "Ingresa una contraseña para el usuario.";
+    }
+
+    if (formulario.contraseña.trim() && formulario.contraseña.trim().length < 8) {
+      nuevosErrores.contraseña = "La contraseña debe tener al menos 8 caracteres.";
     }
 
     setErrores(nuevosErrores);
@@ -536,94 +414,69 @@ export default function Usuarios() {
 
     } else {
 
-      setUsuarios(
-        (actuales) => [
-          {
-            id:
-              formulario.id,
-
-            nombre:
-              formulario.nombre,
-
-            correo:
-              formulario.correo,
-
-            telefono:
-              formulario.telefono,
-
-            rol:
-              formulario.rol,
-
-            estado:
-              formulario.estado,
-
-            fecha:
-              formulario.fecha,
-
-            direccion:
-              formulario.direccion,
-
-            permisos
-          },
+      try {
+        const datos = {
+          nombre: formulario.nombre.trim(),
+          correo: formulario.correo.trim(),
+          telefono: formulario.telefono.trim(),
+          direccion: formulario.direccion.trim(),
+          rol: formulario.rol,
+          estado: formulario.estado,
+          contrasena: formulario.contraseña.trim()
+        };
+        const fila = await crearUsuarioAdmin(datos);
+        setUsuarios((actuales) => [
+          { ...fila, permisos },
           ...actuales
-        ]
-      );
+        ]);
+        mostrarToast("Usuario creado con éxito");
+        cerrarModal();
+      } catch (error) {
+        mostrarToast(error.message, "error");
+      }
 
-      mostrarToast("Usuario creado con éxito");
+      return;
 
     }
-
-    cerrarModal();
 
   };
 
 
-  const confirmarEdicionUsuario = () => {
+  const confirmarEdicionUsuario = async () => {
 
     const permisos =
       obtenerPermisos(
         formulario.rol
       );
 
-    setUsuarios(
-      (actuales) =>
-        actuales.map(
-          (usuario) =>
-            usuario.id === formulario.id
-              ? {
-                  id:
-                    formulario.id,
-
-                  nombre:
-                    formulario.nombre,
-
-                  correo:
-                    formulario.correo,
-
-                  telefono:
-                    formulario.telefono,
-
-                  rol:
-                    formulario.rol,
-
-                  estado:
-                    formulario.estado,
-
-                  fecha:
-                    formulario.fecha,
-
-                  direccion:
-                    formulario.direccion,
-
-                  permisos
-                }
-              : usuario
-        )
-    );
-
-    setConfirmarEdicion(false);
-
-    cerrarModal();
+    try {
+      const datos = {
+        nombre: formulario.nombre.trim(),
+        correo: formulario.correo.trim(),
+        telefono: formulario.telefono.trim(),
+        direccion: formulario.direccion.trim(),
+        rol: formulario.rol,
+        estado: formulario.estado
+      };
+      if (formulario.contraseña && formulario.contraseña.trim()) {
+        datos.contrasena = formulario.contraseña.trim();
+      }
+      const fila = await actualizarUsuarioAdmin(formulario.id, datos);
+      setUsuarios(
+        (actuales) =>
+          actuales.map(
+            (usuario) =>
+              usuario.id === formulario.id
+                ? { ...fila, permisos }
+                : usuario
+          )
+      );
+      setConfirmarEdicion(false);
+      cerrarModal();
+    } catch (error) {
+      mostrarToast(error.message, "error");
+      setConfirmarEdicion(false);
+    }
 
   };
 
@@ -631,25 +484,27 @@ export default function Usuarios() {
   // CAMBIAR ESTADO
   // =====================================================
 
-  const cambiarEstado = (usuario) => {
+  const cambiarEstado = async (usuario) => {
 
     const nuevoEstado =
       usuario.estado === "Activo"
         ? "Inactivo"
         : "Activo";
 
-    setUsuarios(
-      (actuales) =>
-        actuales.map(
-          (item) =>
-            item.id === usuario.id
-              ? {
-                  ...item,
-                  estado: nuevoEstado
-                }
-              : item
-        )
-    );
+    try {
+      const fila = await cambiarEstadoUsuarioAdmin(usuario.id, nuevoEstado);
+      setUsuarios(
+        (actuales) =>
+          actuales.map(
+            (item) =>
+              item.id === usuario.id
+                ? { ...fila, permisos: obtenerPermisos(fila.rol) }
+                : item
+          )
+      );
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
 
   };
 
@@ -673,16 +528,21 @@ export default function Usuarios() {
 
   };
 
-  const confirmarEliminarUsuario = () => {
+  const confirmarEliminarUsuario = async () => {
 
-    setUsuarios(
-      (prev) =>
-        prev.filter(
-          (item) => item.id !== usuarioEliminar.id
-        )
-    );
-
-    setUsuarioEliminar(null);
+    try {
+      await eliminarUsuarioAdmin(usuarioEliminar.id);
+      setUsuarios(
+        (prev) =>
+          prev.filter(
+            (item) => item.id !== usuarioEliminar.id
+          )
+      );
+      setUsuarioEliminar(null);
+    } catch (error) {
+      mostrarToast(error.message, "error");
+      setUsuarioEliminar(null);
+    }
 
   };
 
@@ -722,6 +582,33 @@ export default function Usuarios() {
 
     setUsuarioSeleccionado(null);
 
+  };
+
+  // =====================================================
+  // CARGA INICIAL
+  // =====================================================
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const [usuariosData, rolesData] = await Promise.all([
+          obtenerUsuariosAdmin(),
+          obtenerRolesAdmin()
+        ]);
+        setUsuarios(usuariosData.map((u) => ({ ...u, permisos: obtenerPermisos(u.rol) })));
+        setRoles(rolesData.roles || []);
+      } catch (error) {
+        mostrarToast(error.message, "error");
+      }
+    };
+    cargarDatos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const formatearIdUsuario = (id) => {
+    const numero = Number(id);
+    if (!Number.isInteger(numero)) return id;
+    return `USR-${String(numero).padStart(3, "0")}`;
   };
 
   // =====================================================
@@ -837,7 +724,7 @@ export default function Usuarios() {
                   <td>
 
                     <strong className="usuario-id">
-                      {usuario.id}
+                      {formatearIdUsuario(usuario.id)}
                     </strong>
 
                   </td>
@@ -1403,9 +1290,9 @@ export default function Usuarios() {
                     ID USUARIO
                   </label>
 
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.id}
-                  </div>
+                    <div className="usuario-info-value">
+                      {formatearIdUsuario(usuarioSeleccionado.id)}
+                    </div>
 
                 </div>
 

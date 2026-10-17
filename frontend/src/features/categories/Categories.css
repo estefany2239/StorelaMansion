@@ -29,6 +29,25 @@
   font-weight: 600;
 }
 
+/* Aviso discreto mientras se confirma la lista real de la base de datos */
+.categories__notice {
+  margin: -24px 0 24px;
+  text-align: center;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--ink, #1a1a1a);
+  opacity: 0.55;
+}
+
+.categories__empty {
+  text-align: center;
+  font-family: var(--font-body, "Inter", sans-serif);
+  color: var(--ink, #1a1a1a);
+  opacity: 0.6;
+  padding: 32px 0;
+}
+
 /* ==========================================
    CARRUSEL HORIZONTAL (scroll-snap, sin librerías)
    ========================================== */
@@ -47,6 +66,12 @@
   padding: 16px 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Transición suave al pasar del respaldo local a los datos reales */
+  transition: opacity 0.35s ease;
+}
+
+.categories__track--respaldo {
+  opacity: 0.85;
 }
 
 .categories__track::-webkit-scrollbar {

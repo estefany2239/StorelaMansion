@@ -11,6 +11,17 @@ export async function obtenerProductos(filtros = {}) {
   return respuesta.json()
 }
 
+export async function obtenerCategorias() {
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}/api/categorias`)
+  } catch {
+    throw new Error('No se pudieron cargar las categorías')
+  }
+  if (!respuesta.ok) throw new Error('No se pudieron cargar las categorías')
+  return respuesta.json()
+}
+
 export async function registrarUsuario(nombre, correo, contrasena) {
   let respuesta
   try {
@@ -214,5 +225,85 @@ export async function eliminarProductoAdmin(id) {
   return peticionAdmin(`/api/admin/productos/${id}`, {
     metodo: 'DELETE',
     mensajeError: 'No se pudo eliminar el producto'
+  })
+}
+
+export async function obtenerCategoriasAdmin() {
+  return peticionAdmin('/api/admin/categorias', {
+    mensajeError: 'No se pudieron cargar las categorías'
+  })
+}
+
+export async function crearCategoriaAdmin(datos) {
+  return peticionAdmin('/api/admin/categorias', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear la categoría'
+  })
+}
+
+export async function actualizarCategoriaAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/categorias/${encodeURIComponent(id)}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar la categoría'
+  })
+}
+
+export async function cambiarEstadoCategoriaAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/categorias/${encodeURIComponent(id)}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado de la categoría'
+  })
+}
+
+export async function eliminarCategoriaAdmin(id) {
+  return peticionAdmin(`/api/admin/categorias/${encodeURIComponent(id)}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar la categoría'
+  })
+}
+
+export async function obtenerUsuariosAdmin() {
+  return peticionAdmin('/api/admin/usuarios', {
+    mensajeError: 'No se pudieron cargar los usuarios'
+  })
+}
+
+export async function obtenerRolesAdmin() {
+  return peticionAdmin('/api/admin/usuarios/roles', {
+    mensajeError: 'No se pudieron cargar los roles'
+  })
+}
+
+export async function crearUsuarioAdmin(datos) {
+  return peticionAdmin('/api/admin/usuarios', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el usuario'
+  })
+}
+
+export async function actualizarUsuarioAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/usuarios/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el usuario'
+  })
+}
+
+export async function cambiarEstadoUsuarioAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/usuarios/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado del usuario'
+  })
+}
+
+export async function eliminarUsuarioAdmin(id) {
+  return peticionAdmin(`/api/admin/usuarios/${id}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar el usuario'
   })
 }

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
-import { categories } from "../../data/categories";
+import { useCategorias } from "../../hooks/useCategorias";
 import "./Categories.css";
 
 export default function Categories({ onSelectCategory }) {
+  const { categorias, usandoRespaldo } = useCategorias();
   const trackRef = useRef(null);
   const [hayOverflow, setHayOverflow] = useState(false);
   const [alInicio, setAlInicio] = useState(true);
@@ -55,6 +56,17 @@ export default function Categories({ onSelectCategory }) {
       <div className="categories">
         <h2 className="categories__title">Nuestras Categorías</h2>
 
+        {usandoRespaldo && (
+          <p className="categories__notice" role="status">
+            Mostrando categorías guardadas, actualizando…
+          </p>
+        )}
+
+        {categorias.length === 0 ? (
+          <p className="categories__empty">
+            No hay categorías disponibles por ahora.
+          </p>
+        ) : (
         <div className="categories__carousel">
           {hayOverflow && (
             <button
@@ -69,13 +81,13 @@ export default function Categories({ onSelectCategory }) {
           )}
 
           <div
-            className="categories__track"
+            className={`categories__track${usandoRespaldo ? " categories__track--respaldo" : ""}`}
             ref={trackRef}
             role="group"
             aria-label="Categorías"
             tabIndex={0}
           >
-            {categories.map((cat) => (
+            {categorias.map((cat) => (
               <button
                 key={cat.id}
                 className="categories__item"
@@ -105,6 +117,7 @@ export default function Categories({ onSelectCategory }) {
             </button>
           )}
         </div>
+        )}
       </div>
     </section>
   );

@@ -65,6 +65,34 @@ const leerCuerpo = (body) => {
   return { datos, error }
 }
 
+// Regla de género por categoría: una categoría de un solo género (p. ej.
+// Sudaderas o Vestidos) solo admite ese género. "unisex" solo se admite en
+// categorías que permiten hombre y mujer. Si no se especifica género se
+// permite (compatibilidad con productos antiguos).
+const validarGeneroCategoria = async (db, idCategoria, genero) => {
+  const generoSolicitado = String(genero || '').trim().toLowerCase()
+  if (!generoSolicitado) return null
+
+  const { rows } = await db.query(
+    `SELECT nombre, COALESCE(generos, '{}') AS generos
+       FROM categoria WHERE id_categoria = $1`,
+    [idCategoria]
+  )
+  const categoria = rows[0]
+  if (!categoria) return 'La categoría no existe'
+
+  const permitidos = (categoria.generos || []).map((g) => String(g).toLowerCase())
+  const permitido =
+    generoSolicitado === 'unisex'
+      ? permitidos.includes('hombre') && permitidos.includes('mujer')
+      : permitidos.includes(generoSolicitado)
+
+  if (permitido) return null
+  return `La categoría ${categoria.nombre} no permite el género "${generoSolicitado}"${
+    permitidos.length ? ` (solo ${permitidos.join(' y ')})` : ''
+  }.`
+}
+
 // Busca los ids de categoría, talla y color; si alguno no existe, devuelve el error
 const resolverIds = async (db, datos) => {
   const idCategoria = await idPorNombre(db, 'categoria', 'id_categoria', datos.categoria)
@@ -86,12 +114,15 @@ const leerId = (req) => {
 router.get('/catalogos', async (req, res) => {
   try {
     const [categorias, tallas, colores] = await Promise.all([
-      pool.query('SELECT DISTINCT nombre FROM categoria WHERE estado = TRUE ORDER BY nombre'),
+      pool.query(
+        `SELECT codigo, nombre, COALESCE(generos, '{}') AS generos
+           FROM categoria WHERE estado = TRUE ORDER BY orden, nombre`
+      ),
       pool.query('SELECT nombre, MIN(id_talla) AS orden FROM talla WHERE estado = TRUE GROUP BY nombre ORDER BY orden'),
       pool.query('SELECT DISTINCT nombre FROM color WHERE estado = TRUE ORDER BY nombre'),
     ])
     res.json({
-      categorias: categorias.rows.map((f) => f.nombre),
+      categorias: categorias.rows.map((f) => ({ id: f.codigo, nombre: f.nombre, generos: f.generos })),
       tallas: tallas.rows.map((f) => f.nombre),
       colores: colores.rows.map((f) => f.nombre),
     })
@@ -123,6 +154,12 @@ router.post('/', async (req, res) => {
     if (ids.error) {
       await db.query('ROLLBACK')
       return res.status(400).json({ error: ids.error })
+    }
+
+    const errorGenero = await validarGeneroCategoria(db, ids.idCategoria, datos.genero)
+    if (errorGenero) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: errorGenero })
     }
 
     const producto = await db.query(
@@ -177,6 +214,12 @@ router.put('/:id', async (req, res) => {
     if (ids.error) {
       await db.query('ROLLBACK')
       return res.status(400).json({ error: ids.error })
+    }
+
+    const errorGenero = await validarGeneroCategoria(db, ids.idCategoria, datos.genero)
+    if (errorGenero) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: errorGenero })
     }
 
     await db.query(

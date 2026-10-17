@@ -21,6 +21,18 @@ router.get('/', async (req, res) => {
     if (talla) agregar('t.nombre = ?', talla)
     if (color) agregar('LOWER(co.nombre) = LOWER(?)', color)
 
+    // Regla de género por categoría: no se muestran productos cuyo género no
+    // esté permitido por su categoría (p. ej. una sudadera con género mujer),
+    // aunque existan en la base de datos. "unisex" solo se muestra en
+    // categorías que permiten hombre y mujer. Categorías sin géneros definidos
+    // o productos sin género no se filtran (compatibilidad).
+    condiciones.push(`(
+      c.generos IS NULL OR array_length(c.generos, 1) IS NULL
+      OR p.genero IS NULL
+      OR p.genero = ANY(c.generos)
+      OR (p.genero = 'unisex' AND 'hombre' = ANY(c.generos) AND 'mujer' = ANY(c.generos))
+    )`)
+
     const { rows } = await pool.query(
       `SELECT v.id_variante, p.id_producto, p.nombre, p.precio::float8 AS precio,
               p.genero, c.nombre AS categoria, t.nombre AS talla,

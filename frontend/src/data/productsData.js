@@ -879,7 +879,7 @@ export const allProducts = [
     id: 179,
     grupoId: 179,
     name: 'Reloj Chronograph Gold', 
-   categoryId: 'Pantalones', 
+   categoryId: 'blusas', 
     gender: 'mujer',  
     size: 'S', 
     color: 'Dorado', 
@@ -890,7 +890,7 @@ export const allProducts = [
     id: 179,
     grupoId: 179,
     name: 'sudadera blanco', 
-    categoryId: 'Pantalones', 
+    categoryId: 'blusas', 
     gender: 'mujer', 
     size: 'S', 
     color: 'Dorado', 
@@ -1464,8 +1464,8 @@ export const allProducts = [
 ];
 
 // 5. Función de filtrado flexible
-//    La categoría "Accesorios" agrupa gorras, perfumes y relojes
-//    tanto para hombre como para mujer.
+//    Las categorías de tipo complemento (gorras, relojes y perfumes) no usan
+//    tallas de ropa: su "size" es el tipo de producto, no una talla.
 const normalizarNombreColor = (color) =>
   String(color || "")
     .trim()
@@ -1494,33 +1494,23 @@ const normalizarNombreColor = (color) =>
 
     const sinFiltroCategoria = !catString || catString === 'todos';
 
-    const esCategoriaAccesorios =
-      !sinFiltroCategoria &&
-      ['accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
-        .some(t => catString.includes(t));
-
-    const esProductoAccesorio = () =>
-      ['gorras', 'accesorios', 'accesorio', 'reloj', 'relojes', 'perfumes', 'perfume']
-        .some(t => prodCat.includes(t));
-
-    let matchCategory;
-    if (esCategoriaAccesorios) {
-      matchCategory = esProductoAccesorio();
-    } else {
-      matchCategory =
-        sinFiltroCategoria ||
-        prodCat === catString ||
-        prodCat.includes(catString);
-    }
-
-    const isAccessory =
+    const matchCategory =
       sinFiltroCategoria ||
-      ['gorras', 'perfumes', 'reloj', 'relojes', 'accesorios']
-        .some(t => catString.includes(t) || prodCat.includes(t));
+      prodCat === catString ||
+      prodCat.includes(catString);
+
+    // Categorías de tipo complemento (no usan tallas de ropa)
+    const esCategoriaConTipo =
+      !sinFiltroCategoria &&
+      ['gorras', 'relojes', 'perfumes'].some(t => catString === t || catString.includes(t));
+
+    const esProductoConTipo =
+      ['gorras', 'relojes', 'perfumes'].some(t => prodCat === t || prodCat.includes(t));
 
     const matchGender =
       !gender ||
-      product.gender === gender;
+      product.gender === gender ||
+      product.gender === 'unisex';
 
     if (!matchCategory || !matchGender) return false;
 
@@ -1531,15 +1521,16 @@ const normalizarNombreColor = (color) =>
       }
     }
 
-    // En accesorios los "sizes" son tipos (Gorras, Perfumes, Relojes)
-    if (esCategoriaAccesorios && sizes && sizes.length > 0) {
+    // En las categorías de tipo complemento los "sizes" son tipos (Gorras,
+    // Perfumes, Relojes) y se filtran por nombre.
+    if (esCategoriaConTipo && sizes && sizes.length > 0) {
       const nombre = (product.name || '').toLowerCase();
       const coincideTipo = sizes.some(tipo => {
         const kw = tipoKeywords[String(tipo).toLowerCase()] || String(tipo).toLowerCase();
         return nombre.includes(kw);
       });
       if (!coincideTipo) return false;
-    } else if (!isAccessory && sizes && sizes.length > 0 && product.size && !sizes.includes(product.size)) {
+    } else if (!esProductoConTipo && sizes && sizes.length > 0 && product.size && !sizes.includes(product.size)) {
       return false;
     }
 
