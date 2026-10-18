@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
+import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()
 
-// Todo este módulo es solo para administradores (mismo middleware que productos)
-router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador'))
+// Todo este módulo está protegido; la autorización por permiso se aplica en cada ruta
+router.use(verificarToken, bloquearCambioPendiente)
 
 const GENEROS_VALIDOS = ['hombre', 'mujer']
 
@@ -90,7 +90,7 @@ const filaPorCodigo = async (db, codigo) => {
 }
 
 // GET /api/admin/categorias -> todas (activas e inactivas)
-router.get('/', async (req, res) => {
+router.get('/', requierePrivilegio('Categorías', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(`${SELECT_FILA} ORDER BY c.orden, c.nombre`)
     res.json(rows)
@@ -100,7 +100,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST /api/admin/categorias -> crea una categoría
-router.post('/', async (req, res) => {
+router.post('/', requierePrivilegio('Categorías', 'Crear'), async (req, res) => {
   const { datos, error } = leerCuerpo(req.body)
   if (error) return res.status(400).json({ error })
 
@@ -135,7 +135,7 @@ router.post('/', async (req, res) => {
 })
 
 // PUT /api/admin/categorias/:id -> edita nombre, descripción, géneros, imagen y orden
-router.put('/:id', async (req, res) => {
+router.put('/:id', requierePrivilegio('Categorías', 'Actualizar'), async (req, res) => {
   const codigo = leerId(req)
   if (!codigo) return res.status(400).json({ error: 'Id inválido' })
 
@@ -187,7 +187,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // PATCH /api/admin/categorias/:id/estado -> activa o desactiva (body: { estado })
-router.patch('/:id/estado', async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Categorías', 'Actualizar'), async (req, res) => {
   const codigo = leerId(req)
   if (!codigo) return res.status(400).json({ error: 'Id inválido' })
 
@@ -211,7 +211,7 @@ router.patch('/:id/estado', async (req, res) => {
 })
 
 // DELETE /api/admin/categorias/:id -> elimina SOLO si no tiene productos
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requierePrivilegio('Categorías', 'Eliminar'), async (req, res) => {
   const codigo = leerId(req)
   if (!codigo) return res.status(400).json({ error: 'Id inválido' })
 

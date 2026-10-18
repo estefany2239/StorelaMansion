@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
+import { verificarToken, soloRoles, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()
 
@@ -256,8 +256,8 @@ router.get('/mis', soloRoles('Cliente'), async (req, res) => {
   }
 })
 
-// GET / -> lista de pedidos (Administrador y Vendedor)
-router.get('/', soloRoles('Administrador', 'Vendedor'), async (req, res) => {
+// GET / -> lista de pedidos (requiere Pedidos:Consultar)
+router.get('/', requierePrivilegio('Pedidos', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(`${SELECT_PEDIDO} ORDER BY p.id_pedido DESC`)
     res.json(rows)
@@ -267,8 +267,12 @@ router.get('/', soloRoles('Administrador', 'Vendedor'), async (req, res) => {
   }
 })
 
-// GET /:id -> detalle (Administrador, Vendedor y el Cliente dueño)
-router.get('/:id', soloRoles('Administrador', 'Vendedor', 'Cliente'), async (req, res) => {
+// GET /:id -> detalle. El Cliente solo ve los suyos; el personal necesita Pedidos:Consultar.
+const autorizarDetalle = (req, res, next) => {
+  if (req.usuario?.rol === 'Cliente') return next()
+  return requierePrivilegio('Pedidos', 'Consultar')(req, res, next)
+}
+router.get('/:id', soloRoles('Administrador', 'Vendedor', 'Cliente'), autorizarDetalle, async (req, res) => {
   try {
     const id = Number.parseInt(req.params.id, 10)
     if (Number.isNaN(id)) {
@@ -291,8 +295,8 @@ router.get('/:id', soloRoles('Administrador', 'Vendedor', 'Cliente'), async (req
   }
 })
 
-// PATCH /:id/estado -> cambia el estado (Administrador y Vendedor)
-router.patch('/:id/estado', soloRoles('Administrador', 'Vendedor'), async (req, res) => {
+// PATCH /:id/estado -> cambia el estado (requiere Pedidos:Cambiar estado)
+router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), async (req, res) => {
   const id = Number.parseInt(req.params.id, 10)
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: 'Identificador inválido' })

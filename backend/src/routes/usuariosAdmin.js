@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
+import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 import {
   enviarCorreo,
   plantillaInvitacion,
@@ -11,8 +11,8 @@ import {
 
 const router = Router()
 
-// Todo este módulo es solo para administradores y requiere contraseña propia
-router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador'))
+// Todo este módulo requiere contraseña propia; la autorización por permiso se aplica en cada ruta
+router.use(verificarToken, bloquearCambioPendiente)
 
 // Nunca se devuelve la contraseña. invitacion_enviada y
 // cambio_contrasena_obligatorio permiten ver en el panel si la invitación
@@ -139,7 +139,7 @@ const validarCambio = async (req, idObjetivo, nuevoRol, nuevoActivo) => {
 }
 
 // GET /api/admin/usuarios/roles -> opciones para el select de roles
-router.get('/roles', async (req, res) => {
+router.get('/roles', requierePrivilegio('Usuarios', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(
       'SELECT nombre, MIN(id_rol) AS orden FROM rol WHERE estado = TRUE GROUP BY nombre ORDER BY orden'
@@ -151,7 +151,7 @@ router.get('/roles', async (req, res) => {
 })
 
 // GET /api/admin/usuarios -> todos los usuarios (clientes, vendedores y administradores)
-router.get('/', async (req, res) => {
+router.get('/', requierePrivilegio('Usuarios', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(`${SELECT_FILAS} ORDER BY u.id_usuario`)
     res.json(rows)
@@ -161,9 +161,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST /api/admin/usuarios -> crea un usuario con el rol elegido.
-// Genera una contraseña temporal, la envía por correo (o la simula) y marca
-// el cambio de contraseña como obligatorio al primer inicio de sesión.
-router.post('/', async (req, res) => {
+router.post('/', requierePrivilegio('Usuarios', 'Crear'), async (req, res) => {
   const { datos, error } = leerCuerpo(req.body, { esNuevo: true })
   if (error) return res.status(400).json({ error })
 
@@ -240,7 +238,7 @@ router.post('/', async (req, res) => {
 // Genera una contraseña temporal NUEVA (la anterior no se puede recuperar),
 // la envía por correo y mantiene el cambio de contraseña como obligatorio.
 // Solo aplica a usuarios que todavía no han establecido su contraseña.
-router.post('/:id/reenviar-invitacion', async (req, res) => {
+router.post('/:id/reenviar-invitacion', requierePrivilegio('Usuarios', 'Actualizar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
@@ -315,7 +313,7 @@ router.post('/:id/reenviar-invitacion', async (req, res) => {
 })
 
 // PUT /api/admin/usuarios/:id -> actualiza los datos (la contraseña solo cambia si se envía una nueva)
-router.put('/:id', async (req, res) => {
+router.put('/:id', requierePrivilegio('Usuarios', 'Actualizar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
@@ -360,7 +358,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // PATCH /api/admin/usuarios/:id/estado -> activa o desactiva (body: { estado: 'Activo' | 'Inactivo' })
-router.patch('/:id/estado', async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Usuarios', 'Actualizar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
@@ -389,7 +387,7 @@ router.patch('/:id/estado', async (req, res) => {
 })
 
 // DELETE /api/admin/usuarios/:id -> elimina el usuario (si no tiene pedidos)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requierePrivilegio('Usuarios', 'Eliminar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 

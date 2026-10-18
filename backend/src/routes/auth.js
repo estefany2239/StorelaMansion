@@ -2,7 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { pool } from '../db.js'
-import { verificarToken, bloquearCambioPendiente } from '../middlewares/auth.js'
+import { verificarToken, bloquearCambioPendiente, obtenerPermisos } from '../middlewares/auth.js'
 
 const router = Router()
 
@@ -88,7 +88,7 @@ router.post('/login', async (req, res) => {
     const contrasena = String(req.body.contrasena || '')
 
     const { rows } = await pool.query(
-      `SELECT u.id_usuario, u.nombres, u.apellidos, u.correo, u.contrasena, u.estado,
+      `SELECT u.id_usuario, u.id_rol, u.nombres, u.apellidos, u.correo, u.contrasena, u.estado,
               u.cambio_contrasena_obligatorio, u.contrasena_temporal_vencimiento,
               r.nombre AS rol
        FROM usuario u
@@ -116,13 +116,15 @@ router.post('/login', async (req, res) => {
           error: 'Tu contraseña temporal venció. Pide al administrador que te envíe una nueva invitación.',
         })
       }
+      const permisos = await obtenerPermisos(usuario.id_usuario)
       return res.json({
         token: crearToken(usuario),
-        usuario: { ...datosPublicos(usuario), cambioContrasena: true },
+        usuario: { ...datosPublicos(usuario), cambioContrasena: true, permisos },
       })
     }
 
-    res.json({ token: crearToken(usuario), usuario: datosPublicos(usuario) })
+    const permisos = await obtenerPermisos(usuario.id_usuario)
+    res.json({ token: crearToken(usuario), usuario: { ...datosPublicos(usuario), permisos } })
   } catch (error) {
     console.error('Error en /api/auth/login:', error.message)
     res.status(500).json({ error: 'No se pudo iniciar sesión' })
@@ -143,7 +145,8 @@ router.get('/perfil', verificarToken, bloquearCambioPendiente, async (req, res) 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' })
     }
-    res.json(datosPublicos(rows[0]))
+    const permisos = await obtenerPermisos(rows[0].id_usuario)
+    res.json({ ...datosPublicos(rows[0]), permisos })
   } catch (error) {
     console.error('Error en /api/auth/perfil:', error.message)
     res.status(500).json({ error: 'No se pudo cargar el perfil' })

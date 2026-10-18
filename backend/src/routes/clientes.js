@@ -2,11 +2,11 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
+import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()
 
-router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador', 'Vendedor'))
+router.use(verificarToken, bloquearCambioPendiente)
 
 const SELECT_CLIENTE = `
   SELECT u.id_usuario AS id,
@@ -66,8 +66,7 @@ const obtenerClientePorId = async (id) => {
   return rows[0]
 }
 
-// GET / -> lista de clientes
-router.get('/', async (req, res) => {
+router.get('/', requierePrivilegio('Clientes', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(
       `${SELECT_CLIENTE} WHERE r.nombre = 'Cliente' ORDER BY u.id_usuario`
@@ -80,8 +79,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST / -> crea un cliente
-router.post('/', async (req, res) => {
+router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
   try {
     const { nombre, correo, telefono, direccion, errores } = validarCliente(req.body)
     if (Object.keys(errores).length > 0) {
@@ -124,8 +122,7 @@ router.post('/', async (req, res) => {
   }
 })
 
-// PUT /:id -> actualiza nombre, correo, teléfono y dirección
-router.put('/:id', async (req, res) => {
+router.put('/:id', requierePrivilegio('Clientes', 'Actualizar'), async (req, res) => {
   try {
     const id = idCliente(req)
     if (Number.isNaN(id)) {
@@ -171,8 +168,7 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// PATCH /:id/estado -> alterna el estado del cliente
-router.patch('/:id/estado', async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Clientes', 'Actualizar'), async (req, res) => {
   try {
     const id = idCliente(req)
     if (Number.isNaN(id)) {
@@ -197,8 +193,7 @@ router.patch('/:id/estado', async (req, res) => {
   }
 })
 
-// DELETE /:id -> solo Administrador y solo si el cliente está Inactivo y sin pedidos
-router.delete('/:id', soloRoles('Administrador'), async (req, res) => {
+router.delete('/:id', requierePrivilegio('Clientes', 'Eliminar'), async (req, res) => {
   try {
     const id = idCliente(req)
     if (Number.isNaN(id)) {

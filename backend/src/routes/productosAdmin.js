@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
+import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()
 
-// Todo este módulo es solo para administradores
-router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador'))
+// Todo este módulo está protegido; la autorización por permiso se aplica en cada ruta
+router.use(verificarToken, bloquearCambioPendiente)
 
 // Cada fila del panel es una variante (producto + talla + color)
 const SELECT_FILAS = `
@@ -111,7 +111,7 @@ const leerId = (req) => {
 }
 
 // GET /api/admin/productos/catalogos -> opciones para los selects del formulario
-router.get('/catalogos', async (req, res) => {
+router.get('/catalogos', requierePrivilegio('Productos', 'Consultar'), async (req, res) => {
   try {
     const [categorias, tallas, colores] = await Promise.all([
       pool.query(
@@ -132,7 +132,7 @@ router.get('/catalogos', async (req, res) => {
 })
 
 // GET /api/admin/productos -> todas las variantes (activas e inactivas)
-router.get('/', async (req, res) => {
+router.get('/', requierePrivilegio('Productos', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(`${SELECT_FILAS} ORDER BY v.id_variante`)
     res.json(rows)
@@ -142,7 +142,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST /api/admin/productos -> crea el producto y su variante
-router.post('/', async (req, res) => {
+router.post('/', requierePrivilegio('Productos', 'Crear'), async (req, res) => {
   const { datos, error } = leerCuerpo(req.body)
   if (error) return res.status(400).json({ error })
 
@@ -190,7 +190,7 @@ router.post('/', async (req, res) => {
 })
 
 // PUT /api/admin/productos/:id -> actualiza el producto y su variante
-router.put('/:id', async (req, res) => {
+router.put('/:id', requierePrivilegio('Productos', 'Actualizar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
@@ -248,7 +248,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // PATCH /api/admin/productos/:id/estado -> activa o desactiva (body: { estado: 'Activo' | 'Inactivo' })
-router.patch('/:id/estado', async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Productos', 'Actualizar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
@@ -275,7 +275,7 @@ router.patch('/:id/estado', async (req, res) => {
 })
 
 // DELETE /api/admin/productos/:id -> elimina la variante (y el producto si se queda sin variantes)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requierePrivilegio('Productos', 'Eliminar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
