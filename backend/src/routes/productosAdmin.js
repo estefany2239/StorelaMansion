@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles } from '../middlewares/auth.js'
+import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
 
 const router = Router()
 
 // Todo este módulo es solo para administradores
-router.use(verificarToken, soloRoles('Administrador'))
+router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador'))
 
 // Cada fila del panel es una variante (producto + talla + color)
 const SELECT_FILAS = `

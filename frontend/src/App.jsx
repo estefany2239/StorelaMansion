@@ -13,6 +13,7 @@ import Footer from "./components/layout/Footer";
 import Login from "./features/auth/Login";
 import Register from "./features/auth/Register";
 import ForgotPassword from "./features/auth/ForgotPassword";
+import CambiarContrasena from "./features/auth/CambiarContrasena";
 
 import CartDrawer from "./components/cart/CartDrawer";
 import PaymentView from "./components/payment/PaymentView";
@@ -112,8 +113,19 @@ export default function App() {
   // VISTA ACTUAL
   // ==========================================
 
+  // Vista inicial: el enlace profundo ?vista=login (usado en las
+  // invitaciones por correo) abre el login; una sesión temporal pendiente
+  // de cambio de contraseña solo puede llegar a "Establecer nueva
+  // contraseña"; con sesión interna válida se entra al panel.
   const [currentView, setCurrentView] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("vista") === "login") {
+      window.history.replaceState({}, "", window.location.pathname);
+      return "login";
+    }
+
     const guardado = cargarUsuarioSesion();
+    if (guardado?.cambioContrasena) return "cambiar-contrasena";
     return guardado && esRolInterno(guardado.rol) ? "admin" : "home";
   });
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -397,7 +409,8 @@ export default function App() {
   const isAuthView =
     currentView === "login" ||
     currentView === "register" ||
-    currentView === "forgot";
+    currentView === "forgot" ||
+    currentView === "cambiar-contrasena";
 
 
   // ==========================================
@@ -415,6 +428,15 @@ export default function App() {
       nombre: userData.nombre || prev.nombre,
       email: userData.email || prev.email
     }));
+
+    // Contraseña temporal de invitación: hasta que establezca una nueva
+    // contraseña solo puede ver "Establecer nueva contraseña".
+    if (userData.cambioContrasena) {
+      setFlujoCheckout(false);
+      setCurrentView("cambiar-contrasena");
+      window.scrollTo({ top: 0 });
+      return;
+    }
 
     // Administrador o vendedor: directo al panel administrativo
     if (esRolInterno(userData.rol)) {
@@ -1000,6 +1022,39 @@ export default function App() {
           onBackToLogin={() =>
             setCurrentView("login")
           }
+
+        />
+
+      )}
+
+
+      {/* ======================================
+          ESTABLECER NUEVA CONTRASEÑA (invitación)
+          Solo se llega después de iniciar sesión con la
+          contraseña temporal; no hay enlace directo.
+      ====================================== */}
+
+      {currentView === "cambiar-contrasena" && user && (
+
+        <CambiarContrasena
+
+          usuario={user}
+
+          onContrasenaCambiada={(usuarioActualizado) => {
+
+            const datos = {
+              ...user,
+              ...usuarioActualizado,
+              cambioContrasena: false
+            };
+
+            localStorage.setItem("usuario", JSON.stringify(datos));
+
+            handleLoginSuccess(datos);
+
+          }}
+
+          onCancelar={handleLogout}
 
         />
 

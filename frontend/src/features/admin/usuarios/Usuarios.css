@@ -321,6 +321,35 @@
 }
 
 /* =========================================================
+   ESTADO DE LA INVITACIÓN
+   ========================================================= */
+
+.invitacion-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.invitacion-badge.enviada {
+  color: #15803d;
+  background: rgba(21, 128, 61, 0.12);
+}
+
+.invitacion-badge.fallida {
+  color: #b42318;
+  background: rgba(180, 35, 24, 0.12);
+}
+
+.invitacion-badge.no-aplica {
+  color: #738096;
+  background: rgba(115, 128, 150, 0.12);
+}
+
+/* =========================================================
    CELDA: FECHA
    ========================================================= */
 
@@ -552,6 +581,13 @@
   background: #f1f5f9;
   color: #94a3b8;
   cursor: not-allowed;
+}
+
+
+.usuarios-password-hint {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #94a3b8;
 }
 
 

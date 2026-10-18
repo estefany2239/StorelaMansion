@@ -2,6 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { pool } from '../db.js'
+import { verificarToken, bloquearCambioPendiente } from '../middlewares/auth.js'
 
 const router = Router()
 
@@ -77,7 +78,10 @@ router.post('/register', async (req, res) => {
   }
 })
 
-// POST /api/auth/login  -> devuelve un token y los datos del usuario
+// POST /api/auth/login  -> devuelve un token y los datos del usuario.
+// Si la cuenta tiene una contraseña temporal pendiente (invitación), se
+// marca con cambioContrasena: el navegador debe mostrar "Establecer nueva
+// contraseña" y no dejar pasar al panel hasta que la cambie.
 router.post('/login', async (req, res) => {
   try {
     const correo = String(req.body.correo || '').trim().toLowerCase()
@@ -85,6 +89,7 @@ router.post('/login', async (req, res) => {
 
     const { rows } = await pool.query(
       `SELECT u.id_usuario, u.nombres, u.apellidos, u.correo, u.contrasena, u.estado,
+              u.cambio_contrasena_obligatorio, u.contrasena_temporal_vencimiento,
               r.nombre AS rol
        FROM usuario u
        LEFT JOIN rol r ON r.id_rol = u.id_rol
@@ -102,10 +107,98 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ error: 'Tu cuenta está inactiva' })
     }
 
+    if (usuario.cambio_contrasena_obligatorio) {
+      const vencimiento = usuario.contrasena_temporal_vencimiento
+        ? new Date(usuario.contrasena_temporal_vencimiento)
+        : null
+      if (vencimiento && vencimiento.getTime() < Date.now()) {
+        return res.status(403).json({
+          error: 'Tu contraseña temporal venció. Pide al administrador que te envíe una nueva invitación.',
+        })
+      }
+      return res.json({
+        token: crearToken(usuario),
+        usuario: { ...datosPublicos(usuario), cambioContrasena: true },
+      })
+    }
+
     res.json({ token: crearToken(usuario), usuario: datosPublicos(usuario) })
   } catch (error) {
     console.error('Error en /api/auth/login:', error.message)
     res.status(500).json({ error: 'No se pudo iniciar sesión' })
+  }
+})
+
+// GET /api/auth/perfil -> datos del usuario autenticado. Ruta privada:
+// queda bloqueada mientras haya un cambio de contraseña pendiente.
+router.get('/perfil', verificarToken, bloquearCambioPendiente, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.id_usuario, u.nombres, u.apellidos, u.correo, r.nombre AS rol
+       FROM usuario u
+       LEFT JOIN rol r ON r.id_rol = u.id_rol
+       WHERE u.id_usuario = $1`,
+      [req.usuario.id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' })
+    }
+    res.json(datosPublicos(rows[0]))
+  } catch (error) {
+    console.error('Error en /api/auth/perfil:', error.message)
+    res.status(500).json({ error: 'No se pudo cargar el perfil' })
+  }
+})
+
+// POST /api/auth/cambiar-contrasena -> cualquier usuario autenticado puede
+// cambiar su contraseña; con la contraseña temporal se quitan las banderas
+// de invitación y queda libre para entrar al panel.
+router.post('/cambiar-contrasena', verificarToken, async (req, res) => {
+  try {
+    const contrasenaActual = String(req.body.contrasenaActual || '')
+    const contrasenaNueva = String(req.body.contrasenaNueva || '')
+
+    if (!contrasenaActual) {
+      return res.status(400).json({ error: 'Ingresa tu contraseña actual' })
+    }
+    if (contrasenaNueva.length < 8) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' })
+    }
+    if (contrasenaNueva === contrasenaActual) {
+      return res.status(400).json({ error: 'La contraseña nueva debe ser diferente de la actual' })
+    }
+
+    const { rows } = await pool.query(
+      `SELECT u.id_usuario, u.nombres, u.apellidos, u.correo, u.contrasena, u.estado,
+              r.nombre AS rol
+       FROM usuario u
+       LEFT JOIN rol r ON r.id_rol = u.id_rol
+       WHERE u.id_usuario = $1`,
+      [req.usuario.id]
+    )
+    const usuario = rows[0]
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' })
+    }
+
+    const coincide = await bcrypt.compare(contrasenaActual, usuario.contrasena)
+    if (!coincide) {
+      return res.status(401).json({ error: 'La contraseña actual no es correcta' })
+    }
+
+    const hash = await bcrypt.hash(contrasenaNueva, 10)
+    await pool.query(
+      `UPDATE usuario
+       SET contrasena = $1, cambio_contrasena_obligatorio = FALSE,
+           contrasena_temporal_vencimiento = NULL
+       WHERE id_usuario = $2`,
+      [hash, usuario.id_usuario]
+    )
+
+    res.json({ mensaje: 'Contraseña actualizada', usuario: datosPublicos(usuario) })
+  } catch (error) {
+    console.error('Error en /api/auth/cambiar-contrasena:', error.message)
+    res.status(500).json({ error: 'No se pudo cambiar la contraseña' })
   }
 })
 

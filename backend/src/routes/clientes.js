@@ -2,11 +2,11 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles } from '../middlewares/auth.js'
+import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
 
 const router = Router()
 
-router.use(verificarToken, soloRoles('Administrador', 'Vendedor'))
+router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador', 'Vendedor'))
 
 const SELECT_CLIENTE = `
   SELECT u.id_usuario AS id,

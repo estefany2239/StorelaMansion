@@ -7,7 +7,8 @@ import {
   Pencil,
   Trash2,
   X,
-  ShieldCheck
+  ShieldCheck,
+  MailPlus
 } from "lucide-react";
 
 import "./Usuarios.css";
@@ -22,6 +23,7 @@ import {
   crearUsuarioAdmin,
   actualizarUsuarioAdmin,
   cambiarEstadoUsuarioAdmin,
+  reenviarInvitacionUsuarioAdmin,
   eliminarUsuarioAdmin
 } from "../../../services/api";
 
@@ -74,8 +76,7 @@ export default function Usuarios() {
     rol: "Cliente",
     estado: "Activo",
     fecha: "",
-    direccion: "",
-    contraseña: ""
+    direccion: ""
   });
 
   const [errores, setErrores] = useState({});
@@ -212,9 +213,7 @@ export default function Usuarios() {
       fecha:
         obtenerFechaActual(),
 
-      direccion: "",
-
-      contraseña: ""
+      direccion: ""
 
     });
 
@@ -248,9 +247,7 @@ export default function Usuarios() {
 
       fecha: usuario.fecha,
 
-      direccion: usuario.direccion,
-
-      contraseña: ""
+      direccion: usuario.direccion
 
     });
 
@@ -380,17 +377,6 @@ export default function Usuarios() {
       nuevosErrores.direccion = "Este campo es obligatorio.";
     }
 
-    if (
-      !modoEdicion &&
-      !formulario.contraseña.trim()
-    ) {
-      nuevosErrores.contraseña = "Ingresa una contraseña para el usuario.";
-    }
-
-    if (formulario.contraseña.trim() && formulario.contraseña.trim().length < 8) {
-      nuevosErrores.contraseña = "La contraseña debe tener al menos 8 caracteres.";
-    }
-
     setErrores(nuevosErrores);
 
     if (
@@ -421,15 +407,37 @@ export default function Usuarios() {
           telefono: formulario.telefono.trim(),
           direccion: formulario.direccion.trim(),
           rol: formulario.rol,
-          estado: formulario.estado,
-          contrasena: formulario.contraseña.trim()
+          estado: formulario.estado
         };
         const fila = await crearUsuarioAdmin(datos);
+
+        // El backend devuelve además la contraseña temporal y el enlace;
+        // no deben quedar guardados en la tabla. invitacionEnviada y
+        // cambioContrasenaPendiente sí se conservan para mostrar el estado.
+        const {
+          contrasenaTemporal,
+          modoCorreo,
+          enlaceInvitacion,
+          ...usuarioFila
+        } = fila;
+
         setUsuarios((actuales) => [
-          { ...fila, permisos },
+          { ...usuarioFila, permisos },
           ...actuales
         ]);
-        mostrarToast("Usuario creado con éxito");
+
+        if (!fila.invitacionEnviada) {
+          mostrarToast(
+            `Usuario creado, pero la invitación NO se envió. Usa "Reenviar invitación" en la lista o comparte la contraseña temporal ${contrasenaTemporal} para entrar en ${enlaceInvitacion}`,
+            "error"
+          );
+        } else if (modoCorreo === "simulado") {
+          mostrarToast(
+            `Usuario creado. Invitación simulada a ${datos.correo} (Brevo sin configurar). Contraseña temporal: ${contrasenaTemporal}`
+          );
+        } else {
+          mostrarToast(`Usuario creado. Invitación enviada a ${datos.correo}`);
+        }
         cerrarModal();
       } catch (error) {
         mostrarToast(error.message, "error");
@@ -458,9 +466,6 @@ export default function Usuarios() {
         rol: formulario.rol,
         estado: formulario.estado
       };
-      if (formulario.contraseña && formulario.contraseña.trim()) {
-        datos.contrasena = formulario.contraseña.trim();
-      }
       const fila = await actualizarUsuarioAdmin(formulario.id, datos);
       setUsuarios(
         (actuales) =>
@@ -476,6 +481,50 @@ export default function Usuarios() {
     } catch (error) {
       mostrarToast(error.message, "error");
       setConfirmarEdicion(false);
+    }
+
+  };
+
+  // =====================================================
+  // REENVIAR INVITACIÓN
+  // =====================================================
+
+  const reenviarInvitacion = async (usuario) => {
+
+    try {
+      const fila = await reenviarInvitacionUsuarioAdmin(usuario.id);
+
+      const {
+        contrasenaTemporal,
+        modoCorreo,
+        enlaceInvitacion,
+        ...usuarioFila
+      } = fila;
+
+      setUsuarios(
+        (actuales) =>
+          actuales.map(
+            (item) =>
+              item.id === usuario.id
+                ? { ...item, ...usuarioFila }
+                : item
+          )
+      );
+
+      if (!fila.invitacionEnviada) {
+        mostrarToast(
+          `La invitación sigue sin enviarse. Comparte la contraseña temporal ${contrasenaTemporal} para entrar en ${enlaceInvitacion}`,
+          "error"
+        );
+      } else if (modoCorreo === "simulado") {
+        mostrarToast(
+          `Invitación simulada a ${usuario.correo} (Brevo sin configurar). Contraseña temporal: ${contrasenaTemporal}`
+        );
+      } else {
+        mostrarToast(`Invitación reenviada a ${usuario.correo}`);
+      }
+    } catch (error) {
+      mostrarToast(error.message, "error");
     }
 
   };
@@ -705,6 +754,10 @@ export default function Usuarios() {
               </th>
 
               <th>
+                INVITACIÓN
+              </th>
+
+              <th>
                 ACCIONES
               </th>
 
@@ -779,6 +832,30 @@ export default function Usuarios() {
 
                   </td>
 
+                  {/* =====================================
+                      ESTADO DE LA INVITACIÓN
+                  ===================================== */}
+
+                  <td>
+
+                    {usuario.cambioContrasenaPendiente ? (
+                      usuario.invitacionEnviada ? (
+                        <span className="invitacion-badge enviada">
+                          Enviada
+                        </span>
+                      ) : (
+                        <span className="invitacion-badge fallida">
+                          No enviada
+                        </span>
+                      )
+                    ) : (
+                      <span className="invitacion-badge no-aplica">
+                        —
+                      </span>
+                    )}
+
+                  </td>
+
                   <td>
 
                     <div className="usuario-actions">
@@ -816,6 +893,24 @@ export default function Usuarios() {
                         />
 
                       </button>
+
+                      {/* REENVIAR INVITACIÓN (solo si sigue pendiente) */}
+
+                      {usuario.cambioContrasenaPendiente && (
+                        <button
+                          type="button"
+                          title="Reenviar invitación"
+                          onClick={() =>
+                            reenviarInvitacion(
+                              usuario
+                            )
+                          }
+                        >
+
+                          <MailPlus size={18} />
+
+                        </button>
+                      )}
 
                       {/* ELIMINAR */}
 
@@ -861,7 +956,7 @@ export default function Usuarios() {
               <tr>
 
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="usuarios-empty"
                 >
 
@@ -1122,42 +1217,23 @@ export default function Usuarios() {
 
               </div>
 
-              {/* CONTRASEÑA + FECHA */}
+              {/* CONTRASEÑA (solo nota al crear) + FECHA */}
 
               <div className="usuario-form-row">
 
-                <div className="usuario-form-group">
+                {!modoEdicion && (
+                  <div className="usuario-form-group">
 
-                  <label>
-                    CONTRASEÑA
-                  </label>
+                    <label>
+                      CONTRASEÑA
+                    </label>
 
-                  <input
-                    type="password"
-                    placeholder={
-                      modoEdicion
-                        ? "Dejar vacío para conservar"
-                        : "Contraseña"
-                    }
-                    value={
-                      formulario.contraseña
-                    }
-                    className={`input ${errores.contraseña ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "contraseña",
-                        e.target.value
-                      )
-                    }
-                  />
-
-                  {errores.contraseña && (
-                    <span className="error-text">
-                      {errores.contraseña}
+                    <span className="usuarios-password-hint">
+                      Se enviará una contraseña temporal al correo registrado.
                     </span>
-                  )}
 
-                </div>
+                  </div>
+                )}
 
                 <div className="usuario-form-group">
 

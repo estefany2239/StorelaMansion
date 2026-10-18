@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles } from '../middlewares/auth.js'
+import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
 
 const router = Router()
 
-// Todos los endpoints exigen token
-router.use(verificarToken)
+// Todos los endpoints exigen token y que no haya un cambio de contraseña pendiente
+router.use(verificarToken, bloquearCambioPendiente)
 
 // Estados permitidos para los pedidos (coherentes con el panel admin).
 // `estado` en la tabla pedido es varchar sin CHECK, por eso se valida aquí.

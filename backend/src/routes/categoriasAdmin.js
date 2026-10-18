@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
-import { verificarToken, soloRoles } from '../middlewares/auth.js'
+import { verificarToken, soloRoles, bloquearCambioPendiente } from '../middlewares/auth.js'
 
 const router = Router()
 
 // Todo este módulo es solo para administradores (mismo middleware que productos)
-router.use(verificarToken, soloRoles('Administrador'))
+router.use(verificarToken, bloquearCambioPendiente, soloRoles('Administrador'))
 
 const GENEROS_VALIDOS = ['hombre', 'mujer']
 

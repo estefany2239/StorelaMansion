@@ -60,6 +60,16 @@ export async function iniciarSesion(correo, contrasena) {
   return respuesta.json()
 }
 
+// Cambia la contraseña del usuario autenticado (incluye el paso de
+// contraseña temporal de la invitación).
+export async function cambiarContrasena(contrasenaActual, contrasenaNueva) {
+  return peticionAdmin('/api/auth/cambiar-contrasena', {
+    metodo: 'POST',
+    cuerpo: { contrasenaActual, contrasenaNueva },
+    mensajeError: 'No se pudo cambiar la contraseña'
+  })
+}
+
 export async function obtenerClientes() {
   const respuesta = await fetch(`${API_URL}/api/clientes`, {
     headers: {
@@ -298,6 +308,13 @@ export async function cambiarEstadoUsuarioAdmin(id, estado) {
     metodo: 'PATCH',
     cuerpo: { estado },
     mensajeError: 'No se pudo cambiar el estado del usuario'
+  })
+}
+
+export async function reenviarInvitacionUsuarioAdmin(id) {
+  return peticionAdmin(`/api/admin/usuarios/${id}/reenviar-invitacion`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo reenviar la invitación'
   })
 }
 

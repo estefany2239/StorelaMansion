@@ -8,6 +8,8 @@ import productosAdminRouter from './routes/productosAdmin.js'
 import usuariosAdminRouter from './routes/usuariosAdmin.js'
 import categoriasRouter from './routes/categorias.js'
 import categoriasAdminRouter from './routes/categoriasAdmin.js'
+import pruebasRouter from './routes/pruebas.js'
+import { modoSimulacion } from './services/correos.js'
 
 const app = express()
 
@@ -38,6 +40,13 @@ app.use('/api/admin/productos', productosAdminRouter)
 app.use('/api/admin/usuarios', usuariosAdminRouter)
 app.use('/api/categorias', categoriasRouter)
 app.use('/api/admin/categorias', categoriasAdminRouter)
+
+// MODO DE PRUEBA: la bandeja de correos simulados (que contiene contraseñas
+// temporales) solo se monta fuera de producción y sin BREVO_API_KEY. En
+// producción esta ruta no existe y responde 404.
+if (modoSimulacion()) {
+  app.use('/api/pruebas', pruebasRouter)
+}
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', path: req.originalUrl })
