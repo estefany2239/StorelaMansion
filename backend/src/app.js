@@ -4,6 +4,7 @@ import productosRouter from './routes/productos.js'
 import authRouter from './routes/auth.js'
 import clientesRouter from './routes/clientes.js'
 import pedidosRouter from './routes/pedidos.js'
+import ventasRouter from './routes/ventas.js'
 import productosAdminRouter from './routes/productosAdmin.js'
 import usuariosAdminRouter from './routes/usuariosAdmin.js'
 import categoriasRouter from './routes/categorias.js'
@@ -37,6 +38,7 @@ app.use('/api/productos', productosRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/clientes', clientesRouter)
 app.use('/api/pedidos', pedidosRouter)
+app.use('/api/ventas', ventasRouter)
 app.use('/api/admin/productos', productosAdminRouter)
 app.use('/api/admin/usuarios', usuariosAdminRouter)
 app.use('/api/categorias', categoriasRouter)
