@@ -168,7 +168,7 @@ router.put('/:id', requierePrivilegio('Clientes', 'Actualizar'), async (req, res
   }
 })
 
-router.patch('/:id/estado', requierePrivilegio('Clientes', 'Actualizar'), async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Clientes', 'Cambiar estado'), async (req, res) => {
   try {
     const id = idCliente(req)
     if (Number.isNaN(id)) {

@@ -243,7 +243,7 @@ router.put('/:id', requierePrivilegio('Roles', 'Actualizar'), async (req, res) =
 })
 
 // PATCH /api/admin/roles/:id/estado -> activa o inactiva
-router.patch('/:id/estado', requierePrivilegio('Roles', 'Actualizar'), async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Roles', 'Cambiar estado'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 

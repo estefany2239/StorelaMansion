@@ -61,7 +61,8 @@ const PRIVILEGIO_POR_DEFECTO = "Consultar";
 const REGISTROS_POR_PAGINA = 6;
 
 /* Privilegios de la columna de detalle (incluye
-   el que solo existe en Ventas y Pedidos) */
+   el que solo existe en Ventas y Pedidos). Se usa
+   como respaldo si el catálogo aún no cargó. */
 
 const COLUMNAS_DETALLE = [...PRIVILEGIOS, "Cambiar estado"];
 
@@ -221,6 +222,19 @@ export default function Roles({ user }) {
 
     return ordenarPrivilegios(delCatalogo);
   };
+
+  /* Columnas del detalle: unión de privilegios del
+     catálogo ("Cambiar estado" solo en Ventas y
+     Pedidos); respaldo fijo si no hay catálogo */
+
+  const privilegiosCatalogo = (catalogo?.modulos || []).flatMap(
+    (item) => item.privilegios || []
+  );
+
+  const columnasDetalle =
+    privilegiosCatalogo.length > 0
+      ? ordenarPrivilegios([...new Set(privilegiosCatalogo)])
+      : COLUMNAS_DETALLE;
 
   /* =====================================================
      CARGA INICIAL (API)
@@ -1328,7 +1342,7 @@ export default function Roles({ user }) {
                       <div className="rol-detail-permisos-th modulo">
                         Módulo
                       </div>
-                      {COLUMNAS_DETALLE.map((privilegio) => (
+                      {columnasDetalle.map((privilegio) => (
                         <div
                           className="rol-detail-permisos-th"
                           key={privilegio}
@@ -1351,7 +1365,7 @@ export default function Roles({ user }) {
                             <div className="rol-detail-permisos-td modulo">
                               {permiso.modulo}
                             </div>
-                            {COLUMNAS_DETALLE.map((privilegio) => (
+                            {columnasDetalle.map((privilegio) => (
                               <div
                                 className="rol-detail-permisos-td"
                                 key={`${permiso.modulo}-${privilegio}`}

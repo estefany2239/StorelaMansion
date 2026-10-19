@@ -248,7 +248,7 @@ router.put('/:id', requierePrivilegio('Productos', 'Actualizar'), async (req, re
 })
 
 // PATCH /api/admin/productos/:id/estado -> activa o desactiva (body: { estado: 'Activo' | 'Inactivo' })
-router.patch('/:id/estado', requierePrivilegio('Productos', 'Actualizar'), async (req, res) => {
+router.patch('/:id/estado', requierePrivilegio('Productos', 'Cambiar estado'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
