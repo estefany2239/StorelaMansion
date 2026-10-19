@@ -15,6 +15,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 
 import {
   obtenerCategoriasAdmin,
@@ -42,7 +43,17 @@ const FORMULARIO_VACIO = {
   estado: "Activo"
 };
 
-export default function Categorias() {
+export default function Categorias({ user }) {
+
+  /* =====================================================
+     PERMISOS (los botones sin permiso se ocultan)
+     ===================================================== */
+
+  const puedeCrear = tienePermiso(user, "Categorías", "Crear");
+  const puedeActualizar = tienePermiso(user, "Categorías", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Categorías", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Categorías", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Categorías", "Consultar");
 
   /* =====================================================
      CATEGORÍAS (desde la API)
@@ -371,24 +382,28 @@ export default function Categorias() {
 
         <div className="categorias-actions">
 
-          <div className="categorias-search">
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Buscar por nombre..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-          </div>
+          {puedeConsultar && (
+            <div className="categorias-search">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
+          )}
 
-          <button
-            type="button"
-            className="categorias-add-button"
-            onClick={abrirAgregar}
-          >
-            <Plus size={19} />
-            <span>Registrar categoría</span>
-          </button>
+          {puedeCrear && (
+            <button
+              type="button"
+              className="categorias-add-button"
+              onClick={abrirAgregar}
+            >
+              <Plus size={19} />
+              <span>Registrar categoría</span>
+            </button>
+          )}
 
         </div>
 
@@ -430,14 +445,18 @@ export default function Categorias() {
                   <td>
                     <label
                       className="switch-categoria-estado"
-                      title={categoria.estado === "Activo" ? "Hacer Inactiva" : "Hacer Activa"}
+                      title={puedeCambiarEstado ? (categoria.estado === "Activo" ? "Hacer Inactiva" : "Hacer Activa") : undefined}
                     >
-                      <input
-                        type="checkbox"
-                        checked={categoria.estado === "Activo"}
-                        onChange={() => cambiarEstado(categoria)}
-                      />
-                      <span className="slider-categoria"></span>
+                      {puedeCambiarEstado && (
+                        <input
+                          type="checkbox"
+                          checked={categoria.estado === "Activo"}
+                          onChange={() => cambiarEstado(categoria)}
+                        />
+                      )}
+                      {puedeCambiarEstado && (
+                        <span className="slider-categoria"></span>
+                      )}
                       <span className={`estado-categoria-texto ${categoria.estado === "Activo" ? "activo" : "inactivo"}`}>
                         {categoria.estado.toUpperCase()}
                       </span>
@@ -447,17 +466,23 @@ export default function Categorias() {
                   <td>
                     <div className="categoria-actions">
 
-                      <button type="button" title="Ver" onClick={() => verDetalle(categoria)}>
-                        <Eye size={15} />
-                      </button>
+                      {puedeConsultar && (
+                        <button type="button" title="Ver" onClick={() => verDetalle(categoria)}>
+                          <Eye size={15} />
+                        </button>
+                      )}
 
-                      <button type="button" title="Actualizar categoría" onClick={() => abrirEditar(categoria)}>
-                        <Pencil size={15} />
-                      </button>
+                      {puedeActualizar && (
+                        <button type="button" title="Actualizar categoría" onClick={() => abrirEditar(categoria)}>
+                          <Pencil size={15} />
+                        </button>
+                      )}
 
-                      <button type="button" title="Eliminar" onClick={() => eliminarCategoria(categoria)}>
-                        <Trash2 size={15} />
-                      </button>
+                      {puedeEliminar && (
+                        <button type="button" title="Eliminar" onClick={() => eliminarCategoria(categoria)}>
+                          <Trash2 size={15} />
+                        </button>
+                      )}
 
                     </div>
                   </td>

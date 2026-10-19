@@ -860,16 +860,28 @@ export default function Roles({ user }) {
 
                     <label className="switch-usuario-estado">
 
-                      <input
-                        type="checkbox"
-                        checked={rol.estado === "Activo"}
-                        disabled={esRolProtegido(rol)}
-                        onChange={() =>
-                          cambiarEstado(rol)
-                        }
-                      />
+                      {tienePermiso(
+                        user,
+                        "Roles",
+                        "Cambiar estado"
+                      ) && (
+                        <input
+                          type="checkbox"
+                          checked={rol.estado === "Activo"}
+                          disabled={esRolProtegido(rol)}
+                          onChange={() =>
+                            cambiarEstado(rol)
+                          }
+                        />
+                      )}
 
-                      <span className="slider-usuario"></span>
+                      {tienePermiso(
+                        user,
+                        "Roles",
+                        "Cambiar estado"
+                      ) && (
+                        <span className="slider-usuario"></span>
+                      )}
 
                       <span
                         className={`estado-usuario-texto ${

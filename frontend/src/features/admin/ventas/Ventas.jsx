@@ -18,10 +18,21 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+import { tienePermiso } from "../utils/permisos";
+
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Ventas({ vendedorId }) {
+export default function Ventas({ vendedorId, user }) {
+
+  // =========================================================
+  // PERMISOS (los botones sin permiso se ocultan)
+  // =========================================================
+
+  const puedeCrear = tienePermiso(user, "Ventas", "Crear");
+  const puedeConsultar = tienePermiso(user, "Ventas", "Consultar");
+  const puedeCambiarEstado = tienePermiso(user, "Ventas", "Cambiar estado");
+
 
   // =========================================================
   // DATOS DE VENTAS
@@ -947,6 +958,8 @@ export default function Ventas({ vendedorId }) {
 
           {/* BUSCADOR */}
 
+          {puedeConsultar && (
+
           <div className="ventas-search">
 
             <Search size={18} />
@@ -964,8 +977,12 @@ export default function Ventas({ vendedorId }) {
 
           </div>
 
+          )}
+
 
           {/* AGREGAR */}
+
+          {puedeCrear && (
 
           <button
             type="button"
@@ -978,6 +995,8 @@ export default function Ventas({ vendedorId }) {
             Registrar venta
 
           </button>
+
+          )}
 
         </div>
 
@@ -1080,10 +1099,13 @@ export default function Ventas({ vendedorId }) {
                           ? "venta-estado cancelada"
                           : "venta-estado completada"
                       }
-                      onClick={() =>
-                        avanzarEstado(
-                          venta.id
-                        )
+                      onClick={
+                        puedeCambiarEstado
+                          ? () =>
+                              avanzarEstado(
+                                venta.id
+                              )
+                          : undefined
                       }
                     >
 
@@ -1100,6 +1122,8 @@ export default function Ventas({ vendedorId }) {
 
                     <div className="venta-actions">
 
+                      {puedeConsultar && (
+
                       <button
                         type="button"
                         className="venta-detail-button"
@@ -1115,6 +1139,8 @@ export default function Ventas({ vendedorId }) {
 
                       </button>
 
+                      )}
+
                       <button
                         type="button"
                         className="venta-comprobante-button"
@@ -1129,6 +1155,8 @@ export default function Ventas({ vendedorId }) {
                         <FileText size={18} />
 
                       </button>
+
+                      {puedeCambiarEstado && (
 
                       <button
                         type="button"
@@ -1164,6 +1192,8 @@ export default function Ventas({ vendedorId }) {
                         <X size={18} />
 
                       </button>
+
+                      )}
 
                     </div>
 

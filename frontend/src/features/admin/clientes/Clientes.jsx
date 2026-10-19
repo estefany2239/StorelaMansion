@@ -15,6 +15,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 
 import {
   obtenerClientes,
@@ -27,7 +28,17 @@ import {
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Clientes() {
+export default function Clientes({ user }) {
+
+  // =====================================================
+  // PERMISOS (los botones sin permiso se ocultan)
+  // =====================================================
+
+  const puedeCrear = tienePermiso(user, "Clientes", "Crear");
+  const puedeActualizar = tienePermiso(user, "Clientes", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Clientes", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Clientes", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Clientes", "Consultar");
 
   // =====================================================
   // CLIENTES
@@ -639,35 +650,39 @@ if (modoEdicion) {
 
         <div className="clientes-actions">
 
-          <div className="clientes-search">
+          {puedeConsultar && (
+            <div className="clientes-search">
 
-            <Search size={18} />
+              <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Buscar clientes..."
-              value={busqueda}
-              onChange={(e) =>
-                setBusqueda(
-                  e.target.value
-                )
-              }
-            />
+              <input
+                type="text"
+                placeholder="Buscar clientes..."
+                value={busqueda}
+                onChange={(e) =>
+                  setBusqueda(
+                    e.target.value
+                  )
+                }
+              />
 
-          </div>
+            </div>
+          )}
 
 
-          <button
-            type="button"
-            className="clientes-add-button"
-            onClick={abrirAgregar}
-          >
+          {puedeCrear && (
+            <button
+              type="button"
+              className="clientes-add-button"
+              onClick={abrirAgregar}
+            >
 
-            <Plus size={18} />
+              <Plus size={18} />
 
-            Registrar cliente
+              Registrar cliente
 
-          </button>
+            </button>
+          )}
 
         </div>
 
@@ -753,31 +768,51 @@ if (modoEdicion) {
 
                   <td>
 
-                    <button
-                      type="button"
-                      className="cliente-estado-control"
-                      onClick={() =>
-                        cambiarEstadoCliente(cliente)
-                      }
-                      title={
-                        cliente.estado === "Activo"
-                          ? "Cambiar a Inactivo"
-                          : "Cambiar a Activo"
-                      }
-                    >
+                    {puedeCambiarEstado ? (
 
-                      <span
-                        className={
+                      <button
+                        type="button"
+                        className="cliente-estado-control"
+                        onClick={() =>
+                          cambiarEstadoCliente(cliente)
+                        }
+                        title={
                           cliente.estado === "Activo"
-                            ? "cliente-estado-toggle activo"
-                            : "cliente-estado-toggle inactivo"
+                            ? "Cambiar a Inactivo"
+                            : "Cambiar a Activo"
                         }
                       >
 
-                        <span className="cliente-estado-toggle-circle"></span>
+                        <span
+                          className={
+                            cliente.estado === "Activo"
+                              ? "cliente-estado-toggle activo"
+                              : "cliente-estado-toggle inactivo"
+                          }
+                        >
 
-                      </span>
+                          <span className="cliente-estado-toggle-circle"></span>
 
+                        </span>
+
+
+                        <span
+                          className={
+                            cliente.estado === "Activo"
+                              ? "cliente-estado-label activo"
+                              : "cliente-estado-label inactivo"
+                          }
+                        >
+
+                          {cliente.estado === "Activo"
+                            ? "ACTIVO"
+                            : "INACTIVO"}
+
+                        </span>
+
+                      </button>
+
+                    ) : (
 
                       <span
                         className={
@@ -793,7 +828,7 @@ if (modoEdicion) {
 
                       </span>
 
-                    </button>
+                    )}
 
                   </td>
 
@@ -803,49 +838,55 @@ if (modoEdicion) {
                     <div className="cliente-actions">
 
 
-                      <button
-                        type="button"
-                        title="Ver cliente"
-                        onClick={() =>
-                          verDetalle(
-                            cliente
-                          )
-                        }
-                      >
+                      {puedeConsultar && (
+                        <button
+                          type="button"
+                          title="Ver cliente"
+                          onClick={() =>
+                            verDetalle(
+                              cliente
+                            )
+                          }
+                        >
 
-                        <Eye size={18} />
+                          <Eye size={18} />
 
-                      </button>
-
-
-                      <button
-                        type="button"
-                        title="Actualizar cliente"
-                        onClick={() =>
-                          abrirEditar(
-                            cliente
-                          )
-                        }
-                      >
-
-                        <Pencil size={18} />
-
-                      </button>
+                        </button>
+                      )}
 
 
-                      <button
-                        type="button"
-                        title="Eliminar cliente"
-                        onClick={() =>
-                          eliminarCliente(
-                            cliente
-                          )
-                        }
-                      >
+                      {puedeActualizar && (
+                        <button
+                          type="button"
+                          title="Actualizar cliente"
+                          onClick={() =>
+                            abrirEditar(
+                              cliente
+                            )
+                          }
+                        >
 
-                        <Trash2 size={18} />
+                          <Pencil size={18} />
 
-                      </button>
+                        </button>
+                      )}
+
+
+                      {puedeEliminar && (
+                        <button
+                          type="button"
+                          title="Eliminar cliente"
+                          onClick={() =>
+                            eliminarCliente(
+                              cliente
+                            )
+                          }
+                        >
+
+                          <Trash2 size={18} />
+
+                        </button>
+                      )}
 
 
                     </div>

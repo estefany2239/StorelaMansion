@@ -14,11 +14,22 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Tallas() {
+export default function Tallas({ user }) {
+
+  /* =====================================================
+     PERMISOS (los botones sin permiso se ocultan)
+     ===================================================== */
+
+  const puedeCrear = tienePermiso(user, "Tallas", "Crear");
+  const puedeActualizar = tienePermiso(user, "Tallas", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Tallas", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Tallas", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Tallas", "Consultar");
 
   /* =====================================================
      TALLAS DE PRODUCTOS
@@ -297,34 +308,38 @@ export default function Tallas() {
 
         <div className="tallas-actions">
 
-          <div className="tallas-search">
+          {puedeConsultar && (
+            <div className="tallas-search">
 
-            <Search size={18} />
+              <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Buscar por nombre..."
-              value={busqueda}
-              onChange={(e) =>
-                setBusqueda(e.target.value)
-              }
-            />
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={busqueda}
+                onChange={(e) =>
+                  setBusqueda(e.target.value)
+                }
+              />
 
-          </div>
+            </div>
+          )}
 
-          <button
-            type="button"
-            className="tallas-add-button"
-            onClick={abrirAgregar}
-          >
+          {puedeCrear && (
+            <button
+              type="button"
+              className="tallas-add-button"
+              onClick={abrirAgregar}
+            >
 
-            <Plus size={19} />
+              <Plus size={19} />
 
-            <span>
-              Registrar talla
-            </span>
+              <span>
+                Registrar talla
+              </span>
 
-          </button>
+            </button>
+          )}
 
         </div>
 
@@ -387,21 +402,27 @@ export default function Tallas() {
                     <label
                       className="switch-talla-estado"
                       title={
-                        talla.estado === "Activo"
-                          ? "Hacer Inactiva"
-                          : "Hacer Activa"
+                        puedeCambiarEstado
+                          ? (talla.estado === "Activo"
+                            ? "Hacer Inactiva"
+                            : "Hacer Activa")
+                          : undefined
                       }
                     >
 
-                      <input
-                        type="checkbox"
-                        checked={talla.estado === "Activo"}
-                        onChange={() =>
-                          cambiarEstado(talla)
-                        }
-                      />
+                      {puedeCambiarEstado && (
+                        <input
+                          type="checkbox"
+                          checked={talla.estado === "Activo"}
+                          onChange={() =>
+                            cambiarEstado(talla)
+                          }
+                        />
+                      )}
 
-                      <span className="slider-talla"></span>
+                      {puedeCambiarEstado && (
+                        <span className="slider-talla"></span>
+                      )}
 
                       <span className={`estado-talla-texto ${talla.estado === "Activo" ? "activo" : "inactivo"}`}>
                         {talla.estado.toUpperCase()}
@@ -415,29 +436,33 @@ export default function Tallas() {
 
                     <div className="talla-actions">
 
-                      <button
-                        type="button"
-                        title="Actualizar talla"
-                        onClick={() =>
-                          abrirEditar(talla)
-                        }
-                      >
+                      {puedeActualizar && (
+                        <button
+                          type="button"
+                          title="Actualizar talla"
+                          onClick={() =>
+                            abrirEditar(talla)
+                          }
+                        >
 
-                        <Pencil size={15} />
+                          <Pencil size={15} />
 
-                      </button>
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        title="Eliminar"
-                        onClick={() =>
-                          eliminarTalla(talla)
-                        }
-                      >
+                      {puedeEliminar && (
+                        <button
+                          type="button"
+                          title="Eliminar"
+                          onClick={() =>
+                            eliminarTalla(talla)
+                          }
+                        >
 
-                        <Trash2 size={15} />
+                          <Trash2 size={15} />
 
-                      </button>
+                        </button>
+                      )}
 
                     </div>
 

@@ -14,11 +14,22 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Colores() {
+export default function Colores({ user }) {
+
+  /* =====================================================
+     PERMISOS (los botones sin permiso se ocultan)
+     ===================================================== */
+
+  const puedeCrear = tienePermiso(user, "Colores", "Crear");
+  const puedeActualizar = tienePermiso(user, "Colores", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Colores", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Colores", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Colores", "Consultar");
 
   /* =====================================================
      COLORES DE PRODUCTOS
@@ -302,34 +313,38 @@ export default function Colores() {
 
         <div className="colores-actions">
 
-          <div className="colores-search">
+          {puedeConsultar && (
+            <div className="colores-search">
 
-            <Search size={18} />
+              <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Buscar por nombre..."
-              value={busqueda}
-              onChange={(e) =>
-                setBusqueda(e.target.value)
-              }
-            />
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={busqueda}
+                onChange={(e) =>
+                  setBusqueda(e.target.value)
+                }
+              />
 
-          </div>
+            </div>
+          )}
 
-          <button
-            type="button"
-            className="colores-add-button"
-            onClick={abrirAgregar}
-          >
+          {puedeCrear && (
+            <button
+              type="button"
+              className="colores-add-button"
+              onClick={abrirAgregar}
+            >
 
-            <Plus size={19} />
+              <Plus size={19} />
 
-            <span>
-              Registrar color
-            </span>
+              <span>
+                Registrar color
+              </span>
 
-          </button>
+            </button>
+          )}
 
         </div>
 
@@ -392,21 +407,27 @@ export default function Colores() {
                     <label
                       className="switch-color-estado"
                       title={
-                        color.estado === "Activo"
-                          ? "Hacer Inactivo"
-                          : "Hacer Activo"
+                        puedeCambiarEstado
+                          ? (color.estado === "Activo"
+                            ? "Hacer Inactivo"
+                            : "Hacer Activo")
+                          : undefined
                       }
                     >
 
-                      <input
-                        type="checkbox"
-                        checked={color.estado === "Activo"}
-                        onChange={() =>
-                          cambiarEstado(color)
-                        }
-                      />
+                      {puedeCambiarEstado && (
+                        <input
+                          type="checkbox"
+                          checked={color.estado === "Activo"}
+                          onChange={() =>
+                            cambiarEstado(color)
+                          }
+                        />
+                      )}
 
-                      <span className="slider-color"></span>
+                      {puedeCambiarEstado && (
+                        <span className="slider-color"></span>
+                      )}
 
                       <span className={`estado-color-texto ${color.estado === "Activo" ? "activo" : "inactivo"}`}>
                         {color.estado.toUpperCase()}
@@ -420,29 +441,33 @@ export default function Colores() {
 
                     <div className="color-actions">
 
-                      <button
-                        type="button"
-                        title="Actualizar color"
-                        onClick={() =>
-                          abrirEditar(color)
-                        }
-                      >
+                      {puedeActualizar && (
+                        <button
+                          type="button"
+                          title="Actualizar color"
+                          onClick={() =>
+                            abrirEditar(color)
+                          }
+                        >
 
-                        <Pencil size={15} />
+                          <Pencil size={15} />
 
-                      </button>
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        title="Eliminar"
-                        onClick={() =>
-                          eliminarColor(color)
-                        }
-                      >
+                      {puedeEliminar && (
+                        <button
+                          type="button"
+                          title="Eliminar"
+                          onClick={() =>
+                            eliminarColor(color)
+                          }
+                        >
 
-                        <Trash2 size={15} />
+                          <Trash2 size={15} />
 
-                      </button>
+                        </button>
+                      )}
 
                     </div>
 

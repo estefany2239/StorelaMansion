@@ -16,6 +16,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 
 import {
   obtenerProductosAdmin,
@@ -31,7 +32,17 @@ import { urlImagen } from "../../../utils/imagenes";
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Productos() {
+export default function Productos({ user }) {
+  // =====================================================
+  // PERMISOS (los botones sin permiso se ocultan)
+  // =====================================================
+
+  const puedeCrear = tienePermiso(user, "Productos", "Crear");
+  const puedeActualizar = tienePermiso(user, "Productos", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Productos", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Productos", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Productos", "Consultar");
+
   // =====================================================
   // PRODUCTOS
   // =====================================================
@@ -484,29 +495,33 @@ export default function Productos() {
 
           {/* BUSCADOR */}
 
-          <div className="productos-search">
-            <Search size={18} />
+          {puedeConsultar && (
+            <div className="productos-search">
+              <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={busqueda}
-              onChange={(e) =>
-                setBusqueda(e.target.value)
-              }
-            />
-          </div>
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={busqueda}
+                onChange={(e) =>
+                  setBusqueda(e.target.value)
+                }
+              />
+            </div>
+          )}
 
           {/* AGREGAR */}
 
-          <button
-            type="button"
-            className="productos-add-button"
-            onClick={abrirAgregar}
-          >
-            <Plus size={18} />
-            Registrar producto
-          </button>
+          {puedeCrear && (
+            <button
+              type="button"
+              className="productos-add-button"
+              onClick={abrirAgregar}
+            >
+              <Plus size={18} />
+              Registrar producto
+            </button>
+          )}
 
         </div>
       </div>
@@ -605,29 +620,31 @@ export default function Productos() {
                 <td>
                   <div className="producto-estado-control">
 
-                    <button
-                      type="button"
-                      className={
-                        producto.estado === "Activo"
-                          ? "estado-toggle activo"
-                          : "estado-toggle inactivo"
-                      }
-                      onClick={() =>
-                        cambiarEstado(producto)
-                      }
-                      title={
-                        producto.estado === "Activo"
-                          ? "Desactivar producto"
-                          : "Activar producto"
-                      }
-                      aria-label={
-                        producto.estado === "Activo"
-                          ? "Desactivar producto"
-                          : "Activar producto"
-                      }
-                    >
-                      <span className="estado-toggle-circle"></span>
-                    </button>
+                    {puedeCambiarEstado && (
+                      <button
+                        type="button"
+                        className={
+                          producto.estado === "Activo"
+                            ? "estado-toggle activo"
+                            : "estado-toggle inactivo"
+                        }
+                        onClick={() =>
+                          cambiarEstado(producto)
+                        }
+                        title={
+                          producto.estado === "Activo"
+                            ? "Desactivar producto"
+                            : "Activar producto"
+                        }
+                        aria-label={
+                          producto.estado === "Activo"
+                            ? "Desactivar producto"
+                            : "Activar producto"
+                        }
+                      >
+                        <span className="estado-toggle-circle"></span>
+                      </button>
+                    )}
 
                     <span
                       className={
@@ -647,35 +664,41 @@ export default function Productos() {
                 <td>
                   <div className="producto-actions">
 
-                    <button
-                      type="button"
-                      title="Ver producto"
-                      onClick={() =>
-                        verDetalle(producto)
-                      }
-                    >
-                      <Eye size={18} />
-                    </button>
+                    {puedeConsultar && (
+                      <button
+                        type="button"
+                        title="Ver producto"
+                        onClick={() =>
+                          verDetalle(producto)
+                        }
+                      >
+                        <Eye size={18} />
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      title="Actualizar producto"
-                      onClick={() =>
-                        abrirEditar(producto)
-                      }
-                    >
-                      <Pencil size={18} />
-                    </button>
+                    {puedeActualizar && (
+                      <button
+                        type="button"
+                        title="Actualizar producto"
+                        onClick={() =>
+                          abrirEditar(producto)
+                        }
+                      >
+                        <Pencil size={18} />
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      title="Eliminar producto"
-                      onClick={() =>
-                        eliminarProducto(producto)
-                      }
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {puedeEliminar && (
+                      <button
+                        type="button"
+                        title="Eliminar producto"
+                        onClick={() =>
+                          eliminarProducto(producto)
+                        }
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
 
                   </div>
                 </td>
@@ -1272,23 +1295,25 @@ onChange={(e) =>
 
                     <div className="producto-estado-control">
 
-                      <button
-                        type="button"
-                        className={
-                          productoSeleccionado.estado ===
-                          "Activo"
-                            ? "estado-toggle activo"
-                            : "estado-toggle inactivo"
-                        }
-                        onClick={() => {
-                          cambiarEstado(
-                            productoSeleccionado
-                          );
-                        }}
-                        title="Cambiar estado"
-                      >
-                        <span className="estado-toggle-circle"></span>
-                      </button>
+                      {puedeCambiarEstado && (
+                        <button
+                          type="button"
+                          className={
+                            productoSeleccionado.estado ===
+                            "Activo"
+                              ? "estado-toggle activo"
+                              : "estado-toggle inactivo"
+                          }
+                          onClick={() => {
+                            cambiarEstado(
+                              productoSeleccionado
+                            );
+                          }}
+                          title="Cambiar estado"
+                        >
+                          <span className="estado-toggle-circle"></span>
+                        </button>
+                      )}
 
                       <span
                         className={

@@ -15,11 +15,22 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Domicilios() {
+export default function Domicilios({ user }) {
+
+  // =====================================================
+  // PERMISOS (los botones sin permiso se ocultan)
+  // =====================================================
+
+  const puedeCrear = tienePermiso(user, "Domicilios", "Crear");
+  const puedeActualizar = tienePermiso(user, "Domicilios", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Domicilios", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Domicilios", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Domicilios", "Consultar");
 
   // =====================================================
   // DOMICILIOS
@@ -807,37 +818,41 @@ export default function Domicilios() {
 
           {/* BUSCADOR */}
 
-          <div className="domicilios-search">
+          {puedeConsultar && (
+            <div className="domicilios-search">
 
-            <Search size={18} />
+              <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Buscar domicilios..."
-              value={busqueda}
-              onChange={(e) =>
-                setBusqueda(
-                  e.target.value
-                )
-              }
-            />
+              <input
+                type="text"
+                placeholder="Buscar domicilios..."
+                value={busqueda}
+                onChange={(e) =>
+                  setBusqueda(
+                    e.target.value
+                  )
+                }
+              />
 
-          </div>
+            </div>
+          )}
 
 
           {/* AGREGAR */}
 
-          <button
-            type="button"
-            className="domicilios-add-button"
-            onClick={abrirAgregar}
-          >
+          {puedeCrear && (
+            <button
+              type="button"
+              className="domicilios-add-button"
+              onClick={abrirAgregar}
+            >
 
-            <Plus size={18} />
+              <Plus size={18} />
 
-            Registrar domicilio
+              Registrar domicilio
 
-          </button>
+            </button>
+          )}
 
         </div>
 
@@ -938,10 +953,13 @@ export default function Domicilios() {
 
                           : "domicilio-estado pendiente"
                       }
-                      onClick={() =>
-                        avanzarEstado(
-                          domicilio.id
-                        )
+                      onClick={
+                        puedeCambiarEstado
+                          ? () =>
+                              avanzarEstado(
+                                domicilio.id
+                              )
+                          : undefined
                       }
                     >
 
@@ -957,60 +975,66 @@ export default function Domicilios() {
                     <div className="domicilio-actions">
 
 
-                      <button
-                        type="button"
-                        title="Ver domicilio"
-                        onClick={() =>
-                          verDetalle(
-                            domicilio
-                          )
-                        }
-                      >
+                      {puedeConsultar && (
+                        <button
+                          type="button"
+                          title="Ver domicilio"
+                          onClick={() =>
+                            verDetalle(
+                              domicilio
+                            )
+                          }
+                        >
 
-                        <Eye size={18} />
+                          <Eye size={18} />
 
-                      </button>
-
-
-                      <button
-                        type="button"
-                        title={
-                          domicilio.estado ===
-                          "Entregado"
-                            ? "No se puede modificar"
-                            : "Actualizar domicilio"
-                        }
-                        className={
-                          domicilio.estado ===
-                          "Entregado"
-                            ? "disabled"
-                            : ""
-                        }
-                        onClick={() =>
-                          abrirEditar(
-                            domicilio
-                          )
-                        }
-                      >
-
-                        <Pencil size={18} />
-
-                      </button>
+                        </button>
+                      )}
 
 
-                      <button
-                        type="button"
-                        title="Eliminar domicilio"
-                        onClick={() =>
-                          eliminarDomicilio(
-                            domicilio
-                          )
-                        }
-                      >
+                      {puedeActualizar && (
+                        <button
+                          type="button"
+                          title={
+                            domicilio.estado ===
+                            "Entregado"
+                              ? "No se puede modificar"
+                              : "Actualizar domicilio"
+                          }
+                          className={
+                            domicilio.estado ===
+                            "Entregado"
+                              ? "disabled"
+                              : ""
+                          }
+                          onClick={() =>
+                            abrirEditar(
+                              domicilio
+                            )
+                          }
+                        >
 
-                        <Trash2 size={18} />
+                          <Pencil size={18} />
 
-                      </button>
+                        </button>
+                      )}
+
+
+                      {puedeEliminar && (
+                        <button
+                          type="button"
+                          title="Eliminar domicilio"
+                          onClick={() =>
+                            eliminarDomicilio(
+                              domicilio
+                            )
+                          }
+                        >
+
+                          <Trash2 size={18} />
+
+                        </button>
+                      )}
 
                     </div>
 

@@ -19,6 +19,8 @@ import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
+import { tienePermiso } from "../utils/permisos";
+
 import {
   obtenerPedidos,
   cambiarEstadoPedido as cambiarEstadoPedidoApi
@@ -97,7 +99,18 @@ const claseEstado = (estado) => {
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Pedidos({ vendedorId }) {
+export default function Pedidos({ vendedorId, user }) {
+
+  // =====================================================
+  // PERMISOS (los botones sin permiso se ocultan)
+  // =====================================================
+
+  const puedeCrear = tienePermiso(user, "Pedidos", "Crear");
+  const puedeActualizar = tienePermiso(user, "Pedidos", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Pedidos", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Pedidos", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Pedidos", "Consultar");
+
 
   // =====================================================
   // PEDIDOS
@@ -1211,6 +1224,8 @@ export default function Pedidos({ vendedorId }) {
 
           {/* BUSCADOR */}
 
+          {puedeConsultar && (
+
           <div className="pedidos-search">
 
             <Search size={18} />
@@ -1228,8 +1243,12 @@ export default function Pedidos({ vendedorId }) {
 
           </div>
 
+          )}
+
 
           {/* AGREGAR */}
+
+          {puedeCrear && (
 
           <button
             type="button"
@@ -1242,6 +1261,8 @@ export default function Pedidos({ vendedorId }) {
             Registrar pedido
 
           </button>
+
+          )}
 
         </div>
 
@@ -1348,10 +1369,13 @@ export default function Pedidos({ vendedorId }) {
 
                             : "pedido-estado registrado"
                         }
-                        onClick={() =>
-                          avanzarEstado(
-                            pedido.id
-                          )
+                        onClick={
+                          puedeCambiarEstado
+                            ? () =>
+                                avanzarEstado(
+                                  pedido.id
+                                )
+                            : undefined
                         }
                       >
 
@@ -1360,7 +1384,8 @@ export default function Pedidos({ vendedorId }) {
                       </span>
 
 
-                      {pedido.estado !== "Entregado" &&
+                      {puedeCambiarEstado &&
+                        pedido.estado !== "Entregado" &&
                         pedido.estado !== "Cancelado" && (
 
                         <button
@@ -1388,7 +1413,8 @@ export default function Pedidos({ vendedorId }) {
                         )}
 
 
-                      {(pedido.estado !== "Entregado" &&
+                      {(puedeCambiarEstado &&
+                        pedido.estado !== "Entregado" &&
                         pedido.estado !== "Cancelado") &&
                         estadoAbiertoId ===
                         pedido.id && (
@@ -1444,6 +1470,8 @@ export default function Pedidos({ vendedorId }) {
 
                       {/* VER */}
 
+                      {puedeConsultar && (
+
                       <button
                         type="button"
                         title="Ver pedido"
@@ -1458,8 +1486,12 @@ export default function Pedidos({ vendedorId }) {
 
                       </button>
 
+                      )}
+
 
                       {/* ABONOS */}
+
+                      {puedeConsultar && (
 
                       <button
                         type="button"
@@ -1475,8 +1507,12 @@ export default function Pedidos({ vendedorId }) {
 
                       </button>
 
+                      )}
+
 
                       {/* EDITAR */}
+
+                        {puedeActualizar && (
 
                         <button
                           type="button"
@@ -1503,8 +1539,12 @@ export default function Pedidos({ vendedorId }) {
 
                         </button>
 
+                        )}
+
 
                       {/* CANCELAR */}
+
+                        {puedeCambiarEstado && (
 
                         <button
                           type="button"
@@ -1536,8 +1576,12 @@ export default function Pedidos({ vendedorId }) {
 
                         </button>
 
+                        )}
+
 
                       {/* ELIMINAR */}
+
+                        {puedeEliminar && (
 
                         <button
                           type="button"
@@ -1553,6 +1597,8 @@ export default function Pedidos({ vendedorId }) {
                           <Trash2 size={18} />
 
                         </button>
+
+                        )}
 
 
                     </div>
@@ -1668,6 +1714,7 @@ export default function Pedidos({ vendedorId }) {
                     value={
                       formulario.estado
                     }
+                    disabled={modoEdicion && !puedeCambiarEstado}
                     onChange={(e) =>
                       cambiarCampo(
                         "estado",

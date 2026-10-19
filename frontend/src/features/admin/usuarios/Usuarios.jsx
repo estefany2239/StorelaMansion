@@ -17,6 +17,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import { tienePermiso } from "../utils/permisos";
 import {
   obtenerUsuariosAdmin,
   obtenerRolesAdmin,
@@ -30,7 +31,17 @@ import {
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Usuarios() {
+export default function Usuarios({ user }) {
+
+  // =====================================================
+  // PERMISOS (los botones sin permiso se ocultan)
+  // =====================================================
+
+  const puedeCrear = tienePermiso(user, "Usuarios", "Crear");
+  const puedeActualizar = tienePermiso(user, "Usuarios", "Actualizar");
+  const puedeEliminar = tienePermiso(user, "Usuarios", "Eliminar");
+  const puedeCambiarEstado = tienePermiso(user, "Usuarios", "Cambiar estado");
+  const puedeConsultar = tienePermiso(user, "Usuarios", "Consultar");
 
   // =====================================================
   // USUARIOS
@@ -690,36 +701,40 @@ export default function Usuarios() {
 
           {/* BUSCADOR */}
 
-          <div className="usuarios-search">
+          {puedeConsultar && (
+            <div className="usuarios-search">
 
-            <Search size={18} />
+              <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Buscar usuarios..."
-              value={busqueda}
-              onChange={(e) =>
-                setBusqueda(
-                  e.target.value
-                )
-              }
-            />
+              <input
+                type="text"
+                placeholder="Buscar usuarios..."
+                value={busqueda}
+                onChange={(e) =>
+                  setBusqueda(
+                    e.target.value
+                  )
+                }
+              />
 
-          </div>
+            </div>
+          )}
 
           {/* AGREGAR */}
 
-          <button
-            type="button"
-            className="usuarios-add-button"
-            onClick={abrirAgregar}
-          >
+          {puedeCrear && (
+            <button
+              type="button"
+              className="usuarios-add-button"
+              onClick={abrirAgregar}
+            >
 
-            <Plus size={18} />
+              <Plus size={18} />
 
-            Registrar usuario
+              Registrar usuario
 
-          </button>
+            </button>
+          )}
 
         </div>
 
@@ -806,17 +821,21 @@ export default function Usuarios() {
 
                     <label className="switch-usuario-estado">
 
-                      <input
-                        type="checkbox"
-                        checked={
-                          usuario.estado === "Activo"
-                        }
-                        onChange={() =>
-                          cambiarEstado(usuario)
-                        }
-                      />
+                      {puedeCambiarEstado && (
+                        <input
+                          type="checkbox"
+                          checked={
+                            usuario.estado === "Activo"
+                          }
+                          onChange={() =>
+                            cambiarEstado(usuario)
+                          }
+                        />
+                      )}
 
-                      <span className="slider-usuario"></span>
+                      {puedeCambiarEstado && (
+                        <span className="slider-usuario"></span>
+                      )}
 
                       <span
                         className={`estado-usuario-texto ${
@@ -862,41 +881,45 @@ export default function Usuarios() {
 
                       {/* VER */}
 
-                      <button
-                        type="button"
-                        title="Ver usuario"
-                        onClick={() =>
-                          verDetalle(
-                            usuario
-                          )
-                        }
-                      >
+                      {puedeConsultar && (
+                        <button
+                          type="button"
+                          title="Ver usuario"
+                          onClick={() =>
+                            verDetalle(
+                              usuario
+                            )
+                          }
+                        >
 
-                        <Eye size={18} />
+                          <Eye size={18} />
 
-                      </button>
+                        </button>
+                      )}
 
                       {/* EDITAR */}
 
-                      <button
-                        type="button"
-                        title="Actualizar usuario"
-                        onClick={() =>
-                          abrirEditar(
-                            usuario
-                          )
-                        }
-                      >
+                      {puedeActualizar && (
+                        <button
+                          type="button"
+                          title="Actualizar usuario"
+                          onClick={() =>
+                            abrirEditar(
+                              usuario
+                            )
+                          }
+                        >
 
-                        <Pencil
-                          size={18}
-                        />
+                          <Pencil
+                            size={18}
+                          />
 
-                      </button>
+                        </button>
+                      )}
 
                       {/* REENVIAR INVITACIÓN (solo si sigue pendiente) */}
 
-                      {usuario.cambioContrasenaPendiente && (
+                      {puedeActualizar && usuario.cambioContrasenaPendiente && (
                         <button
                           type="button"
                           title="Reenviar invitación"
@@ -914,32 +937,34 @@ export default function Usuarios() {
 
                       {/* ELIMINAR */}
 
-                      <button
-                        type="button"
-                        title={
-                          usuario.estado ===
-                          "Inactivo"
-                            ? "Eliminar usuario"
-                            : "Solo se puede eliminar un usuario Inactivo"
-                        }
-                        className={
-                          usuario.estado ===
-                          "Inactivo"
-                            ? ""
-                            : "disabled"
-                        }
-                        onClick={() =>
-                          eliminarUsuario(
-                            usuario
-                          )
-                        }
-                      >
+                      {puedeEliminar && (
+                        <button
+                          type="button"
+                          title={
+                            usuario.estado ===
+                            "Inactivo"
+                              ? "Eliminar usuario"
+                              : "Solo se puede eliminar un usuario Inactivo"
+                          }
+                          className={
+                            usuario.estado ===
+                            "Inactivo"
+                              ? ""
+                              : "disabled"
+                          }
+                          onClick={() =>
+                            eliminarUsuario(
+                              usuario
+                            )
+                          }
+                        >
 
-                        <Trash2
-                          size={18}
-                        />
+                          <Trash2
+                            size={18}
+                          />
 
-                      </button>
+                        </button>
+                      )}
 
                     </div>
 
