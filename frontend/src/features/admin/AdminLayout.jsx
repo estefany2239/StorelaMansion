@@ -31,69 +31,36 @@ import Pedidos from "./pedidos/Pedidos";
 import Domicilios from "./domicilios/Domicilios";
 import Perfil from "./perfil/Perfil";
 
-import { tienePrivilegio } from "./utils/permisos";
-import ROLES_MOCK from "./data/rolesMock";
+import { tienePermiso } from "./utils/permisos";
 
 import "./AdminLayout.css";
 import "./AdminTheme.css";
 
 export default function AdminLayout({ user, onLogout }) {
 
-  const esVendedor = user?.rol === "Vendedor";
-  const rolUsuario = user?.rol || "Administrador";
-  const rolesDisponibles = ROLES_MOCK;
-
-  const [adminView, setAdminView] = useState(
-    esVendedor ? "ventas" : "dashboard"
-  );
-
-  const [darkMode, setDarkMode] = useState(() => {
-    const guardado = localStorage.getItem("sla-admin-theme");
-    return guardado === "dark";
-  });
-
-  const [sidebarColapsado, setSidebarColapsado] = useState(() => {
-    const guardado = localStorage.getItem("sla-admin-sidebar");
-    return guardado === "colapsado";
-  });
-
-  const [gestionProductosAbierto, setGestionProductosAbierto] =
-    useState(false);
-
-  const [gestionVentasAbierto, setGestionVentasAbierto] =
-    useState(esVendedor);
-
-
   /* =====================================================
-     MENÚ PRINCIPAL
+     MENÚ PRINCIPAL (solo permisos "Módulo:Consultar")
      ===================================================== */
 
-  const menu = esVendedor
-    ? []
-    : [
-        {
-          nombre: "Dashboard",
-          vista: "dashboard",
-          icono: LayoutDashboard
-        },
-        {
-          nombre: "Roles",
-          vista: "roles",
-          icono: Shield
-        },
-        {
-          nombre: "Usuarios",
-          vista: "usuarios",
-          icono: Users
-        }
-      ].filter((item) =>
-        tienePrivilegio(
-          rolUsuario,
-          rolesDisponibles,
-          item.nombre,
-          "Consultar"
-        )
-      );
+  const menu = [
+    {
+      nombre: "Dashboard",
+      vista: "dashboard",
+      icono: LayoutDashboard
+    },
+    {
+      nombre: "Roles",
+      vista: "roles",
+      icono: Shield
+    },
+    {
+      nombre: "Usuarios",
+      vista: "usuarios",
+      icono: Users
+    }
+  ].filter((item) =>
+    tienePermiso(user, item.nombre, "Consultar")
+  );
 
   /* =====================================================
      SUBMENÚ GESTIÓN DE PRODUCTOS
@@ -121,60 +88,62 @@ export default function AdminLayout({ user, onLogout }) {
       icono: Palette
     }
   ].filter((item) =>
-    tienePrivilegio(
-      rolUsuario,
-      rolesDisponibles,
-      item.nombre,
-      "Consultar"
-    )
+    tienePermiso(user, item.nombre, "Consultar")
   );
 
   /* =====================================================
      SUBMENÚ GESTIÓN DE VENTAS
      ===================================================== */
 
-  const menuVentas = esVendedor
-    ? [
-        {
-          nombre: "Ventas",
-          vista: "ventas",
-          icono: ShoppingCart
-        },
-        {
-          nombre: "Pedidos",
-          vista: "pedidos",
-          icono: ShoppingCart
-        }
-      ]
-    : [
-        {
-          nombre: "Ventas",
-          vista: "ventas",
-          icono: ShoppingCart
-        },
-        {
-          nombre: "Clientes",
-          vista: "clientes",
-          icono: UserRound
-        },
-        {
-          nombre: "Pedidos",
-          vista: "pedidos",
-          icono: ShoppingCart
-        },
-        {
-          nombre: "Domicilios",
-          vista: "domicilios",
-          icono: Truck
-        }
-      ].filter((item) =>
-    tienePrivilegio(
-      rolUsuario,
-      rolesDisponibles,
-      item.nombre,
-      "Consultar"
-    )
+  const menuVentas = [
+    {
+      nombre: "Ventas",
+      vista: "ventas",
+      icono: ShoppingCart
+    },
+    {
+      nombre: "Clientes",
+      vista: "clientes",
+      icono: UserRound
+    },
+    {
+      nombre: "Pedidos",
+      vista: "pedidos",
+      icono: ShoppingCart
+    },
+    {
+      nombre: "Domicilios",
+      vista: "domicilios",
+      icono: Truck
+    }
+  ].filter((item) =>
+    tienePermiso(user, item.nombre, "Consultar")
   );
+
+  /* Vista inicial: el primer módulo permitido (o el perfil). */
+  const vistaInicial =
+    menu[0]?.vista ||
+    menuProductos[0]?.vista ||
+    menuVentas[0]?.vista ||
+    "perfil";
+
+  const [adminView, setAdminView] = useState(vistaInicial);
+
+  const [darkMode, setDarkMode] = useState(() => {
+    const guardado = localStorage.getItem("sla-admin-theme");
+    return guardado === "dark";
+  });
+
+  const [sidebarColapsado, setSidebarColapsado] = useState(() => {
+    const guardado = localStorage.getItem("sla-admin-sidebar");
+    return guardado === "colapsado";
+  });
+
+  const [gestionProductosAbierto, setGestionProductosAbierto] =
+    useState(false);
+
+  const [gestionVentasAbierto, setGestionVentasAbierto] =
+    useState(menuVentas.length > 0 && menu.length === 0);
 
 
   /* =====================================================
@@ -236,37 +205,37 @@ export default function AdminLayout({ user, onLogout }) {
     switch (adminView) {
 
       case "dashboard":
-        return <Dashboard rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Dashboard user={user} />;
 
       case "roles":
-        return <Roles rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Roles user={user} />;
 
       case "usuarios":
-        return <Usuarios rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Usuarios user={user} />;
 
       case "productos":
-        return <Productos rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Productos user={user} />;
 
       case "categorias":
-        return <Categorias rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Categorias user={user} />;
 
       case "tallas":
-        return <Tallas rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Tallas user={user} />;
 
       case "colores":
-        return <Colores rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Colores user={user} />;
 
       case "ventas":
-        return <Ventas vendedorId={user?.vendedorId} rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Ventas vendedorId={user?.vendedorId} user={user} />;
 
       case "clientes":
-        return <Clientes rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Clientes user={user} />;
 
       case "pedidos":
-        return <Pedidos vendedorId={user?.vendedorId} rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Pedidos vendedorId={user?.vendedorId} user={user} />;
 
       case "domicilios":
-        return <Domicilios rolesDisponibles={rolesDisponibles} user={user} />;
+        return <Domicilios user={user} />;
 
       case "perfil":
         return (
@@ -278,7 +247,7 @@ export default function AdminLayout({ user, onLogout }) {
         );
 
       default:
-        return <Dashboard />;
+        return <Dashboard user={user} />;
     }
   };
 
@@ -340,9 +309,7 @@ export default function AdminLayout({ user, onLogout }) {
           </h2>
 
           <span>
-            {esVendedor
-              ? "Panel del Vendedor"
-              : "Panel Administrativo"}
+            Panel Administrativo
           </span>
 
         </div>
@@ -354,7 +321,7 @@ export default function AdminLayout({ user, onLogout }) {
 
         <nav className="admin-menu">
 
-          {!esVendedor && (
+          {menu.length > 0 && (
             <span className="menu-title">
               MENÚ PRINCIPAL
             </span>
@@ -405,7 +372,7 @@ export default function AdminLayout({ user, onLogout }) {
               ACORDEÓN GESTIÓN DE PRODUCTOS
               ================================================= */}
 
-          {!esVendedor && (
+          {menuProductos.length > 0 && (
 
             <div className="admin-menu-accordion">
 
@@ -497,6 +464,8 @@ export default function AdminLayout({ user, onLogout }) {
               ACORDEÓN GESTIÓN DE VENTAS
               ================================================= */}
 
+          {menuVentas.length > 0 && (
+
           <div className="admin-menu-accordion">
 
             <button
@@ -580,6 +549,8 @@ export default function AdminLayout({ user, onLogout }) {
 
           </div>
 
+          )}
+
         </nav>
 
 
@@ -637,7 +608,7 @@ export default function AdminLayout({ user, onLogout }) {
               </strong>
 
               <span>
-                {rolUsuario}
+                {user?.rol}
               </span>
 
             </div>

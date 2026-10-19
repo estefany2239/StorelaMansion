@@ -21,6 +21,7 @@ import { useNotify } from "./components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
 import { useCatalogo } from "./hooks/useCatalogo";
+import { obtenerPerfil } from "./services/api";
 
 // VISTAS DEL CLIENTE LOGUEADO
 import MisPedidos from "./features/store/MisPedidos";
@@ -88,7 +89,8 @@ const resolverDestacado = (def, catalogo) => {
 };
 
 // Recupera la sesión guardada en localStorage (si existe y es válida).
-// El login guarda el usuario bajo la clave "usuario".
+// El login guarda el usuario bajo la clave "usuario" (con sus permisos
+// "Módulo:Privilegio" incluidos).
 const cargarUsuarioSesion = () => {
   try {
     const guardado = JSON.parse(localStorage.getItem("usuario"));
@@ -99,7 +101,10 @@ const cargarUsuarioSesion = () => {
   return null;
 };
 
-const esRolInterno = (rol) => rol === "Administrador" || rol === "Vendedor";
+// Se entra al panel administrativo solo si el usuario tiene
+// al menos un permiso ("Módulo:Privilegio") en la sesión.
+const tieneAccesoPanel = (usuario) =>
+  Array.isArray(usuario?.permisos) && usuario.permisos.length > 0;
 
 
 export default function App() {
@@ -116,7 +121,7 @@ export default function App() {
   // Vista inicial: el enlace profundo ?vista=login (usado en las
   // invitaciones por correo) abre el login; una sesión temporal pendiente
   // de cambio de contraseña solo puede llegar a "Establecer nueva
-  // contraseña"; con sesión interna válida se entra al panel.
+  // contraseña"; con sesión que tiene al menos un permiso se entra al panel.
   const [currentView, setCurrentView] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("vista") === "login") {
@@ -126,7 +131,7 @@ export default function App() {
 
     const guardado = cargarUsuarioSesion();
     if (guardado?.cambioContrasena) return "cambiar-contrasena";
-    return guardado && esRolInterno(guardado.rol) ? "admin" : "home";
+    return guardado && tieneAccesoPanel(guardado) ? "admin" : "home";
   });
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -165,6 +170,42 @@ export default function App() {
   // ==========================================
 
   const [user, setUser] = useState(cargarUsuarioSesion);
+
+
+  // Refresca los datos del usuario (incluidos los permisos
+  // "Módulo:Privilegio") con GET /api/auth/perfil al cargar la app,
+  // para que la sesión guardada no quede desactualizada al recargar.
+  useEffect(() => {
+    if (!user || user.cambioContrasena) return;
+    if (!localStorage.getItem("token")) return;
+
+    let cancelado = false;
+
+    obtenerPerfil()
+      .then((perfil) => {
+        if (cancelado) return;
+
+        const actualizado = { ...user, ...perfil };
+        localStorage.setItem("usuario", JSON.stringify(actualizado));
+        setUser(actualizado);
+
+        // Sesión guardada sin permisos (sesión antigua): si el backend
+        // confirma que el usuario tiene al menos uno, se entra al panel.
+        setCurrentView((vista) =>
+          vista === "home" && tieneAccesoPanel(actualizado)
+            ? "admin"
+            : vista
+        );
+      })
+      .catch(() => {
+        // Sin conexión o sesión inválida: se mantiene la sesión guardada.
+      });
+
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   // ==========================================
@@ -438,8 +479,8 @@ export default function App() {
       return;
     }
 
-    // Administrador o vendedor: directo al panel administrativo
-    if (esRolInterno(userData.rol)) {
+    // Con al menos un permiso ("Módulo:Privilegio"): directo al panel
+    if (tieneAccesoPanel(userData)) {
       setFlujoCheckout(false);
       setCurrentView("admin");
       return;

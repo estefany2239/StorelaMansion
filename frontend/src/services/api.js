@@ -60,6 +60,14 @@ export async function iniciarSesion(correo, contrasena) {
   return respuesta.json()
 }
 
+// Datos del usuario autenticado (incluye sus permisos "Módulo:Privilegio").
+// Se usa al cargar la app para refrescar la sesión guardada.
+export async function obtenerPerfil() {
+  return peticionAdmin('/api/auth/perfil', {
+    mensajeError: 'No se pudo cargar el perfil'
+  })
+}
+
 // Cambia la contraseña del usuario autenticado (incluye el paso de
 // contraseña temporal de la invitación).
 export async function cambiarContrasena(contrasenaActual, contrasenaNueva) {
@@ -284,6 +292,51 @@ export async function obtenerUsuariosAdmin() {
 export async function obtenerRolesAdmin() {
   return peticionAdmin('/api/admin/usuarios/roles', {
     mensajeError: 'No se pudieron cargar los roles'
+  })
+}
+
+// ===== ROLES (CRUD del módulo Roles) =====
+
+export async function listarRolesAdmin() {
+  return peticionAdmin('/api/admin/roles', {
+    mensajeError: 'No se pudieron cargar los roles'
+  })
+}
+
+export async function obtenerCatalogoPermisosAdmin() {
+  return peticionAdmin('/api/admin/roles/permisos', {
+    mensajeError: 'No se pudo cargar el catálogo de permisos'
+  })
+}
+
+export async function crearRolAdmin(datos) {
+  return peticionAdmin('/api/admin/roles', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el rol'
+  })
+}
+
+export async function actualizarRolAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/roles/${encodeURIComponent(id)}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el rol'
+  })
+}
+
+export async function cambiarEstadoRolAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/roles/${encodeURIComponent(id)}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado del rol'
+  })
+}
+
+export async function eliminarRolAdmin(id) {
+  return peticionAdmin(`/api/admin/roles/${encodeURIComponent(id)}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar el rol'
   })
 }
 

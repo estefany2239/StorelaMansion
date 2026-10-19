@@ -12,7 +12,16 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { tienePrivilegio } from "../utils/permisos";
+import { tienePermiso } from "../utils/permisos";
+
+import {
+  listarRolesAdmin,
+  obtenerCatalogoPermisosAdmin,
+  crearRolAdmin,
+  actualizarRolAdmin,
+  cambiarEstadoRolAdmin,
+  eliminarRolAdmin,
+} from "../../../services/api";
 
 import "./Roles.css";
 
@@ -51,17 +60,100 @@ const PRIVILEGIO_POR_DEFECTO = "Consultar";
 
 const REGISTROS_POR_PAGINA = 6;
 
+/* Privilegios de la columna de detalle (incluye
+   el que solo existe en Ventas y Pedidos) */
+
+const COLUMNAS_DETALLE = [...PRIVILEGIOS, "Cambiar estado"];
+
+/* Roles que no se editan ni se cambian de estado
+   desde la interfaz (Administrador es intocable
+   también en el backend) */
+
+const ROLES_PROTEGIDOS = ["Administrador", "Cliente"];
+
+const esRolProtegido = (rol) =>
+  ROLES_PROTEGIDOS.includes(rol?.nombre);
+
+const formatearIdRol = (id) => {
+  if (id === null || id === undefined || id === "") {
+    return "—";
+  }
+  return `ROL-${String(id).padStart(3, "0")}`;
+};
+
 /* =====================================================
    HELPERS DE ESTRUCTURA
    ===================================================== */
 
 /* Mantiene los privilegios en el orden canónico
-   (Crear, Consultar, Actualizar, Eliminar) */
+   (Crear, Consultar, Actualizar, Eliminar) y
+   conserva los extraños al catálogo (Cambiar estado) */
 
-const ordenarPrivilegios = (privilegios = []) =>
-  PRIVILEGIOS.filter((privilegio) =>
+const ordenarPrivilegios = (privilegios = []) => {
+  const ordenados = PRIVILEGIOS.filter((privilegio) =>
     privilegios.includes(privilegio)
   );
+  const extras = privilegios.filter(
+    (privilegio) => !PRIVILEGIOS.includes(privilegio)
+  );
+  return [...ordenados, ...extras];
+};
+
+/* Ordena módulos según el orden canónico y deja
+   los desconocidos al final */
+
+const ordenarModulos = (nombres = []) => [
+  ...MODULOS.filter((modulo) => nombres.includes(modulo)),
+  ...nombres.filter((modulo) => !MODULOS.includes(modulo)),
+];
+
+/* API -> UI: lista plana ["Ventas:Crear"]
+   a estructura [{ modulo, privilegios }] */
+
+const estructuraDesdeLista = (lista = []) => {
+  const agrupados = new Map();
+
+  (Array.isArray(lista) ? lista : []).forEach((nombre) => {
+    const texto = String(nombre).trim();
+    if (!texto) return;
+
+    const [modulo, ...resto] = texto.split(":");
+    const privilegio = resto.join(":");
+    if (!modulo || !privilegio) return;
+
+    if (!agrupados.has(modulo)) {
+      agrupados.set(modulo, []);
+    }
+
+    const privilegios = agrupados.get(modulo);
+    if (!privilegios.includes(privilegio)) {
+      privilegios.push(privilegio);
+    }
+  });
+
+  return ordenarModulos([...agrupados.keys()]).map(
+    (modulo) => ({
+      modulo,
+      privilegios: ordenarPrivilegios(agrupados.get(modulo)),
+    })
+  );
+};
+
+/* UI -> API: estructura [{ modulo, privilegios }]
+   a lista plana ["Ventas:Crear"] */
+
+const listaDesdeEstructura = (estructura = []) =>
+  (Array.isArray(estructura) ? estructura : []).flatMap(
+    (permiso) =>
+      (permiso.privilegios || []).map(
+        (privilegio) => `${permiso.modulo}:${privilegio}`
+      )
+  );
+
+const desdeApi = (rol) => ({
+  ...rol,
+  permisos: estructuraDesdeLista(rol.permisos),
+});
 
 const totalPrivilegios = (permisos = []) =>
   permisos.reduce(
@@ -70,75 +162,12 @@ const totalPrivilegios = (permisos = []) =>
     0
   );
 
-/* =====================================================
-   ROLES MOCK (MIGRADOS A LA NUEVA ESTRUCTURA)
-   ===================================================== */
 
-const PERMISOS_ADMINISTRADOR = MODULOS.map(
-  (modulo) => ({
-    modulo,
-    privilegios: [...PRIVILEGIOS],
-  })
-);
-
-const PERMISOS_VENDEDOR = [
-  {
-    modulo: "Dashboard",
-    privilegios: ["Consultar"],
-  },
-  {
-    modulo: "Productos",
-    privilegios: ["Consultar"],
-  },
-  {
-    modulo: "Ventas",
-    privilegios: ["Crear", "Consultar", "Actualizar"],
-  },
-  {
-    modulo: "Clientes",
-    privilegios: ["Consultar", "Actualizar"],
-  },
-  {
-    modulo: "Pedidos",
-    privilegios: ["Crear", "Consultar", "Actualizar"],
-  },
-  {
-    modulo: "Domicilios",
-    privilegios: ["Consultar", "Actualizar"],
-  },
-];
-
-/* El Cliente no ingresa al panel administrativo,
-   por eso no tiene módulos asignados */
-
-const PERMISOS_CLIENTE = [];
-
-
-export default function Roles({ rolesDisponibles = [], user }) {
+export default function Roles({ user }) {
   const rolUsuario = user?.rol;
-  const [roles, setRoles] = useState([
-    {
-      id: "ROL-001",
-      nombre: "Administrador",
-      permisos: PERMISOS_ADMINISTRADOR,
-      usuarios: 1,
-      estado: "Activo",
-    },
-    {
-      id: "ROL-002",
-      nombre: "Vendedor",
-      permisos: PERMISOS_VENDEDOR,
-      usuarios: 2,
-      estado: "Activo",
-    },
-    {
-      id: "ROL-003",
-      nombre: "Cliente",
-      permisos: PERMISOS_CLIENTE,
-      usuarios: 12,
-      estado: "Activo",
-    },
-  ]);
+  const [roles, setRoles] = useState([]);
+
+  const [catalogo, setCatalogo] = useState(null);
 
   const [busqueda, setBusqueda] = useState("");
 
@@ -159,37 +188,114 @@ export default function Roles({ rolesDisponibles = [], user }) {
   const [errores, setErrores] = useState({});
 
   /* =====================================================
+     NOTIFICACIÓN
+     ===================================================== */
+
+  const mostrarToast = (mensaje, tipo = "exito") => {
+    setToast({ mensaje, tipo });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+
+  /* =====================================================
+     CATÁLOGO DE MÓDULOS Y PRIVILEGIOS (API)
+     ===================================================== */
+
+  const modulosFormulario =
+    catalogo?.modulos?.length > 0
+      ? ordenarModulos(
+          catalogo.modulos.map((item) => item.nombre)
+        )
+      : MODULOS;
+
+  const privilegiosDisponibles = (modulo) => {
+    const delCatalogo = catalogo?.modulos?.find(
+      (item) => item.nombre === modulo
+    )?.privilegios;
+
+    if (!delCatalogo?.length) {
+      return PRIVILEGIOS;
+    }
+
+    return ordenarPrivilegios(delCatalogo);
+  };
+
+  /* =====================================================
+     CARGA INICIAL (API)
+     ===================================================== */
+
+  useEffect(() => {
+    if (!tienePermiso(user, "Roles", "Consultar")) return;
+
+    const cargarDatos = async () => {
+      try {
+        const lista = await listarRolesAdmin();
+        setRoles((Array.isArray(lista) ? lista : []).map(desdeApi));
+      } catch (error) {
+        mostrarToast(error.message, "error");
+      }
+
+      try {
+        const permisos = await obtenerCatalogoPermisosAdmin();
+        setCatalogo(permisos);
+      } catch (error) {
+        mostrarToast(error.message, "error");
+      }
+    };
+
+    cargarDatos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* =====================================================
      FILTRADO
      ===================================================== */
 
-  const rolesFiltrados = roles.filter((rol) => {
-    const texto = busqueda.toLowerCase();
+  const filtrarRoles = (lista, textoBusqueda) => {
+    const texto = textoBusqueda.toLowerCase();
 
-    const coincideBusqueda =
-      rol.nombre
-        .toLowerCase()
-        .includes(texto) ||
-      rol.id
-        .toLowerCase()
-        .includes(texto) ||
-      rol.estado
-        .toLowerCase()
-        .includes(texto) ||
-      rol.permisos.some(
-        (permiso) =>
-          permiso.modulo
-            .toLowerCase()
-            .includes(texto) ||
-          (permiso.privilegios || []).some(
-            (privilegio) =>
-              privilegio
-                .toLowerCase()
-                .includes(texto)
-          )
-      );
+    return lista.filter((rol) => {
+      const coincideBusqueda =
+        rol.nombre
+          .toLowerCase()
+          .includes(texto) ||
+        formatearIdRol(rol.id)
+          .toLowerCase()
+          .includes(texto) ||
+        rol.estado
+          .toLowerCase()
+          .includes(texto) ||
+        rol.permisos.some(
+          (permiso) =>
+            permiso.modulo
+              .toLowerCase()
+              .includes(texto) ||
+            (permiso.privilegios || []).some(
+              (privilegio) =>
+                privilegio
+                  .toLowerCase()
+                  .includes(texto)
+            )
+        );
 
-    return coincideBusqueda;
-  });
+      return coincideBusqueda;
+    });
+  };
+
+  const rolesFiltrados = filtrarRoles(roles, busqueda);
+
+  const manejarBusqueda = (valor) => {
+    setBusqueda(valor);
+
+    if (
+      valor.trim() &&
+      filtrarRoles(roles, valor).length === 0
+    ) {
+      mostrarToast("Rol no encontrado en el sistema", "error");
+    }
+  };
 
   /* =====================================================
      PAGINACIÓN DE LA TABLA
@@ -219,22 +325,13 @@ export default function Roles({ rolesDisponibles = [], user }) {
     }
   }, [paginaActual, totalPaginas]);
 
-  useEffect(() => {
-    if (
-      busqueda.trim() &&
-      rolesFiltrados.length === 0
-    ) {
-      mostrarToast("Rol no encontrado en el sistema", "error");
-    }
-  }, [busqueda, rolesFiltrados.length]);
-
   /* =====================================================
      ABRIR CREAR
      ===================================================== */
 
   const abrirCrear = () => {
     setRolForm({
-      id: `ROL-${String(roles.length + 1).padStart(3, "0")}`,
+      id: "",
       nombre: "",
       permisos: [],
     });
@@ -248,6 +345,14 @@ export default function Roles({ rolesDisponibles = [], user }) {
      ===================================================== */
 
   const abrirEditar = (rol) => {
+    if (esRolProtegido(rol)) {
+      mostrarToast(
+        "Este rol está protegido y no se puede editar.",
+        "error"
+      );
+      return;
+    }
+
     if (rol.estado !== "Activo") {
       mostrarToast(
         "No se puede editar un rol inactivo",
@@ -450,15 +555,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
      GUARDAR ROL
      ===================================================== */
 
-  const mostrarToast = (mensaje, tipo = "exito") => {
-    setToast({ mensaje, tipo });
-
-    setTimeout(() => {
-      setToast(null);
-    }, 3000);
-  };
-
-  const guardarRol = (e) => {
+  const guardarRol = async (e) => {
     e.preventDefault();
 
     const nuevosErrores = {};
@@ -501,59 +598,86 @@ export default function Roles({ rolesDisponibles = [], user }) {
     }
 
     if (modal === "crear") {
-      const nuevoRol = {
-        id: rolForm.id,
-        nombre: rolForm.nombre.trim(),
-        permisos: rolForm.permisos,
-        usuarios: 0,
-        estado: "Activo",
-      };
+      try {
+        const rolCreado = await crearRolAdmin({
+          nombre: rolForm.nombre.trim(),
+          permisos: listaDesdeEstructura(rolForm.permisos),
+        });
 
-      setRoles((prev) => [nuevoRol, ...prev]);
+        setRoles((prev) => [desdeApi(rolCreado), ...prev]);
 
-      mostrarToast("Rol creado con éxito");
+        mostrarToast("Rol creado con éxito");
+
+        cerrarModal();
+      } catch (error) {
+        /* El backend responde 409 si el nombre ya existe */
+        mostrarToast(error.message, "error");
+      }
     }
-
-    cerrarModal();
   };
 
-  const confirmarEdicionRol = () => {
-    setRoles((prev) =>
-      prev.map((rol) =>
-        rol.id === rolForm.id
-          ? {
-              ...rol,
-              nombre: rolForm.nombre.trim(),
-              permisos: rolForm.permisos,
-            }
-          : rol
-      )
-    );
+  const confirmarEdicionRol = async () => {
+    try {
+      const rolActualizado = await actualizarRolAdmin(
+        rolForm.id,
+        {
+          nombre: rolForm.nombre.trim(),
+          permisos: listaDesdeEstructura(rolForm.permisos),
+        }
+      );
 
-    mostrarToast("Rol editado con éxito");
+      setRoles((prev) =>
+        prev.map((rol) =>
+          rol.id === rolForm.id
+            ? desdeApi(rolActualizado)
+            : rol
+        )
+      );
 
-    setConfirmarEdicion(false);
-    cerrarModal();
+      mostrarToast("Rol editado con éxito");
+
+      setConfirmarEdicion(false);
+      cerrarModal();
+    } catch (error) {
+      /* 403 (rol protegido) o 409 (nombre duplicado) */
+      setConfirmarEdicion(false);
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
      CAMBIAR ESTADO
      ===================================================== */
 
-  const cambiarEstado = (rol) => {
-    setRoles((prev) =>
-      prev.map((item) =>
-        item.id === rol.id
-          ? {
-              ...item,
-              estado:
-                item.estado === "Activo"
-                  ? "Inactivo"
-                  : "Activo",
-            }
-          : item
-      )
-    );
+  const cambiarEstado = async (rol) => {
+    if (esRolProtegido(rol)) {
+      mostrarToast(
+        "Este rol está protegido y no se puede cambiar su estado.",
+        "error"
+      );
+      return;
+    }
+
+    const nuevoEstado =
+      rol.estado === "Activo" ? "Inactivo" : "Activo";
+
+    try {
+      const rolActualizado = await cambiarEstadoRolAdmin(
+        rol.id,
+        nuevoEstado
+      );
+
+      setRoles((prev) =>
+        prev.map((item) =>
+          item.id === rol.id
+            ? desdeApi(rolActualizado)
+            : item
+        )
+      );
+    } catch (error) {
+      /* 409: no se desactiva un rol con usuarios */
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
@@ -561,6 +685,14 @@ export default function Roles({ rolesDisponibles = [], user }) {
      ===================================================== */
 
   const eliminarRol = (rol) => {
+    if (esRolProtegido(rol)) {
+      mostrarToast(
+        "Este rol está protegido y no se puede eliminar.",
+        "error"
+      );
+      return;
+    }
+
     if (rol.estado !== "Inactivo") {
       mostrarToast(
         "No se puede eliminar el rol porque solo se permiten eliminar roles inactivos.",
@@ -572,18 +704,26 @@ export default function Roles({ rolesDisponibles = [], user }) {
     setRolEliminar(rol);
   };
 
-  const confirmarEliminar = () => {
-    setRoles((actuales) =>
-      actuales.filter((item) => item.id !== rolEliminar.id)
-    );
+  const confirmarEliminar = async () => {
+    try {
+      await eliminarRolAdmin(rolEliminar.id);
 
-    setRolEliminar(null);
+      setRoles((actuales) =>
+        actuales.filter((item) => item.id !== rolEliminar.id)
+      );
 
-    mostrarToast("Rol eliminado con éxito");
+      setRolEliminar(null);
+
+      mostrarToast("Rol eliminado con éxito");
+    } catch (error) {
+      /* 403 (rol protegido) o 409 (usuarios asignados) */
+      setRolEliminar(null);
+      mostrarToast(error.message, "error");
+    }
   };
 
   if (
-    !tienePrivilegio(rolUsuario, rolesDisponibles, "Roles", "Consultar")
+    !tienePermiso(user, "Roles", "Consultar")
   ) {
     return (
       <div className="roles-page">
@@ -628,7 +768,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
               placeholder="Buscar por nombre, permiso o estado..."
               value={busqueda}
               onChange={(e) =>
-                setBusqueda(e.target.value)
+                manejarBusqueda(e.target.value)
               }
             />
 
@@ -636,9 +776,8 @@ export default function Roles({ rolesDisponibles = [], user }) {
 
           {/* AGREGAR */}
 
-          {(tienePrivilegio(
-            rolUsuario,
-            rolesDisponibles,
+          {(tienePermiso(
+            user,
             "Roles",
             "Crear"
           ) || rolUsuario === "Administrador") && (
@@ -683,7 +822,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
 
                   <td>
                     <span className="rol-id">
-                      {rol.id}
+                      {formatearIdRol(rol.id)}
                     </span>
                   </td>
 
@@ -710,6 +849,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
                       <input
                         type="checkbox"
                         checked={rol.estado === "Activo"}
+                        disabled={esRolProtegido(rol)}
                         onChange={() =>
                           cambiarEstado(rol)
                         }
@@ -749,12 +889,11 @@ export default function Roles({ rolesDisponibles = [], user }) {
                         <Eye size={18} />
                       </button>
 
-                      {tienePrivilegio(
-                        rolUsuario,
-                        rolesDisponibles,
+                      {tienePermiso(
+                        user,
                         "Roles",
                         "Actualizar"
-                      ) && (
+                      ) && !esRolProtegido(rol) && (
                         <button
                           type="button"
                           className={
@@ -775,12 +914,11 @@ export default function Roles({ rolesDisponibles = [], user }) {
                         </button>
                       )}
 
-                      {tienePrivilegio(
-                        rolUsuario,
-                        rolesDisponibles,
+                      {tienePermiso(
+                        user,
                         "Roles",
                         "Eliminar"
-                      ) && (
+                      ) && !esRolProtegido(rol) && (
                         <button
                           type="button"
                           className={
@@ -888,7 +1026,11 @@ export default function Roles({ rolesDisponibles = [], user }) {
                     <input
                       type="text"
                       name="id"
-                      value={rolForm.id}
+                      value={
+                        rolForm.id === ""
+                          ? "Se asigna al guardar"
+                          : formatearIdRol(rolForm.id)
+                      }
                       disabled
                     />
 
@@ -937,7 +1079,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
  
                    <div className="rol-permisos-list-nivel3">
  
-                     {MODULOS.map((modulo) => {
+                      {modulosFormulario.map((modulo) => {
                        const tieneAcceso =
                          moduloTieneAcceso(modulo);
                        const privilegiosModulo =
@@ -977,7 +1119,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
  
                            {tieneAcceso && (
                              <div className="rol-privilegios-grid">
-                               {PRIVILEGIOS.map((privilegio) => {
+                                {privilegiosDisponibles(modulo).map((privilegio) => {
                                  const activo =
                                    privilegiosModulo.includes(
                                      privilegio
@@ -1105,7 +1247,7 @@ export default function Roles({ rolesDisponibles = [], user }) {
                   </h3>
 
                   <p>
-                    {modal.rol.id}
+                    {formatearIdRol(modal.rol.id)}
                   </p>
 
                 </div>
@@ -1182,23 +1324,19 @@ export default function Roles({ rolesDisponibles = [], user }) {
                  </h4>
  
                  <div className="rol-detail-permisos-tabla">
-                   <div className="rol-detail-permisos-thead">
-                     <div className="rol-detail-permisos-th modulo">
-                       Módulo
-                     </div>
-                     <div className="rol-detail-permisos-th">
-                       Crear
-                     </div>
-                     <div className="rol-detail-permisos-th">
-                       Consultar
-                     </div>
-                     <div className="rol-detail-permisos-th">
-                       Actualizar
-                     </div>
-                     <div className="rol-detail-permisos-th">
-                       Eliminar
-                     </div>
-                   </div>
+                    <div className="rol-detail-permisos-thead">
+                      <div className="rol-detail-permisos-th modulo">
+                        Módulo
+                      </div>
+                      {COLUMNAS_DETALLE.map((privilegio) => (
+                        <div
+                          className="rol-detail-permisos-th"
+                          key={privilegio}
+                        >
+                          {privilegio}
+                        </div>
+                      ))}
+                    </div>
  
                    {(modal.rol.permisos || []).map(
                      (permiso) => {
@@ -1210,62 +1348,28 @@ export default function Roles({ rolesDisponibles = [], user }) {
                            className="rol-detail-permisos-row"
                            key={permiso.modulo}
                          >
-                           <div className="rol-detail-permisos-td modulo">
-                             {permiso.modulo}
-                           </div>
-                           <div className="rol-detail-permisos-td">
-                             {privilegios.includes("Crear") ? (
-                               <CheckCircle
-                                 size={18}
-                                 className="priv-check activo"
-                               />
-                             ) : (
-                               <XCircle
-                                 size={18}
-                                 className="priv-check inactivo"
-                               />
-                             )}
-                           </div>
-                           <div className="rol-detail-permisos-td">
-                             {privilegios.includes("Consultar") ? (
-                               <CheckCircle
-                                 size={18}
-                                 className="priv-check activo"
-                               />
-                             ) : (
-                               <XCircle
-                                 size={18}
-                                 className="priv-check inactivo"
-                               />
-                             )}
-                           </div>
-                           <div className="rol-detail-permisos-td">
-                             {privilegios.includes("Actualizar") ? (
-                               <CheckCircle
-                                 size={18}
-                                 className="priv-check activo"
-                               />
-                             ) : (
-                               <XCircle
-                                 size={18}
-                                 className="priv-check inactivo"
-                               />
-                             )}
-                           </div>
-                           <div className="rol-detail-permisos-td">
-                             {privilegios.includes("Eliminar") ? (
-                               <CheckCircle
-                                 size={18}
-                                 className="priv-check activo"
-                               />
-                             ) : (
-                               <XCircle
-                                 size={18}
-                                 className="priv-check inactivo"
-                               />
-                             )}
-                           </div>
-                         </div>
+                            <div className="rol-detail-permisos-td modulo">
+                              {permiso.modulo}
+                            </div>
+                            {COLUMNAS_DETALLE.map((privilegio) => (
+                              <div
+                                className="rol-detail-permisos-td"
+                                key={`${permiso.modulo}-${privilegio}`}
+                              >
+                                {privilegios.includes(privilegio) ? (
+                                  <CheckCircle
+                                    size={18}
+                                    className="priv-check activo"
+                                  />
+                                ) : (
+                                  <XCircle
+                                    size={18}
+                                    className="priv-check inactivo"
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
                        );
                      }
                    )}

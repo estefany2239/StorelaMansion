@@ -312,6 +312,17 @@
   transform: translateX(18px);
 }
 
+/* Switch deshabilitado (roles protegidos) */
+
+.switch-usuario-estado:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.switch-usuario-estado:has(input:disabled)
+  .slider-usuario {
+  opacity: 0.55;
+}
+
 /* Texto del estado */
 
 .estado-usuario-texto {
@@ -904,7 +915,7 @@
 
 .rol-detail-permisos-thead {
   display: grid;
-  grid-template-columns: 1.8fr repeat(4, 1fr);
+  grid-template-columns: 1.8fr repeat(5, 1fr);
   background: #f7f7f7;
   border-bottom: 1px solid var(--admin-border);
 }
@@ -924,7 +935,7 @@
 
 .rol-detail-permisos-row {
   display: grid;
-  grid-template-columns: 1.8fr repeat(4, 1fr);
+  grid-template-columns: 1.8fr repeat(5, 1fr);
   align-items: center;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -1061,7 +1072,7 @@
 
   .rol-detail-permisos-thead,
   .rol-detail-permisos-row {
-    grid-template-columns: 1.5fr repeat(4, 0.9fr);
+    grid-template-columns: 1.5fr repeat(5, 0.9fr);
   }
 }
 
@@ -1072,6 +1083,6 @@
 
   .rol-detail-permisos-thead,
   .rol-detail-permisos-row {
-    grid-template-columns: 1.2fr repeat(4, 0.8fr);
+    grid-template-columns: 1.2fr repeat(5, 0.8fr);
   }
 }
