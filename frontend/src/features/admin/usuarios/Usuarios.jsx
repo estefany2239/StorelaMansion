@@ -17,6 +17,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 import {
   obtenerUsuariosAdmin,
@@ -29,6 +30,40 @@ import {
 } from "../../../services/api";
 
 const REGISTROS_POR_PAGINA = 6;
+
+// Mismo formato de correo que valida el backend (usuariosAdmin.js)
+const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Reglas del formulario de usuario, alineadas con leerCuerpo() del backend:
+// nombre obligatorio (máx. 100), correo válido, teléfono (máx. 30),
+// dirección (máx. 255) y rol obligatorio.
+const REGLAS_USUARIO = {
+  nombre: (valor) => {
+    const nombre = String(valor || "").trim();
+    if (!nombre) return "Este campo es obligatorio.";
+    if (nombre.length > 100) return "El nombre no puede superar los 100 caracteres.";
+    return "";
+  },
+  correo: (valor) => {
+    const correo = String(valor || "").trim();
+    if (!correo) return "Este campo es obligatorio.";
+    if (!CORREO_VALIDO.test(correo)) return "El correo no es válido.";
+    return "";
+  },
+  telefono: (valor) => {
+    const telefono = String(valor || "").trim();
+    if (!telefono) return "Este campo es obligatorio.";
+    if (telefono.length > 30) return "El teléfono es demasiado largo.";
+    return "";
+  },
+  rol: (valor) => (valor ? "" : "Selecciona un rol."),
+  direccion: (valor) => {
+    const direccion = String(valor || "").trim();
+    if (!direccion) return "Este campo es obligatorio.";
+    if (direccion.length > 255) return "La dirección es demasiado larga.";
+    return "";
+  }
+};
 
 
 export default function Usuarios({ user }) {
@@ -90,7 +125,13 @@ export default function Usuarios({ user }) {
     direccion: ""
   });
 
-  const [errores, setErrores] = useState({});
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion
+  } = useValidacionFormulario(REGLAS_USUARIO);
 
   // =====================================================
   // ROLES
@@ -228,7 +269,7 @@ export default function Usuarios({ user }) {
 
     });
 
-    setErrores({});
+    limpiarValidacion();
 
     setModoEdicion(false);
 
@@ -262,7 +303,7 @@ export default function Usuarios({ user }) {
 
     });
 
-    setErrores({});
+    limpiarValidacion();
 
     setModoEdicion(true);
 
@@ -279,28 +320,16 @@ export default function Usuarios({ user }) {
     valor
   ) => {
 
-    setFormulario(
-      (actual) => ({
-        ...actual,
-        [campo]: valor
-      })
-    );
+    const siguiente = {
+      ...formulario,
+      [campo]: valor
+    };
 
-    if (String(valor).trim()) {
-      setErrores(
-        (actuales) => {
-          if (!actuales[campo]) {
-            return actuales;
-          }
+    setFormulario(siguiente);
 
-          const nuevos = {
-            ...actuales
-          };
-          delete nuevos[campo];
-          return nuevos;
-        }
-      );
-    }
+    // Si el campo ya fue tocado, su error se recalcula al instante
+    // (desaparece en cuanto el valor es válido).
+    revisarCampo(campo, valor, siguiente);
 
   };
 
@@ -344,58 +373,10 @@ export default function Usuarios({ user }) {
 
   const guardarUsuario = async () => {
 
-    const nuevosErrores = {};
-
-    if (
-      !formulario.nombre.trim()
-    ) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    }
-
-    if (
-      formulario.nombre.trim().length > 100
-    ) {
-      nuevosErrores.nombre = "El nombre no puede superar los 100 caracteres.";
-    }
-
-    if (
-      !formulario.correo.trim()
-    ) {
-      nuevosErrores.correo = "Este campo es obligatorio.";
-    }
-
-    if (
-      !formulario.telefono.trim()
-    ) {
-      nuevosErrores.telefono = "Este campo es obligatorio.";
-    }
-
-    if (
-      formulario.telefono.length > 30
-    ) {
-      nuevosErrores.telefono = "El teléfono es demasiado largo.";
-    }
-
-    if (
-      !formulario.rol
-    ) {
-      nuevosErrores.rol = "Selecciona un rol.";
-    }
-
-    if (
-      !formulario.direccion.trim()
-    ) {
-      nuevosErrores.direccion = "Este campo es obligatorio.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (
-      Object.keys(nuevosErrores).length > 0
-    ) {
-
+    // Valida todo el formulario (mismas reglas que el backend) y,
+    // si hay errores, enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) {
       return;
-
     }
 
     const permisos =
@@ -576,8 +557,9 @@ export default function Usuarios({ user }) {
 
     if (usuario.estado !== "Inactivo") {
 
-      alert(
-        "Solo se pueden eliminar los usuarios que estén en estado Inactivo."
+      mostrarToast(
+        "Solo se pueden eliminar los usuarios que estén en estado Inactivo.",
+        "error"
       );
 
       return;
@@ -1039,25 +1021,9 @@ export default function Usuarios({ user }) {
 
             <div className="usuario-modal-body">
 
-              {/* ID + ESTADO */}
+              {/* ESTADO */}
 
               <div className="usuario-form-row">
-
-                <div className="usuario-form-group">
-
-                  <label>
-                    ID USUARIO
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      formulario.id
-                    }
-                    disabled
-                  />
-
-                </div>
 
                 <div className="usuario-form-group">
 
@@ -1103,6 +1069,7 @@ export default function Usuarios({ user }) {
 
                   <input
                     type="text"
+                    id="campo-nombre"
                     placeholder="Nombre completo"
                     maxLength={20}
                     value={
@@ -1116,6 +1083,13 @@ export default function Usuarios({ user }) {
                           /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                           ""
                         )
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "nombre",
+                        formulario.nombre,
+                        formulario
                       )
                     }
                   />
@@ -1136,6 +1110,7 @@ export default function Usuarios({ user }) {
 
                   <input
                     type="email"
+                    id="campo-correo"
                     placeholder="correo@ejemplo.com"
                     value={
                       formulario.correo
@@ -1145,6 +1120,13 @@ export default function Usuarios({ user }) {
                       cambiarCampo(
                         "correo",
                         e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "correo",
+                        formulario.correo,
+                        formulario
                       )
                     }
                   />
@@ -1171,6 +1153,7 @@ export default function Usuarios({ user }) {
 
                   <input
                     type="text"
+                    id="campo-telefono"
                     placeholder="+57 300 000 0000"
                     maxLength={10}
                     value={
@@ -1184,6 +1167,13 @@ export default function Usuarios({ user }) {
                           /[^0-9]/g,
                           ""
                         )
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "telefono",
+                        formulario.telefono,
+                        formulario
                       )
                     }
                   />
@@ -1203,6 +1193,7 @@ export default function Usuarios({ user }) {
                   </label>
 
                   <select
+                    id="campo-rol"
                     value={
                       formulario.rol
                     }
@@ -1211,6 +1202,13 @@ export default function Usuarios({ user }) {
                       cambiarCampo(
                         "rol",
                         e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "rol",
+                        formulario.rol,
+                        formulario
                       )
                     }
                   >
@@ -1242,7 +1240,7 @@ export default function Usuarios({ user }) {
 
               </div>
 
-              {/* CONTRASEÑA (solo nota al crear) + FECHA */}
+              {/* CONTRASEÑA (solo nota al crear) + FECHA (solo lectura al editar) */}
 
               <div className="usuario-form-row">
 
@@ -1260,26 +1258,23 @@ export default function Usuarios({ user }) {
                   </div>
                 )}
 
-                <div className="usuario-form-group">
+                {modoEdicion && (
+                  <div className="usuario-form-group">
 
-                  <label>
-                    FECHA DE REGISTRO
-                  </label>
+                    <label>
+                      FECHA DE REGISTRO
+                    </label>
 
-                  <input
-                    type="date"
-                    value={
-                      formulario.fecha
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "fecha",
-                        e.target.value
-                      )
-                    }
-                  />
+                    <input
+                      type="date"
+                      value={
+                        formulario.fecha
+                      }
+                      disabled
+                    />
 
-                </div>
+                  </div>
+                )}
 
               </div>
 
@@ -1293,6 +1288,7 @@ export default function Usuarios({ user }) {
 
                 <input
                   type="text"
+                  id="campo-direccion"
                   placeholder="Dirección completa"
                   value={
                     formulario.direccion
@@ -1302,6 +1298,13 @@ export default function Usuarios({ user }) {
                     cambiarCampo(
                       "direccion",
                       e.target.value
+                    )
+                  }
+                  onBlur={() =>
+                    manejarBlur(
+                      "direccion",
+                      formulario.direccion,
+                      formulario
                     )
                   }
                 />

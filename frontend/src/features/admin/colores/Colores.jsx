@@ -14,9 +14,27 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
+import {
+  obtenerColoresAdmin,
+  crearColorAdmin,
+  actualizarColorAdmin,
+  cambiarEstadoColorAdmin,
+  eliminarColorAdmin
+} from "../../../services/api";
+
 const REGISTROS_POR_PAGINA = 6;
+
+// El ID lo da el servidor (numérico); en la tabla se muestra como COL-001.
+const formatoColor = (id) => `COL-${String(id).padStart(3, "0")}`;
+
+const FORMULARIO_VACIO = {
+  id: "",
+  nombre: "",
+  codigo_hex: ""
+};
 
 
 export default function Colores({ user }) {
@@ -28,26 +46,16 @@ export default function Colores({ user }) {
   const puedeCrear = tienePermiso(user, "Colores", "Crear");
   const puedeActualizar = tienePermiso(user, "Colores", "Actualizar");
   const puedeEliminar = tienePermiso(user, "Colores", "Eliminar");
-  const puedeCambiarEstado = tienePermiso(user, "Colores", "Cambiar estado");
+  // El backend protege PATCH /estado con Colores:Actualizar.
+  const puedeCambiarEstado = tienePermiso(user, "Colores", "Actualizar");
   const puedeConsultar = tienePermiso(user, "Colores", "Consultar");
 
   /* =====================================================
-     COLORES DE PRODUCTOS
+     COLORES (desde la API)
      ===================================================== */
 
-  const [colores, setColores] = useState([
-    { id: "COL-001", nombre: "Negro", enUso: true, estado: "Activo" },
-    { id: "COL-002", nombre: "Blanco", enUso: true, estado: "Activo" },
-    { id: "COL-003", nombre: "Café", enUso: true, estado: "Activo" },
-    { id: "COL-004", nombre: "Beige", enUso: false, estado: "Activo" },
-    { id: "COL-005", nombre: "Gris", enUso: false, estado: "Activo" },
-    { id: "COL-006", nombre: "Azul", enUso: false, estado: "Activo" },
-    { id: "COL-007", nombre: "Rojo", enUso: false, estado: "Activo" },
-    { id: "COL-008", nombre: "Blanco / Azul", enUso: false, estado: "Activo" },
-    { id: "COL-009", nombre: "Rojo / Negro", enUso: false, estado: "Activo" },
-    { id: "COL-010", nombre: "Negro / Dorado", enUso: false, estado: "Activo" },
-    { id: "COL-011", nombre: "Multicolor", enUso: false, estado: "Activo" }
-  ]);
+  const [colores, setColores] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   /* =====================================================
      ESTADOS DE LA VISTA
@@ -64,16 +72,61 @@ export default function Colores({ user }) {
 
   const { toast, mostrarToast } = useToast();
 
+  useEffect(() => {
+    obtenerColoresAdmin()
+      .then(setColores)
+      .catch((error) => mostrarToast(error.message, "error"))
+      .finally(() => setCargando(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* =====================================================
      FORMULARIO
      ===================================================== */
 
-  const [formulario, setFormulario] = useState({
-    id: "",
-    nombre: ""
-  });
+  const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
 
-  const [errores, setErrores] = useState({});
+  // Reglas alineadas con leerCuerpo() del backend (coloresAdmin.js):
+  // nombre obligatorio (máx. 30, sin distinguir mayúsculas) y código
+  // hexadecimal obligatorio con formato #RRGGBB.
+  const REGLAS_COLOR = {
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+      if (!nombre) return "Este campo es obligatorio.";
+
+      if (nombre.length > 30) {
+        return "El nombre no puede superar los 30 caracteres.";
+      }
+
+      const normalizarNombre = (texto) =>
+        String(texto).trim().toLowerCase().replace(/\s+/g, " ");
+
+      const yaExiste = colores.some(
+        (item) =>
+          normalizarNombre(item.nombre) === normalizarNombre(nombre) &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+      if (yaExiste) return "Ya existe un registro con este nombre.";
+
+      return "";
+    },
+    codigo_hex: (valor) => {
+      const codigo = String(valor || "").trim();
+      if (!codigo) return "Este campo es obligatorio.";
+      if (!/^#[0-9A-Fa-f]{6}$/.test(codigo)) {
+        return "El código debe tener el formato #RRGGBB.";
+      }
+      return "";
+    }
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion
+  } = useValidacionFormulario(REGLAS_COLOR);
 
   /* =====================================================
      FILTRAR COLORES POR NOMBRE
@@ -117,18 +170,10 @@ export default function Colores({ user }) {
      ===================================================== */
 
   const abrirAgregar = () => {
-    const siguienteNumero = colores.reduce((max, item) => {
-      const numero = Number(item.id.split("-")[1]) || 0;
-      return Math.max(max, numero);
-    }, 0) + 1;
+    // El ID lo asigna el servidor; el formulario pide nombre y código hex.
+    setFormulario({ ...FORMULARIO_VACIO });
 
-    setFormulario({
-      id: `COL-${String(siguienteNumero).padStart(3, "0")}`,
-      nombre: "",
-      estado: "Activo"
-    });
-
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -140,10 +185,11 @@ export default function Colores({ user }) {
   const abrirEditar = (color) => {
     setFormulario({
       id: color.id,
-      nombre: color.nombre
+      nombre: color.nombre,
+      codigo_hex: color.codigo_hex || ""
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -153,104 +199,78 @@ export default function Colores({ user }) {
      ===================================================== */
 
   const cambiarCampo = (campo, valor) => {
-    setFormulario((actual) => ({
-      ...actual,
-      [campo]: valor
-    }));
+    const siguiente = { ...formulario, [campo]: valor };
+    setFormulario(siguiente);
 
-    if (String(valor).trim()) {
-      setErrores((actuales) => {
-        if (!actuales[campo]) return actuales;
-
-        const nuevos = { ...actuales };
-        delete nuevos[campo];
-        return nuevos;
-      });
-    }
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(campo, valor, siguiente);
   };
 
   /* =====================================================
      GUARDAR COLOR
      ===================================================== */
 
-  const guardarColor = () => {
-    const nuevosErrores = {};
-
-    if (!formulario.nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else {
-      const normalizarNombre = (nombre) =>
-        String(nombre).trim().toLowerCase().replace(/\s+/g, " ");
-
-      const nombreNormalizado = normalizarNombre(formulario.nombre);
-
-      const yaExiste = colores.some(
-        (item) =>
-          normalizarNombre(item.nombre) === nombreNormalizado &&
-          (!modoEdicion || item.id !== formulario.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
-      }
-    }
-
-    if (formulario.nombre.trim().length > 20) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (Object.keys(nuevosErrores).length > 0) return;
+  const guardarColor = async () => {
+    // Valida todo el formulario (mismas reglas que el backend) y,
+    // si hay errores, enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
       return;
     }
 
-    setColores((actuales) => [
-      {
-        id: formulario.id,
-        nombre: formulario.nombre.trim(),
-        enUso: false,
-        estado: "Activo"
-      },
-      ...actuales
-    ]);
+    const datos = {
+      nombre: formulario.nombre.trim(),
+      codigo_hex: formulario.codigo_hex.trim()
+    };
 
-    mostrarToast("Color creado con éxito");
-    cerrarModal();
+    try {
+      const fila = await crearColorAdmin(datos);
+      setColores((actuales) => [...actuales, fila]);
+      mostrarToast("Color creado con éxito");
+      cerrarModal();
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
-  const confirmarEdicionColor = () => {
-    setColores((actuales) =>
-      actuales.map((color) =>
-        color.id === formulario.id
-          ? { ...color, nombre: formulario.nombre.trim() }
-          : color
-      )
-    );
+  const confirmarEdicionColor = async () => {
+    const datos = {
+      nombre: formulario.nombre.trim(),
+      codigo_hex: formulario.codigo_hex.trim()
+    };
 
-    setConfirmarEdicion(false);
-    cerrarModal();
+    try {
+      const fila = await actualizarColorAdmin(formulario.id, datos);
+      setColores((actuales) =>
+        actuales.map((color) => (color.id === fila.id ? fila : color))
+      );
+      setConfirmarEdicion(false);
+      cerrarModal();
+      mostrarToast("Color actualizado con éxito");
+    } catch (error) {
+      setConfirmarEdicion(false);
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
      CAMBIAR ESTADO DEL COLOR
      ===================================================== */
 
-  const cambiarEstado = (color) => {
+  const cambiarEstado = async (color) => {
     const nuevoEstado =
       color.estado === "Activo" ? "Inactivo" : "Activo";
 
-    setColores((actuales) =>
-      actuales.map((item) =>
-        item.id === color.id
-          ? { ...item, estado: nuevoEstado }
-          : item
-      )
-    );
+    try {
+      const fila = await cambiarEstadoColorAdmin(color.id, nuevoEstado);
+      setColores((actuales) =>
+        actuales.map((item) => (item.id === fila.id ? fila : item))
+      );
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
@@ -260,7 +280,7 @@ export default function Colores({ user }) {
   const eliminarColor = (color) => {
     if (color.enUso) {
       setAviso(
-        "No se puede eliminar el color porque está asociado a productos activos."
+        "No se puede eliminar el color porque está asociado a productos existentes. Puedes desactivarlo."
       );
       return;
     }
@@ -268,12 +288,18 @@ export default function Colores({ user }) {
     setColorEliminar(color);
   };
 
-  const confirmarEliminarColor = () => {
-    setColores((actuales) =>
-      actuales.filter((item) => item.id !== colorEliminar.id)
-    );
-
-    setColorEliminar(null);
+  const confirmarEliminarColor = async () => {
+    try {
+      await eliminarColorAdmin(colorEliminar.id);
+      setColores((actuales) =>
+        actuales.filter((item) => item.id !== colorEliminar.id)
+      );
+      setColorEliminar(null);
+      mostrarToast("Color eliminado con éxito");
+    } catch (error) {
+      setColorEliminar(null);
+      setAviso(error.message);
+    }
   };
 
   /* =====================================================
@@ -392,13 +418,20 @@ export default function Colores({ user }) {
 
                   <td>
                     <span className="color-id">
-                      {color.id}
+                      {formatoColor(color.id)}
                     </span>
                   </td>
 
                   <td>
                     <span className="color-nombre">
                       {color.nombre}
+                    </span>
+                    <span className="color-hex">
+                      <span
+                        className="color-hex-muestra"
+                        style={{ backgroundColor: color.codigo_hex }}
+                      ></span>
+                      {color.codigo_hex}
                     </span>
                   </td>
 
@@ -483,7 +516,7 @@ export default function Colores({ user }) {
                   colSpan="4"
                   className="colores-empty"
                 >
-                  Color no encontrado en el sistema.
+                  {cargando ? "Cargando colores..." : "Color no encontrado en el sistema."}
                 </td>
 
               </tr>
@@ -540,24 +573,6 @@ export default function Colores({ user }) {
 
             <div className="color-modal-body">
 
-              <div className="color-form-row">
-
-                <div className="color-form-group">
-
-                  <label>
-                    IDENTIFICADOR
-                  </label>
-
-                  <input
-                    type="text"
-                    value={formulario.id}
-                    disabled
-                  />
-
-                </div>
-
-              </div>
-
               <div className="color-form-group">
 
                 <label>
@@ -566,8 +581,9 @@ export default function Colores({ user }) {
 
                 <input
                   type="text"
+                  id="campo-nombre"
                   placeholder="Ej: Café"
-                  maxLength={20}
+                  maxLength={30}
                   value={formulario.nombre}
                   className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
@@ -579,11 +595,54 @@ export default function Colores({ user }) {
                       )
                     )
                   }
+                  onBlur={() =>
+                    manejarBlur(
+                      "nombre",
+                      formulario.nombre,
+                      formulario
+                    )
+                  }
                 />
 
                 {errores.nombre && (
                   <span className="error-text">
                     {errores.nombre}
+                  </span>
+                )}
+
+              </div>
+
+              <div className="color-form-group">
+
+                <label>
+                  CÓDIGO HEXADECIMAL
+                </label>
+
+                <input
+                  type="text"
+                  id="campo-codigo_hex"
+                  placeholder="Ej: #A0522D"
+                  maxLength={7}
+                  value={formulario.codigo_hex}
+                  className={`input ${errores.codigo_hex ? "input-error" : ""}`}
+                  onChange={(e) =>
+                    cambiarCampo(
+                      "codigo_hex",
+                      e.target.value.toUpperCase()
+                    )
+                  }
+                  onBlur={() =>
+                    manejarBlur(
+                      "codigo_hex",
+                      formulario.codigo_hex,
+                      formulario
+                    )
+                  }
+                />
+
+                {errores.codigo_hex && (
+                  <span className="error-text">
+                    {errores.codigo_hex}
                   </span>
                 )}
 

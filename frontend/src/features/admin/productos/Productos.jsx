@@ -16,6 +16,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
 import {
@@ -31,6 +32,14 @@ import { urlImagen } from "../../../utils/imagenes";
 
 const REGISTROS_POR_PAGINA = 6;
 
+// Tipos de talla que reconoce el backend (productosAdmin.js):
+// numérica si es un número (36, 38.5), letra si es XS, S, M, L, XL o XXL.
+const TALLAS_LETRA = ["XS", "S", "M", "L", "XL", "XXL"];
+
+const esTallaNumerica = (valor) => /^\d+(\.\d+)?$/.test(String(valor || "").trim());
+
+const esTallaDeLetra = (valor) =>
+  TALLAS_LETRA.includes(String(valor || "").trim().toUpperCase());
 
 export default function Productos({ user }) {
   // =====================================================
@@ -98,7 +107,60 @@ export default function Productos({ user }) {
     imagen: ""
   });
 
-  const [errores, setErrores] = useState({});
+  // Reglas alineadas con leerCuerpo()/resolverIds() del backend
+  // (productosAdmin.js): nombre obligatorio (máx. 150), categoría y color
+  // obligatorios, precio no negativo y stock entero no negativo. La talla es
+  // obligatoria salvo en categorías de tipo "ninguna" (gorras, perfumes y
+  // relojes) y su tipo debe corresponder a la categoría.
+  const REGLAS_PRODUCTO = {
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+      if (!nombre) return "Este campo es obligatorio.";
+      if (nombre.length > 150) {
+        return "El nombre no puede superar los 150 caracteres.";
+      }
+      return "";
+    },
+    categoria: (valor) =>
+      valor ? "" : "Selecciona una categoría.",
+    talla: (valor, formularioActual) => {
+      const tipo = tipoTallaCategoria(formularioActual?.categoria);
+      if (tipo === "ninguna") return "";
+      if (!valor) return "Selecciona una talla.";
+      if (tipo === "numerica" && !esTallaNumerica(valor)) {
+        return "Esta categoría usa tallas numéricas (por ejemplo 36 o 38.5).";
+      }
+      if (tipo === "letra" && !esTallaDeLetra(valor)) {
+        return "Esta categoría usa tallas de letra (XS, S, M, L, XL o XXL).";
+      }
+      return "";
+    },
+    color: (valor) =>
+      valor ? "" : "Selecciona un color.",
+    precio: (valor) => {
+      const precio = Number(valor);
+      if (!Number.isFinite(precio) || precio < 0) {
+        return "El precio no puede ser negativo.";
+      }
+      return "";
+    },
+    stock: (valor) => {
+      const stock = Number(valor);
+      if (!Number.isInteger(stock) || stock < 0) {
+        return "El stock no puede ser negativo.";
+      }
+      return "";
+    }
+  };
+
+  const {
+    errores,
+    tocados,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion
+  } = useValidacionFormulario(REGLAS_PRODUCTO);
 
   // =====================================================
   // OPCIONES
@@ -119,19 +181,31 @@ export default function Productos({ user }) {
 
   const opcionesGenero = ["hombre", "mujer", "unisex"];
 
-  // Formatea el id numérico de la variante solo para mostrarlo en el panel.
-  const formatearId = (id) =>
-    Number.isFinite(Number(id))
-      ? `PROD-${String(id).padStart(3, "0")}`
-      : id;
+  // Tipo de talla que admite la categoría elegida ('numerica', 'letra',
+  // 'ninguna' o '' si todavía no se conoce). Viene de la base de datos
+  // (categoria.tipo_talla) a través de GET /catalogos.
+  const tipoTallaCategoria = (nombreCategoria) => {
+    const categoria = categorias.find((c) => c.nombre === nombreCategoria);
+    return (categoria && categoria.tipoTalla) || "";
+  };
+
+  // Tallas que el formulario debe ofrecer para la categoría elegida:
+  // solo numéricas o solo letras según tipo_talla; sin tipo conocido se
+  // muestra la lista completa (compatibilidad).
+  const tallasVisibles = tallas.filter((talla) => {
+    const tipo = tipoTallaCategoria(formulario.categoria);
+    if (!tipo) return true;
+    return talla.tipo === tipo;
+  });
 
   // Carga inicial: productos y catálogos para los selects del formulario.
+  // opciones.tallas es [{ nombre, tipo }]; el tipo lo deduce el servidor.
   useEffect(() => {
     Promise.all([obtenerProductosAdmin(), obtenerCatalogosAdmin()])
       .then(([filas, opciones]) => {
         setProductos(filas);
         setCategorias(opciones.categorias);
-        setTallas(opciones.tallas);
+        setTallas(opciones.tallas || []);
         setColores(opciones.colores);
       })
       .catch((error) => {
@@ -211,7 +285,7 @@ export default function Productos({ user }) {
       imagen: ""
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -227,7 +301,7 @@ export default function Productos({ user }) {
       categoria: producto.categoria,
       genero:
         producto.genero || generoFijo(producto.categoria) || "",
-      talla: producto.talla,
+      talla: producto.talla || "",
       color: producto.color,
       precio: producto.precio,
       stock: producto.stock,
@@ -235,7 +309,7 @@ export default function Productos({ user }) {
       imagen: producto.imagen
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -245,32 +319,42 @@ export default function Productos({ user }) {
   // =====================================================
 
   const cambiarCampo = (campo, valor) => {
-    setFormulario((actual) => {
-      const siguiente = { ...actual, [campo]: valor };
+    const siguiente = { ...formulario, [campo]: valor };
 
-      if (campo === "categoria") {
-        siguiente.genero = generoFijo(valor);
+    if (campo === "categoria") {
+      siguiente.genero = generoFijo(valor);
+
+      // La talla se filtra por tipo: si la nueva categoría no admite la
+      // talla elegida (o no lleva talla), se limpia el campo.
+      const tipo = tipoTallaCategoria(valor);
+      const tallaActual = String(siguiente.talla || "").trim();
+
+      if (tipo === "ninguna") {
+        siguiente.talla = "";
+      } else if (
+        tallaActual &&
+        tipo === "numerica" &&
+        !esTallaNumerica(tallaActual)
+      ) {
+        siguiente.talla = "";
+      } else if (
+        tallaActual &&
+        tipo === "letra" &&
+        !esTallaDeLetra(tallaActual)
+      ) {
+        siguiente.talla = "";
       }
+    }
 
-      return siguiente;
-    });
+    setFormulario(siguiente);
 
-    const camposAOrdenar =
-      campo === "categoria" ? ["categoria", "genero"] : [campo];
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(campo, valor, siguiente);
 
-    setErrores((actuales) => {
-      const nuevos = { ...actuales };
-      let cambio = false;
-
-      camposAOrdenar.forEach((c) => {
-        if (nuevos[c] && String(valor).trim()) {
-          delete nuevos[c];
-          cambio = true;
-        }
-      });
-
-      return cambio ? nuevos : actuales;
-    });
+    // Cambiar la categoría puede vaciar la talla: su error se recalcula igual.
+    if (campo === "categoria") {
+      revisarCampo("talla", siguiente.talla, siguiente);
+    }
   };
 
   // =====================================================
@@ -278,47 +362,10 @@ export default function Productos({ user }) {
   // =====================================================
 
   const guardarProducto = async () => {
-    const nuevosErrores = {};
-
-    if (!formulario.nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    }
-
-    if (formulario.nombre.trim().length > 150) {
-      nuevosErrores.nombre = "El nombre no puede superar los 150 caracteres.";
-    }
-
-    if (!formulario.categoria) {
-      nuevosErrores.categoria = "Selecciona una categoría.";
-    }
-
-    if (!formulario.talla) {
-      nuevosErrores.talla = "Selecciona una talla.";
-    }
-
-    if (!formulario.color) {
-      nuevosErrores.color = "Selecciona un color.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (Object.keys(nuevosErrores).length > 0) return;
-
-    // STOCK NO NEGATIVO
-    if (Number(formulario.stock) < 0) {
-      alert(
-        "El stock no puede ser negativo."
-      );
-
-      return;
-    }
-
-    // PRECIO NO NEGATIVO
-    if (Number(formulario.precio) < 0) {
-      alert(
-        "El precio no puede ser negativo."
-      );
-
+    // Valida todo el formulario (mismas reglas que el backend: nombre,
+    // categoría, talla, color, precio y stock) y, si hay errores,
+    // enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) {
       return;
     }
 
@@ -556,7 +603,7 @@ export default function Productos({ user }) {
           <thead>
             <tr>
               <th>IMAGEN</th>
-              <th>ID PRODUCTO</th>
+              <th>CÓDIGO</th>
               <th>NOMBRE</th>
               <th>PRECIO</th>
               <th>STOCK</th>
@@ -585,7 +632,7 @@ export default function Productos({ user }) {
 
                 <td>
                   <strong className="producto-id">
-                    {formatearId(producto.id)}
+                    {producto.codigo || "—"}
                   </strong>
                 </td>
 
@@ -758,25 +805,9 @@ export default function Productos({ user }) {
 
             <div className="producto-modal-body">
 
-              {/* ID + ESTADO */}
+              {/* ESTADO */}
 
               <div className="producto-form-row">
-
-                <div className="producto-form-group">
-
-                  <label>ID PRODUCTO</label>
-
-                  <input
-                    type="text"
-                    value={
-                      formulario.id
-                        ? formatearId(formulario.id)
-                        : ""
-                    }
-                    disabled
-                  />
-
-                </div>
 
                 <div className="producto-form-group">
 
@@ -814,6 +845,7 @@ export default function Productos({ user }) {
 
                   <input
                     type="text"
+                    id="campo-nombre"
                     placeholder="Nombre del producto"
                     maxLength={150}
                   value={formulario.nombre}
@@ -825,6 +857,13 @@ export default function Productos({ user }) {
                         /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                         ""
                       )
+                    )
+                  }
+                  onBlur={() =>
+                    manejarBlur(
+                      "nombre",
+                      formulario.nombre,
+                      formulario
                     )
                   }
                 />
@@ -846,12 +885,20 @@ export default function Productos({ user }) {
                   <label>CATEGORÍA</label>
 
                   <select
+                    id="campo-categoria"
                     value={formulario.categoria}
                     className={`input ${errores.categoria ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "categoria",
                         e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "categoria",
+                        formulario.categoria,
+                        formulario
                       )
                     }
                   >
@@ -919,15 +966,18 @@ export default function Productos({ user }) {
 
               </div>
 
-              {/* TALLA + COLOR */}
+              {/* TALLA + COLOR (la talla se oculta en categorías de tipo
+                  "ninguna": gorras, perfumes y relojes) */}
 
               <div className="producto-form-row">
 
+                {tipoTallaCategoria(formulario.categoria) !== "ninguna" && (
                 <div className="producto-form-group">
 
                   <label>TALLA</label>
 
                   <select
+                    id="campo-talla"
                     value={formulario.talla}
                     className={`input ${errores.talla ? "input-error" : ""}`}
                     onChange={(e) =>
@@ -936,17 +986,24 @@ export default function Productos({ user }) {
                         e.target.value
                       )
                     }
+                    onBlur={() =>
+                      manejarBlur(
+                        "talla",
+                        formulario.talla,
+                        formulario
+                      )
+                    }
                   >
                     <option value="">
                       Seleccionar talla
                     </option>
 
-                    {tallas.map((talla) => (
+                    {tallasVisibles.map((talla) => (
                       <option
-                        key={talla}
-                        value={talla}
+                        key={talla.nombre}
+                        value={talla.nombre}
                       >
-                        {talla}
+                        {talla.nombre}
                       </option>
                     ))}
                   </select>
@@ -958,18 +1015,27 @@ export default function Productos({ user }) {
                   )}
 
                 </div>
+                )}
 
                 <div className="producto-form-group">
 
                   <label>COLOR</label>
 
                   <select
+                    id="campo-color"
                     value={formulario.color}
                     className={`input ${errores.color ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "color",
                         e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "color",
+                        formulario.color,
+                        formulario
                       )
                     }
                   >
@@ -1009,8 +1075,10 @@ export default function Productos({ user }) {
 
                   <input
                     type="number"
+                    id="campo-precio"
                     min="0"
                     value={formulario.precio}
+                    className={`input ${errores.precio ? "input-error" : ""}`}
 onChange={(e) =>
                     cambiarCampo(
                       "precio",
@@ -1022,7 +1090,20 @@ onChange={(e) =>
                         .replace(/(\..*)\./g, "$1")
                     )
                   }
+                  onBlur={() =>
+                    manejarBlur(
+                      "precio",
+                      formulario.precio,
+                      formulario
+                    )
+                  }
                   />
+
+                  {errores.precio && (
+                    <span className="error-text">
+                      {errores.precio}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1034,8 +1115,10 @@ onChange={(e) =>
 
                   <input
                     type="number"
+                    id="campo-stock"
                     min="0"
                     value={formulario.stock}
+                    className={`input ${errores.stock ? "input-error" : ""}`}
                     onChange={(e) => {
                       const soloDigitos =
                         e.target.value.replace(
@@ -1053,7 +1136,20 @@ onChange={(e) =>
                         valor
                       );
                     }}
+                    onBlur={() =>
+                      manejarBlur(
+                        "stock",
+                        formulario.stock,
+                        formulario
+                      )
+                    }
                   />
+
+                  {errores.stock && (
+                    <span className="error-text">
+                      {errores.stock}
+                    </span>
+                  )}
 
                 </div>
 
@@ -1094,9 +1190,11 @@ onChange={(e) =>
 
               </div>
 
-              {/* ALERTA STOCK */}
+              {/* ALERTA STOCK (solo tras tocar el campo o intentar enviar;
+                  con el formulario recién abierto no aparece) */}
 
-              {Number(formulario.stock) <=
+              {tocados.stock &&
+                Number(formulario.stock) <=
                 STOCK_MINIMO && (
                 <div className="producto-form-alert">
 
@@ -1187,9 +1285,7 @@ onChange={(e) =>
                     </strong>
 
                     <span>
-                      {formatearId(
-                        productoSeleccionado.id
-                      )}
+                      {productoSeleccionado.codigo || "—"}
                     </span>
 
                   </div>

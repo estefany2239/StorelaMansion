@@ -412,21 +412,6 @@ export default function Perfil({
                   <div className="rol-form-group">
 
                     <label>
-                      ID USUARIO
-                    </label>
-
-                    <input
-                      type="text"
-                      name="id"
-                      value={form.id}
-                      disabled
-                    />
-
-                  </div>
-
-                  <div className="rol-form-group">
-
-                    <label>
                       NOMBRE COMPLETO
                     </label>
 

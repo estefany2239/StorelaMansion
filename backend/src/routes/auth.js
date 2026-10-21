@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { pool } from '../db.js'
 import { verificarToken, bloquearCambioPendiente, obtenerPermisos } from '../middlewares/auth.js'
+import { leerIdentificacion } from '../utils/documentos.js'
 
 const router = Router()
 
@@ -27,8 +28,17 @@ const datosPublicos = (usuario) => ({
   rol: usuario.rol,
 })
 
-// POST /api/auth/register  -> siempre crea un usuario con rol Cliente
+// POST /api/auth/register  -> siempre crea un usuario con rol Cliente.
+// Tipo de documento, número y fecha de nacimiento son opcionales; si
+// llegan, se validan igual que en el formulario de clientes.
 router.post('/register', async (req, res) => {
+  const {
+    tipo: tipoDocumento,
+    documento,
+    fechaNacimiento,
+    errores: erroresIdentificacion
+  } = leerIdentificacion(req.body)
+
   try {
     const nombre = String(req.body.nombre || '').trim()
     const correo = String(req.body.correo || '').trim().toLowerCase()
@@ -43,6 +53,9 @@ router.post('/register', async (req, res) => {
     if (contrasena.length < 8) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' })
     }
+    if (Object.keys(erroresIdentificacion).length > 0) {
+      return res.status(400).json({ error: Object.values(erroresIdentificacion)[0] })
+    }
 
     const existe = await pool.query(
       'SELECT 1 FROM usuario WHERE LOWER(correo) = $1',
@@ -50,6 +63,16 @@ router.post('/register', async (req, res) => {
     )
     if (existe.rowCount > 0) {
       return res.status(409).json({ error: 'Este correo ya está registrado' })
+    }
+
+    if (documento) {
+      const docExiste = await pool.query(
+        'SELECT 1 FROM usuario WHERE documento = $1',
+        [documento]
+      )
+      if (docExiste.rowCount > 0) {
+        return res.status(409).json({ error: 'Este documento ya está registrado' })
+      }
     }
 
     const rol = await pool.query("SELECT MIN(id_rol) AS id FROM rol WHERE nombre = 'Cliente'")
@@ -62,15 +85,26 @@ router.post('/register', async (req, res) => {
     const hash = await bcrypt.hash(contrasena, 10)
 
     const { rows } = await pool.query(
-      `INSERT INTO usuario (nombres, apellidos, correo, contrasena, id_rol)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO usuario (nombres, apellidos, correo, contrasena, id_rol,
+                            tipo_documento, documento, fecha_nacimiento)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id_usuario`,
-      [nombres, apellidos, correo, hash, rol.rows[0].id]
+      [nombres, apellidos, correo, hash, rol.rows[0].id,
+       tipoDocumento, documento, fechaNacimiento]
     )
 
     res.status(201).json({ id: rows[0].id_usuario, mensaje: 'Cuenta creada con éxito' })
   } catch (error) {
     if (error.code === '23505') {
+      if (documento) {
+        const docExiste = await pool.query(
+          'SELECT 1 FROM usuario WHERE documento = $1',
+          [documento]
+        )
+        if (docExiste.rowCount > 0) {
+          return res.status(409).json({ error: 'Este documento ya está registrado' })
+        }
+      }
       return res.status(409).json({ error: 'Este correo ya está registrado' })
     }
     console.error('Error en /api/auth/register:', error.message)

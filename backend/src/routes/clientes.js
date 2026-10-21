@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { pool } from '../db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
+import { leerIdentificacion } from '../utils/documentos.js'
 
 const router = Router()
 
@@ -12,6 +13,8 @@ const SELECT_CLIENTE = `
   SELECT u.id_usuario AS id,
          TRIM(u.nombres || ' ' || u.apellidos) AS nombre,
          u.correo, u.telefono, u.direccion,
+         u.tipo_documento, u.documento,
+         TO_CHAR(u.fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
          CASE WHEN u.estado THEN 'Activo' ELSE 'Inactivo' END AS estado,
          TO_CHAR(u.created_at, 'YYYY-MM-DD') AS fecha,
          (SELECT COUNT(*) FROM pedido p WHERE p.id_usuario = u.id_usuario)::int AS pedidos
@@ -53,7 +56,20 @@ const validarCliente = (body) => {
     errores.direccion = 'La dirección es obligatoria.'
   }
 
-  return { nombre, correo, telefono, direccion, errores }
+  // Tipo de documento, número y fecha de nacimiento (opcionales, pero si
+  // llega uno de los del documento debe ir con su par y con formato válido).
+  const identificacion = leerIdentificacion(body)
+
+  return {
+    nombre,
+    correo,
+    telefono,
+    direccion,
+    tipoDocumento: identificacion.tipo,
+    documento: identificacion.documento,
+    fechaNacimiento: identificacion.fechaNacimiento,
+    errores: { ...errores, ...identificacion.errores }
+  }
 }
 
 const idCliente = (req) => Number.parseInt(req.params.id, 10)
@@ -80,18 +96,33 @@ router.get('/', requierePrivilegio('Clientes', 'Consultar'), async (req, res) =>
 })
 
 router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
-  try {
-    const { nombre, correo, telefono, direccion, errores } = validarCliente(req.body)
-    if (Object.keys(errores).length > 0) {
-      return res.status(400).json({ error: Object.values(errores)[0] })
-    }
+  const {
+    nombre, correo, telefono, direccion,
+    tipoDocumento, documento, fechaNacimiento, errores
+  } = validarCliente(req.body)
+  if (Object.keys(errores).length > 0) {
+    return res.status(400).json({ error: Object.values(errores)[0] })
+  }
 
+  try {
     const existe = await pool.query(
       'SELECT 1 FROM usuario WHERE LOWER(correo) = $1',
       [correo]
     )
     if (existe.rowCount > 0) {
       return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
+    }
+
+    if (documento) {
+      const docExistente = await pool.query(
+        'SELECT 1 FROM usuario WHERE documento = $1',
+        [documento]
+      )
+      if (docExistente.rowCount > 0) {
+        return res.status(409).json({
+          error: 'Ya existe un cliente con este número de documento.'
+        })
+      }
     }
 
     const rol = await pool.query("SELECT MIN(id_rol) AS id FROM rol WHERE nombre = 'Cliente'")
@@ -105,16 +136,29 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
     const hash = await bcrypt.hash(contrasenaTemporal, 10)
 
     const { rows } = await pool.query(
-      `INSERT INTO usuario (nombres, apellidos, correo, contrasena, telefono, direccion, id_rol, estado)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
+      `INSERT INTO usuario (nombres, apellidos, correo, contrasena, telefono, direccion,
+                            id_rol, estado, tipo_documento, documento, fecha_nacimiento)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10)
        RETURNING id_usuario`,
-      [nombres, apellidos, correo, hash, telefono, direccion, rol.rows[0].id]
+      [nombres, apellidos, correo, hash, telefono, direccion, rol.rows[0].id,
+       tipoDocumento, documento, fechaNacimiento]
     )
 
     const cliente = await obtenerClientePorId(rows[0].id_usuario)
     res.status(201).json(cliente)
   } catch (error) {
     if (error.code === '23505') {
+      if (documento) {
+        const docExistente = await pool.query(
+          'SELECT 1 FROM usuario WHERE documento = $1',
+          [documento]
+        )
+        if (docExistente.rowCount > 0) {
+          return res.status(409).json({
+            error: 'Ya existe un cliente con este número de documento.'
+          })
+        }
+      }
       return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
     }
     console.error(error.message)
@@ -123,20 +167,23 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
 })
 
 router.put('/:id', requierePrivilegio('Clientes', 'Actualizar'), async (req, res) => {
-  try {
-    const id = idCliente(req)
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ error: 'Identificador inválido' })
-    }
+  const id = idCliente(req)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
 
+  const {
+    nombre, correo, telefono, direccion,
+    tipoDocumento, documento, fechaNacimiento, errores
+  } = validarCliente(req.body)
+  if (Object.keys(errores).length > 0) {
+    return res.status(400).json({ error: Object.values(errores)[0] })
+  }
+
+  try {
     const existente = await obtenerClientePorId(id)
     if (!existente) {
       return res.status(404).json({ error: 'Cliente no encontrado' })
-    }
-
-    const { nombre, correo, telefono, direccion, errores } = validarCliente(req.body)
-    if (Object.keys(errores).length > 0) {
-      return res.status(400).json({ error: Object.values(errores)[0] })
     }
 
     const duplicado = await pool.query(
@@ -147,20 +194,45 @@ router.put('/:id', requierePrivilegio('Clientes', 'Actualizar'), async (req, res
       return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
     }
 
+    if (documento) {
+      const docDuplicado = await pool.query(
+        'SELECT 1 FROM usuario WHERE documento = $1 AND id_usuario <> $2',
+        [documento, id]
+      )
+      if (docDuplicado.rowCount > 0) {
+        return res.status(409).json({
+          error: 'Ya existe un cliente con este número de documento.'
+        })
+      }
+    }
+
     const [nombres, ...resto] = nombre.split(/\s+/)
     const apellidos = resto.join(' ')
 
     await pool.query(
       `UPDATE usuario
-       SET nombres = $1, apellidos = $2, correo = $3, telefono = $4, direccion = $5
-       WHERE id_usuario = $6`,
-      [nombres, apellidos, correo, telefono, direccion, id]
+       SET nombres = $1, apellidos = $2, correo = $3, telefono = $4, direccion = $5,
+           tipo_documento = $6, documento = $7, fecha_nacimiento = $8
+       WHERE id_usuario = $9`,
+      [nombres, apellidos, correo, telefono, direccion,
+       tipoDocumento, documento, fechaNacimiento, id]
     )
 
     const cliente = await obtenerClientePorId(id)
     res.json(cliente)
   } catch (error) {
     if (error.code === '23505') {
+      if (documento) {
+        const docDuplicado = await pool.query(
+          'SELECT 1 FROM usuario WHERE documento = $1 AND id_usuario <> $2',
+          [documento, id]
+        )
+        if (docDuplicado.rowCount > 0) {
+          return res.status(409).json({
+            error: 'Ya existe un cliente con este número de documento.'
+          })
+        }
+      }
       return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
     }
     console.error(error.message)

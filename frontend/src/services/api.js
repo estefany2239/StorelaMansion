@@ -22,13 +22,28 @@ export async function obtenerCategorias() {
   return respuesta.json()
 }
 
-export async function registrarUsuario(nombre, correo, contrasena) {
+// identificacion (opcional): tipoDocumento ('CC' | 'CE' | 'NIT' |
+// 'Pasaporte'), documento y fechaNacimiento ('YYYY-MM-DD'). El registro
+// también funciona sin esos campos.
+export async function registrarUsuario(
+  nombre,
+  correo,
+  contrasena,
+  { tipoDocumento = '', documento = '', fechaNacimiento = '' } = {}
+) {
   let respuesta
   try {
     respuesta = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, correo, contrasena })
+      body: JSON.stringify({
+        nombre,
+        correo,
+        contrasena,
+        tipo_documento: tipoDocumento,
+        documento,
+        fecha_nacimiento: fechaNacimiento
+      })
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')
@@ -203,6 +218,52 @@ export async function cambiarEstadoPedido(id, estado) {
   return procesarRespuesta(respuesta, 'No se pudo cambiar el estado del pedido')
 }
 
+// ===== VENTAS (módulo Ventas del panel) =====
+
+export async function obtenerVentas() {
+  return peticionAdmin('/api/ventas', {
+    mensajeError: 'No se pudieron cargar las ventas'
+  })
+}
+
+export async function obtenerVenta(id) {
+  return peticionAdmin(`/api/ventas/${id}`, {
+    mensajeError: 'No se pudo cargar la venta'
+  })
+}
+
+// La única transición permitida por el backend es Completada -> Anulada.
+export async function anularVenta(id) {
+  return peticionAdmin(`/api/ventas/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado: 'Anulada' },
+    mensajeError: 'No se pudo anular la venta'
+  })
+}
+
+// Variantes activas con stock > 0 para el formulario de venta.
+export async function obtenerVariantesVenta() {
+  return peticionAdmin('/api/ventas/variantes', {
+    mensajeError: 'No se pudieron cargar las variantes'
+  })
+}
+
+// Clientes activos para el formulario de venta.
+export async function obtenerClientesVenta() {
+  return peticionAdmin('/api/ventas/clientes', {
+    mensajeError: 'No se pudieron cargar los clientes'
+  })
+}
+
+// Crea una venta en el mostrador. El precio lo toma el backend del producto.
+export async function crearVenta(datos) {
+  return peticionAdmin('/api/ventas', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo registrar la venta'
+  })
+}
+
 export async function obtenerProductosAdmin() {
   return peticionAdmin('/api/admin/productos', {
     mensajeError: 'No se pudieron cargar los productos'
@@ -375,5 +436,83 @@ export async function eliminarUsuarioAdmin(id) {
   return peticionAdmin(`/api/admin/usuarios/${id}`, {
     metodo: 'DELETE',
     mensajeError: 'No se pudo eliminar el usuario'
+  })
+}
+
+// ===== TALLAS (CRUD del módulo Tallas) =====
+
+export async function obtenerTallasAdmin() {
+  return peticionAdmin('/api/admin/tallas', {
+    mensajeError: 'No se pudieron cargar las tallas'
+  })
+}
+
+export async function crearTallaAdmin(datos) {
+  return peticionAdmin('/api/admin/tallas', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear la talla'
+  })
+}
+
+export async function actualizarTallaAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/tallas/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar la talla'
+  })
+}
+
+export async function cambiarEstadoTallaAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/tallas/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado de la talla'
+  })
+}
+
+export async function eliminarTallaAdmin(id) {
+  return peticionAdmin(`/api/admin/tallas/${id}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar la talla'
+  })
+}
+
+// ===== COLORES (CRUD del módulo Colores) =====
+
+export async function obtenerColoresAdmin() {
+  return peticionAdmin('/api/admin/colores', {
+    mensajeError: 'No se pudieron cargar los colores'
+  })
+}
+
+export async function crearColorAdmin(datos) {
+  return peticionAdmin('/api/admin/colores', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el color'
+  })
+}
+
+export async function actualizarColorAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/colores/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el color'
+  })
+}
+
+export async function cambiarEstadoColorAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/colores/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado del color'
+  })
+}
+
+export async function eliminarColorAdmin(id) {
+  return peticionAdmin(`/api/admin/colores/${id}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar el color'
   })
 }

@@ -133,9 +133,13 @@ export default function CartDrawer({
                       {item.name}
                     </h4>
 
-                    <p className="cart-item-specs">
-                      Color: {item.color || "—"} | Talla: {item.size || "—"}
-                    </p>
+                    {(item.color || item.size) && (
+                      <p className="cart-item-specs">
+                        {item.color ? `Color: ${item.color}` : ""}
+                        {item.color && item.size ? " | " : ""}
+                        {item.size ? `Talla: ${item.size}` : ""}
+                      </p>
+                    )}
 
                     <p className="cart-item-price">
                       {formatoPrecio(precio)}

@@ -390,32 +390,37 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                   </div>
                 </div>
               ) : isTenis ? (
-                /* 6. SI ES TENIS (TALLAS DE CALZADO) */
-                <div className="filter__group">
-                  <h4>Tallas de Tenis</h4>
-                  <div className="filter__sizes-grid">
-                    {selectedGender === 'hombre' 
-                      ? ['38.5', '37', '37.5', '38', '39', '39.5'].map(size => (
-                          <button 
+                /* 6. SI ES TENIS (TALLAS DE CALZADO): solo las tallas que
+                   realmente existen en los productos de esta categoría y
+                   género (no se ofrecen tallas inventadas) */
+                (() => {
+                  const tallasTenis = Array.from(
+                    new Set(
+                      productosCategoriaGenero
+                        .map((prod) =>
+                          prod && prod.size ? String(prod.size).trim() : ""
+                        )
+                        .filter(Boolean)
+                    )
+                  ).sort((a, b) => Number(a) - Number(b));
+
+                  return (
+                    <div className="filter__group">
+                      <h4>Tallas de Tenis</h4>
+                      <div className="filter__sizes-grid">
+                        {tallasTenis.map((size) => (
+                          <button
                             key={size}
                             className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
                             onClick={() => toggleSize(size)}
                           >
                             {size}
                           </button>
-                        ))
-                      : ['35', '35.5', '36', '36.5', '37', '38'].map(size => (
-                          <button 
-                            key={size}
-                            className={`filter__size-btn ${selectedSizes.includes(size) ? 'active' : ''}`}
-                            onClick={() => toggleSize(size)}
-                          >
-                            {size}
-                          </button>
-                        ))
-                    }
-                  </div>
-                </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()
               ) : isCamisas && selectedGender === 'hombre' ? (
                 /* 7. SI ES CAMISAS DE HOMBRE (TALLAS M, L, XL) */
                 <div className="filter__group">
@@ -611,9 +616,19 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
                       <div className="product__info">
                         <h4>{product.name}</h4>
-                        <p className="product__details">
-                          {isGorras ? `Marca: ${product.brand}` : `Talla: ${product.size}`}
-                        </p>
+                        {/* Sin talla (gorras, perfumes, relojes, etc.) no se
+                            muestra la línea "Talla:" */}
+                        {isGorras ? (
+                          product.brand ? (
+                            <p className="product__details">
+                              Marca: {product.brand}
+                            </p>
+                          ) : null
+                        ) : product.size ? (
+                          <p className="product__details">
+                            Talla: {product.size}
+                          </p>
+                        ) : null}
                         {/* PUNTOS DE COLOR DE LOS DISPONIBLES EN EL GRUPO */}
                         {(() => {
                           const cc = getColoresDisponibles(product);

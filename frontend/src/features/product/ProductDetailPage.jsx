@@ -138,7 +138,9 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
               </div>
             )}
 
-            {isGorras ? null : (
+            {/* Sin tallas reales (gorras, perfumes, relojes, etc.) no se
+                muestra la fila de tallas */}
+            {isGorras || tallasDisponibles.length === 0 ? null : (
               <div className="pdp-group">
                 <div className="pdp-label">Talla</div>
                 <div className="pdp-sizes">

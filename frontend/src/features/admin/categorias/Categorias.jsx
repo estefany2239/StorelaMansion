@@ -15,6 +15,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
 import {
@@ -91,7 +92,48 @@ export default function Categorias({ user }) {
      ===================================================== */
 
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
-  const [errores, setErrores] = useState({});
+
+  // Reglas alineadas con leerCuerpo() del backend (categoriasAdmin.js):
+  // nombre obligatorio (máx. 20), descripción (máx. 200), al menos un
+  // género y imagen (máx. 300).
+  const REGLAS_CATEGORIA = {
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+      if (!nombre) return "Este campo es obligatorio.";
+      if (nombre.length > 20) {
+        return "El nombre no puede superar los 20 caracteres.";
+      }
+
+      const yaExiste = categorias.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() === nombre.toLowerCase() &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+      if (yaExiste) return "Ya existe un registro con este nombre.";
+
+      return "";
+    },
+    descripcion: (valor) =>
+      String(valor || "").trim().length > 200
+        ? "La descripción no puede superar los 200 caracteres."
+        : "",
+    generos: (valor) =>
+      Array.isArray(valor) && valor.length > 0
+        ? ""
+        : "Selecciona al menos un género.",
+    imagen: (valor) =>
+      String(valor || "").trim().length > 300
+        ? "La imagen no puede superar los 300 caracteres."
+        : ""
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion
+  } = useValidacionFormulario(REGLAS_CATEGORIA);
 
   /* =====================================================
      FILTRAR CATEGORÍAS POR NOMBRE
@@ -135,7 +177,7 @@ export default function Categorias({ user }) {
 
   const abrirAgregar = () => {
     setFormulario({ ...FORMULARIO_VACIO });
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -154,7 +196,7 @@ export default function Categorias({ user }) {
       estado: categoria.estado
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -164,73 +206,22 @@ export default function Categorias({ user }) {
      ===================================================== */
 
   const cambiarCampo = (campo, valor) => {
-    setFormulario((actual) => ({
-      ...actual,
-      [campo]: valor
-    }));
+    const siguiente = { ...formulario, [campo]: valor };
+    setFormulario(siguiente);
 
-    if (String(valor).trim()) {
-      setErrores((actuales) => {
-        if (!actuales[campo]) return actuales;
-
-        const nuevos = { ...actuales };
-        delete nuevos[campo];
-        return nuevos;
-      });
-    }
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(campo, valor, siguiente);
   };
 
   const alternarGenero = (genero) => {
-    setFormulario((actual) => {
-      const yaEsta = actual.generos.includes(genero);
-      const generos = yaEsta
-        ? actual.generos.filter((g) => g !== genero)
-        : [...actual.generos, genero];
-      return { ...actual, generos };
-    });
+    const generos = formulario.generos.includes(genero)
+      ? formulario.generos.filter((g) => g !== genero)
+      : [...formulario.generos, genero];
 
-    setErrores((actuales) => {
-      if (!actuales.generos) return actuales;
-      const nuevos = { ...actuales };
-      delete nuevos.generos;
-      return nuevos;
-    });
-  };
+    const siguiente = { ...formulario, generos };
+    setFormulario(siguiente);
 
-  /* =====================================================
-     VALIDAR FORMULARIO (mismos límites que antes + géneros)
-     ===================================================== */
-
-  const validarFormulario = () => {
-    const nuevosErrores = {};
-
-    if (!formulario.nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else if (formulario.nombre.trim().length > 20) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
-    } else {
-      const nombreNormalizado = formulario.nombre.trim().toLowerCase();
-      const yaExiste = categorias.some(
-        (item) =>
-          item.nombre.trim().toLowerCase() === nombreNormalizado &&
-          (!modoEdicion || item.id !== formulario.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre = "Ya existe un registro con este nombre.";
-      }
-    }
-
-    if (formulario.descripcion.trim().length > 200) {
-      nuevosErrores.descripcion = "La descripción no puede superar los 200 caracteres.";
-    }
-
-    if (formulario.generos.length === 0) {
-      nuevosErrores.generos = "Selecciona al menos un género.";
-    }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
+    revisarCampo("generos", generos, siguiente);
   };
 
   /* =====================================================
@@ -238,7 +229,9 @@ export default function Categorias({ user }) {
      ===================================================== */
 
   const guardarCategoria = async () => {
-    if (!validarFormulario()) return;
+    // Valida todo el formulario (mismas reglas que el backend) y,
+    // si hay errores, enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
@@ -555,6 +548,7 @@ export default function Categorias({ user }) {
                 <label>NOMBRE</label>
                 <input
                   type="text"
+                  id="campo-nombre"
                   placeholder="Ej: Camisetas"
                   maxLength={20}
                   value={formulario.nombre}
@@ -565,6 +559,9 @@ export default function Categorias({ user }) {
                       e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "")
                     )
                   }
+                  onBlur={() =>
+                    manejarBlur("nombre", formulario.nombre, formulario)
+                  }
                 />
                 {errores.nombre && <span className="error-text">{errores.nombre}</span>}
               </div>
@@ -573,11 +570,19 @@ export default function Categorias({ user }) {
                 <label>DESCRIPCIÓN</label>
                 <input
                   type="text"
+                  id="campo-descripcion"
                   placeholder="Ej: Todo tipo de camisetas"
                   maxLength={200}
                   value={formulario.descripcion}
                   className={`input ${errores.descripcion ? "input-error" : ""}`}
                   onChange={(e) => cambiarCampo("descripcion", e.target.value)}
+                  onBlur={() =>
+                    manejarBlur(
+                      "descripcion",
+                      formulario.descripcion,
+                      formulario
+                    )
+                  }
                 />
                 {errores.descripcion && (
                   <span className="error-text">{errores.descripcion}</span>
@@ -605,10 +610,18 @@ export default function Categorias({ user }) {
                 <label>IMAGEN</label>
                 <input
                   type="text"
+                  id="campo-imagen"
                   placeholder="camisa.png o https://..."
                   value={formulario.imagen}
+                  className={`input ${errores.imagen ? "input-error" : ""}`}
                   onChange={(e) => cambiarCampo("imagen", e.target.value)}
+                  onBlur={() =>
+                    manejarBlur("imagen", formulario.imagen, formulario)
+                  }
                 />
+                {errores.imagen && (
+                  <span className="error-text">{errores.imagen}</span>
+                )}
                 {urlImagen(formulario.imagen) && (
                   <img
                     className="categoria-imagen-preview"

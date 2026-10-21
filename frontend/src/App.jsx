@@ -920,8 +920,11 @@ export default function App() {
                           {item.name}
                         </span>
                         <span className="checkout-login-item-specs">
-                          Color: {item.color || "—"} | Talla:{" "}
-                          {item.size || "—"} · x{Number(item.quantity) || 1}
+                          {item.color ? `Color: ${item.color}` : ""}
+                          {item.color && item.size ? " | " : ""}
+                          {item.size ? `Talla: ${item.size}` : ""}
+                          {item.color || item.size ? " · " : ""}
+                          x{Number(item.quantity) || 1}
                         </span>
                       </div>
                       <span className="checkout-login-item-price">

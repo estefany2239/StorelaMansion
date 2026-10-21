@@ -214,18 +214,19 @@
   table-layout: fixed;
 }
 
-/* DISTRIBUCIÓN: ID | NOMBRE | CORREO | ESTADO | ACCIONES */
-.clientes-table th:nth-child(1) { width: 11%; }
-.clientes-table th:nth-child(2) { width: 33%; }
-.clientes-table th:nth-child(3) { width: 24%; }
-.clientes-table th:nth-child(4) { width: 18%; }
-.clientes-table th:nth-child(5) { width: 14%; }
-
-.clientes-table th:nth-child(4),
-.clientes-table td:nth-child(4) { text-align: center; }
+/* DISTRIBUCIÓN: ID | NOMBRE | DOCUMENTO | CORREO | ESTADO | ACCIONES */
+.clientes-table th:nth-child(1) { width: 10%; }
+.clientes-table th:nth-child(2) { width: 24%; }
+.clientes-table th:nth-child(3) { width: 16%; }
+.clientes-table th:nth-child(4) { width: 20%; }
+.clientes-table th:nth-child(5) { width: 16%; }
+.clientes-table th:nth-child(6) { width: 14%; }
 
 .clientes-table th:nth-child(5),
 .clientes-table td:nth-child(5) { text-align: center; }
+
+.clientes-table th:nth-child(6),
+.clientes-table td:nth-child(6) { text-align: center; }
 
 
 .clientes-table th {
@@ -303,7 +304,8 @@
 
 .cliente-correo,
 .cliente-telefono,
-.cliente-fecha {
+.cliente-fecha,
+.cliente-documento {
   color:
     #738096;
 
@@ -721,6 +723,64 @@
 }
 
 
+/* =========================================================
+   TARJETAS DEL FORMULARIO (dos secciones dentro del modal)
+   ========================================================= */
+
+.cliente-form-card {
+  padding: 20px;
+
+  margin-bottom: 20px;
+
+  box-sizing: border-box;
+
+  background:
+    #fafafa;
+
+  border:
+    1px solid #e6e6e6;
+
+  border-radius: 12px;
+}
+
+
+.cliente-form-card:last-child {
+  margin-bottom: 0;
+}
+
+
+.cliente-form-card-title {
+  margin: 0 0 18px;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+
+  color:
+    #667085;
+}
+
+
+.cliente-form-row .cliente-form-card .cliente-form-group:last-child,
+.cliente-form-card .cliente-form-row:last-child {
+  margin-bottom: 0;
+}
+
+
+.cliente-form-group-full {
+  grid-column: 1 / -1;
+}
+
+
 .cliente-form-group,
 .cliente-info-group {
   display: flex;
@@ -1106,6 +1166,21 @@
 
   color:
     #ffffff;
+}
+
+
+.admin-container.admin-dark .cliente-form-card {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+.admin-container.admin-dark .cliente-form-card-title {
+  color:
+    #b0b0b0;
 }
 
 

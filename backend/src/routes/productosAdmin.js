@@ -9,7 +9,7 @@ router.use(verificarToken, bloquearCambioPendiente)
 
 // Cada fila del panel es una variante (producto + talla + color)
 const SELECT_FILAS = `
-  SELECT v.id_variante AS id, p.id_producto, p.nombre,
+  SELECT v.id_variante AS id, p.id_producto, p.codigo, p.nombre,
          c.nombre AS categoria, p.genero,
          t.nombre AS talla, co.nombre AS color,
          p.precio::float8 AS precio, v.stock,
@@ -23,6 +23,17 @@ const SELECT_FILAS = `
 
 const GENEROS = ['hombre', 'mujer', 'unisex']
 
+const TALLAS_LETRA = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+
+// Tipo de una talla deducido de su nombre: numérica si es un número
+// (por ejemplo 36 o 38.5), de letra si es XS, S, M, L, XL o XXL.
+const tipoTalla = (nombre) => {
+  const valor = String(nombre || '').trim()
+  if (/^\d+(\.\d+)?$/.test(valor)) return 'numerica'
+  if (TALLAS_LETRA.includes(valor.toUpperCase())) return 'letra'
+  return 'otra'
+}
+
 const responderError = (res, error, mensaje) => {
   console.error(mensaje, error.message)
   res.status(500).json({ error: mensaje })
@@ -35,6 +46,43 @@ const idPorNombre = async (db, tabla, columnaId, nombre) => {
     [nombre]
   )
   return rows[0].id
+}
+
+// Categoría completa por su nombre (incluye tipo_talla)
+const categoriaPorNombre = async (db, nombre) => {
+  const { rows } = await db.query(
+    `SELECT id_categoria, COALESCE(tipo_talla, '') AS tipo_talla
+       FROM categoria WHERE nombre = $1
+       ORDER BY id_categoria LIMIT 1`,
+    [nombre]
+  )
+  return rows[0] || null
+}
+
+// Valida la talla contra el tipo_talla de la categoría:
+//   'numerica' solo tallas numéricas; 'letra' solo XS, S, M, L, XL o XXL;
+//   'ninguna' no admite talla (se guarda id_talla NULL).
+// Categorías sin tipo definido solo exigen que la talla exista.
+const validarTallaCategoria = (tipoCategoria, talla) => {
+  const valor = String(talla || '').trim()
+
+  if (tipoCategoria === 'ninguna') {
+    return valor
+      ? 'Esta categoría no lleva talla: no se debe enviar ninguna'
+      : null
+  }
+
+  if (!valor) return 'Selecciona una talla'
+
+  if (tipoCategoria === 'numerica' && tipoTalla(valor) !== 'numerica') {
+    return `La categoría es de tallas numéricas: "${valor}" no es una talla válida (usa, por ejemplo, 36 o 38.5)`
+  }
+
+  if (tipoCategoria === 'letra' && tipoTalla(valor) !== 'letra') {
+    return `La categoría es de tallas de letra: "${valor}" no es una talla válida (usa XS, S, M, L, XL o XXL)`
+  }
+
+  return null
 }
 
 // Valida y limpia lo que llega del formulario
@@ -55,12 +103,13 @@ const leerCuerpo = (body) => {
   if (!datos.nombre) error = 'El nombre es obligatorio'
   else if (datos.nombre.length > 150) error = 'El nombre no puede superar los 150 caracteres'
   else if (!datos.categoria) error = 'Selecciona una categoría'
-  else if (!datos.talla) error = 'Selecciona una talla'
   else if (!datos.color) error = 'Selecciona un color'
   else if (!Number.isFinite(datos.precio) || datos.precio < 0) error = 'El precio no es válido'
   else if (!Number.isInteger(datos.stock) || datos.stock < 0) error = 'El stock no es válido'
   else if (datos.genero && !GENEROS.includes(datos.genero)) error = 'El género no es válido'
 
+  // La talla no se valida aquí: es obligatoria solo si la categoría tiene
+  // tipo_talla distinto de 'ninguna' (se resuelve en resolverIds).
   datos.genero = datos.genero || null
   return { datos, error }
 }
@@ -93,16 +142,25 @@ const validarGeneroCategoria = async (db, idCategoria, genero) => {
   }.`
 }
 
-// Busca los ids de categoría, talla y color; si alguno no existe, devuelve el error
+// Busca los ids de categoría, talla y color; valida la talla contra el
+// tipo de la categoría; si algo no existe o no corresponde, devuelve el error.
 const resolverIds = async (db, datos) => {
-  const idCategoria = await idPorNombre(db, 'categoria', 'id_categoria', datos.categoria)
-  const idTalla = await idPorNombre(db, 'talla', 'id_talla', datos.talla)
+  const categoria = await categoriaPorNombre(db, datos.categoria)
   const idColor = await idPorNombre(db, 'color', 'id_color', datos.color)
 
-  if (!idCategoria) return { error: 'La categoría no existe' }
-  if (!idTalla) return { error: 'La talla no existe' }
+  if (!categoria) return { error: 'La categoría no existe' }
   if (!idColor) return { error: 'El color no existe' }
-  return { idCategoria, idTalla, idColor }
+
+  const errorTalla = validarTallaCategoria(categoria.tipo_talla, datos.talla)
+  if (errorTalla) return { error: errorTalla }
+
+  let idTalla = null
+  if (datos.talla) {
+    idTalla = await idPorNombre(db, 'talla', 'id_talla', datos.talla)
+    if (!idTalla) return { error: 'La talla no existe' }
+  }
+
+  return { idCategoria: categoria.id_categoria, idTalla, idColor }
 }
 
 const leerId = (req) => {
@@ -115,15 +173,23 @@ router.get('/catalogos', requierePrivilegio('Productos', 'Consultar'), async (re
   try {
     const [categorias, tallas, colores] = await Promise.all([
       pool.query(
-        `SELECT codigo, nombre, COALESCE(generos, '{}') AS generos
+        `SELECT codigo, nombre, COALESCE(generos, '{}') AS generos,
+                COALESCE(tipo_talla, '') AS tipo_talla
            FROM categoria WHERE estado = TRUE ORDER BY orden, nombre`
       ),
       pool.query('SELECT nombre, MIN(id_talla) AS orden FROM talla WHERE estado = TRUE GROUP BY nombre ORDER BY orden'),
       pool.query('SELECT DISTINCT nombre FROM color WHERE estado = TRUE ORDER BY nombre'),
     ])
     res.json({
-      categorias: categorias.rows.map((f) => ({ id: f.codigo, nombre: f.nombre, generos: f.generos })),
-      tallas: tallas.rows.map((f) => f.nombre),
+      categorias: categorias.rows.map((f) => ({
+        id: f.codigo,
+        nombre: f.nombre,
+        generos: f.generos,
+        tipoTalla: f.tipo_talla || null,
+      })),
+      // Cada talla lleva su tipo deducido del nombre (numérica o letra)
+      // para que el formulario filtre según la categoría elegida.
+      tallas: tallas.rows.map((f) => ({ nombre: f.nombre, tipo: tipoTalla(f.nombre) })),
       colores: colores.rows.map((f) => f.nombre),
     })
   } catch (error) {
@@ -162,10 +228,20 @@ router.post('/', requierePrivilegio('Productos', 'Crear'), async (req, res) => {
       return res.status(400).json({ error: errorGenero })
     }
 
+    // El código se genera en el servidor dentro de la misma transacción:
+    // 'PROD-' + id del producto con relleno de 6 dígitos. No se acepta del
+    // formulario y en editar no se puede cambiar.
     const producto = await db.query(
-      `INSERT INTO producto (nombre, precio, id_categoria, genero, estado)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id_producto`,
+      `WITH nuevo AS (
+         INSERT INTO producto (nombre, precio, id_categoria, genero, estado)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id_producto
+       )
+       UPDATE producto p
+          SET codigo = 'PROD-' || LPAD(p.id_producto::text, 6, '0')
+         FROM nuevo
+        WHERE p.id_producto = nuevo.id_producto
+        RETURNING p.id_producto`,
       [datos.nombre, datos.precio, ids.idCategoria, datos.genero, datos.activo]
     )
     const variante = await db.query(

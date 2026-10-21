@@ -15,6 +15,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
 const REGISTROS_POR_PAGINA = 6;
@@ -176,7 +177,46 @@ export default function Domicilios({ user }) {
     fecha: "2026-09-07"
   });
 
-  const [errores, setErrores] = useState({});
+  // Módulo mock (sin backend): se conservan las reglas locales
+  // del formulario, ahora validadas en tiempo real.
+  const REGLAS_DOMICILIO = {
+    idPedido: (valor) =>
+      String(valor || "").trim()
+        ? ""
+        : "Selecciona un pedido.",
+    idCliente: (valor) =>
+      String(valor || "").trim()
+        ? ""
+        : "Selecciona un pedido válido.",
+    cliente: (valor) =>
+      String(valor || "").trim()
+        ? ""
+        : "Este campo es obligatorio.",
+    direccion: (valor) =>
+      String(valor || "").trim()
+        ? ""
+        : "Este campo es obligatorio.",
+    ciudad: (valor) =>
+      String(valor || "").trim()
+        ? ""
+        : "Este campo es obligatorio.",
+    responsable: (valor) => {
+      const responsable = String(valor || "").trim();
+      if (!responsable) return "Este campo es obligatorio.";
+      if (responsable.length > 20) {
+        return "El nombre del responsable no puede superar los 20 caracteres.";
+      }
+      return "";
+    },
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion,
+  } = useValidacionFormulario(REGLAS_DOMICILIO);
 
 
   // =====================================================
@@ -340,7 +380,7 @@ export default function Domicilios({ user }) {
     });
 
 
-    setErrores({});
+    limpiarValidacion();
 
     setModoEdicion(false);
 
@@ -357,8 +397,9 @@ export default function Domicilios({ user }) {
 
     if (domicilio.estado === "Entregado") {
 
-      alert(
-        "No se puede modificar un domicilio que ya fue entregado."
+      mostrarToast(
+        "No se puede modificar un domicilio que ya fue entregado.",
+        "error"
       );
 
       return;
@@ -391,7 +432,7 @@ export default function Domicilios({ user }) {
     });
 
 
-    setErrores({});
+    limpiarValidacion();
 
     setModoEdicion(true);
 
@@ -404,35 +445,20 @@ export default function Domicilios({ user }) {
   // CAMBIAR CAMPO
   // =====================================================
 
-  const limpiarError = (campo) => {
-    setErrores(
-      (actuales) => {
-        if (!actuales[campo]) {
-          return actuales;
-        }
-
-        const nuevos = { ...actuales };
-        delete nuevos[campo];
-        return nuevos;
-      }
-    );
-  };
-
   const cambiarCampo = (
     campo,
     valor
   ) => {
 
-    setFormulario(
-      (actual) => ({
-        ...actual,
-        [campo]: valor
-      })
-    );
+    const siguiente = {
+      ...formulario,
+      [campo]: valor
+    };
 
-    if (String(valor).trim()) {
-      limpiarError(campo);
-    }
+    setFormulario(siguiente);
+
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(campo, valor, siguiente);
 
   };
 
@@ -443,16 +469,6 @@ export default function Domicilios({ user }) {
 
   const seleccionarPedido = (idPedido) => {
 
-    const camposRelacionados = [
-      "idPedido",
-      "idCliente",
-      "cliente",
-      "direccion",
-      "ciudad"
-    ];
-
-    camposRelacionados.forEach(limpiarError);
-
     const pedido =
       pedidosDisponibles.find(
         (item) =>
@@ -462,15 +478,20 @@ export default function Domicilios({ user }) {
 
     if (!pedido) {
 
-      setFormulario(
-        (actual) => ({
-          ...actual,
-          idPedido: idPedido,
-          idCliente: "",
-          cliente: "",
-          direccion: "",
-          ciudad: ""
-        })
+      const siguiente = {
+        ...formulario,
+        idPedido: idPedido,
+        idCliente: "",
+        cliente: "",
+        direccion: "",
+        ciudad: ""
+      };
+
+      setFormulario(siguiente);
+
+      // Recalcula al instante los campos derivados ya tocados.
+      ["idPedido", "idCliente", "cliente", "direccion", "ciudad"].forEach(
+        (campo) => revisarCampo(campo, siguiente[campo], siguiente)
       );
 
       return;
@@ -478,27 +499,32 @@ export default function Domicilios({ user }) {
     }
 
 
-    setFormulario(
-      (actual) => ({
+    const siguiente = {
 
-        ...actual,
+      ...formulario,
 
-        idPedido:
-          pedido.id,
+      idPedido:
+        pedido.id,
 
-        idCliente:
-          pedido.idCliente,
+      idCliente:
+        pedido.idCliente,
 
-        cliente:
-          pedido.cliente,
+      cliente:
+        pedido.cliente,
 
-        direccion:
-          pedido.direccion,
+      direccion:
+        pedido.direccion,
 
-        ciudad:
-          pedido.ciudad
+      ciudad:
+        pedido.ciudad
 
-      })
+    };
+
+    setFormulario(siguiente);
+
+    // Recalcula al instante los campos derivados ya tocados.
+    ["idPedido", "idCliente", "cliente", "direccion", "ciudad"].forEach(
+      (campo) => revisarCampo(campo, siguiente[campo], siguiente)
     );
 
   };
@@ -510,44 +536,10 @@ export default function Domicilios({ user }) {
 
   const guardarDomicilio = () => {
 
-    const nuevosErrores = {};
-
-    if (!formulario.idPedido) {
-      nuevosErrores.idPedido = "Selecciona un pedido.";
-    }
-
-    if (!formulario.idCliente) {
-      nuevosErrores.idCliente = "Selecciona un pedido válido.";
-    }
-
-    if (!formulario.cliente) {
-      nuevosErrores.cliente = "Este campo es obligatorio.";
-    }
-
-    if (!formulario.direccion) {
-      nuevosErrores.direccion = "Este campo es obligatorio.";
-    }
-
-    if (!formulario.ciudad) {
-      nuevosErrores.ciudad = "Este campo es obligatorio.";
-    }
-
-    if (!formulario.responsable) {
-      nuevosErrores.responsable = "Este campo es obligatorio.";
-    }
-
-    if (formulario.responsable.trim().length > 20) {
-      nuevosErrores.responsable = "El nombre del responsable no puede superar los 20 caracteres.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (
-      Object.keys(nuevosErrores).length > 0
-    ) {
-
+    // Valida todo el formulario y, si hay errores,
+    // enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) {
       return;
-
     }
 
 
@@ -1114,26 +1106,9 @@ export default function Domicilios({ user }) {
             <div className="domicilio-modal-body">
 
 
-              {/* ID + ESTADO */}
+              {/* ESTADO */}
 
               <div className="domicilio-form-row">
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    ID DOMICILIO
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      formulario.id
-                    }
-                    disabled
-                  />
-
-                </div>
-
 
                 <div className="domicilio-form-group">
 
@@ -1176,7 +1151,7 @@ export default function Domicilios({ user }) {
               </div>
 
 
-              {/* ID PEDIDO + ID CLIENTE */}
+              {/* ID PEDIDO (selector; el id del cliente se deriva solo) */}
 
               <div className="domicilio-form-row">
 
@@ -1187,6 +1162,7 @@ export default function Domicilios({ user }) {
                   </label>
 
                   <select
+                    id="campo-idPedido"
                     value={
                       formulario.idPedido
                     }
@@ -1194,6 +1170,13 @@ export default function Domicilios({ user }) {
                     onChange={(e) =>
                       seleccionarPedido(
                         e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "idPedido",
+                        formulario.idPedido,
+                        formulario
                       )
                     }
                   >
@@ -1224,25 +1207,6 @@ export default function Domicilios({ user }) {
                       {errores.idPedido}
                     </span>
                   )}
-
-                </div>
-
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    ID CLIENTE
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      formulario.idCliente
-                    }
-                    readOnly
-                    placeholder="ID cliente"
-                    className={`input ${errores.idCliente ? "input-error" : ""}`}
-                  />
 
                   {errores.idCliente && (
                     <span className="error-text">
@@ -1294,6 +1258,7 @@ export default function Domicilios({ user }) {
 
                   <input
                     type="text"
+                    id="campo-direccion"
                     placeholder="Dirección de entrega"
                     value={
                       formulario.direccion
@@ -1303,6 +1268,13 @@ export default function Domicilios({ user }) {
                       cambiarCampo(
                         "direccion",
                         e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "direccion",
+                        formulario.direccion,
+                        formulario
                       )
                     }
                   />
@@ -1324,6 +1296,7 @@ export default function Domicilios({ user }) {
 
                   <input
                     type="text"
+                    id="campo-ciudad"
                     placeholder="Ciudad"
                     value={
                       formulario.ciudad
@@ -1336,6 +1309,13 @@ export default function Domicilios({ user }) {
                           /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                           ""
                         )
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "ciudad",
+                        formulario.ciudad,
+                        formulario
                       )
                     }
                   />
@@ -1391,6 +1371,7 @@ export default function Domicilios({ user }) {
 
                   <input
                     type="text"
+                    id="campo-responsable"
                     placeholder="Nombre del responsable"
                     maxLength={20}
                     value={
@@ -1404,6 +1385,13 @@ export default function Domicilios({ user }) {
                           /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                           ""
                         )
+                      )
+                    }
+                    onBlur={() =>
+                      manejarBlur(
+                        "responsable",
+                        formulario.responsable,
+                        formulario
                       )
                     }
                   />

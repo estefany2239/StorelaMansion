@@ -20,10 +20,50 @@ import useToast from "../hooks/useToast";
 
 import { tienePermiso } from "../utils/permisos";
 
+import {
+  obtenerVentas,
+  obtenerVenta,
+  anularVenta as anularVentaApi,
+  obtenerVariantesVenta,
+  obtenerClientesVenta,
+  crearVenta
+} from "../../../services/api";
+
 const REGISTROS_POR_PAGINA = 6;
 
 
-export default function Ventas({ vendedorId, user }) {
+// Fecha de hoy en formato YYYY-MM-DD (la usa el date del formulario).
+const fechaHoy = () => {
+  const hoy = new Date();
+  const año = hoy.getFullYear();
+  const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoy.getDate()).padStart(2, "0");
+  return `${año}-${mes}-${dia}`;
+};
+
+
+// Convierte una venta del backend a la forma que usa esta pantalla.
+const mapearVentaBackend = (venta) => ({
+  id: venta.codigo || String(venta.id),
+  idVenta: venta.id,
+  cliente: venta.cliente,
+  fecha: venta.fecha,
+  total: Number(venta.total) || 0,
+  metodoPago: venta.metodo_pago || "—",
+  estado: venta.estado,
+  vendedor: venta.vendedor,
+  productos: (venta.productos || []).map((producto) => ({
+    nombre: producto.nombre,
+    talla: producto.talla || "-",
+    color: producto.color || "-",
+    cantidad: producto.cantidad,
+    precio: Number(producto.precio_unitario) || 0,
+    subtotal: Number(producto.subtotal) || 0
+  }))
+});
+
+
+export default function Ventas({ user }) {
 
   // =========================================================
   // PERMISOS (los botones sin permiso se ocultan)
@@ -38,148 +78,13 @@ export default function Ventas({ vendedorId, user }) {
   // DATOS DE VENTAS
   // =========================================================
 
-  const [ventas, setVentas] = useState([
-    {
-      id: "V-00125",
-      vendedor_id: "USR-003",
-      cliente: "María López",
-      fecha: "2026-09-06",
-      total: 250000,
-      metodoPago: "Transferencia",
-      estado: "Completada",
+  // La lista se carga desde el backend (GET /api/ventas). El mapeo a la
+  // forma que usa esta pantalla se hace en `mapearVentaBackend`.
+  const [ventas, setVentas] = useState([]);
 
-      productos: [
-        {
-          nombre: "Camiseta Clásica",
-          cantidad: 2,
-          precio: 85000
-        },
-        {
-          nombre: "Gorra Premium",
-          cantidad: 1,
-          precio: 80000
-        }
-      ]
-    },
+  const [cargandoVentas, setCargandoVentas] = useState(true);
 
-    {
-      id: "V-00124",
-      vendedor_id: "USR-006",
-      cliente: "Juan Pérez",
-      fecha: "2026-09-05",
-      total: 180000,
-      metodoPago: "Efectivo",
-      estado: "Completada",
-
-      productos: [
-        {
-          nombre: "Buso Clásico",
-          cantidad: 1,
-          precio: 180000
-        }
-      ]
-    },
-
-    {
-      id: "V-00123",
-      vendedor_id: "USR-003",
-      cliente: "Laura Gómez",
-      fecha: "2026-09-05",
-      total: 320000,
-      metodoPago: "Transferencia",
-      estado: "Anulada",
-
-      productos: [
-        {
-          nombre: "Tenis Urban",
-          cantidad: 1,
-          precio: 280000
-        },
-        {
-          nombre: "Camiseta Clásica",
-          cantidad: 1,
-          precio: 40000
-        }
-      ]
-    },
-
-    {
-      id: "V-00122",
-      vendedor_id: "USR-006",
-      cliente: "Carlos Rodríguez",
-      fecha: "2026-09-04",
-      total: 485000,
-      metodoPago: "Transferencia",
-      estado: "Anulada",
-
-      productos: [
-        {
-          nombre: "Reloj Ejecutivo",
-          cantidad: 1,
-          precio: 350000
-        },
-        {
-          nombre: "Camiseta Clásica",
-          cantidad: 1,
-          precio: 135000
-        }
-      ]
-    },
-
-    {
-      id: "V-00121",
-      vendedor_id: "USR-003",
-      cliente: "María García",
-      fecha: "2026-08-28",
-      total: 620000,
-      metodoPago: "Crédito",
-      estado: "Anulada",
-
-      productos: [
-        {
-          nombre: "Abrigo Wool Premium",
-          cantidad: 1,
-          precio: 620000
-        }
-      ]
-    },
-
-    {
-      id: "V-00120",
-      vendedor_id: "USR-006",
-      cliente: "Valentina Torres",
-      fecha: "2026-08-21",
-      total: 280000,
-      metodoPago: "Efectivo",
-      estado: "Anulada",
-
-      productos: [
-        {
-          nombre: "Tenis Urbanos",
-          cantidad: 1,
-          precio: 280000
-        }
-      ]
-    },
-
-    {
-      id: "V-00119",
-      vendedor_id: "USR-003",
-      cliente: "Sofía Martínez",
-      fecha: "2026-08-15",
-      total: 340000,
-      metodoPago: "Transferencia",
-      estado: "Cancelada",
-
-      productos: [
-        {
-          nombre: "Vestido Cóctel Elegante",
-          cantidad: 1,
-          precio: 340000
-        }
-      ]
-    }
-  ]);
+  const [errorVentas, setErrorVentas] = useState("");
 
 
   // =========================================================
@@ -206,18 +111,91 @@ export default function Ventas({ vendedorId, user }) {
 
 
   // =========================================================
+  // CARGA DE VENTAS DESDE EL BACKEND
+  // =========================================================
+
+  // El 403 del backend llega como "No tienes permisos para acceder a este
+  // recurso" y se muestra tal cual en la tabla.
+  // Se reutiliza tras anular una venta para refrescar la lista.
+  const recargarVentas = () => {
+    setCargandoVentas(true);
+    return obtenerVentas()
+      .then((respuesta) => {
+        setVentas((respuesta || []).map(mapearVentaBackend));
+        setErrorVentas("");
+      })
+      .catch((error) => {
+        setErrorVentas(error?.message || "No se pudieron cargar las ventas");
+      })
+      .finally(() => {
+        setCargandoVentas(false);
+      });
+  };
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerVentas()
+      .then((respuesta) => {
+        if (!activo) return;
+        setVentas((respuesta || []).map(mapearVentaBackend));
+        setErrorVentas("");
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setErrorVentas(error?.message || "No se pudieron cargar las ventas");
+      })
+      .finally(() => {
+        if (activo) setCargandoVentas(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+
+  // =========================================================
   // FORMULARIO
   // =========================================================
 
   const [formulario, setFormulario] = useState({
-    cliente: "",
-    fecha: "2026-09-06",
+    idCliente: "",
+    nombreCliente: "",
+    fecha: fechaHoy(),
     metodoPago: "Transferencia",
-    estado: "Completada",
-    productos: []
+    items: []
   });
 
   const [errores, setErrores] = useState({});
+
+  const [creandoVenta, setCreandoVenta] = useState(false);
+
+
+  // =========================================================
+  // CATÁLOGOS DEL FORMULARIO
+  // =========================================================
+
+  const [variantes, setVariantes] = useState([]);
+
+  const [clientes, setClientes] = useState([]);
+
+  const [cargandoCatalogos, setCargandoCatalogos] =
+    useState(false);
+
+  const [errorCatalogos, setErrorCatalogos] =
+    useState("");
+
+
+  // Selector de producto ("Agregar producto").
+  const [mostrarSelector, setMostrarSelector] =
+    useState(false);
+
+  const [varianteSel, setVarianteSel] =
+    useState("");
+
+  const [cantidadSel, setCantidadSel] =
+    useState("1");
 
 
   // =========================================================
@@ -264,13 +242,6 @@ export default function Ventas({ vendedorId, user }) {
   // =========================================================
 
   const ventasFiltradas = ventas.filter((venta) => {
-
-    if (
-      vendedorId &&
-      venta.vendedor_id !== vendedorId
-    ) {
-      return false;
-    }
 
     const texto =
       busqueda.toLowerCase().trim();
@@ -327,16 +298,50 @@ export default function Ventas({ vendedorId, user }) {
   const abrirModal = () => {
 
     setFormulario({
-      cliente: "",
-      fecha: "2026-09-06",
+      idCliente: "",
+      nombreCliente: "",
+      fecha: fechaHoy(),
       metodoPago: "Transferencia",
-      estado: "Completada",
-      productos: []
+      items: []
     });
 
     setErrores({});
 
+    setMostrarSelector(false);
+
+    setVarianteSel("");
+
+    setCantidadSel("1");
+
     setMostrarModal(true);
+
+
+    // Catálogos del formulario (variantes y clientes).
+    setCargandoCatalogos(true);
+
+    setErrorCatalogos("");
+
+    Promise.all([
+      obtenerVariantesVenta(),
+      obtenerClientesVenta()
+    ])
+      .then(([listaVariantes, listaClientes]) => {
+        setVariantes(
+          Array.isArray(listaVariantes) ? listaVariantes : []
+        );
+        setClientes(
+          Array.isArray(listaClientes) ? listaClientes : []
+        );
+      })
+      .catch((error) => {
+        setErrorCatalogos(
+          error?.message ||
+          "No se pudieron cargar las opciones del formulario"
+        );
+      })
+      .finally(() => {
+        setCargandoCatalogos(false);
+      });
 
   };
 
@@ -381,68 +386,116 @@ export default function Ventas({ vendedorId, user }) {
 
 
   // =========================================================
-  // AGREGAR PRODUCTO
+  // AGREGAR PRODUCTO (variante del catálogo)
   // =========================================================
 
-  const agregarProducto = () => {
+  // Si la variante ya está en la lista, suma las cantidades.
+  const agregarItem = () => {
 
-    const nuevoProducto = {
-
-      nombre: "Nuevo producto",
-
-      cantidad: 1,
-
-      talla: "M",
-
-      color: "Negro",
-
-      precio: 0
-
-    };
-
-
-    setFormulario(
-      (actual) => ({
-        ...actual,
-
-        productos: [
-          ...actual.productos,
-          nuevoProducto
-        ]
-
-      })
+    const variante = variantes.find(
+      (v) =>
+        String(v.id_variante) === String(varianteSel)
     );
+
+    if (!variante) {
+      setErrores((actuales) => ({
+        ...actuales,
+        selector: "Selecciona un producto."
+      }));
+      return;
+    }
+
+    const cantidad = Number(cantidadSel);
+
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+      setErrores((actuales) => ({
+        ...actuales,
+        selector: "La cantidad debe ser un número entero mayor a cero."
+      }));
+      return;
+    }
+
+    const enLista = formulario.items.find(
+      (item) => item.id_variante === variante.id_variante
+    );
+
+    const disponible =
+      Number(variante.stock) -
+      (enLista ? enLista.cantidad : 0);
+
+    if (cantidad > disponible) {
+      setErrores((actuales) => ({
+        ...actuales,
+        selector:
+          `Solo hay ${disponible} unidades disponibles de ${variante.nombre}.`
+      }));
+      return;
+    }
+
+    setFormulario((actual) => ({
+      ...actual,
+      items: enLista
+        ? actual.items.map((item) =>
+            item.id_variante === variante.id_variante
+              ? { ...item, cantidad: item.cantidad + cantidad }
+              : item
+          )
+        : [
+            ...actual.items,
+            {
+              id_variante: variante.id_variante,
+              nombre: variante.nombre,
+              talla: variante.talla || "-",
+              color: variante.color || "-",
+              precio: Number(variante.precio),
+              stock: Number(variante.stock),
+              cantidad
+            }
+          ]
+    }));
+
+    setVarianteSel("");
+
+    setCantidadSel("1");
+
+    setErrores((actuales) => {
+      if (!actuales.selector) {
+        return actuales;
+      }
+
+      const nuevos = { ...actuales };
+      delete nuevos.selector;
+      return nuevos;
+    });
 
   };
 
 
   // =========================================================
-  // ACTUALIZAR PRODUCTO
+  // ACTUALIZAR CANTIDAD DE UNA LÍNEA
   // =========================================================
 
-  const actualizarProducto = (
-    index,
-    campo,
-    valor
-  ) => {
+  const actualizarCantidadItem = (index, valor) => {
 
-    setFormulario(
-      (actual) => ({
-        ...actual,
+    const texto = String(valor).replace(/[^0-9]/g, "");
 
-        productos:
-          actual.productos.map(
-            (producto, i) =>
-              i === index
-                ? {
-                    ...producto,
-                    [campo]: valor
-                  }
-                : producto
-          )
+    setFormulario((actual) => ({
+      ...actual,
+      items: actual.items.map((item, i) => {
+
+        if (i !== index) {
+          return item;
+        }
+
+        const cantidad = Math.min(
+          Math.max(Number(texto || 1), 1),
+          item.stock
+        );
+
+        return { ...item, cantidad };
 
       })
-    );
+    }));
 
   };
 
@@ -457,8 +510,8 @@ export default function Ventas({ vendedorId, user }) {
       (actual) => ({
         ...actual,
 
-        productos:
-          actual.productos.filter(
+        items:
+          actual.items.filter(
             (_, i) => i !== index
           )
 
@@ -469,150 +522,104 @@ export default function Ventas({ vendedorId, user }) {
 
 
   // =========================================================
-  // REGISTRAR VENTA
+  // REGISTRAR VENTA (POST /api/ventas)
   // =========================================================
 
-  const registrarVenta = () => {
+  const registrarVenta = async () => {
 
     const nuevosErrores = {};
 
-    if (
-      !formulario.cliente.trim()
-    ) {
-      nuevosErrores.cliente = "Este campo es obligatorio.";
+    const nombreEscrito =
+      formulario.nombreCliente.trim();
+
+    const clienteSeleccionado = clientes.find(
+      (cliente) =>
+        String(cliente.id) === String(formulario.idCliente)
+    );
+
+    if (!clienteSeleccionado) {
+      if (!nombreEscrito) {
+        nuevosErrores.nombreCliente =
+          "Escribe el nombre del cliente o selecciónalo de la lista.";
+      } else if (nombreEscrito.length > 100) {
+        nuevosErrores.nombreCliente =
+          "El nombre del cliente no puede superar los 100 caracteres.";
+      }
     }
 
-    if (
-      formulario.cliente.trim().length > 20
-    ) {
-      nuevosErrores.cliente = "El nombre del cliente no puede superar los 20 caracteres.";
-    }
-
-    if (
-      !formulario.fecha
-    ) {
+    if (!formulario.fecha) {
       nuevosErrores.fecha = "Selecciona una fecha.";
     }
 
-    const productoNombreLargo = formulario.productos.find(
-      (producto) => producto.nombre.trim().length > 20
-    );
-
-    if (productoNombreLargo) {
-      nuevosErrores.productos =
-        "El nombre de cada producto no puede superar los 20 caracteres.";
+    if (formulario.items.length === 0) {
+      nuevosErrores.items =
+        "Agrega al menos un producto a la venta.";
     }
 
     setErrores(nuevosErrores);
 
-    if (
-      Object.keys(nuevosErrores).length > 0
-    ) {
-
+    if (Object.keys(nuevosErrores).length > 0) {
       return;
-
     }
 
 
-    const totalProductos =
-      formulario.productos.reduce(
-        (suma, producto) =>
-          suma +
-          Number(producto.precio) *
-          Number(producto.cantidad),
-        0
-      );
+    const datos = {
 
+      nombre_cliente: clienteSeleccionado
+        ? clienteSeleccionado.nombre
+        : nombreEscrito,
 
-    const nuevoId =
-      `V-${String(
-        ventas.length + 126
-      ).padStart(5, "0")}`;
+      fecha: formulario.fecha,
 
+      metodo_pago: formulario.metodoPago,
 
-    const nuevaVenta = {
-
-      id: nuevoId,
-
-      vendedor_id: vendedorId,
-
-      cliente:
-        formulario.cliente.trim(),
-
-      fecha:
-        formulario.fecha,
-
-      total:
-        totalProductos,
-
-      metodoPago:
-        formulario.metodoPago,
-
-      estado:
-        formulario.estado,
-
-      productos:
-        formulario.productos
+      items: formulario.items.map((item) => ({
+        id_variante: item.id_variante,
+        cantidad: item.cantidad
+      }))
 
     };
 
-
-    setVentas((actuales) => [
-      nuevaVenta,
-      ...actuales
-    ]);
-
-    mostrarToast("Venta registrada con éxito");
+    if (clienteSeleccionado) {
+      datos.id_cliente = clienteSeleccionado.id;
+    }
 
 
-    cerrarModal();
+    setCreandoVenta(true);
 
-  };
+    try {
 
+      await crearVenta(datos);
 
-  // =========================================================
-  // AVANZAR ESTADO
-  // =========================================================
+      mostrarToast("Venta registrada con éxito");
 
-  const avanzarEstado = (id) => {
+      cerrarModal();
 
-    setVentas((actuales) =>
+      await recargarVentas();
 
-      actuales.map((venta) => {
+    } catch (error) {
 
-        if (venta.id !== id) {
+      // 400 (validación) y 409 (stock): se muestra el mensaje del
+      // backend y el formulario queda abierto.
+      mostrarToast(
+        error?.message || "No se pudo registrar la venta",
+        "error"
+      );
 
-          return venta;
-
-        }
-
-
-        if (venta.estado === "Completada") {
-
-          return {
-            ...venta,
-            estado: "Anulada"
-          };
-
-        }
-
-
-        return venta;
-
-      })
-
-    );
+    } finally {
+      setCreandoVenta(false);
+    }
 
   };
 
 
   // =========================================================
-  // ANULAR VENTA
+  // ANULAR VENTA (PATCH /api/ventas/:id/estado)
   // =========================================================
 
   const anularVenta = (venta) => {
-    if (venta.estado === "Cancelada") {
-      mostrarToast("Esta venta ya está cancelada.", "error");
+    if (venta.estado === "Anulada") {
+      mostrarToast("Esta venta ya está anulada.", "error");
       return;
     }
     setVentaACancelar(venta);
@@ -620,31 +627,47 @@ export default function Ventas({ vendedorId, user }) {
 
 
   // Ejecuta la anulación real cuando el usuario confirma en la tarjeta.
-  const confirmarAnularVenta = () => {
+  const confirmarAnularVenta = async () => {
     if (!ventaACancelar) return;
 
     const venta = ventaACancelar;
 
     setVentaACancelar(null);
 
-    setVentas((prev) =>
-      prev.map((item) =>
-        item.id === venta.id ? { ...item, estado: "Cancelada" } : item
-      )
-    );
+    try {
+      await anularVentaApi(venta.idVenta);
+      mostrarToast("Venta anulada correctamente");
+      await recargarVentas();
+    } catch (error) {
+      mostrarToast(
+        error?.message || "No se pudo anular la venta",
+        "error"
+      );
+    }
   };
 
 
   // =========================================================
-  // VER DETALLE
+  // VER DETALLE (GET /api/ventas/:id)
   // =========================================================
 
-  const verDetalle = (venta) => {
+  const [cargandoDetalle, setCargandoDetalle] =
+    useState(false);
 
-    setVentaSeleccionada(venta);
-
-    setMostrarDetalle(true);
-
+  const verDetalle = async (venta) => {
+    setCargandoDetalle(true);
+    try {
+      const detalle = await obtenerVenta(venta.idVenta);
+      setVentaSeleccionada(mapearVentaBackend(detalle));
+      setMostrarDetalle(true);
+    } catch (error) {
+      mostrarToast(
+        error?.message || "No se pudo cargar la venta",
+        "error"
+      );
+    } finally {
+      setCargandoDetalle(false);
+    }
   };
 
 
@@ -663,9 +686,24 @@ export default function Ventas({ vendedorId, user }) {
 
   // =========================================================
   // GENERAR COMPROBANTE (PDF)
+  // Usa los mismos datos del detalle (GET /api/ventas/:id),
+  // incluidos talla y color de cada producto.
   // =========================================================
 
-  const generarComprobante = (venta) => {
+  const generarComprobante = async (venta) => {
+
+    let ventaDetalle;
+    try {
+      ventaDetalle = mapearVentaBackend(
+        await obtenerVenta(venta.idVenta)
+      );
+    } catch (error) {
+      mostrarToast(
+        error?.message || "No se pudo generar el comprobante",
+        "error"
+      );
+      return;
+    }
 
     const doc = new jsPDF({
       unit: "mm",
@@ -736,11 +774,11 @@ export default function Ventas({ vendedorId, user }) {
       y += 7;
     };
 
-    dato("Venta N.°:", venta.id);
-    dato("Fecha:", formatearFecha(venta.fecha));
-    dato("Cliente:", venta.cliente);
-    dato("Método de pago:", venta.metodoPago);
-    dato("Estado:", venta.estado);
+    dato("Venta N.°:", ventaDetalle.id);
+    dato("Fecha:", formatearFecha(ventaDetalle.fecha));
+    dato("Cliente:", ventaDetalle.cliente);
+    dato("Método de pago:", ventaDetalle.metodoPago);
+    dato("Estado:", ventaDetalle.estado);
 
 
     // TABLA DE PRODUCTOS
@@ -810,7 +848,7 @@ export default function Ventas({ vendedorId, user }) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
 
-    venta.productos.forEach((producto) => {
+    ventaDetalle.productos.forEach((producto) => {
 
       if (y > altoPagina - 35) {
         doc.addPage();
@@ -818,6 +856,7 @@ export default function Ventas({ vendedorId, user }) {
       }
 
       const subtotal =
+        Number(producto.subtotal) ||
         Number(producto.precio) *
         Number(producto.cantidad);
 
@@ -886,7 +925,7 @@ export default function Ventas({ vendedorId, user }) {
       { align: "right" }
     );
     doc.text(
-      formatearPrecio(venta.total),
+      formatearPrecio(ventaDetalle.total),
       anchoPagina - margen,
       y,
       { align: "right" }
@@ -913,7 +952,7 @@ export default function Ventas({ vendedorId, user }) {
     // DESCARGA
 
     doc.save(
-      `comprobante-${venta.id}.pdf`
+      `comprobante-${ventaDetalle.id}.pdf`
     );
 
     mostrarToast("Comprobante generado con éxito");
@@ -1094,18 +1133,7 @@ export default function Ventas({ vendedorId, user }) {
                         venta.estado ===
                         "Anulada"
                           ? "venta-estado anulada"
-                          : venta.estado ===
-                            "Cancelada"
-                          ? "venta-estado cancelada"
                           : "venta-estado completada"
-                      }
-                      onClick={
-                        puedeCambiarEstado
-                          ? () =>
-                              avanzarEstado(
-                                venta.id
-                              )
-                          : undefined
                       }
                     >
 
@@ -1133,6 +1161,7 @@ export default function Ventas({ vendedorId, user }) {
                           )
                         }
                         title="Ver detalle"
+                        disabled={cargandoDetalle}
                       >
 
                         <Eye size={18} />
@@ -1140,6 +1169,8 @@ export default function Ventas({ vendedorId, user }) {
                       </button>
 
                       )}
+
+                      {puedeConsultar && (
 
                       <button
                         type="button"
@@ -1156,24 +1187,22 @@ export default function Ventas({ vendedorId, user }) {
 
                       </button>
 
+                      )}
+
                       {puedeCambiarEstado && (
 
                       <button
                         type="button"
                         className={
                           venta.estado ===
-                            "Cancelada" ||
-                          venta.estado ===
-                            "Anulada"
+                          "Anulada"
                             ? "venta-anular-button disabled"
                             : "venta-anular-button"
                         }
                         title={
                           venta.estado ===
-                            "Cancelada" ||
-                          venta.estado ===
-                            "Anulada"
-                            ? "Esta venta no se puede anular"
+                          "Anulada"
+                            ? "Esta venta ya está anulada"
                             : "Anular venta"
                         }
                         onClick={() =>
@@ -1183,9 +1212,7 @@ export default function Ventas({ vendedorId, user }) {
                         }
                         disabled={
                           venta.estado ===
-                            "Cancelada" ||
-                          venta.estado ===
-                            "Anulada"
+                          "Anulada"
                         }
                       >
 
@@ -1215,7 +1242,11 @@ export default function Ventas({ vendedorId, user }) {
                   className="ventas-empty"
                 >
 
-                  Venta no encontrada en el sistema.
+                  {cargandoVentas
+                    ? "Cargando ventas..."
+                    : errorVentas
+                      ? errorVentas
+                      : "No hay ventas registradas."}
 
                 </td>
 
@@ -1283,30 +1314,35 @@ export default function Ventas({ vendedorId, user }) {
                     CLIENTE
                   </label>
 
-                  <input
-                    type="text"
-                    placeholder="Nombre del cliente"
-                    maxLength={20}
+                  <select
                     value={
-                      formulario.cliente
+                      formulario.idCliente
                     }
-                    className={`input ${errores.cliente ? "input-error" : ""}`}
+                    className={`input ${errores.nombreCliente ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
-                        "cliente",
-                        e.target.value.replace(
-                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                          ""
-                        )
+                        "idCliente",
+                        e.target.value
                       )
                     }
-                  />
+                  >
 
-                  {errores.cliente && (
-                    <span className="error-text">
-                      {errores.cliente}
-                    </span>
-                  )}
+                    <option value="">
+                      Venta de mostrador (escribir nombre)
+                    </option>
+
+                    {clientes.map((cliente) => (
+
+                      <option
+                        key={cliente.id}
+                        value={cliente.id}
+                      >
+                        {cliente.nombre}
+                      </option>
+
+                    ))}
+
+                  </select>
 
                 </div>
 
@@ -1342,6 +1378,43 @@ export default function Ventas({ vendedorId, user }) {
               </div>
 
 
+              {/* NOMBRE DEL CLIENTE (solo venta de mostrador) */}
+
+              {!formulario.idCliente && (
+
+                <div className="venta-form-group">
+
+                  <label>
+                    NOMBRE DEL CLIENTE
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="Nombre del comprador"
+                    maxLength={100}
+                    value={
+                      formulario.nombreCliente
+                    }
+                    className={`input ${errores.nombreCliente ? "input-error" : ""}`}
+                    onChange={(e) =>
+                      cambiarCampo(
+                        "nombreCliente",
+                        e.target.value
+                      )
+                    }
+                  />
+
+                  {errores.nombreCliente && (
+                    <span className="error-text">
+                      {errores.nombreCliente}
+                    </span>
+                  )}
+
+                </div>
+
+              )}
+
+
               {/* MÉTODO DE PAGO */}
 
               <div className="venta-form-group">
@@ -1362,49 +1435,16 @@ export default function Ventas({ vendedorId, user }) {
                   }
                 >
 
-                  <option value="Transferencia">
-                    Transferencia
-                  </option>
-
                   <option value="Efectivo">
                     Efectivo
                   </option>
 
+                  <option value="Transferencia">
+                    Transferencia
+                  </option>
+
                   <option value="Crédito">
                     Crédito
-                  </option>
-
-                </select>
-
-              </div>
-
-
-              {/* ESTADO */}
-
-              <div className="venta-form-group">
-
-                <label>
-                  ESTADO
-                </label>
-
-                <select
-                  value={
-                    formulario.estado
-                  }
-                  onChange={(e) =>
-                    cambiarCampo(
-                      "estado",
-                      e.target.value
-                    )
-                  }
-                >
-
-                  <option value="Completada">
-                    Completada
-                  </option>
-
-                  <option value="Anulada">
-                    Anulada
                   </option>
 
                 </select>
@@ -1424,7 +1464,12 @@ export default function Ventas({ vendedorId, user }) {
                 <button
                   type="button"
                   className="venta-add-product"
-                  onClick={agregarProducto}
+                  onClick={() =>
+                    setMostrarSelector(
+                      (actual) => !actual
+                    )
+                  }
+                  disabled={cargandoCatalogos}
                 >
 
                   <Plus size={16} />
@@ -1436,13 +1481,133 @@ export default function Ventas({ vendedorId, user }) {
               </div>
 
 
-              {errores.productos && (
+              {cargandoCatalogos && (
+
+                <div className="venta-no-productos">
+
+                  Cargando productos disponibles...
+
+                </div>
+
+              )}
+
+
+              {errorCatalogos && (
                 <span className="error-text">
-                  {errores.productos}
+                  {errorCatalogos}
                 </span>
               )}
 
-              {formulario.productos.length ===
+
+              {/* SELECTOR DE VARIANTE + CANTIDAD */}
+
+              {mostrarSelector && !cargandoCatalogos && (
+
+                <div className="venta-form-row">
+
+                  <div className="venta-form-group">
+
+                    <label>
+                      PRODUCTO
+                    </label>
+
+                    <select
+                      value={
+                        varianteSel
+                      }
+                      onChange={(e) => {
+                        setVarianteSel(
+                          e.target.value
+                        );
+                        setErrores(
+                          (actuales) => {
+                            if (!actuales.selector) {
+                              return actuales;
+                            }
+
+                            const nuevos = { ...actuales };
+                            delete nuevos.selector;
+                            return nuevos;
+                          }
+                        );
+                      }}
+                    >
+
+                      <option value="">
+                        Selecciona una variante
+                      </option>
+
+                      {variantes.map((variante) => (
+
+                        <option
+                          key={variante.id_variante}
+                          value={variante.id_variante}
+                        >
+                          {`${variante.nombre} · ${variante.talla || "-"} · ${variante.color || "-"} · ${formatearPrecio(variante.precio)} · Stock: ${variante.stock}`}
+                        </option>
+
+                      ))}
+
+                    </select>
+
+                  </div>
+
+
+                  <div className="venta-form-group">
+
+                    <label>
+                      CANTIDAD
+                    </label>
+
+                    <input
+                      type="number"
+                      min="1"
+                      value={
+                        cantidadSel
+                      }
+                      onChange={(e) =>
+                        setCantidadSel(
+                          e.target.value.replace(
+                            /[^0-9]/g,
+                            ""
+                          )
+                        )
+                      }
+                    />
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    className="venta-add-product"
+                    onClick={agregarItem}
+                  >
+
+                    <Plus size={16} />
+
+                    Agregar a la venta
+
+                  </button>
+
+                </div>
+
+              )}
+
+
+              {errores.selector && (
+                <span className="error-text">
+                  {errores.selector}
+                </span>
+              )}
+
+              {errores.items && (
+                <span className="error-text">
+                  {errores.items}
+                </span>
+              )}
+
+              {formulario.items.length ===
                 0 ? (
 
                 <div className="venta-no-productos">
@@ -1455,18 +1620,18 @@ export default function Ventas({ vendedorId, user }) {
 
                 <div className="venta-products-list">
 
-                  {formulario.productos.map(
-                    (producto, index) => (
+                  {formulario.items.map(
+                    (item, index) => (
 
                       <div
                         className="venta-product-item"
-                        key={index}
+                        key={item.id_variante}
                       >
 
                         <div className="venta-product-item-head">
 
                           <span className="venta-product-item-number">
-                            Producto #{index + 1}
+                            {`${item.nombre} · ${item.talla} · ${item.color}`}
                           </span>
 
                           <button
@@ -1497,20 +1662,10 @@ export default function Ventas({ vendedorId, user }) {
 
                             <input
                               type="text"
+                              readOnly
+                              tabIndex={-1}
                               value={
-                                producto.nombre
-                              }
-                              maxLength={20}
-                              placeholder="Nombre del producto"
-                              onChange={(e) =>
-                                actualizarProducto(
-                                  index,
-                                  "nombre",
-                                  e.target.value.replace(
-                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                                    ""
-                                  )
-                                )
+                                item.nombre
                               }
                             />
 
@@ -1526,17 +1681,16 @@ export default function Ventas({ vendedorId, user }) {
                             <input
                               type="number"
                               min="1"
+                              max={
+                                item.stock
+                              }
                               value={
-                                producto.cantidad
+                                item.cantidad
                               }
                               onChange={(e) =>
-                                actualizarProducto(
+                                actualizarCantidadItem(
                                   index,
-                                  "cantidad",
-                                  e.target.value.replace(
-                                    /[^0-9]/g,
-                                    ""
-                                  )
+                                  e.target.value
                                 )
                               }
                             />
@@ -1552,16 +1706,10 @@ export default function Ventas({ vendedorId, user }) {
 
                             <input
                               type="text"
+                              readOnly
+                              tabIndex={-1}
                               value={
-                                producto.talla
-                              }
-                              placeholder="Talla"
-                              onChange={(e) =>
-                                actualizarProducto(
-                                  index,
-                                  "talla",
-                                  e.target.value
-                                )
+                                item.talla
                               }
                             />
 
@@ -1576,19 +1724,10 @@ export default function Ventas({ vendedorId, user }) {
 
                             <input
                               type="text"
+                              readOnly
+                              tabIndex={-1}
                               value={
-                                producto.color
-                              }
-                              placeholder="Color"
-                              onChange={(e) =>
-                                actualizarProducto(
-                                  index,
-                                  "color",
-                                  e.target.value.replace(
-                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                                    ""
-                                  )
-                                )
+                                item.color
                               }
                             />
 
@@ -1602,24 +1741,12 @@ export default function Ventas({ vendedorId, user }) {
                             </label>
 
                             <input
-                              type="number"
-                              min="0"
+                              type="text"
+                              readOnly
+                              tabIndex={-1}
                               value={
-                                producto.precio
-                              }
-                              onChange={(e) =>
-                                actualizarProducto(
-                                  index,
-                                  "precio",
-                                  e.target.value
-                                    .replace(
-                                      /[^0-9.]/g,
-                                      ""
-                                    )
-                                    .replace(
-                                      /(\..*)\./g,
-                                      "$1"
-                                    )
+                                formatearPrecio(
+                                  item.precio
                                 )
                               }
                             />
@@ -1636,12 +1763,8 @@ export default function Ventas({ vendedorId, user }) {
                             <strong>
 
                               {formatearPrecio(
-                                Number(
-                                  producto.precio
-                                ) *
-                                Number(
-                                  producto.cantidad
-                                )
+                                item.precio *
+                                item.cantidad
                               )}
 
                             </strong>
@@ -1671,15 +1794,11 @@ export default function Ventas({ vendedorId, user }) {
                 <strong>
 
                   {formatearPrecio(
-                    formulario.productos.reduce(
-                      (suma, producto) =>
+                    formulario.items.reduce(
+                      (suma, item) =>
                         suma +
-                        Number(
-                          producto.precio
-                        ) *
-                        Number(
-                          producto.cantidad
-                        ),
+                        item.precio *
+                        item.cantidad,
                       0
                     )
                   )}
@@ -1708,8 +1827,11 @@ export default function Ventas({ vendedorId, user }) {
                 type="button"
                 className="venta-create-button"
                 onClick={registrarVenta}
+                disabled={creandoVenta}
               >
-                Crear venta
+                {creandoVenta
+                  ? "Creando..."
+                  : "Crear venta"}
               </button>
 
             </div>
@@ -1854,6 +1976,10 @@ export default function Ventas({ vendedorId, user }) {
                             <span>
                               Cantidad:{" "}
                               {producto.cantidad}
+                              {" · Talla: "}
+                              {producto.talla}
+                              {" · Color: "}
+                              {producto.color}
                             </span>
 
                           </div>
@@ -1861,6 +1987,7 @@ export default function Ventas({ vendedorId, user }) {
 
                           <strong>
                             {formatearPrecio(
+                              producto.subtotal ||
                               producto.precio *
                               producto.cantidad
                             )}
@@ -1918,9 +2045,6 @@ export default function Ventas({ vendedorId, user }) {
                     ventaSeleccionada.estado ===
                     "Anulada"
                       ? "venta-estado anulada"
-                      : ventaSeleccionada.estado ===
-                        "Cancelada"
-                      ? "venta-estado cancelada"
                       : "venta-estado completada"
                   }
                 >

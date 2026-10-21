@@ -968,6 +968,13 @@
   opacity: 0.8;
 }
 
+.priv-check.na {
+  color: #9ca3af;
+  opacity: 0.5;
+  font-size: 15px;
+  line-height: 1;
+}
+
 .rol-detail-permisos-list {
   display: flex;
   flex-wrap: wrap;

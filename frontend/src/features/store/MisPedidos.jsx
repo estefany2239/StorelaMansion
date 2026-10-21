@@ -54,7 +54,7 @@ const mapearPedido = (pedido, catalogo) => {
       nombre: item.nombre,
       imagen: variante?.image || IMAGEN_FALLBACK,
       cantidad: item.cantidad,
-      talla: item.talla || "-",
+      talla: item.talla || "",
       color: item.color || "-",
       precio: Number(item.precio_unitario) || 0
     };
@@ -427,7 +427,13 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                       <div className="mp-detail-info">
                         <p className="mp-detail-name">{producto.nombre}</p>
                         <p className="mp-detail-meta">
-                          Talla: {producto.talla} · Color: {producto.color} · Cant: {producto.cantidad}
+                          {[
+                            producto.talla ? `Talla: ${producto.talla}` : "",
+                            producto.color ? `Color: ${producto.color}` : "",
+                            `Cant: ${producto.cantidad}`
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
                       </div>
                       <div className="mp-detail-price">

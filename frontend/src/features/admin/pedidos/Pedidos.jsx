@@ -20,6 +20,7 @@ import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 
 import { tienePermiso } from "../utils/permisos";
+import { formatoCliente } from "../utils/ids";
 
 import {
   obtenerPedidos,
@@ -44,7 +45,7 @@ const EDICION_COMPLETA_PEDIDO = false;
 // Convierte un pedido del backend a la forma que usa esta pantalla.
 const mapearPedidoBackend = (pedido) => ({
   id: String(pedido.id),
-  idCliente: `CLI-${pedido.id_usuario}`,
+  idCliente: formatoCliente(pedido.id_usuario),
   cliente: pedido.cliente,
   clienteCorreo: pedido.cliente_correo,
   vendedor_id: undefined,
@@ -56,7 +57,7 @@ const mapearPedidoBackend = (pedido) => ({
   productos: (pedido.items || []).map((item) => ({
     nombre: item.nombre,
     cantidad: item.cantidad,
-    talla: item.talla || "-",
+    talla: item.talla || "",
     color: item.color || "-",
     precio: Number(item.precio_unitario) || 0
   })),
@@ -475,8 +476,9 @@ export default function Pedidos({ vendedorId, user }) {
 
     if (pedido.estado === "Entregado") {
 
-      alert(
-        "Los pedidos en estado Entregado no pueden ser modificados."
+      mostrarToast(
+        "Los pedidos en estado Entregado no pueden ser modificados.",
+        "error"
       );
 
       return;
@@ -1094,8 +1096,9 @@ export default function Pedidos({ vendedorId, user }) {
 
     if (pedidoAbonos.estado === "Entregado") {
 
-      alert(
-        "Los pedidos en estado Entregado no pueden recibir abonos."
+      mostrarToast(
+        "Los pedidos en estado Entregado no pueden recibir abonos.",
+        "error"
       );
 
       return;
@@ -1121,8 +1124,9 @@ export default function Pedidos({ vendedorId, user }) {
       valor <= 0
     ) {
 
-      alert(
-        "Ingresa un monto válido para el abono."
+      mostrarToast(
+        "Ingresa un monto válido para el abono.",
+        "error"
       );
 
       return;
@@ -1135,8 +1139,9 @@ export default function Pedidos({ vendedorId, user }) {
       Number(pedidoAbonos.total) - abonado
     ) {
 
-      alert(
-        "El monto no puede superar el saldo pendiente del pedido."
+      mostrarToast(
+        "El monto no puede superar el saldo pendiente del pedido.",
+        "error"
       );
 
       return;
@@ -1683,26 +1688,9 @@ export default function Pedidos({ vendedorId, user }) {
             <div className="pedido-modal-body">
 
 
-              {/* ID + ESTADO */}
+              {/* ESTADO */}
 
               <div className="pedido-form-row">
-
-                <div className="pedido-form-group">
-
-                  <label>
-                    ID PEDIDO
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      formulario.id
-                    }
-                    disabled
-                  />
-
-                </div>
-
 
                 <div className="pedido-form-group">
 
@@ -2484,10 +2472,13 @@ export default function Pedidos({ vendedorId, user }) {
                             Cantidad:{" "}
                             {producto.cantidad}
 
-                            {" · "}
-
-                            Talla:{" "}
-                            {producto.talla}
+                            {producto.talla && (
+                              <>
+                                {" · "}
+                                Talla:{" "}
+                                {producto.talla}
+                              </>
+                            )}
 
                             {" · "}
 

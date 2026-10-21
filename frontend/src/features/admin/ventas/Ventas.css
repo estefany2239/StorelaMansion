@@ -495,6 +495,10 @@
 
 /* =========================================================
    BOTÓN GENERAR COMPROBANTE
+   Mismo estilo que el botón "ver detalle" (sin fondo, mismo
+   tamaño y espaciado). El icono usa el color de texto del
+   tema (se ve claro en modo oscuro) y al pasar el cursor se
+   pone dorado, como los demás botones de acción.
    ========================================================= */
 
 .venta-comprobante-button {
@@ -509,27 +513,42 @@
 
   border: none;
 
-  background:
-    var(--admin-cta-gold);
+  background: transparent;
 
-  color: #111111;
+  color:
+    var(--admin-text);
 
   border-radius: 7px;
 
   cursor: pointer;
 
   transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+    color 0.2s ease,
+    background 0.2s ease;
 }
 
 
 .venta-comprobante-button:hover {
-  background:
-    var(--admin-cta-gold-dark);
+  color:
+    var(--admin-gold);
 
-  transform:
-    translateY(-1px);
+  background:
+    rgba(201, 162, 39, 0.08);
+}
+
+
+.venta-comprobante-button:disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
+
+.venta-comprobante-button:disabled:hover {
+  color:
+    var(--admin-text);
+
+  background: transparent;
 }
 
 

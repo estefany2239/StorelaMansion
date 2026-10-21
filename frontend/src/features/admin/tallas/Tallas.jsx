@@ -14,9 +14,26 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
+import {
+  obtenerTallasAdmin,
+  crearTallaAdmin,
+  actualizarTallaAdmin,
+  cambiarEstadoTallaAdmin,
+  eliminarTallaAdmin
+} from "../../../services/api";
+
 const REGISTROS_POR_PAGINA = 6;
+
+// El ID lo da el servidor (numérico); en la tabla se muestra como TAL-001.
+const formatoTalla = (id) => `TAL-${String(id).padStart(3, "0")}`;
+
+const FORMULARIO_VACIO = {
+  id: "",
+  nombre: ""
+};
 
 
 export default function Tallas({ user }) {
@@ -28,22 +45,16 @@ export default function Tallas({ user }) {
   const puedeCrear = tienePermiso(user, "Tallas", "Crear");
   const puedeActualizar = tienePermiso(user, "Tallas", "Actualizar");
   const puedeEliminar = tienePermiso(user, "Tallas", "Eliminar");
-  const puedeCambiarEstado = tienePermiso(user, "Tallas", "Cambiar estado");
+  // El backend protege PATCH /estado con Tallas:Actualizar.
+  const puedeCambiarEstado = tienePermiso(user, "Tallas", "Actualizar");
   const puedeConsultar = tienePermiso(user, "Tallas", "Consultar");
 
   /* =====================================================
-     TALLAS DE PRODUCTOS
+     TALLAS (desde la API)
      ===================================================== */
 
-  const [tallas, setTallas] = useState([
-    { id: "TAL-001", nombre: "XS", enUso: false, estado: "Activo" },
-    { id: "TAL-002", nombre: "S", enUso: true, estado: "Activo" },
-    { id: "TAL-003", nombre: "M", enUso: true, estado: "Activo" },
-    { id: "TAL-004", nombre: "L", enUso: true, estado: "Activo" },
-    { id: "TAL-005", nombre: "XL", enUso: false, estado: "Activo" },
-    { id: "TAL-006", nombre: "XXL", enUso: false, estado: "Activo" },
-    { id: "TAL-007", nombre: "XXXL", enUso: false, estado: "Activo" }
-  ]);
+  const [tallas, setTallas] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   /* =====================================================
      ESTADOS DE LA VISTA
@@ -60,16 +71,49 @@ export default function Tallas({ user }) {
 
   const { toast, mostrarToast } = useToast();
 
+  useEffect(() => {
+    obtenerTallasAdmin()
+      .then(setTallas)
+      .catch((error) => mostrarToast(error.message, "error"))
+      .finally(() => setCargando(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* =====================================================
      FORMULARIO
      ===================================================== */
 
-  const [formulario, setFormulario] = useState({
-    id: "",
-    nombre: ""
-  });
+  const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
 
-  const [errores, setErrores] = useState({});
+  // Reglas alineadas con leerCuerpo() del backend (tallasAdmin.js):
+  // nombre obligatorio, sin distinguir mayúsculas y máximo 10 caracteres.
+  const REGLAS_TALLA = {
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+      if (!nombre) return "Este campo es obligatorio.";
+
+      if (nombre.length > 10) {
+        return "El nombre no puede superar los 10 caracteres.";
+      }
+
+      const yaExiste = tallas.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() === nombre.toLowerCase() &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+      if (yaExiste) return "Ya existe un registro con este nombre.";
+
+      return "";
+    }
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion
+  } = useValidacionFormulario(REGLAS_TALLA);
 
   /* =====================================================
      FILTRAR TALLAS POR NOMBRE
@@ -113,18 +157,10 @@ export default function Tallas({ user }) {
      ===================================================== */
 
   const abrirAgregar = () => {
-    const siguienteNumero = tallas.reduce((max, item) => {
-      const numero = Number(item.id.split("-")[1]) || 0;
-      return Math.max(max, numero);
-    }, 0) + 1;
+    // El ID lo asigna el servidor; el formulario solo pide el nombre.
+    setFormulario({ ...FORMULARIO_VACIO });
 
-    setFormulario({
-      id: `TAL-${String(siguienteNumero).padStart(3, "0")}`,
-      nombre: "",
-      estado: "Activo"
-    });
-
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(false);
     setMostrarModal(true);
   };
@@ -139,7 +175,7 @@ export default function Tallas({ user }) {
       nombre: talla.nombre
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModoEdicion(true);
     setMostrarModal(true);
   };
@@ -149,103 +185,70 @@ export default function Tallas({ user }) {
      ===================================================== */
 
   const cambiarCampo = (campo, valor) => {
-    setFormulario((actual) => ({
-      ...actual,
-      [campo]: valor
-    }));
+    const siguiente = { ...formulario, [campo]: valor };
+    setFormulario(siguiente);
 
-    if (String(valor).trim()) {
-      setErrores((actuales) => {
-        if (!actuales[campo]) return actuales;
-
-        const nuevos = { ...actuales };
-        delete nuevos[campo];
-        return nuevos;
-      });
-    }
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(campo, valor, siguiente);
   };
 
   /* =====================================================
      GUARDAR TALLA
      ===================================================== */
 
-  const guardarTalla = () => {
-    const nuevosErrores = {};
-
-    if (!formulario.nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else {
-      const nombreNormalizado =
-        formulario.nombre.trim().toLowerCase();
-
-      const yaExiste = tallas.some(
-        (item) =>
-          item.nombre.trim().toLowerCase() ===
-            nombreNormalizado &&
-          (!modoEdicion || item.id !== formulario.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
-      }
-    }
-
-    if (formulario.nombre.trim().length > 20) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (Object.keys(nuevosErrores).length > 0) return;
+  const guardarTalla = async () => {
+    // Valida todo el formulario (mismas reglas que el backend) y,
+    // si hay errores, enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) return;
 
     if (modoEdicion) {
       setConfirmarEdicion(true);
       return;
     }
 
-    setTallas((actuales) => [
-      {
-        id: formulario.id,
-        nombre: formulario.nombre.trim(),
-        enUso: false,
-        estado: "Activo"
-      },
-      ...actuales
-    ]);
-
-    mostrarToast("Talla creada con éxito");
-    cerrarModal();
+    try {
+      const fila = await crearTallaAdmin({ nombre: formulario.nombre.trim() });
+      setTallas((actuales) => [...actuales, fila]);
+      mostrarToast("Talla creada con éxito");
+      cerrarModal();
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
-  const confirmarEdicionTalla = () => {
-    setTallas((actuales) =>
-      actuales.map((talla) =>
-        talla.id === formulario.id
-          ? { ...talla, nombre: formulario.nombre.trim() }
-          : talla
-      )
-    );
-
-    setConfirmarEdicion(false);
-    cerrarModal();
+  const confirmarEdicionTalla = async () => {
+    try {
+      const fila = await actualizarTallaAdmin(formulario.id, {
+        nombre: formulario.nombre.trim()
+      });
+      setTallas((actuales) =>
+        actuales.map((talla) => (talla.id === fila.id ? fila : talla))
+      );
+      setConfirmarEdicion(false);
+      cerrarModal();
+      mostrarToast("Talla actualizada con éxito");
+    } catch (error) {
+      setConfirmarEdicion(false);
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
      CAMBIAR ESTADO DE LA TALLA
      ===================================================== */
 
-  const cambiarEstado = (talla) => {
+  const cambiarEstado = async (talla) => {
     const nuevoEstado =
       talla.estado === "Activo" ? "Inactivo" : "Activo";
 
-    setTallas((actuales) =>
-      actuales.map((item) =>
-        item.id === talla.id
-          ? { ...item, estado: nuevoEstado }
-          : item
-      )
-    );
+    try {
+      const fila = await cambiarEstadoTallaAdmin(talla.id, nuevoEstado);
+      setTallas((actuales) =>
+        actuales.map((item) => (item.id === fila.id ? fila : item))
+      );
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
   /* =====================================================
@@ -255,7 +258,7 @@ export default function Tallas({ user }) {
   const eliminarTalla = (talla) => {
     if (talla.enUso) {
       setAviso(
-        "No se puede eliminar la talla porque está asociada a productos existentes."
+        "No se puede eliminar la talla porque está asociada a productos existentes. Puedes desactivarla."
       );
       return;
     }
@@ -263,12 +266,18 @@ export default function Tallas({ user }) {
     setTallaEliminar(talla);
   };
 
-  const confirmarEliminarTalla = () => {
-    setTallas((actuales) =>
-      actuales.filter((item) => item.id !== tallaEliminar.id)
-    );
-
-    setTallaEliminar(null);
+  const confirmarEliminarTalla = async () => {
+    try {
+      await eliminarTallaAdmin(tallaEliminar.id);
+      setTallas((actuales) =>
+        actuales.filter((item) => item.id !== tallaEliminar.id)
+      );
+      setTallaEliminar(null);
+      mostrarToast("Talla eliminada con éxito");
+    } catch (error) {
+      setTallaEliminar(null);
+      setAviso(error.message);
+    }
   };
 
   /* =====================================================
@@ -387,7 +396,7 @@ export default function Tallas({ user }) {
 
                   <td>
                     <span className="talla-id">
-                      {talla.id}
+                      {formatoTalla(talla.id)}
                     </span>
                   </td>
 
@@ -478,7 +487,7 @@ export default function Tallas({ user }) {
                   colSpan="4"
                   className="tallas-empty"
                 >
-                  Talla no encontrada en el sistema.
+                  {cargando ? "Cargando tallas..." : "Talla no encontrada en el sistema."}
                 </td>
 
               </tr>
@@ -535,24 +544,6 @@ export default function Tallas({ user }) {
 
             <div className="talla-modal-body">
 
-              <div className="talla-form-row">
-
-                <div className="talla-form-group">
-
-                  <label>
-                    IDENTIFICADOR
-                  </label>
-
-                  <input
-                    type="text"
-                    value={formulario.id}
-                    disabled
-                  />
-
-                </div>
-
-              </div>
-
               <div className="talla-form-group">
 
                 <label>
@@ -561,8 +552,9 @@ export default function Tallas({ user }) {
 
                 <input
                   type="text"
+                  id="campo-nombre"
                   placeholder="Ej: M"
-                  maxLength={20}
+                  maxLength={10}
                   value={formulario.nombre}
                   className={`input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
@@ -572,6 +564,13 @@ export default function Tallas({ user }) {
                         /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                         ""
                       )
+                    )
+                  }
+                  onBlur={() =>
+                    manejarBlur(
+                      "nombre",
+                      formulario.nombre,
+                      formulario
                     )
                   }
                 />

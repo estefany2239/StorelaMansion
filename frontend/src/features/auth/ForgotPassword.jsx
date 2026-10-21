@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Mail, ArrowLeft, Key, ArrowRight } from "lucide-react";
+import useNotify from "../../components/notifications/useNotify";
 import "./Login.css";
 
 const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
@@ -7,6 +8,8 @@ const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
 export default function ForgotPassword({ onBackToLogin }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  const notify = useNotify();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -36,7 +39,7 @@ export default function ForgotPassword({ onBackToLogin }) {
     );
 
     if (!existe) {
-      alert("No existe una cuenta asociada a este correo.");
+      notify("No existe una cuenta asociada a este correo.", "error");
       return;
     }
 

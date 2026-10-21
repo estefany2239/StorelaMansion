@@ -15,7 +15,9 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
+import { formatoCliente } from "../utils/ids";
 
 import {
   obtenerClientes,
@@ -52,7 +54,7 @@ export default function Clientes({ user }) {
 
   const mapearCliente = (cliente) => ({
     ...cliente,
-    id: `CLI-${String(cliente.id).padStart(3, "0")}`
+    id: formatoCliente(cliente.id)
   });
 
   const idBackend = (id) => Number(String(id).replace(/\D/g, ""));
@@ -111,11 +113,147 @@ export default function Clientes({ user }) {
     correo: "",
     telefono: "",
     direccion: "",
+    tipoDocumento: "",
+    documento: "",
+    fechaNacimiento: "",
     estado: "Activo",
     fecha: "2026-09-07"
   });
 
-  const [errores, setErrores] = useState({});
+  // Reglas alineadas con validarCliente() del backend (clientes.js):
+  // nombre (letras/espacios, máx. 20), correo válido, teléfono (dígitos,
+  // máx. 10) y dirección obligatoria. Tipo/número de documento van juntos
+  // (ambos vacíos o ambos con valor) y la fecha de nacimiento es opcional.
+  const REGLAS_CLIENTE = {
+    tipoDocumento: (valor, form) => {
+      const tipo = String(valor || "").trim();
+      const documento = String(form.documento || "").trim();
+
+      if (!tipo && documento) {
+        return "Si indicas el número de documento, también debes elegir el tipo.";
+      }
+
+      return "";
+    },
+    documento: (valor, form) => {
+      const tipo = String(form.tipoDocumento || "").trim();
+      const documento = String(valor || "").trim();
+
+      if (tipo && !documento) {
+        return "Si eliges el tipo de documento, también debes indicar el número.";
+      }
+
+      if (!tipo && documento) {
+        return "Si indicas el número de documento, también debes elegir el tipo.";
+      }
+
+      if (!documento) {
+        return "";
+      }
+
+      if (tipo === "CC") {
+        return /^\d{6,10}$/.test(documento)
+          ? ""
+          : "El documento CC debe tener entre 6 y 10 dígitos.";
+      }
+
+      if (tipo === "NIT") {
+        return /^[0-9-]{5,15}$/.test(documento) && /\d/.test(documento)
+          ? ""
+          : "El documento NIT debe tener entre 5 y 15 caracteres (dígitos y guion).";
+      }
+
+      return /^[A-Za-z0-9]{5,15}$/.test(documento)
+        ? ""
+        : `El documento ${tipo} debe tener entre 5 y 15 letras o números.`;
+    },
+    fechaNacimiento: (valor) => {
+      const fecha = String(valor || "").trim();
+
+      if (!fecha) {
+        return "";
+      }
+
+      const fechaDate = new Date(`${fecha}T00:00:00`);
+
+      if (Number.isNaN(fechaDate.getTime())) {
+        return "La fecha de nacimiento no es válida.";
+      }
+
+      if (fechaDate.getTime() > Date.now()) {
+        return "La fecha de nacimiento no puede ser futura.";
+      }
+
+      if (fechaDate.getFullYear() < 1900) {
+        return "La fecha de nacimiento no puede ser anterior a 1900.";
+      }
+
+      return "";
+    },
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+
+      if (!nombre) {
+        return "Este campo es obligatorio.";
+      }
+
+      const yaExiste = clientes.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() ===
+            nombre.toLowerCase() &&
+          (!modoEdicion || item.id !== formulario.id)
+      );
+
+      if (yaExiste) {
+        return "Ya existe un registro con este nombre.";
+      }
+
+      if (nombre.length > 20) {
+        return "El nombre no puede superar los 20 caracteres.";
+      }
+
+      return "";
+    },
+    correo: (valor) => {
+      const correo = String(valor || "").trim();
+
+      if (!correo) {
+        return "Este campo es obligatorio.";
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+        return "El correo no es válido.";
+      }
+
+      return "";
+    },
+    telefono: (valor) => {
+      const telefono = String(valor || "").trim();
+
+      if (!telefono) {
+        return "Este campo es obligatorio.";
+      }
+
+      if (!/^[0-9]+$/.test(telefono) || telefono.length > 10) {
+        return "El teléfono no puede superar los 10 dígitos.";
+      }
+
+      return "";
+    },
+    direccion: (valor) =>
+      String(valor || "").trim()
+        ? ""
+        : "Este campo es obligatorio."
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion,
+    setErrores
+  } = useValidacionFormulario(REGLAS_CLIENTE);
 
   const manejarErrorServidor = (error) => {
 
@@ -161,6 +299,10 @@ export default function Clientes({ user }) {
           .includes(texto) ||
 
         cliente.telefono
+          .toLowerCase()
+          .includes(texto) ||
+
+        String(cliente.documento || "")
           .toLowerCase()
           .includes(texto)
       );
@@ -223,14 +365,9 @@ export default function Clientes({ user }) {
 
   const abrirAgregar = () => {
 
-    const numero =
-      String(
-        clientes.length + 1
-      ).padStart(3, "0");
-
     setFormulario({
 
-      id: `CLI-${numero}`,
+      id: formatoCliente(clientes.length + 1),
 
       nombre: "",
 
@@ -240,13 +377,19 @@ export default function Clientes({ user }) {
 
       direccion: "",
 
+      tipoDocumento: "",
+
+      documento: "",
+
+      fechaNacimiento: "",
+
       estado: "Activo",
 
       fecha: "2026-09-07"
 
     });
 
-    setErrores({});
+    limpiarValidacion();
 
     setModoEdicion(false);
 
@@ -273,13 +416,19 @@ export default function Clientes({ user }) {
 
       direccion: cliente.direccion,
 
+      tipoDocumento: cliente.tipo_documento || "",
+
+      documento: cliente.documento || "",
+
+      fechaNacimiento: cliente.fecha_nacimiento || "",
+
       estado: cliente.estado,
 
       fecha: cliente.fecha
 
     });
 
-    setErrores({});
+    limpiarValidacion();
 
     setModoEdicion(true);
 
@@ -297,27 +446,23 @@ export default function Clientes({ user }) {
     valor
   ) => {
 
-    setFormulario(
-      (actual) => ({
-        ...actual,
-        [campo]: valor
-      })
-    );
+    const siguiente = {
+      ...formulario,
+      [campo]: valor
+    };
 
-    if (String(valor).trim()) {
-      setErrores(
-        (actuales) => {
-          if (!actuales[campo]) {
-            return actuales;
-          }
+    setFormulario(siguiente);
 
-          const nuevos = {
-            ...actuales
-          };
-          delete nuevos[campo];
-          return nuevos;
-        }
-      );
+    // Si el campo ya fue tocado, su error se recalcula al instante
+    // (desaparece en cuanto el valor es válido).
+    revisarCampo(campo, valor, siguiente);
+
+    // Tipo y número de documento son un par: al cambiar uno se revisa
+    // también el otro para que su error no quede desactualizado.
+    if (campo === "documento") {
+      revisarCampo("tipoDocumento", siguiente.tipoDocumento, siguiente);
+    } else if (campo === "tipoDocumento") {
+      revisarCampo("documento", siguiente.documento, siguiente);
     }
 
   };
@@ -369,72 +514,10 @@ export default function Clientes({ user }) {
 
   const guardarCliente = async () => {
 
-    const nuevosErrores = {};
-
-    if (
-      !formulario.nombre.trim()
-    ) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else {
-
-      const nombreNormalizado =
-        formulario.nombre
-          .trim()
-          .toLowerCase();
-
-      const yaExiste = clientes.some(
-        (item) =>
-          item.nombre.trim().toLowerCase() ===
-            nombreNormalizado &&
-          (!modoEdicion ||
-            item.id !== formulario.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
-      }
-
-    }
-
-    if (
-      formulario.nombre.trim().length > 20
-    ) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
-    }
-
-    if (
-      !formulario.correo.trim()
-    ) {
-      nuevosErrores.correo = "Este campo es obligatorio.";
-    }
-
-    if (
-      !formulario.telefono.trim()
-    ) {
-      nuevosErrores.telefono = "Este campo es obligatorio.";
-    }
-
-    if (
-      formulario.telefono.length > 10
-    ) {
-      nuevosErrores.telefono = "El teléfono no puede superar los 10 dígitos.";
-    }
-
-    if (
-      !formulario.direccion.trim()
-    ) {
-      nuevosErrores.direccion = "Este campo es obligatorio.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (
-      Object.keys(nuevosErrores).length > 0
-    ) {
-
+    // Valida todo el formulario (mismas reglas que el backend) y,
+    // si hay errores, enfoca el primer campo inválido.
+    if (!validarTodo(formulario)) {
       return;
-
     }
 
 if (modoEdicion) {
@@ -456,7 +539,13 @@ if (modoEdicion) {
 
           telefono: formulario.telefono,
 
-          direccion: formulario.direccion
+          direccion: formulario.direccion,
+
+          tipo_documento: formulario.tipoDocumento,
+
+          documento: formulario.documento,
+
+          fecha_nacimiento: formulario.fechaNacimiento
 
         })
       );
@@ -494,7 +583,13 @@ if (modoEdicion) {
 
           telefono: formulario.telefono,
 
-          direccion: formulario.direccion
+          direccion: formulario.direccion,
+
+          tipo_documento: formulario.tipoDocumento,
+
+          documento: formulario.documento,
+
+          fecha_nacimiento: formulario.fechaNacimiento
 
         })
       );
@@ -710,6 +805,10 @@ if (modoEdicion) {
               </th>
 
               <th>
+                DOCUMENTO
+              </th>
+
+              <th>
                 CORREO
               </th>
 
@@ -748,6 +847,17 @@ if (modoEdicion) {
 
                     <span className="cliente-nombre">
                       {cliente.nombre}
+                    </span>
+
+                  </td>
+
+
+                  <td>
+
+                    <span className="cliente-documento">
+                      {cliente.documento
+                        ? `${cliente.tipo_documento ? cliente.tipo_documento + " " : ""}${cliente.documento}`
+                        : "—"}
                     </span>
 
                   </td>
@@ -904,7 +1014,7 @@ if (modoEdicion) {
               <tr>
 
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="clientes-empty"
                 >
 
@@ -922,7 +1032,7 @@ if (modoEdicion) {
               <tr>
 
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="clientes-empty"
                 >
 
@@ -942,7 +1052,7 @@ if (modoEdicion) {
               <tr>
 
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="clientes-empty"
                 >
 
@@ -1003,220 +1113,390 @@ if (modoEdicion) {
             <div className="cliente-modal-body">
 
 
-              {/* ID + ESTADO */}
+              {/* =================================================
+                  TARJETA 1 — DATOS PERSONALES
+              ================================================= */}
 
-              <div className="cliente-form-row">
+              <div className="cliente-form-card">
 
-                <div className="cliente-form-group">
-
-                  <label>
-                    ID CLIENTE
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      formulario.id
-                    }
-                    disabled
-                  />
-
-                </div>
+                <h4 className="cliente-form-card-title">
+                  Datos personales
+                </h4>
 
 
-                <div className="cliente-form-group">
+                {/* TIPO + NÚMERO DE DOCUMENTO */}
 
-                  <label>
-                    ESTADO
-                  </label>
+                <div className="cliente-form-row">
 
-                  <select
-                    value={
-                      formulario.estado
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "estado",
-                        e.target.value
-                      )
-                    }
-                  >
+                  <div className="cliente-form-group">
 
-                    <option value="Activo">
-                      Activo
-                    </option>
+                    <label>
+                      TIPO DE DOCUMENTO
+                    </label>
 
-                    <option value="Inactivo">
-                      Inactivo
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
-
-
-              {/* NOMBRE + CORREO */}
-
-              <div className="cliente-form-row">
-
-                <div className="cliente-form-group">
-
-                  <label>
-                    NOMBRE COMPLETO
-                  </label>
-
-                  <input
-                    type="text"
-                    placeholder="Nombre completo"
-                    maxLength={20}
-                    value={
-                      formulario.nombre
-                    }
-                    className={`input ${errores.nombre ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "nombre",
-                        e.target.value.replace(
-                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                          ""
+                    <select
+                      id="campo-tipoDocumento"
+                      value={
+                        formulario.tipoDocumento
+                      }
+                      className={`input ${errores.tipoDocumento ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "tipoDocumento",
+                          e.target.value
                         )
-                      )
-                    }
-                  />
-
-                  {errores.nombre && (
-                    <span className="error-text">
-                      {errores.nombre}
-                    </span>
-                  )}
-
-                </div>
-
-
-                <div className="cliente-form-group">
-
-                  <label>
-                    CORREO ELECTRÓNICO
-                  </label>
-
-                  <input
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    value={
-                      formulario.correo
-                    }
-                    className={`input ${errores.correo ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "correo",
-                        e.target.value
-                      )
-                    }
-                  />
-
-                  {errores.correo && (
-                    <span className="error-text">
-                      {errores.correo}
-                    </span>
-                  )}
-
-                </div>
-
-              </div>
-
-
-              {/* TELÉFONO + FECHA */}
-
-              <div className="cliente-form-row">
-
-                <div className="cliente-form-group">
-
-                  <label>
-                    TELÉFONO
-                  </label>
-
-                  <input
-                    type="text"
-                    placeholder="+57 300 000 0000"
-                    maxLength={10}
-                    value={
-                      formulario.telefono
-                    }
-                    className={`input ${errores.telefono ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "telefono",
-                        e.target.value.replace(
-                          /[^0-9]/g,
-                          ""
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "tipoDocumento",
+                          formulario.tipoDocumento,
+                          formulario
                         )
-                      )
-                    }
-                  />
+                      }
+                    >
 
-                  {errores.telefono && (
-                    <span className="error-text">
-                      {errores.telefono}
-                    </span>
-                  )}
+                      <option value="">
+                        Sin documento
+                      </option>
+
+                      <option value="CC">
+                        CC — Cédula de ciudadanía
+                      </option>
+
+                      <option value="CE">
+                        CE — Cédula de extranjería
+                      </option>
+
+                      <option value="NIT">
+                        NIT
+                      </option>
+
+                      <option value="Pasaporte">
+                        Pasaporte
+                      </option>
+
+                    </select>
+
+                    {errores.tipoDocumento && (
+                      <span className="error-text">
+                        {errores.tipoDocumento}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  <div className="cliente-form-group">
+
+                    <label>
+                      NÚMERO DE DOCUMENTO
+                    </label>
+
+                    <input
+                      type="text"
+                      id="campo-documento"
+                      placeholder="Opcional"
+                      maxLength={15}
+                      value={
+                        formulario.documento
+                      }
+                      className={`input ${errores.documento ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "documento",
+                          e.target.value.replace(
+                            /[^0-9A-Za-z-]/g,
+                            ""
+                          )
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "documento",
+                          formulario.documento,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.documento && (
+                      <span className="error-text">
+                        {errores.documento}
+                      </span>
+                    )}
+
+                  </div>
 
                 </div>
 
 
-                <div className="cliente-form-group">
+                {/* NOMBRE + FECHA DE NACIMIENTO */}
 
-                  <label>
-                    FECHA DE REGISTRO
-                  </label>
+                <div className="cliente-form-row">
 
-                  <input
-                    type="date"
-                    value={
-                      formulario.fecha
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "fecha",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <div className="cliente-form-group">
+
+                    <label>
+                      NOMBRE COMPLETO
+                    </label>
+
+                    <input
+                      type="text"
+                      id="campo-nombre"
+                      placeholder="Nombre completo"
+                      maxLength={20}
+                      value={
+                        formulario.nombre
+                      }
+                      className={`input ${errores.nombre ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "nombre",
+                          e.target.value.replace(
+                            /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                            ""
+                          )
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "nombre",
+                          formulario.nombre,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.nombre && (
+                      <span className="error-text">
+                        {errores.nombre}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  <div className="cliente-form-group">
+
+                    <label>
+                      FECHA DE NACIMIENTO
+                    </label>
+
+                    <input
+                      type="date"
+                      id="campo-fechaNacimiento"
+                      value={
+                        formulario.fechaNacimiento
+                      }
+                      className={`input ${errores.fechaNacimiento ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "fechaNacimiento",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "fechaNacimiento",
+                          formulario.fechaNacimiento,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.fechaNacimiento && (
+                      <span className="error-text">
+                        {errores.fechaNacimiento}
+                      </span>
+                    )}
+
+                  </div>
 
                 </div>
+
 
               </div>
 
 
-              {/* DIRECCIÓN */}
+              {/* =================================================
+                  TARJETA 2 — DATOS DE CONTACTO
+              ================================================= */}
 
-              <div className="cliente-form-group">
+              <div className="cliente-form-card">
 
-                <label>
-                  DIRECCIÓN
-                </label>
+                <h4 className="cliente-form-card-title">
+                  Datos de contacto
+                </h4>
 
-                <input
-                  type="text"
-                  placeholder="Dirección completa"
-                  value={
-                    formulario.direccion
-                  }
-                  className={`input ${errores.direccion ? "input-error" : ""}`}
-                  onChange={(e) =>
-                    cambiarCampo(
-                      "direccion",
-                      e.target.value
-                    )
-                  }
-                />
 
-                {errores.direccion && (
-                  <span className="error-text">
-                    {errores.direccion}
-                  </span>
+                {/* CORREO + TELÉFONO */}
+
+                <div className="cliente-form-row">
+
+                  <div className="cliente-form-group">
+
+                    <label>
+                      CORREO ELECTRÓNICO
+                    </label>
+
+                    <input
+                      type="email"
+                      id="campo-correo"
+                      placeholder="correo@ejemplo.com"
+                      value={
+                        formulario.correo
+                      }
+                      className={`input ${errores.correo ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "correo",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "correo",
+                          formulario.correo,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.correo && (
+                      <span className="error-text">
+                        {errores.correo}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  <div className="cliente-form-group">
+
+                    <label>
+                      TELÉFONO
+                    </label>
+
+                    <input
+                      type="text"
+                      id="campo-telefono"
+                      placeholder="+57 300 000 0000"
+                      maxLength={10}
+                      value={
+                        formulario.telefono
+                      }
+                      className={`input ${errores.telefono ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "telefono",
+                          e.target.value.replace(
+                            /[^0-9]/g,
+                            ""
+                          )
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "telefono",
+                          formulario.telefono,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.telefono && (
+                      <span className="error-text">
+                        {errores.telefono}
+                      </span>
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                {/* DIRECCIÓN */}
+
+                <div className="cliente-form-row">
+
+                  <div className="cliente-form-group cliente-form-group-full">
+
+                    <label>
+                      DIRECCIÓN
+                    </label>
+
+                    <input
+                      type="text"
+                      id="campo-direccion"
+                      placeholder="Dirección completa"
+                      value={
+                        formulario.direccion
+                      }
+                      className={`input ${errores.direccion ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "direccion",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "direccion",
+                          formulario.direccion,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.direccion && (
+                      <span className="error-text">
+                        {errores.direccion}
+                      </span>
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                {/* ESTADO (solo al editar) */}
+
+                {modoEdicion && (
+                  <div className="cliente-form-row">
+
+                    <div className="cliente-form-group">
+
+                      <label>
+                        ESTADO
+                      </label>
+
+                      <select
+                        value={
+                          formulario.estado
+                        }
+                        onChange={(e) =>
+                          cambiarCampo(
+                            "estado",
+                            e.target.value
+                          )
+                        }
+                      >
+
+                        <option value="Activo">
+                          Activo
+                        </option>
+
+                        <option value="Inactivo">
+                          Inactivo
+                        </option>
+
+                      </select>
+
+                    </div>
+
+                  </div>
                 )}
+
 
               </div>
 

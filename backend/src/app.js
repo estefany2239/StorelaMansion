@@ -10,6 +10,8 @@ import usuariosAdminRouter from './routes/usuariosAdmin.js'
 import categoriasRouter from './routes/categorias.js'
 import categoriasAdminRouter from './routes/categoriasAdmin.js'
 import rolesAdminRouter from './routes/rolesAdmin.js'
+import tallasAdminRouter from './routes/tallasAdmin.js'
+import coloresAdminRouter from './routes/coloresAdmin.js'
 import pruebasRouter from './routes/pruebas.js'
 import { modoSimulacion } from './services/correos.js'
 
@@ -44,6 +46,8 @@ app.use('/api/admin/usuarios', usuariosAdminRouter)
 app.use('/api/categorias', categoriasRouter)
 app.use('/api/admin/categorias', categoriasAdminRouter)
 app.use('/api/admin/roles', rolesAdminRouter)
+app.use('/api/admin/tallas', tallasAdminRouter)
+app.use('/api/admin/colores', coloresAdminRouter)
 
 // MODO DE PRUEBA: la bandeja de correos simulados (que contiene contraseñas
 // temporales) solo se monta fuera de producción y sin BREVO_API_KEY. En

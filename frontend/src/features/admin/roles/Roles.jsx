@@ -27,6 +27,7 @@ import "./Roles.css";
 
 import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
+import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
 
 /* =====================================================
    NIVEL 3 DE SEGURIDAD
@@ -60,9 +61,10 @@ const PRIVILEGIO_POR_DEFECTO = "Consultar";
 
 const REGISTROS_POR_PAGINA = 6;
 
-/* Privilegios de la columna de detalle (incluye
-   el que solo existe en Ventas y Pedidos). Se usa
-   como respaldo si el catálogo aún no cargó. */
+/* Privilegios de la columna de detalle. Se usa
+   como respaldo si el catálogo aún no cargó;
+   incluye "Cambiar estado" (existe en todo módulo
+   con estado, no en Dashboard según el catálogo). */
 
 const COLUMNAS_DETALLE = [...PRIVILEGIOS, "Cambiar estado"];
 
@@ -165,7 +167,6 @@ const totalPrivilegios = (permisos = []) =>
 
 
 export default function Roles({ user }) {
-  const rolUsuario = user?.rol;
   const [roles, setRoles] = useState([]);
 
   const [catalogo, setCatalogo] = useState(null);
@@ -186,7 +187,40 @@ export default function Roles({ user }) {
     permisos: [],
   });
 
-  const [errores, setErrores] = useState({});
+  // Reglas alineadas con el backend (rolesAdmin.js): nombre obligatorio
+  // y sin duplicados; y al menos un permiso (regla del formulario).
+  const REGLAS_ROL = {
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+      if (!nombre) return "Este campo es obligatorio.";
+
+      const yaExiste = roles.some(
+        (item) =>
+          item.nombre.trim().toLowerCase() === nombre.toLowerCase() &&
+          (modal !== "editar" || item.id !== rolForm.id)
+      );
+      if (yaExiste) return "Ya existe un registro con este nombre.";
+
+      if (nombre.length > 20) {
+        return "El nombre no puede superar los 20 caracteres.";
+      }
+
+      return "";
+    },
+    permisos: (valor) =>
+      Array.isArray(valor) && valor.length > 0
+        ? ""
+        : "Debe seleccionar al menos un permiso.",
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    limpiarValidacion,
+    setErrores,
+  } = useValidacionFormulario(REGLAS_ROL);
 
   /* =====================================================
      NOTIFICACIÓN
@@ -223,9 +257,19 @@ export default function Roles({ user }) {
     return ordenarPrivilegios(delCatalogo);
   };
 
+  /* Un privilegio existe para el módulo según el
+     catálogo de la BD; sin catálogo no se juzga
+     (se muestra el check normal de asignado/no) */
+
+  const privilegioExisteEnModulo = (modulo, privilegio) => {
+    if (!catalogo?.modulos?.length) return true;
+
+    return privilegiosDisponibles(modulo).includes(privilegio);
+  };
+
   /* Columnas del detalle: unión de privilegios del
-     catálogo ("Cambiar estado" solo en Ventas y
-     Pedidos); respaldo fijo si no hay catálogo */
+     catálogo (lo que diga la BD); respaldo fijo
+     si no hay catálogo */
 
   const privilegiosCatalogo = (catalogo?.modulos || []).flatMap(
     (item) => item.privilegios || []
@@ -350,7 +394,7 @@ export default function Roles({ user }) {
       permisos: [],
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModal("crear");
   };
 
@@ -388,7 +432,7 @@ export default function Roles({ user }) {
         : [],
     });
 
-    setErrores({});
+    limpiarValidacion();
     setModal("editar");
   };
 
@@ -415,16 +459,6 @@ export default function Roles({ user }) {
      MANEJAR CAMPOS
      ===================================================== */
 
-  const limpiarError = (campo) => {
-    setErrores((prev) => {
-      if (!prev[campo]) return prev;
-
-      const nuevos = { ...prev };
-      delete nuevos[campo];
-      return nuevos;
-    });
-  };
-
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
@@ -436,14 +470,15 @@ export default function Roles({ user }) {
           )
         : value;
 
-    setRolForm((prev) => ({
-      ...prev,
+    const siguiente = {
+      ...rolForm,
       [name]: valorFiltrado,
-    }));
+    };
 
-    if (String(valorFiltrado).trim()) {
-      limpiarError(name);
-    }
+    setRolForm(siguiente);
+
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(name, valorFiltrado, siguiente);
   };
 
   /* =====================================================
@@ -459,8 +494,19 @@ export default function Roles({ user }) {
   const moduloTieneAcceso = (modulo) =>
     obtenerPrivilegiosModulo(modulo).length > 0;
 
+  /* Al tocar los permisos se limpia su error (igual que antes) */
+  const limpiarErrorPermisos = () => {
+    setErrores((prev) => {
+      if (!prev.permisos) return prev;
+
+      const nuevos = { ...prev };
+      delete nuevos.permisos;
+      return nuevos;
+    });
+  };
+
   const manejarAccesoModulo = (modulo) => {
-    limpiarError("permisos");
+    limpiarErrorPermisos();
 
     setRolForm((prev) => {
       const permisosActuales = Array.isArray(prev.permisos)
@@ -498,7 +544,7 @@ export default function Roles({ user }) {
   };
 
   const manejarPrivilegio = (modulo, privilegio) => {
-    limpiarError("permisos");
+    limpiarErrorPermisos();
 
     setRolForm((prev) => {
       const permisosActuales = Array.isArray(prev.permisos)
@@ -572,39 +618,9 @@ export default function Roles({ user }) {
   const guardarRol = async (e) => {
     e.preventDefault();
 
-    const nuevosErrores = {};
-
-    if (!rolForm.nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio.";
-    } else {
-      const nombreNormalizado =
-        rolForm.nombre.trim().toLowerCase();
-
-      const yaExiste = roles.some(
-        (item) =>
-          item.nombre.trim().toLowerCase() ===
-            nombreNormalizado &&
-          (modal !== "editar" ||
-            item.id !== rolForm.id)
-      );
-
-      if (yaExiste) {
-        nuevosErrores.nombre =
-          "Ya existe un registro con este nombre.";
-      }
-    }
-
-    if (rolForm.nombre.trim().length > 20) {
-      nuevosErrores.nombre = "El nombre no puede superar los 20 caracteres.";
-    }
-
-    if (!Array.isArray(rolForm.permisos) || rolForm.permisos.length === 0) {
-      nuevosErrores.permisos = "Debe seleccionar al menos un permiso.";
-    }
-
-    setErrores(nuevosErrores);
-
-    if (Object.keys(nuevosErrores).length > 0) return;
+    // Valida todo el formulario (nombre y permisos) y, si hay
+    // errores, enfoca el primer campo inválido.
+    if (!validarTodo(rolForm)) return;
 
     if (modal === "editar") {
       setConfirmarEdicion(true);
@@ -794,7 +810,7 @@ export default function Roles({ user }) {
             user,
             "Roles",
             "Crear"
-          ) || rolUsuario === "Administrador") && (
+          )) && (
             <button
               type="button"
               className="roles-add-button"
@@ -864,11 +880,10 @@ export default function Roles({ user }) {
                         user,
                         "Roles",
                         "Cambiar estado"
-                      ) && (
+                      ) && !esRolProtegido(rol) && (
                         <input
                           type="checkbox"
                           checked={rol.estado === "Activo"}
-                          disabled={esRolProtegido(rol)}
                           onChange={() =>
                             cambiarEstado(rol)
                           }
@@ -879,7 +894,7 @@ export default function Roles({ user }) {
                         user,
                         "Roles",
                         "Cambiar estado"
-                      ) && (
+                      ) && !esRolProtegido(rol) && (
                         <span className="slider-usuario"></span>
                       )}
 
@@ -1046,35 +1061,20 @@ export default function Roles({ user }) {
                   <div className="rol-form-group">
 
                     <label>
-                      ID ROL
-                    </label>
-
-                    <input
-                      type="text"
-                      name="id"
-                      value={
-                        rolForm.id === ""
-                          ? "Se asigna al guardar"
-                          : formatearIdRol(rolForm.id)
-                      }
-                      disabled
-                    />
-
-                  </div>
-
-                  <div className="rol-form-group">
-
-                    <label>
                       NOMBRE DEL ROL
                     </label>
 
                     <input
                       type="text"
+                      id="campo-nombre"
                       name="nombre"
                       placeholder="Ej. Vendedor"
                       maxLength={20}
                       value={rolForm.nombre}
                       onChange={manejarCambio}
+                      onBlur={() =>
+                        manejarBlur("nombre", rolForm.nombre, rolForm)
+                      }
                       className={`input ${errores.nombre ? "input-error" : ""}`}
                     />
 
@@ -1089,7 +1089,7 @@ export default function Roles({ user }) {
                 </div>
                  {/* PERMISOS */}
  
-                 <div className="rol-permisos-section">
+                 <div className="rol-permisos-section" id="campo-permisos" tabIndex={-1}>
  
                    <div className="rol-permisos-header">
  
@@ -1387,11 +1387,21 @@ export default function Roles({ user }) {
                                     size={18}
                                     className="priv-check activo"
                                   />
-                                ) : (
+                                ) : privilegioExisteEnModulo(
+                                    permiso.modulo,
+                                    privilegio
+                                  ) ? (
                                   <XCircle
                                     size={18}
                                     className="priv-check inactivo"
                                   />
+                                ) : (
+                                  <span
+                                    className="priv-check na"
+                                    title="Este privilegio no existe para el módulo"
+                                  >
+                                    —
+                                  </span>
                                 )}
                               </div>
                             ))}

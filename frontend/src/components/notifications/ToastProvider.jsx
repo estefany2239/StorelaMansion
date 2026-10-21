@@ -14,9 +14,9 @@ import "./ToastProvider.css";
 // NOTIFICACIONES PÚBLICAS - STORE LA MANSIÓN
 // =========================================================
 // Sistema de notificaciones reutilizable para el sitio público.
-// Reemplaza los `alert()` nativos por avisos elegantes integrados
-// en la interfaz. Se monta una sola vez (nivel App), por lo que
-// los avisos sobreviven al desmontaje del componente que los lanza.
+// Sustituye los diálogos nativos del navegador por avisos elegantes
+// integrados en la interfaz. Se monta una sola vez (nivel App), por
+// lo que los avisos sobreviven al desmontaje del componente que los lanza.
 
 // Tiempo que permanece visible cada aviso (ms)
 const DURACION = 4500;
