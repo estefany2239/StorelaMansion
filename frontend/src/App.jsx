@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock, Minus, Plus, Trash2 } from "lucide-react";
 
 import SplashScreen from "./components/splash/SplashScreen";
 
@@ -444,6 +444,16 @@ export default function App() {
 
 
   // ==========================================
+  // VOLVER DESDE EL GATE (el carrito se conserva)
+  // ==========================================
+
+  const volverDesdeElGate = () => {
+    setFlujoCheckout(false);
+    setCurrentView(viewAnterior);
+  };
+
+
+  // ==========================================
   // VISTAS DE AUTENTICACIÓN
   // ==========================================
 
@@ -596,11 +606,6 @@ export default function App() {
     (acumulado, item) =>
       acumulado +
       obtenerPrecio(item.price) * (Number(item.quantity) || 1),
-    0
-  );
-
-  const totalItemsCarrito = cart.reduce(
-    (acumulado, item) => acumulado + (Number(item.quantity) || 1),
     0
   );
 
@@ -873,132 +878,198 @@ export default function App() {
 
         <section className="checkout-login-page">
 
-          <button
-            type="button"
-            className="checkout-login-back"
-            onClick={() => {
-              setFlujoCheckout(false);
-              setCurrentView(viewAnterior);
-            }}
-          >
-            <ArrowLeft size={16} />
-            Seguir comprando
-          </button>
+          <div className="checkout-login-inner">
 
-          <div className="checkout-login-wrap">
+            <button
+              type="button"
+              className="checkout-login-back"
+              onClick={volverDesdeElGate}
+            >
+              <ArrowLeft size={16} />
+              Seguir comprando
+            </button>
 
-            {/* RESUMEN DEL CARRITO */}
-            <div className="checkout-login-summary">
-
-              <h2 className="checkout-login-title">
-                Iniciar sesión para continuar
-              </h2>
-
+            <header className="checkout-login-header">
+              <h1 className="checkout-login-title">Tu pedido</h1>
               <p className="checkout-login-subtitle">
-                Tienes {totalItemsCarrito}{" "}
-                {totalItemsCarrito === 1 ? "producto" : "productos"} en tu carrito
+                Revisa tus productos antes de continuar
               </p>
+            </header>
 
-              <div className="checkout-login-items">
-                {cart.length === 0 ? (
-                  <p className="checkout-login-empty">
-                    Tu carrito está vacío.
-                  </p>
-                ) : (
-                  cart.map((item) => (
-                    <div
-                      key={`${item.id}-${item.size || "sin-talla"}`}
-                      className="checkout-login-item"
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="checkout-login-item-img"
-                      />
-                      <div className="checkout-login-item-info">
-                        <span className="checkout-login-item-name">
-                          {item.name}
-                        </span>
-                        <span className="checkout-login-item-specs">
-                          {item.color ? `Color: ${item.color}` : ""}
-                          {item.color && item.size ? " | " : ""}
-                          {item.size ? `Talla: ${item.size}` : ""}
-                          {item.color || item.size ? " · " : ""}
-                          x{Number(item.quantity) || 1}
-                        </span>
+            {cart.length === 0 ? (
+
+              <div className="checkout-login-card checkout-login-empty">
+
+                <p className="checkout-login-empty-text">
+                  Tu carrito está vacío
+                </p>
+
+                <button
+                  type="button"
+                  className="checkout-login-btn-ghost"
+                  onClick={volverDesdeElGate}
+                >
+                  Seguir comprando
+                </button>
+
+              </div>
+
+            ) : (
+
+              <div className="checkout-login-wrap">
+
+                {/* PRODUCTOS DEL CARRITO */}
+                <div className="checkout-login-card checkout-login-items">
+
+                  {cart.map((item) => {
+
+                    const cantidad = Number(item.quantity) || 1;
+
+                    return (
+                      <div
+                        key={`${item.id}-${item.size || "sin-talla"}`}
+                        className="checkout-login-item"
+                      >
+
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="checkout-login-item-img"
+                        />
+
+                        <div className="checkout-login-item-info">
+                          <span className="checkout-login-item-name">
+                            {item.name}
+                          </span>
+
+                          {(item.color || item.size) && (
+                            <span className="checkout-login-item-specs">
+                              {item.color ? `Color: ${item.color}` : ""}
+                              {item.color && item.size ? " | " : ""}
+                              {item.size ? `Talla: ${item.size}` : ""}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="checkout-login-item-controls">
+
+                          <div className="checkout-login-qty">
+                            <button
+                              type="button"
+                              aria-label="Disminuir cantidad"
+                              disabled={cantidad <= 1}
+                              onClick={() =>
+                                updateQuantity &&
+                                updateQuantity(item.id, cantidad - 1)
+                              }
+                            >
+                              <Minus size={15} />
+                            </button>
+
+                            <span>{cantidad}</span>
+
+                            <button
+                              type="button"
+                              aria-label="Aumentar cantidad"
+                              onClick={() =>
+                                updateQuantity &&
+                                updateQuantity(item.id, cantidad + 1)
+                              }
+                            >
+                              <Plus size={15} />
+                            </button>
+                          </div>
+
+                          <span className="checkout-login-item-price">
+                            {formatoPrecio(obtenerPrecio(item.price))}
+                          </span>
+
+                          <button
+                            type="button"
+                            className="checkout-login-remove"
+                            title="Eliminar producto"
+                            aria-label={`Eliminar ${item.name}`}
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            <Trash2 size={17} />
+                          </button>
+
+                        </div>
+
                       </div>
-                      <span className="checkout-login-item-price">
-                        {formatoPrecio(
-                          obtenerPrecio(item.price) *
-                            (Number(item.quantity) || 1)
-                        )}
+                    );
+
+                  })}
+
+                </div>
+
+                {/* RESUMEN DEL PEDIDO */}
+                <aside className="checkout-login-card checkout-login-summary">
+
+                  <h2 className="checkout-login-summary-title">
+                    Resumen del pedido
+                  </h2>
+
+                  <div className="checkout-login-gold-line" />
+
+                  <div className="checkout-login-summary-rows">
+
+                    <div className="checkout-login-summary-row">
+                      <span>Subtotal</span>
+                      <span className="checkout-login-summary-amount">
+                        {formatoPrecio(subtotalCarrito)}
                       </span>
                     </div>
-                  ))
-                )}
+
+                    <div className="checkout-login-summary-row">
+                      <span>Envío</span>
+                      <span className="checkout-login-summary-amount">
+                        {formatoPrecio(0)}
+                      </span>
+                    </div>
+
+                    <div className="checkout-login-summary-row checkout-login-summary-total">
+                      <span>Total</span>
+                      <span className="checkout-login-summary-amount">
+                        {formatoPrecio(subtotalCarrito)}
+                      </span>
+                    </div>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="checkout-login-btn-primary"
+                    onClick={() => setCurrentView("login")}
+                  >
+                    Continuar con mi compra
+                    <ArrowRight size={18} />
+                  </button>
+
+                  <p className="checkout-login-note">
+                    <Lock size={15} className="checkout-login-note-icon" />
+                    <span>
+                      Necesitarás iniciar sesión para finalizar tu pedido.
+                    </span>
+                  </p>
+
+                  <div className="checkout-login-divider" />
+
+                  <p className="checkout-login-signup">
+                    ¿No tienes cuenta?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView("register")}
+                    >
+                      Crear cuenta
+                    </button>
+                  </p>
+
+                </aside>
+
               </div>
 
-              <div className="checkout-login-totals">
-                <div className="checkout-login-row">
-                  <span>Subtotal</span>
-                  <span>{formatoPrecio(subtotalCarrito)}</span>
-                </div>
-                <div className="checkout-login-row">
-                  <span>Envío</span>
-                  <span>{formatoPrecio(0)}</span>
-                </div>
-                <div className="checkout-login-total">
-                  <span>Total</span>
-                  <strong>{formatoPrecio(subtotalCarrito)}</strong>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="checkout-login-btn-primary"
-                onClick={() => setCurrentView("login")}
-              >
-                Iniciar sesión para continuar
-              </button>
-
-            </div>
-
-            {/* PANEL OSCURO CON LA MARCA */}
-            <div className="checkout-login-panel">
-
-              <h1 className="checkout-login-logo">
-                LA MANSI<span>ÓN</span>
-              </h1>
-
-              <p className="checkout-login-headline">
-                Último paso antes de tu pedido
-              </p>
-
-              <p className="checkout-login-copy">
-                Por tu seguridad, necesitamos que inicies sesión
-                para procesar tu compra. No perderás los productos
-                que tienes en tu carrito.
-              </p>
-
-              <div className="checkout-login-actions">
-                <button
-                  type="button"
-                  className="checkout-login-btn-primary"
-                  onClick={() => setCurrentView("login")}
-                >
-                  Iniciar sesión
-                </button>
-
-                <button
-                  type="button"
-                  className="checkout-login-btn-secondary"
-                  onClick={() => setCurrentView("register")}
-                >
-                  Crear cuenta
-                </button>
-              </div>
-
-            </div>
+            )}
 
           </div>
 
