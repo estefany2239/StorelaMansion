@@ -4,11 +4,15 @@ import crypto from 'node:crypto'
 import { pool } from '../db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 import { leerIdentificacion } from '../utils/documentos.js'
+import { generarClaveTemporal, enviarInvitacion } from '../services/invitaciones.js'
 
 const router = Router()
 
 router.use(verificarToken, bloquearCambioPendiente)
 
+// accesoWeb: TRUE = la persona conoce/recibió su contraseña (puede entrar);
+// FALSE = ficha sin acceso: nadie conoce la contraseña y hay que invitarla.
+// invitacionEnviada y cambioContrasenaPendiente permiten verlo en la tabla.
 const SELECT_CLIENTE = `
   SELECT u.id_usuario AS id,
          TRIM(u.nombres || ' ' || u.apellidos) AS nombre,
@@ -17,7 +21,10 @@ const SELECT_CLIENTE = `
          TO_CHAR(u.fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
          CASE WHEN u.estado THEN 'Activo' ELSE 'Inactivo' END AS estado,
          TO_CHAR(u.created_at, 'YYYY-MM-DD') AS fecha,
-         (SELECT COUNT(*) FROM pedido p WHERE p.id_usuario = u.id_usuario)::int AS pedidos
+         (SELECT COUNT(*) FROM pedido p WHERE p.id_usuario = u.id_usuario)::int AS pedidos,
+         u.acceso_web AS "accesoWeb",
+         u.invitacion_enviada AS "invitacionEnviada",
+         u.cambio_contrasena_obligatorio AS "cambioContrasenaPendiente"
   FROM usuario u
   JOIN rol r ON r.id_rol = u.id_rol
 `
@@ -26,6 +33,26 @@ const correoValido = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
 const nombreValido = (nombre) =>
   /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre) && nombre.length <= 20
 const telefonoValido = (telefono) => /^[0-9]+$/.test(telefono) && telefono.length <= 10
+
+// Mismo correo de otra persona: 409 con un mensaje distinto según lo que ya
+// exista. Si es una CUENTA REAL (acceso_web = TRUE) no se crea otro registro
+// ni se manda invitación: esa persona entra con su contraseña. Si es una
+// ficha sin acceso, se avisa que ya existe el registro.
+const responderCorreoRepetido = async (res, correo, idExcluido = null) => {
+  const parametros = idExcluido ? [correo, idExcluido] : [correo]
+  const { rows } = await pool.query(
+    `SELECT acceso_web FROM usuario
+     WHERE LOWER(correo) = $1${idExcluido ? ' AND id_usuario <> $2' : ''}`,
+    parametros
+  )
+  if (rows[0]?.acceso_web) {
+    return res.status(409).json({
+      error: 'Este correo ya tiene una cuenta; el cliente puede entrar con su contraseña',
+      codigo: 'CORREO_CUENTA_REAL',
+    })
+  }
+  return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
+}
 
 const validarCliente = (body) => {
   const nombre = String(body.nombre || '').trim()
@@ -110,7 +137,7 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
       [correo]
     )
     if (existe.rowCount > 0) {
-      return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
+      return await responderCorreoRepetido(res, correo)
     }
 
     if (documento) {
@@ -120,7 +147,8 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
       )
       if (docExistente.rowCount > 0) {
         return res.status(409).json({
-          error: 'Ya existe un cliente con este número de documento.'
+          error: 'Ya existe un cliente con este número de documento.',
+          codigo: 'DOCUMENTO_DUPLICADO',
         })
       }
     }
@@ -132,20 +160,59 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
 
     const [nombres, ...resto] = nombre.split(/\s+/)
     const apellidos = resto.join(' ')
-    const contrasenaTemporal = crypto.randomBytes(12).toString('base64url')
-    const hash = await bcrypt.hash(contrasenaTemporal, 10)
+
+    // "Invitar por correo" (opt-in): solo si el administrador lo pidió. La
+    // clave temporal la genera SIEMPRE el backend, vive únicamente en el
+    // correo y nunca se recibe en el cuerpo ni se devuelve en la respuesta.
+    const invitar = req.body.invitar === true
+    let hash
+    let vencimiento = null
+    let contrasenaTemporal = null
+
+    if (invitar) {
+      const generada = await generarClaveTemporal()
+      hash = generada.hash
+      vencimiento = generada.vencimiento
+      contrasenaTemporal = generada.contrasenaTemporal
+    } else {
+      // Ficha: se guarda un hash que nadie conoce, así el cliente no puede
+      // entrar hasta que le mandemos una invitación con clave temporal.
+      hash = await bcrypt.hash(crypto.randomBytes(12).toString('base64url'), 10)
+    }
 
     const { rows } = await pool.query(
       `INSERT INTO usuario (nombres, apellidos, correo, contrasena, telefono, direccion,
-                            id_rol, estado, tipo_documento, documento, fecha_nacimiento)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10)
+                            id_rol, estado, tipo_documento, documento, fecha_nacimiento,
+                            acceso_web, cambio_contrasena_obligatorio, contrasena_temporal_vencimiento,
+                            invitacion_enviada)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, FALSE)
        RETURNING id_usuario`,
       [nombres, apellidos, correo, hash, telefono, direccion, rol.rows[0].id,
-       tipoDocumento, documento, fechaNacimiento]
+       tipoDocumento, documento, fechaNacimiento, invitar, invitar, vencimiento]
     )
+    const idCliente = rows[0].id_usuario
 
-    const cliente = await obtenerClientePorId(rows[0].id_usuario)
-    res.status(201).json(cliente)
+    // Invitación por correo (real con Brevo; simulada sin BREVO_API_KEY).
+    // Si el envío falla, el cliente YA existe en ficha: el administrador puede
+    // reenviar la invitación desde la tabla de clientes más tarde.
+    const invitacion = invitar
+      ? await enviarInvitacion({
+          tipo: 'cliente',
+          idUsuario: idCliente,
+          para: correo,
+          nombre,
+          contrasenaTemporal,
+          vencimiento,
+        })
+      : null
+
+    const cliente = await obtenerClientePorId(idCliente)
+    res.status(201).json({
+      ...cliente,
+      ...(invitacion
+        ? { invitacionEnviada: invitacion.ok, modoCorreo: invitacion.modo }
+        : {}),
+    })
   } catch (error) {
     if (error.code === '23505') {
       if (documento) {
@@ -155,11 +222,12 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
         )
         if (docExistente.rowCount > 0) {
           return res.status(409).json({
-            error: 'Ya existe un cliente con este número de documento.'
+            error: 'Ya existe un cliente con este número de documento.',
+            codigo: 'DOCUMENTO_DUPLICADO',
           })
         }
       }
-      return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
+      return await responderCorreoRepetido(res, correo)
     }
     console.error(error.message)
     res.status(500).json({ error: 'No se pudo crear el cliente' })
@@ -191,7 +259,7 @@ router.put('/:id', requierePrivilegio('Clientes', 'Actualizar'), async (req, res
       [correo, id]
     )
     if (duplicado.rowCount > 0) {
-      return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
+      return await responderCorreoRepetido(res, correo, id)
     }
 
     if (documento) {
@@ -229,11 +297,12 @@ router.put('/:id', requierePrivilegio('Clientes', 'Actualizar'), async (req, res
         )
         if (docDuplicado.rowCount > 0) {
           return res.status(409).json({
-            error: 'Ya existe un cliente con este número de documento.'
+            error: 'Ya existe un cliente con este número de documento.',
+            codigo: 'DOCUMENTO_DUPLICADO',
           })
         }
       }
-      return res.status(409).json({ error: 'Ya existe un registro con este correo.' })
+      return await responderCorreoRepetido(res, correo, id)
     }
     console.error(error.message)
     res.status(500).json({ error: 'No se pudo actualizar el cliente' })

@@ -1,13 +1,13 @@
 import { Router } from 'express'
-import bcrypt from 'bcryptjs'
 import { pool } from '../db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 import {
-  enviarCorreo,
-  plantillaInvitacion,
-  generarContrasenaTemporal,
-  modoSimulacion
-} from '../services/correos.js'
+  enlaceLogin,
+  esperaReenvio,
+  generarClaveTemporal,
+  marcarReenvio,
+  enviarInvitacion
+} from '../services/invitaciones.js'
 
 const router = Router()
 
@@ -25,7 +25,8 @@ const SELECT_FILAS = `
          CASE WHEN u.estado THEN 'Activo' ELSE 'Inactivo' END AS estado,
          TO_CHAR(u.created_at, 'YYYY-MM-DD') AS fecha,
          u.invitacion_enviada AS "invitacionEnviada",
-         u.cambio_contrasena_obligatorio AS "cambioContrasenaPendiente"
+         u.cambio_contrasena_obligatorio AS "cambioContrasenaPendiente",
+         u.acceso_web AS "accesoWeb"
   FROM usuario u
   LEFT JOIN rol r ON r.id_rol = u.id_rol`
 
@@ -71,36 +72,6 @@ const leerCuerpo = (body, { esNuevo }) => {
   else if (!datos.rol) error = 'Selecciona un rol'
 
   return { datos, error }
-}
-
-// Enlace profundo al login. Solo ?vista=login: la pantalla de cambio de
-// contraseña se muestra después de entrar con la temporal, nunca por enlace.
-const enlaceLogin = () =>
-  process.env.APP_LOGIN_URL || 'http://localhost:5173/?vista=login'
-
-// Horas de vigencia de la contraseña temporal (por defecto 48).
-const horasVigenciaTemporal = () => {
-  const horas = Number(process.env.CONTRASENA_TEMPORAL_HORAS)
-  return Number.isInteger(horas) && horas > 0 ? horas : 48
-}
-
-// Límite de frecuencia del reenvío de invitación: un reenvío por usuario cada
-// REENVIO_INVITACION_SEGUNDOS segundos (60 por defecto). Se guarda en memoria
-// el instante del último reenvío por id de usuario.
-const ultimoReenvio = new Map()
-
-const segundosReenvio = () => {
-  const segundos = Number(process.env.REENVIO_INVITACION_SEGUNDOS)
-  return Number.isInteger(segundos) && segundos >= 0 ? segundos : 60
-}
-
-// Devuelve los segundos que faltan para poder reenviar, o 0 si ya se puede.
-const esperaReenvio = (id) => {
-  const ultimo = ultimoReenvio.get(id)
-  if (!ultimo) return 0
-  const transcurrido = Date.now() - ultimo
-  const limite = segundosReenvio() * 1000
-  return transcurrido >= limite ? 0 : Math.ceil((limite - transcurrido) / 1000)
 }
 
 const separarNombre = (nombre) => {
@@ -175,9 +146,7 @@ router.post('/', requierePrivilegio('Usuarios', 'Crear'), async (req, res) => {
     }
 
     const { nombres, apellidos } = separarNombre(datos.nombre)
-    const contrasenaTemporal = generarContrasenaTemporal()
-    const hash = await bcrypt.hash(contrasenaTemporal, 10)
-    const vencimiento = new Date(Date.now() + horasVigenciaTemporal() * 3600 * 1000)
+    const { contrasenaTemporal, hash, vencimiento } = await generarClaveTemporal()
 
     const { rows } = await pool.query(
       `INSERT INTO usuario (nombres, apellidos, correo, contrasena, telefono, direccion, id_rol, estado,
@@ -194,27 +163,14 @@ router.post('/', requierePrivilegio('Usuarios', 'Crear'), async (req, res) => {
     // Invitación por correo (real con Brevo; simulada sin BREVO_API_KEY).
     // Si el envío falla, el usuario YA existe y conserva la contraseña
     // temporal: el administrador puede reenviar la invitación más tarde.
-    const nombreCompleto = `${nombres} ${apellidos}`.trim()
-    let invitacion = { ok: false, modo: modoSimulacion() ? 'simulado' : 'brevo' }
-    try {
-      const plantilla = plantillaInvitacion({
-        nombre: nombreCompleto,
-        contrasenaTemporal,
-        enlaceLogin: enlaceLogin(),
-        vencimiento,
-      })
-      invitacion = await enviarCorreo({
-        para: datos.correo,
-        asunto: plantilla.asunto,
-        html: plantilla.html,
-        texto: plantilla.texto,
-      })
-      await pool.query('UPDATE usuario SET invitacion_enviada = TRUE WHERE id_usuario = $1', [
-        idUsuario,
-      ])
-    } catch (err) {
-      console.error('[usuarios] No se pudo enviar la invitación:', err.message)
-    }
+    const invitacion = await enviarInvitacion({
+      tipo: 'usuario',
+      idUsuario,
+      para: datos.correo,
+      nombre: `${nombres} ${apellidos}`.trim(),
+      contrasenaTemporal,
+      vencimiento,
+    })
 
     const fila = await pool.query(`${SELECT_FILAS} WHERE u.id_usuario = $1`, [idUsuario])
     res.status(201).json({
@@ -237,25 +193,33 @@ router.post('/', requierePrivilegio('Usuarios', 'Crear'), async (req, res) => {
 // POST /api/admin/usuarios/:id/reenviar-invitacion
 // Genera una contraseña temporal NUEVA (la anterior no se puede recuperar),
 // la envía por correo y mantiene el cambio de contraseña como obligatorio.
-// Solo aplica a usuarios que todavía no han establecido su contraseña.
+// Aplica a usuarios invitados que no han establecido su contraseña y también
+// a las FICHAS de cliente (acceso_web = FALSE), que nunca tuvieron clave.
 router.post('/:id/reenviar-invitacion', requierePrivilegio('Usuarios', 'Actualizar'), async (req, res) => {
   const id = leerId(req)
   if (!id) return res.status(400).json({ error: 'Id inválido' })
 
   try {
     const actual = await pool.query(
-      `SELECT cambio_contrasena_obligatorio, invitacion_enviada, correo,
-              TRIM(nombres || ' ' || apellidos) AS nombre
-       FROM usuario WHERE id_usuario = $1`,
+      `SELECT u.cambio_contrasena_obligatorio, u.acceso_web, u.correo,
+              TRIM(u.nombres || ' ' || u.apellidos) AS nombre,
+              r.nombre AS rol
+       FROM usuario u LEFT JOIN rol r ON r.id_rol = u.id_rol
+       WHERE u.id_usuario = $1`,
       [id]
     )
     if (actual.rowCount === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' })
     }
-    if (!actual.rows[0].cambio_contrasena_obligatorio) {
-      return res
-        .status(400)
-        .json({ error: 'Este usuario ya estableció su contraseña; no hay invitación pendiente' })
+    const fila = actual.rows[0]
+
+    // Cuenta real: la persona ya conoce su contraseña. Nunca se genera una
+    // clave nueva ni se le envía una invitación que la cambiaría.
+    if (fila.acceso_web && !fila.cambio_contrasena_obligatorio) {
+      return res.status(409).json({
+        error: 'Este correo ya tiene una cuenta; el cliente puede entrar con su contraseña',
+        codigo: 'CUENTA_REAL_SIN_INVITACION',
+      })
     }
 
     // Límite de frecuencia: un reenvío por usuario cada N segundos.
@@ -267,41 +231,35 @@ router.post('/:id/reenviar-invitacion', requierePrivilegio('Usuarios', 'Actualiz
         reintentarEn: restante,
       })
     }
-    ultimoReenvio.set(id, Date.now())
+    marcarReenvio(id)
 
-    const contrasenaTemporal = generarContrasenaTemporal()
-    const hash = await bcrypt.hash(contrasenaTemporal, 10)
-    const vencimiento = new Date(Date.now() + horasVigenciaTemporal() * 3600 * 1000)
+    const { contrasenaTemporal, hash, vencimiento } = await generarClaveTemporal()
 
+    // El reenvío NO apaga el cambio de contraseña obligatorio: mientras la
+    // clave siga siendo temporal, la pantalla de cambio se mantiene. Como la
+    // clave ya la va a recibir por correo, la cuenta pasa a "conoce su
+    // contraseña" (acceso_web = TRUE); una ficha deja de serlo al invitarse.
     await pool.query(
       `UPDATE usuario
-       SET contrasena = $1, contrasena_temporal_vencimiento = $2, invitacion_enviada = FALSE
+       SET contrasena = $1, contrasena_temporal_vencimiento = $2,
+           cambio_contrasena_obligatorio = TRUE, acceso_web = TRUE,
+           invitacion_enviada = FALSE
        WHERE id_usuario = $3`,
       [hash, vencimiento, id]
     )
 
-    let invitacion = { ok: false, modo: modoSimulacion() ? 'simulado' : 'brevo' }
-    try {
-      const plantilla = plantillaInvitacion({
-        nombre: actual.rows[0].nombre,
-        contrasenaTemporal,
-        enlaceLogin: enlaceLogin(),
-        vencimiento,
-      })
-      invitacion = await enviarCorreo({
-        para: actual.rows[0].correo,
-        asunto: plantilla.asunto,
-        html: plantilla.html,
-        texto: plantilla.texto,
-      })
-      await pool.query('UPDATE usuario SET invitacion_enviada = TRUE WHERE id_usuario = $1', [id])
-    } catch (err) {
-      console.error('[usuarios] No se pudo reenviar la invitación:', err.message)
-    }
+    const invitacion = await enviarInvitacion({
+      tipo: fila.rol === 'Cliente' ? 'cliente' : 'usuario',
+      idUsuario: id,
+      para: fila.correo,
+      nombre: fila.nombre,
+      contrasenaTemporal,
+      vencimiento,
+    })
 
-    const fila = await pool.query(`${SELECT_FILAS} WHERE u.id_usuario = $1`, [id])
+    const respuesta = await pool.query(`${SELECT_FILAS} WHERE u.id_usuario = $1`, [id])
     res.json({
-      ...fila.rows[0],
+      ...respuesta.rows[0],
       contrasenaTemporal,
       enlaceInvitacion: enlaceLogin(),
       invitacionEnviada: invitacion.ok,

@@ -4,6 +4,7 @@ import {
   Plus,
   Search,
   Eye,
+  MailPlus,
   Pencil,
   Trash2,
   X
@@ -24,7 +25,8 @@ import {
   crearCliente,
   actualizarCliente,
   cambiarEstadoCliente as cambiarEstadoClienteApi,
-  eliminarCliente as eliminarClienteApi
+  eliminarCliente as eliminarClienteApi,
+  reenviarInvitacionUsuarioAdmin
 } from "../../../services/api";
 
 const REGISTROS_POR_PAGINA = 6;
@@ -41,6 +43,10 @@ export default function Clientes({ user }) {
   const puedeEliminar = tienePermiso(user, "Clientes", "Eliminar");
   const puedeCambiarEstado = tienePermiso(user, "Clientes", "Cambiar estado");
   const puedeConsultar = tienePermiso(user, "Clientes", "Consultar");
+
+  // El correo de invitación se envía con la ruta de Usuarios del backend,
+  // por eso el botón se muestra solo con ese permiso.
+  const puedeInvitar = tienePermiso(user, "Usuarios", "Actualizar");
 
   // =====================================================
   // CLIENTES
@@ -95,6 +101,14 @@ export default function Clientes({ user }) {
   const [clienteEliminar, setClienteEliminar] =
     useState(null);
 
+  // Cliente elegido para enviar/reenviar la invitación por correo
+  const [clienteInvitar, setClienteInvitar] =
+    useState(null);
+
+  // id (CLI-001) del cliente cuyo correo se está enviando en este momento
+  const [enviandoInvitacion, setEnviandoInvitacion] =
+    useState(null);
+
   const [aviso, setAviso] = useState(null);
 
   const [confirmarEdicion, setConfirmarEdicion] =
@@ -117,7 +131,9 @@ export default function Clientes({ user }) {
     documento: "",
     fechaNacimiento: "",
     estado: "Activo",
-    fecha: "2026-09-07"
+    fecha: "2026-09-07",
+    // Solo al crear: envía el correo de invitación con contraseña temporal.
+    invitar: true
   });
 
   // Reglas alineadas con validarCliente() del backend (clientes.js):
@@ -260,7 +276,10 @@ export default function Clientes({ user }) {
     const mensaje =
       error?.message || "No se pudo completar la operación";
 
-    if (/correo/i.test(mensaje) && /existe|registrado/i.test(mensaje)) {
+    // Correo repetido: se muestra bajo el campo. Cubre los mensajes del
+    // backend ("ya existe", "ya está registrado", "ya tiene una cuenta" y
+    // el que orienta a revisar la invitación).
+    if (/correo/i.test(mensaje) && /existe|registrado|cuenta|invitación/i.test(mensaje)) {
 
       setErrores((actuales) => ({ ...actuales, correo: mensaje }));
 
@@ -385,7 +404,9 @@ export default function Clientes({ user }) {
 
       estado: "Activo",
 
-      fecha: "2026-09-07"
+      fecha: "2026-09-07",
+
+      invitar: true
 
     });
 
@@ -545,7 +566,11 @@ if (modoEdicion) {
 
           documento: formulario.documento,
 
-          fecha_nacimiento: formulario.fechaNacimiento
+          fecha_nacimiento: formulario.fechaNacimiento,
+
+          // El backend genera la contraseña temporal y solo la envía por
+          // correo: aquí nunca se recibe ni se guarda.
+          invitar: formulario.invitar === true
 
         })
       );
@@ -557,7 +582,20 @@ if (modoEdicion) {
         ]
       );
 
-      mostrarToast("Cliente creado con éxito");
+      // Si se pidió invitar y el envío falló, el cliente quedó en ficha y
+      // se puede reenviar desde la tabla: se deja un aviso que permanece
+      // hasta que el administrador lo cierre.
+      if (formulario.invitar && nuevoCliente.invitacionEnviada === false) {
+        setAviso(
+          "Cliente creado, pero no se pudo enviar el correo de invitación. " +
+            "El cliente todavía no tiene contraseña: usa el botón de invitación " +
+            "de la tabla para reenviarla."
+        );
+      } else if (formulario.invitar) {
+        mostrarToast("Cliente creado e invitación enviada");
+      } else {
+        mostrarToast("Cliente creado con éxito");
+      }
 
       cerrarModal();
 
@@ -669,6 +707,80 @@ if (modoEdicion) {
 
     }
 
+  };
+
+
+  // =====================================================
+  // ENVIAR / REENVIAR INVITACIÓN POR CORREO
+  // =====================================================
+
+  // La invitación solo se ofrece a quien todavía no conoce su contraseña:
+  // las fichas sin acceso (accesoWeb = FALSE) y las cuentas con clave
+  // temporal pendiente. A una cuenta real con su propia contraseña nunca se
+  // le genera otra (el backend la rechaza con 409).
+  const puedeInvitarCliente = (cliente) =>
+    !cliente.accesoWeb || cliente.cambioContrasenaPendiente;
+
+  // Insignia de la columna INVITACIÓN.
+  const estadoInvitacion = (cliente) => {
+    if (cliente.invitacionEnviada) {
+      return { clase: "enviada", texto: "Enviada" };
+    }
+    if (puedeInvitarCliente(cliente)) {
+      return { clase: "pendiente", texto: "No enviada" };
+    }
+    return { clase: "cuenta", texto: "" };
+  };
+
+  const enviarInvitacionCliente = async () => {
+    const objetivo = clienteInvitar;
+    if (!objetivo || enviandoInvitacion) return;
+
+    // El diálogo se cierra ya y el botón de la fila queda cargando.
+    setClienteInvitar(null);
+    setEnviandoInvitacion(objetivo.id);
+
+    try {
+      const respuesta = mapearCliente(
+        await reenviarInvitacionUsuarioAdmin(idBackend(objetivo.id))
+      );
+
+      // La contraseña temporal solo viaja en el correo: nunca se guarda
+      // en el estado ni se muestra en pantalla.
+      delete respuesta.contrasenaTemporal;
+
+      setClientes((actuales) =>
+        actuales.map((item) =>
+          item.id === objetivo.id
+            ? {
+                ...item,
+                invitacionEnviada: respuesta.invitacionEnviada,
+                cambioContrasenaPendiente:
+                  respuesta.cambioContrasenaPendiente,
+                accesoWeb: respuesta.accesoWeb
+              }
+            : item
+        )
+      );
+
+      if (respuesta.invitacionEnviada) {
+        mostrarToast("Invitación enviada con éxito");
+      } else {
+        // El correo no salió: aviso persistente, no un toast que desaparece.
+        setAviso(
+          "No se pudo enviar el correo de invitación. El cliente sigue sin " +
+            "contraseña: vuelve a intentarlo desde la tabla."
+        );
+      }
+    } catch (error) {
+      // Límite de reenvíos, permiso o cuenta real: van al toast.
+      mostrarToast(
+        error?.message || "No se pudo enviar la invitación",
+        "error"
+      );
+    } finally {
+      setEnviandoInvitacion(null);
+    }
   };
 
 
@@ -817,6 +929,10 @@ if (modoEdicion) {
               </th>
 
               <th>
+                INVITACIÓN
+              </th>
+
+              <th>
                 ACCIONES
               </th>
 
@@ -943,6 +1059,23 @@ if (modoEdicion) {
                   </td>
 
 
+                  {/* =================================================
+                      INVITACIÓN POR CORREO
+                  ================================================= */}
+
+                  <td>
+
+                    <span
+                      className={`cliente-invitacion-badge ${estadoInvitacion(cliente).clase}`}
+                    >
+
+                      {estadoInvitacion(cliente).texto}
+
+                    </span>
+
+                  </td>
+
+
                   <td>
 
                     <div className="cliente-actions">
@@ -982,6 +1115,31 @@ if (modoEdicion) {
                       )}
 
 
+                      {puedeInvitar && puedeInvitarCliente(cliente) && (
+                        <button
+                          type="button"
+                          className={
+                            enviandoInvitacion === cliente.id
+                              ? "cliente-invitar enviando"
+                              : "cliente-invitar"
+                          }
+                          title={
+                            cliente.accesoWeb
+                              ? "Reenviar invitación por correo"
+                              : "Enviar invitación por correo"
+                          }
+                          disabled={enviandoInvitacion === cliente.id}
+                          onClick={() =>
+                            setClienteInvitar(cliente)
+                          }
+                        >
+
+                          <MailPlus size={18} />
+
+                        </button>
+                      )}
+
+
                       {puedeEliminar && (
                         <button
                           type="button"
@@ -1014,7 +1172,7 @@ if (modoEdicion) {
               <tr>
 
                 <td
-                  colSpan="6"
+                  colSpan="7"
                   className="clientes-empty"
                 >
 
@@ -1032,7 +1190,7 @@ if (modoEdicion) {
               <tr>
 
                 <td
-                  colSpan="6"
+                  colSpan="7"
                   className="clientes-empty"
                 >
 
@@ -1052,7 +1210,7 @@ if (modoEdicion) {
               <tr>
 
                 <td
-                  colSpan="6"
+                  colSpan="7"
                   className="clientes-empty"
                 >
 
@@ -1459,6 +1617,48 @@ if (modoEdicion) {
                 </div>
 
 
+                {/* INVITACIÓN POR CORREO (solo al crear) */}
+
+                {!modoEdicion && (
+                  <div className="cliente-form-row">
+
+                    <div className="cliente-invitar-box">
+
+                      <label
+                        className="cliente-invitar-check"
+                        htmlFor="campo-invitar"
+                      >
+
+                        <input
+                          type="checkbox"
+                          id="campo-invitar"
+                          checked={formulario.invitar === true}
+                          onChange={(e) =>
+                            cambiarCampo(
+                              "invitar",
+                              e.target.checked
+                            )
+                          }
+                        />
+
+                        <span>
+                          Enviar invitación por correo
+                        </span>
+
+                      </label>
+
+                      <p className="cliente-invitar-ayuda">
+                        El cliente recibirá en su correo una contraseña
+                        temporal para entrar a la tienda y deberá crear la
+                        suya propia al iniciar sesión.
+                      </p>
+
+                    </div>
+
+                  </div>
+                )}
+
+
                 {/* ESTADO (solo al editar) */}
 
                 {modoEdicion && (
@@ -1768,6 +1968,30 @@ if (modoEdicion) {
           onCancelar={() =>
             setClienteEliminar(null)
           }
+        />
+      )}
+
+      {clienteInvitar && (
+        <ConfirmDialog
+          abierto={clienteInvitar !== null}
+          titulo={
+            clienteInvitar.accesoWeb
+              ? "Reenviar invitación"
+              : "Enviar invitación"
+          }
+          mensaje={
+            <>¿Enviar al cliente "
+              <strong>{clienteInvitar.nombre}</strong>" un correo con una
+              contraseña temporal para entrar a la tienda?
+              {clienteInvitar.cambioContrasenaPendiente && (
+                " La contraseña temporal anterior dejará de ser válida."
+              )}</>
+          }
+          textoConfirmar="Enviar"
+          textoCancelar="Cancelar"
+          variante="info"
+          onConfirmar={enviarInvitacionCliente}
+          onCancelar={() => setClienteInvitar(null)}
         />
       )}
 

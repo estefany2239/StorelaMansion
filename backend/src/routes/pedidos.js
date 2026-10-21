@@ -14,8 +14,12 @@ const ESTADO_INICIAL = 'Registrado'
 const ESTADO_CANCELADO = 'Cancelado'
 const ESTADO_ENTREGADO = 'Entregado'
 
-const METODOS = ['Efectivo', 'Transferencia', 'Crédito']
+// Efectivo ya no se acepta en pedidos nuevos (las ventas de mostrador no
+// cambian: su lista vive en routes/ventas.js y su CHECK de la tabla venta se
+// mantiene intacto).
+const METODOS = ['Transferencia', 'Crédito', 'Contra entrega']
 const BANCOS = ['Nequi', 'Bancolombia']
+const METODOS_ENVIO = ['Domicilio', 'Recoger en tienda']
 
 // Error con código HTTP para responder desde los catch.
 class ErrorHttp extends Error {
@@ -36,12 +40,33 @@ const SELECT_PEDIDO = `
          p.estado,
          TRIM(u.nombres || ' ' || u.apellidos) AS cliente,
          u.correo AS cliente_correo,
+         u.tipo_documento,
+         u.documento,
+         u.telefono,
          (SELECT metodo FROM pago WHERE id_pedido = p.id_pedido ORDER BY id_pago LIMIT 1) AS metodo_pago,
-         (SELECT monto::float8 FROM pago WHERE id_pedido = p.id_pedido ORDER BY id_pago LIMIT 1) AS monto_pagado,
-         (SELECT direccion_entrega FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS direccion
+         (SELECT COALESCE(SUM(monto), 0)::float8 FROM pago WHERE id_pedido = p.id_pedido) AS monto_pagado,
+         (p.total - (SELECT COALESCE(SUM(monto), 0) FROM pago WHERE id_pedido = p.id_pedido))::float8 AS saldo,
+         (SELECT direccion_entrega FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS direccion,
+         (SELECT metodo_envio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS metodo_envio
   FROM pedido p
   JOIN usuario u ON u.id_usuario = p.id_usuario
 `
+
+const SELECT_PAGOS = `
+  SELECT id_pedido, id_pago, metodo, monto::float8 AS monto,
+         TO_CHAR(fecha, 'YYYY-MM-DD') AS fecha, url
+  FROM pago
+`
+
+// El banco viaja dentro del texto del método ("Transferencia - Nequi",
+// "Contra entrega - Abono 50% - Nequi"); aquí se separa para mostrarlo
+// como campo propio.
+const bancoDeMetodo = (metodo) => {
+  const texto = String(metodo || '')
+  if (texto.includes('Nequi')) return 'Nequi'
+  if (texto.includes('Bancolombia')) return 'Bancolombia'
+  return null
+}
 
 const SELECT_DETALLE = `
   SELECT dp.id_pedido,
@@ -84,11 +109,45 @@ const adjuntarItems = async (pedidos) => {
   return pedidos.map((p) => ({ ...p, items: porPedido.get(p.id) || [] }))
 }
 
+// Agrega el historial completo de pagos a cada pedido (una sola consulta).
+const adjuntarPagos = async (pedidos) => {
+  if (pedidos.length === 0) return pedidos
+
+  const ids = pedidos.map((p) => p.id)
+  const { rows } = await pool.query(
+    `${SELECT_PAGOS} WHERE id_pedido = ANY($1::int[]) ORDER BY id_pago`,
+    [ids]
+  )
+
+  const porPedido = new Map()
+  for (const fila of rows) {
+    if (!porPedido.has(fila.id_pedido)) porPedido.set(fila.id_pedido, [])
+    porPedido.get(fila.id_pedido).push({
+      id: fila.id_pago,
+      fecha: fila.fecha,
+      metodo: fila.metodo,
+      banco: bancoDeMetodo(fila.metodo),
+      monto: fila.monto,
+      url: fila.url,
+    })
+  }
+
+  return pedidos.map((p) => ({ ...p, pagos: porPedido.get(p.id) || [] }))
+}
+
+// Quita los datos personales de documento/teléfono: solo se entregan a quien
+// tenga el privilegio Pedidos:Consultar (el Cliente nunca lo tiene).
+const sinDatosDocumento = (pedido) => {
+  const { tipo_documento, documento, telefono, ...resto } = pedido
+  return resto
+}
+
 const obtenerPedidoPorId = async (id) => {
   const { rows } = await pool.query(`${SELECT_PEDIDO} WHERE p.id_pedido = $1`, [id])
   if (rows.length === 0) return null
-  const [pedido] = await adjuntarItems(rows)
-  return pedido
+  const conItems = await adjuntarItems(rows)
+  const conPagos = await adjuntarPagos(conItems)
+  return conPagos[0]
 }
 
 const normalizarItems = (items) => {
@@ -118,7 +177,7 @@ const normalizarPago = (body) => {
   const metodo = String(body.metodo_pago || '').trim()
 
   if (!METODOS.includes(metodo)) {
-    throw new ErrorHttp(400, 'Método de pago inválido. Usa: Efectivo, Transferencia o Crédito')
+    throw new ErrorHttp(400, 'Método de pago inválido. Usa: Transferencia, Crédito o Contra entrega')
   }
 
   if (metodo === 'Transferencia') {
@@ -129,7 +188,53 @@ const normalizarPago = (body) => {
     return { metodo_pago: metodo, metodo_guardado: `Transferencia - ${banco}` }
   }
 
+  // Contra entrega cobra el abono del 50 % por transferencia, con las mismas
+  // instrucciones y el mismo banco que una transferencia normal.
+  if (metodo === 'Contra entrega') {
+    const banco = String(body.banco || body.transferencia_banco || '').trim()
+    if (!BANCOS.includes(banco)) {
+      throw new ErrorHttp(400, 'Para contra entrega indica el banco del abono: Nequi o Bancolombia')
+    }
+    return { metodo_pago: metodo, metodo_guardado: `Contra entrega - Abono 50% - ${banco}` }
+  }
+
   return { metodo_pago: metodo, metodo_guardado: metodo }
+}
+
+const normalizarEnvio = (body) => {
+  const metodo = String(body.metodo_envio || 'Domicilio').trim()
+
+  if (!METODOS_ENVIO.includes(metodo)) {
+    throw new ErrorHttp(400, `Método de envío inválido. Usa: ${METODOS_ENVIO.join(' o ')}`)
+  }
+
+  return metodo
+}
+
+// Texto que se guarda en domicilio.direccion_entrega (varchar 255).
+// Con "Recoger en tienda" el destino es ese texto + nombre y teléfono del
+// checkout; con "Domicilio" se recibe ya construido desde el frontend.
+const construirDestino = (body, metodoEnvio) => {
+  if (metodoEnvio === 'Recoger en tienda') {
+    const nombre = String(body.nombre_entrega || '').trim()
+    const telefono = String(body.telefono_entrega || '').trim()
+
+    let texto = 'Recoger en tienda'
+    if (nombre) texto += ` | Nombre: ${nombre}`
+    if (telefono) texto += ` | Teléfono: ${telefono}`
+
+    return texto.slice(0, 255)
+  }
+
+  const direccion = String(body.direccion || '').trim()
+  if (!direccion) {
+    throw new ErrorHttp(400, 'La dirección de entrega es obligatoria')
+  }
+  if (direccion.length > 255) {
+    throw new ErrorHttp(400, 'Los datos de entrega superan el máximo permitido (255 caracteres)')
+  }
+
+  return direccion
 }
 
 // POST / -> crea un pedido (solo Cliente). El precio lo calcula el backend.
@@ -139,11 +244,8 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
   try {
     const cantidades = normalizarItems(req.body.items)
     const { metodo_pago, metodo_guardado } = normalizarPago(req.body)
-
-    const direccion = String(req.body.direccion || '').trim()
-    if (!direccion) {
-      throw new ErrorHttp(400, 'La dirección de entrega es obligatoria')
-    }
+    const metodoEnvio = normalizarEnvio(req.body)
+    const direccion = construirDestino(req.body, metodoEnvio)
 
     const ids = [...cantidades.keys()].sort((a, b) => a - b)
 
@@ -211,8 +313,14 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
       }
     }
 
-    // Crédito deja saldo pendiente (monto 0); el resto registra el pago completo.
-    const monto = metodo_pago === 'Crédito' ? 0 : total
+    // Crédito deja saldo pendiente (monto 0); Contra entrega cobra el abono
+    // del 50 % redondeado; el resto registra el pago completo.
+    const monto =
+      metodo_pago === 'Crédito'
+        ? 0
+        : metodo_pago === 'Contra entrega'
+          ? Math.round(total * 0.5)
+          : total
     await client.query(
       `INSERT INTO pago (id_pedido, metodo, monto)
        VALUES ($1, $2, $3)`,
@@ -220,9 +328,9 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
     )
 
     await client.query(
-      `INSERT INTO domicilio (id_pedido, direccion_entrega, estado)
-       VALUES ($1, $2, $3)`,
-      [idPedido, direccion, 'Pendiente']
+      `INSERT INTO domicilio (id_pedido, direccion_entrega, metodo_envio, estado)
+       VALUES ($1, $2, $3, $4)`,
+      [idPedido, direccion, metodoEnvio, 'Pendiente']
     )
 
     await client.query('COMMIT')
@@ -248,8 +356,9 @@ router.get('/mis', soloRoles('Cliente'), async (req, res) => {
       `${SELECT_PEDIDO} WHERE p.id_usuario = $1 ORDER BY p.id_pedido DESC`,
       [req.usuario.id]
     )
-    const pedidos = await adjuntarItems(rows)
-    res.json(pedidos)
+    const conItems = await adjuntarItems(rows)
+    const conPagos = await adjuntarPagos(conItems)
+    res.json(conPagos.map(sinDatosDocumento))
   } catch (error) {
     console.error('Error en GET /api/pedidos/mis:', error.message)
     res.status(500).json({ error: 'No se pudieron cargar tus pedidos' })
@@ -260,7 +369,9 @@ router.get('/mis', soloRoles('Cliente'), async (req, res) => {
 router.get('/', requierePrivilegio('Pedidos', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(`${SELECT_PEDIDO} ORDER BY p.id_pedido DESC`)
-    res.json(rows)
+    const conItems = await adjuntarItems(rows)
+    const conPagos = await adjuntarPagos(conItems)
+    res.json(conPagos)
   } catch (error) {
     console.error('Error en GET /api/pedidos:', error.message)
     res.status(500).json({ error: 'No se pudieron cargar los pedidos' })
@@ -288,7 +399,8 @@ router.get('/:id', soloRoles('Administrador', 'Vendedor', 'Cliente'), autorizarD
       return res.status(403).json({ error: 'No tienes permisos para acceder a este recurso' })
     }
 
-    res.json(pedido)
+    // documento/teléfono solo para quien tenga Pedidos:Consultar.
+    res.json(req.usuario.rol === 'Cliente' ? sinDatosDocumento(pedido) : pedido)
   } catch (error) {
     console.error('Error en GET /api/pedidos/:id:', error.message)
     res.status(500).json({ error: 'No se pudo cargar el pedido' })
@@ -314,7 +426,7 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     await client.query('BEGIN')
 
     const { rows } = await client.query(
-      'SELECT id_pedido, estado FROM pedido WHERE id_pedido = $1 FOR UPDATE',
+      'SELECT id_pedido, estado, total FROM pedido WHERE id_pedido = $1 FOR UPDATE',
       [id]
     )
     const pedido = rows[0]
@@ -343,6 +455,37 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
           'UPDATE producto_variante SET stock = stock + $1 WHERE id_variante = $2',
           [detalle.cantidad, detalle.id_variante]
         )
+      }
+    }
+
+    // Contra entrega: al entregar se cobra el saldo restante en la MISMA
+    // transacción, con el método "Contra entrega - Saldo" (sin banco). El
+    // saldo se calcula con una consulta hecha después del bloqueo FOR UPDATE
+    // de arriba. Crédito no registra nada aquí (queda como hasta ahora).
+    if (estado === ESTADO_ENTREGADO) {
+      const { rows: pagosRows } = await client.query(
+        'SELECT metodo FROM pago WHERE id_pedido = $1 ORDER BY id_pago LIMIT 1',
+        [id]
+      )
+      const primerMetodo = String(pagosRows[0]?.metodo || '')
+
+      if (primerMetodo.startsWith('Contra entrega')) {
+        const { rows: saldoRows } = await client.query(
+          `SELECT (p.total - COALESCE(
+                     (SELECT SUM(monto) FROM pago WHERE id_pedido = p.id_pedido), 0
+                   ))::float8 AS saldo
+             FROM pedido p
+            WHERE p.id_pedido = $1`,
+          [id]
+        )
+        const saldo = Number(saldoRows[0]?.saldo || 0)
+
+        if (saldo > 0) {
+          await client.query(
+            'INSERT INTO pago (id_pedido, metodo, monto) VALUES ($1, $2, $3)',
+            [id, 'Contra entrega - Saldo', saldo]
+          )
+        }
       }
     }
 

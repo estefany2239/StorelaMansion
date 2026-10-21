@@ -62,19 +62,36 @@ const mapearPedido = (pedido, catalogo) => {
 
   const montoPagado = Number(pedido.monto_pagado) || 0;
 
+  // Historial real de pagos del backend (todas las filas de la tabla pago);
+  // el fallback solo cubre respuestas antiguas con un único monto.
+  const pagos =
+    Array.isArray(pedido.pagos) && pedido.pagos.length > 0
+      ? pedido.pagos
+      : montoPagado > 0
+        ? [
+            {
+              fecha: pedido.fecha,
+              monto: montoPagado,
+              metodo: pedido.metodo_pago
+            }
+          ]
+        : [];
+
   return {
     id: pedido.id,
     fecha: pedido.fecha,
     estado,
     mensajeEstado: MENSAJES_ESTADO[estado],
     estimadoEntrega: null,
+    metodoEnvio: pedido.metodo_envio || "Domicilio",
     direccion: pedido.direccion,
     productos,
     total: Number(pedido.total) || 0,
-    abonos:
-      montoPagado > 0
-        ? [{ fecha: pedido.fecha, valor: montoPagado, metodoPago: pedido.metodo_pago }]
-        : []
+    abonos: pagos.map((pago) => ({
+      fecha: pago.fecha || pedido.fecha,
+      valor: Number(pago.monto) || 0,
+      metodoPago: pago.metodo || ""
+    }))
   };
 };
 
@@ -449,6 +466,12 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                 </div>
 
                 <div className="mp-finance mp-finance-modal">
+                  <div className="mp-finance-row">
+                    <span>Método de envío</span>
+                    <span className="mp-amount">
+                      {modalPedido.metodoEnvio}
+                    </span>
+                  </div>
                   <div className="mp-finance-row mp-total">
                     <span>Total del pedido</span>
                     <span className="mp-amount-total">

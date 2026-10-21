@@ -4,12 +4,13 @@ import {
   CreditCard,
   Smartphone,
   Building2,
-  Banknote,
   Upload,
   CheckCircle,
   Receipt,
   Wallet,
   ShieldCheck,
+  Truck,
+  Store,
 } from "lucide-react";
 
 import { obtenerPrecio } from "../../features/store/pedidosCliente";
@@ -18,9 +19,9 @@ import { useNotify } from "../notifications/useNotify.js";
 
 import "./PaymentView.css";
 
-// Los abonos todavía no se persisten en el backend (no existe tabla de
-// abonos y Crédito registra monto 0). Se oculta la opción "Abonar una parte"
-// sin borrar el código, para poder reactivarla cuando exista soporte.
+// El abono libre (monto a elegir) todavía no es una opción del checkout: el
+// único abono es el 50 % fijo de "Contra entrega", que calcula y persiste el
+// backend. Se oculta la sección "Abonar una parte" sin borrar el código.
 const ABONOS_HABILITADOS = false;
 
 // Largo máximo de la columna domicilio.direccion_entrega (varchar(255)).
@@ -81,6 +82,7 @@ export default function PaymentView({
   const [direccionEntrega, setDireccionEntrega] = useState("");
   const [tipoPago, setTipoPago] = useState("completo");
   const [montoAbono, setMontoAbono] = useState("");
+  const [metodoEnvio, setMetodoEnvio] = useState("domicilio");
 
   const [nombreEntrega, setNombreEntrega] = useState("");
   const [telefonoEntrega, setTelefonoEntrega] = useState("");
@@ -102,6 +104,18 @@ export default function PaymentView({
 
     return acumulado + precio * cantidad;
   }, 0);
+
+  /* =========================================================
+     DERIVADOS
+  ========================================================= */
+
+  // Abono del 50 % de "Contra entrega" (mismo redondeo que el backend).
+  const abonoContraEntrega = Math.round(total * 0.5);
+
+  const esTransferencia = paymentMethod === "transferencia";
+  const esContraEntrega = paymentMethod === "contra_entrega";
+  const requiereBanco = esTransferencia || esContraEntrega;
+  const esDomicilio = metodoEnvio === "domicilio";
 
   /* =========================================================
      COMPROBANTE
@@ -164,23 +178,31 @@ export default function PaymentView({
       marcar("telefono", "Este campo es obligatorio.");
     }
 
-    if (!direccionEntrega.trim()) {
-      marcar("direccion", "Este campo es obligatorio.");
+    if (!telefonoEntrega.trim()) {
+      marcar("telefono", "Este campo es obligatorio.");
     }
 
-    if (!ciudadEntrega.trim()) {
-      marcar("ciudad", "Este campo es obligatorio.");
+    // La dirección y la ciudad solo aplican a envío a domicilio; con
+    // "Recoger en tienda" no se piden.
+    if (esDomicilio) {
+      if (!direccionEntrega.trim()) {
+        marcar("direccion", "Este campo es obligatorio.");
+      }
+
+      if (!ciudadEntrega.trim()) {
+        marcar("ciudad", "Este campo es obligatorio.");
+      }
     }
 
     if (!paymentMethod) {
       marcar("metodo", "Selecciona una opción.");
     }
 
-    if (paymentMethod === "transferencia" && !transferenciaTipo) {
+    if (requiereBanco && !transferenciaTipo) {
       marcar("transferencia", "Selecciona un medio.");
     }
 
-    if (paymentMethod === "transferencia" && !proofFile) {
+    if (requiereBanco && !proofFile) {
       marcar("comprobante", "Adjunta el comprobante.");
     }
 
@@ -203,7 +225,11 @@ export default function PaymentView({
       direccion: direccionEntrega,
     });
 
-    if (!faltan.direccion && direccionFinal.length > LARGO_MAX_DIRECCION) {
+    if (
+      esDomicilio &&
+      !faltan.direccion &&
+      direccionFinal.length > LARGO_MAX_DIRECCION
+    ) {
       marcar(
         "direccion",
         `Los datos de entrega superan el máximo permitido (${LARGO_MAX_DIRECCION} caracteres).`
@@ -235,14 +261,14 @@ export default function PaymentView({
 
     // Mapa a la nomenclatura del backend.
     const metodoPago =
-      paymentMethod === "efectivo"
-        ? "Efectivo"
-        : paymentMethod === "credito"
-          ? "Crédito"
+      paymentMethod === "credito"
+        ? "Crédito"
+        : paymentMethod === "contra_entrega"
+          ? "Contra entrega"
           : "Transferencia";
 
     const banco =
-      paymentMethod === "transferencia" && transferenciaTipo
+      requiereBanco && transferenciaTipo
         ? transferenciaTipo === "nequi"
           ? "Nequi"
           : "Bancolombia"
@@ -258,12 +284,16 @@ export default function PaymentView({
       return;
     }
 
-    const direccion = construirDireccion({
-      nombre: nombreEntrega,
-      telefono: telefonoEntrega,
-      ciudad: ciudadEntrega,
-      direccion: direccionEntrega,
-    });
+    // Con "Recoger en tienda" el backend arma destino y metodo_envio; con
+    // "Domicilio" viaja aquí la cadena construida con los datos del formulario.
+    const direccion = esDomicilio
+      ? construirDireccion({
+          nombre: nombreEntrega,
+          telefono: telefonoEntrega,
+          ciudad: ciudadEntrega,
+          direccion: direccionEntrega,
+        })
+      : "";
 
     setEnviando(true);
 
@@ -272,7 +302,10 @@ export default function PaymentView({
         items,
         metodo_pago: metodoPago,
         ...(banco ? { banco } : {}),
+        metodo_envio: esDomicilio ? "Domicilio" : "Recoger en tienda",
         direccion,
+        nombre_entrega: nombreEntrega.trim(),
+        telefono_entrega: telefonoEntrega.trim(),
       });
 
       if (onConfirmarPedido) {
@@ -421,6 +454,7 @@ export default function PaymentView({
                 )}
               </div>
 
+              {esDomicilio && (
               <div
                 className={`form-group ${errores.direccion ? "has-error" : ""}`}
                 id="campo-direccion"
@@ -445,7 +479,9 @@ export default function PaymentView({
                   </span>
                 )}
               </div>
+              )}
 
+              {esDomicilio && (
               <div
                 className={`form-group ${errores.ciudad ? "has-error" : ""}`}
                 id="campo-ciudad"
@@ -470,6 +506,7 @@ export default function PaymentView({
                   </span>
                 )}
               </div>
+              )}
 
             </div>
 
@@ -505,47 +542,6 @@ export default function PaymentView({
               className={`payment-methods ${errores.metodo ? "has-error" : ""}`}
               id="campo-metodo"
             >
-
-              {/* EFECTIVO */}
-
-              <button
-                type="button"
-                className={`payment-method ${
-                  paymentMethod === "efectivo"
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() => {
-                  setPaymentMethod("efectivo");
-                  limpiarError("metodo");
-                }}
-              >
-
-                <div className="method-icon">
-                  <Banknote size={23} />
-                </div>
-
-                <div className="method-info">
-
-                  <strong>
-                    Efectivo
-                  </strong>
-
-                  <span>
-                    Pago en efectivo
-                  </span>
-
-                </div>
-
-                {paymentMethod === "efectivo" && (
-                  <CheckCircle
-                    className="method-check"
-                    size={19}
-                  />
-                )}
-
-              </button>
-
 
               {/* TRANSFERENCIA */}
 
@@ -631,6 +627,50 @@ export default function PaymentView({
 
               </button>
 
+
+              {/* CONTRA ENTREGA */}
+
+              <button
+                type="button"
+                className={`payment-method ${
+                  paymentMethod === "contra_entrega"
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() => {
+                  setPaymentMethod("contra_entrega");
+                  setTransferenciaTipo("");
+                  limpiarError("metodo");
+                  limpiarError("transferencia");
+                  limpiarError("comprobante");
+                }}
+              >
+
+                <div className="method-icon">
+                  <Wallet size={23} />
+                </div>
+
+                <div className="method-info">
+
+                  <strong>
+                    Contra entrega
+                  </strong>
+
+                  <span>
+                    Abono del 50 % hoy, saldo al recibir
+                  </span>
+
+                </div>
+
+                {paymentMethod === "contra_entrega" && (
+                  <CheckCircle
+                    className="method-check"
+                    size={19}
+                  />
+                )}
+
+              </button>
+
             </div>
 
             {errores.metodo && (
@@ -641,38 +681,10 @@ export default function PaymentView({
 
 
             {/* =================================================
-                EFECTIVO
+                TRANSFERENCIA / CONTRA ENTREGA
             ================================================= */}
 
-            {paymentMethod === "efectivo" && (
-
-              <div className="payment-extra">
-
-                <div className="extra-title">
-
-                  <Banknote size={19} />
-
-                  <span>
-                    Pago en efectivo
-                  </span>
-
-                </div>
-
-                <p className="payment-instruction">
-                  Paga en efectivo al momento de recibir tu
-                  pedido.
-                </p>
-
-              </div>
-
-            )}
-
-
-            {/* =================================================
-                TRANSFERENCIA
-            ================================================= */}
-
-            {paymentMethod === "transferencia" && (
+            {requiereBanco && (
 
               <>
 
@@ -683,14 +695,17 @@ export default function PaymentView({
                     <Building2 size={19} />
 
                     <span>
-                      Medio de transferencia
+                      {esContraEntrega
+                        ? "Medio para el abono del 50 %"
+                        : "Medio de transferencia"}
                     </span>
 
                   </div>
 
                   <p className="payment-instruction">
-                    Selecciona el medio por el que realizarás
-                    la transferencia.
+                    {esContraEntrega
+                      ? `Para apartar tu pedido paga hoy el abono de ${formatoPrecio(abonoContraEntrega)} por el medio que prefieras.`
+                      : "Selecciona el medio por el que realizarás la transferencia."}
                   </p>
 
                   <div
@@ -787,6 +802,19 @@ export default function PaymentView({
                     </span>
                   )}
 
+                  {esContraEntrega && (
+                    <div className="payment-notice">
+
+                      <CheckCircle size={18} />
+
+                      <span>
+                        El saldo restante se paga al recibir
+                        tu pedido.
+                      </span>
+
+                    </div>
+                  )}
+
                 </div>
 
 
@@ -807,8 +835,9 @@ export default function PaymentView({
                     </div>
 
                     <p className="payment-instruction">
-                      Realiza el pago al número de Nequi
-                      registrado por Store La Mansión.
+                      {esContraEntrega
+                        ? `Realiza el abono de ${formatoPrecio(abonoContraEntrega)} al número de Nequi registrado por Store La Mansión.`
+                        : "Realiza el pago al número de Nequi registrado por Store La Mansión."}
                     </p>
 
 
@@ -924,8 +953,9 @@ export default function PaymentView({
                       <div className="transfer-data">
 
                         <p className="payment-instruction">
-                          Realiza la transferencia utilizando
-                          los siguientes datos.
+                          {esContraEntrega
+                            ? `Realiza la transferencia del abono (${formatoPrecio(abonoContraEntrega)}) utilizando los siguientes datos.`
+                            : "Realiza la transferencia utilizando los siguientes datos."}
                         </p>
 
 
@@ -1132,6 +1162,114 @@ export default function PaymentView({
               </div>
 
             )}
+
+          </section>
+
+
+          {/* =================================================
+              MÉTODO DE ENVÍO
+          ================================================= */}
+
+          <section className="payment-card">
+
+            <div className="section-heading">
+
+              <div className="section-number">
+                3
+              </div>
+
+              <div>
+                <h2>Método de envío</h2>
+
+                <p>
+                  Elige cómo quieres recibir tu pedido.
+                </p>
+              </div>
+
+            </div>
+
+            <div className="payment-methods">
+
+              <button
+                type="button"
+                className={`payment-method ${
+                  metodoEnvio === "domicilio"
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() => setMetodoEnvio("domicilio")}
+              >
+
+                <div className="method-icon">
+                  <Truck size={23} />
+                </div>
+
+                <div className="method-info">
+
+                  <strong>
+                    Domicilio
+                  </strong>
+
+                  <span>
+                    Lo enviamos a tu dirección
+                  </span>
+
+                </div>
+
+                {metodoEnvio === "domicilio" && (
+                  <CheckCircle
+                    className="method-check"
+                    size={19}
+                  />
+                )}
+
+              </button>
+
+
+              <button
+                type="button"
+                className={`payment-method ${
+                  metodoEnvio === "recoger"
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() => {
+                  setMetodoEnvio("recoger");
+                  limpiarError("direccion");
+                  limpiarError("ciudad");
+                }}
+              >
+
+                <div className="method-icon">
+                  <Store size={23} />
+                </div>
+
+                <div className="method-info">
+
+                  <strong>
+                    Recoger en tienda
+                  </strong>
+
+                  <span>
+                    Recógelo en nuestra tienda
+                  </span>
+
+                </div>
+
+                {metodoEnvio === "recoger" && (
+                  <CheckCircle
+                    className="method-check"
+                    size={19}
+                  />
+                )}
+
+              </button>
+
+            </div>
+
+            <p className="payment-instruction">
+              Costo de envío: $0. No se cobra envío.
+            </p>
 
           </section>
 

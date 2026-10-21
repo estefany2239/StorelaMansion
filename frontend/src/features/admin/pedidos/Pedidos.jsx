@@ -8,8 +8,7 @@ import {
   Pencil,
   X,
   Trash2,
-  Receipt,
-  Wallet
+  Receipt
 } from "lucide-react";
 
 import "./Pedidos.css";
@@ -43,35 +42,64 @@ const EDICION_COMPLETA_PEDIDO = false;
 
 
 // Convierte un pedido del backend a la forma que usa esta pantalla.
-const mapearPedidoBackend = (pedido) => ({
-  id: String(pedido.id),
-  idCliente: formatoCliente(pedido.id_usuario),
-  cliente: pedido.cliente,
-  clienteCorreo: pedido.cliente_correo,
-  vendedor_id: undefined,
-  fecha: pedido.fecha,
-  total: Number(pedido.total) || 0,
-  estado: pedido.estado,
-  metodoPago: pedido.metodo_pago || "—",
-  direccion: pedido.direccion || "",
-  productos: (pedido.items || []).map((item) => ({
-    nombre: item.nombre,
-    cantidad: item.cantidad,
-    talla: item.talla || "",
-    color: item.color || "-",
-    precio: Number(item.precio_unitario) || 0
-  })),
-  abonos:
-    Number(pedido.monto_pagado) > 0
-      ? [
-          {
-            fecha: pedido.fecha,
-            valor: Number(pedido.monto_pagado),
-            metodoPago: pedido.metodo_pago
-          }
-        ]
-      : []
-});
+// `pagos` trae el historial real (todas las filas de la tabla pago); el
+// fallback a monto_pagado solo cubre respuestas antiguas sin pagos.
+const mapearPedidoBackend = (pedido) => {
+  const pagos =
+    Array.isArray(pedido.pagos) && pedido.pagos.length > 0
+      ? pedido.pagos
+      : Number(pedido.monto_pagado) > 0
+        ? [
+            {
+              fecha: pedido.fecha,
+              monto: Number(pedido.monto_pagado),
+              metodo: pedido.metodo_pago,
+              banco: null
+            }
+          ]
+        : [];
+
+  const abonos = pagos.map((pago) => ({
+    fecha: pago.fecha || pedido.fecha,
+    valor: Number(pago.monto) || 0,
+    metodoPago: pago.metodo || "",
+    banco: pago.banco || null
+  }));
+
+  const total = Number(pedido.total) || 0;
+  const totalPagado = abonos.reduce(
+    (suma, abono) => suma + abono.valor,
+    0
+  );
+
+  return {
+    id: String(pedido.id),
+    idCliente: formatoCliente(pedido.id_usuario),
+    cliente: pedido.cliente,
+    clienteCorreo: pedido.cliente_correo,
+    tipoDocumento: pedido.tipo_documento || "",
+    documento: pedido.documento || "",
+    telefono: pedido.telefono || "",
+    vendedor_id: undefined,
+    fecha: pedido.fecha,
+    total,
+    estado: pedido.estado,
+    metodoPago: pedido.metodo_pago || "—",
+    banco: pagos[0]?.banco || "",
+    metodoEnvio: pedido.metodo_envio || "Domicilio",
+    direccion: pedido.direccion || "",
+    productos: (pedido.items || []).map((item) => ({
+      nombre: item.nombre,
+      cantidad: item.cantidad,
+      talla: item.talla || "",
+      color: item.color || "-",
+      precio: Number(item.precio_unitario) || 0
+    })),
+    abonos,
+    totalPagado,
+    saldo: Math.max(0, total - totalPagado)
+  };
+};
 
 
 const claseEstado = (estado) => {
@@ -209,16 +237,6 @@ export default function Pedidos({ vendedorId, user }) {
   const [pedidoAbonos, setPedidoAbonos] =
     useState(null);
 
-  const [mostrarFormAbono, setMostrarFormAbono] =
-    useState(false);
-
-  const [formularioAbono, setFormularioAbono] =
-    useState({
-      fecha: "",
-      valor: "",
-      metodoPago: "Efectivo"
-    });
-
 
   // =====================================================
   // FORMULARIO
@@ -230,7 +248,7 @@ export default function Pedidos({ vendedorId, user }) {
     cliente: "",
     fecha: "2026-09-07",
     estado: "Registrado",
-    metodoPago: "Efectivo",
+    metodoPago: "Transferencia",
     direccion: "",
     productos: []
   });
@@ -450,7 +468,7 @@ export default function Pedidos({ vendedorId, user }) {
 
       estado: "Registrado",
 
-      metodoPago: "Efectivo",
+      metodoPago: "Transferencia",
 
       direccion: "",
 
@@ -1044,8 +1062,6 @@ export default function Pedidos({ vendedorId, user }) {
 
     setPedidoAbonos(pedido);
 
-    setMostrarFormAbono(false);
-
     setMostrarAbonos(true);
 
   };
@@ -1060,138 +1076,6 @@ export default function Pedidos({ vendedorId, user }) {
     setMostrarAbonos(false);
 
     setPedidoAbonos(null);
-
-    setMostrarFormAbono(false);
-
-  };
-
-
-  // =====================================================
-  // ABRIR FORMULARIO ABONO
-  // =====================================================
-
-  const abrirFormAbono = () => {
-
-    setFormularioAbono({
-      fecha: "2026-09-07",
-      valor: "",
-      metodoPago: "Efectivo"
-    });
-
-    setMostrarFormAbono(true);
-
-  };
-
-
-  // =====================================================
-  // REGISTRAR ABONO
-  // =====================================================
-
-  const registrarAbono = () => {
-
-    if (!pedidoAbonos) {
-      return;
-    }
-
-
-    if (pedidoAbonos.estado === "Entregado") {
-
-      mostrarToast(
-        "Los pedidos en estado Entregado no pueden recibir abonos.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    const valor =
-      Number(formularioAbono.valor);
-
-    const abonado =
-      obtenerAbonos(pedidoAbonos).reduce(
-        (suma, abono) =>
-          suma + Number(abono.valor),
-        0
-      );
-
-
-    if (
-      !formularioAbono.fecha ||
-      !formularioAbono.valor ||
-      isNaN(valor) ||
-      valor <= 0
-    ) {
-
-      mostrarToast(
-        "Ingresa un monto válido para el abono.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    if (
-      valor >
-      Number(pedidoAbonos.total) - abonado
-    ) {
-
-      mostrarToast(
-        "El monto no puede superar el saldo pendiente del pedido.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    const nuevoAbono = {
-
-      fecha:
-        formularioAbono.fecha,
-
-      valor,
-
-      metodoPago:
-        formularioAbono.metodoPago
-
-    };
-
-
-    setPedidos(
-      (actuales) =>
-        actuales.map(
-          (pedido) =>
-            pedido.id ===
-            pedidoAbonos.id
-              ? {
-                  ...pedido,
-                  abonos: [
-                    ...obtenerAbonos(pedido),
-                    nuevoAbono
-                  ]
-                }
-              : pedido
-        )
-    );
-
-
-    setPedidoAbonos(
-      (actual) => ({
-        ...actual,
-        abonos: [
-          ...obtenerAbonos(actual),
-          nuevoAbono
-        ]
-      })
-    );
-
-
-    setMostrarFormAbono(false);
 
   };
 
@@ -1899,16 +1783,16 @@ export default function Pedidos({ vendedorId, user }) {
                     }
                   >
 
-                    <option value="Efectivo">
-                      Efectivo
-                    </option>
-
                     <option value="Transferencia">
                       Transferencia
                     </option>
 
                     <option value="Crédito">
                       Crédito
+                    </option>
+
+                    <option value="Contra entrega">
+                      Contra entrega
                     </option>
 
                   </select>
@@ -2429,6 +2313,36 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    MÉTODO DE ENVÍO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoSeleccionado.metodoEnvio}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    BANCO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoSeleccionado.banco || "—"}
+                  </div>
+
+                </div>
+
+              </div>
+
+
               <div className="pedido-info-group">
 
                 <label>
@@ -2437,6 +2351,66 @@ export default function Pedidos({ vendedorId, user }) {
 
                 <div className="pedido-info-value">
                   {pedidoSeleccionado.direccion}
+                </div>
+
+              </div>
+
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    TIPO DOCUMENTO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoSeleccionado.tipoDocumento || "—"}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    DOCUMENTO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoSeleccionado.documento || "—"}
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    TELÉFONO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoSeleccionado.telefono || "—"}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    CORREO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoSeleccionado.clienteCorreo || "—"}
+                  </div>
+
                 </div>
 
               </div>
@@ -2487,10 +2461,21 @@ export default function Pedidos({ vendedorId, user }) {
 
                           </span>
 
+                          <span>
+
+                            Precio unitario:{" "}
+                            {formatearPrecio(
+                              producto.precio
+                            )}
+
+                          </span>
+
                         </div>
 
 
                         <strong>
+
+                          Subtotal:{" "}
 
                           {formatearPrecio(
                             producto.precio *
@@ -2505,6 +2490,71 @@ export default function Pedidos({ vendedorId, user }) {
                   )}
 
                 </div>
+
+              </div>
+
+
+              {/* HISTORIAL DE PAGOS */}
+
+              <div className="pedido-detail-products">
+
+                <label>
+                  HISTORIAL DE PAGOS
+                </label>
+
+
+                {pedidoSeleccionado.abonos.length ===
+                0 ? (
+
+                  <div className="pedido-no-products">
+
+                    Sin pagos registrados.
+
+                  </div>
+
+                ) : (
+
+                  <div className="pedido-abonos-list">
+
+                    {pedidoSeleccionado.abonos.map(
+                      (abono, index) => (
+
+                        <div
+                          className="pedido-abono-item"
+                          key={index}
+                        >
+
+                          <div className="pedido-abono-info">
+
+                            <strong>
+                              {formatearFecha(
+                                abono.fecha
+                              )}
+                            </strong>
+
+                            <span>
+                              {abono.metodoPago}
+                            </span>
+
+                          </div>
+
+
+                          <strong className="pedido-abono-valor">
+
+                            {formatearPrecio(
+                              abono.valor
+                            )}
+
+                          </strong>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
 
               </div>
 
@@ -2524,6 +2574,60 @@ export default function Pedidos({ vendedorId, user }) {
                   )}
 
                 </strong>
+
+              </div>
+
+
+              {/* ABONADO Y SALDO */}
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    TOTAL ABONADO
+                  </label>
+
+                  <div className="pedido-info-value">
+
+                    <strong className="pedido-abono-monto abonado">
+
+                      {formatearPrecio(
+                        pedidoSeleccionado.totalPagado
+                      )}
+
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    SALDO PENDIENTE
+                  </label>
+
+                  <div className="pedido-info-value">
+
+                    <strong
+                      className={
+                        pedidoSeleccionado.saldo > 0
+                          ? "pedido-abono-monto pendiente"
+                          : "pedido-abono-monto saldado"
+                      }
+                    >
+
+                      {formatearPrecio(
+                        pedidoSeleccionado.saldo
+                      )}
+
+                    </strong>
+
+                  </div>
+
+                </div>
 
               </div>
 
@@ -2702,23 +2806,10 @@ export default function Pedidos({ vendedorId, user }) {
                   ABONOS DEL PEDIDO
                 </label>
 
-
-                {pedidoAbonos.estado !==
-                  "Entregado" && (
-
-                  <button
-                    type="button"
-                    className="pedido-add-product"
-                    onClick={abrirFormAbono}
-                  >
-
-                    <Plus size={16} />
-
-                    Registrar abono
-
-                  </button>
-
-                )}
+                {/* "Registrar abono" quedó oculto: los pagos reales los
+                    crea el checkout y el cambio de estado; no existe
+                    endpoint de abonos y no se conecta esta simulación
+                    local. */}
 
               </div>
 
@@ -2775,150 +2866,6 @@ export default function Pedidos({ vendedorId, user }) {
                     </div>
 
                   ))}
-
-                </div>
-
-              )}
-
-
-              {/* FORMULARIO REGISTRAR ABONO */}
-
-              {mostrarFormAbono && (
-
-                <div className="pedido-abono-form">
-
-                  <div className="pedido-form-row">
-
-                    <div className="pedido-form-group">
-
-                      <label>
-                        FECHA
-                      </label>
-
-                      <input
-                        type="date"
-                        value={
-                          formularioAbono.fecha
-                        }
-                        onChange={(e) =>
-                          setFormularioAbono(
-                            (actual) => ({
-                              ...actual,
-                              fecha:
-                                e.target.value
-                            })
-                          )
-                        }
-                      />
-
-                    </div>
-
-
-                    <div className="pedido-form-group">
-
-                      <label>
-                        MÉTODO DE PAGO
-                      </label>
-
-                      <select
-                        value={
-                          formularioAbono.metodoPago
-                        }
-                        onChange={(e) =>
-                          setFormularioAbono(
-                            (actual) => ({
-                              ...actual,
-                              metodoPago:
-                                e.target.value
-                            })
-                          )
-                        }
-                      >
-
-                        <option value="Efectivo">
-                          Efectivo
-                        </option>
-
-                        <option value="Transferencia">
-                          Transferencia
-                        </option>
-
-                        <option value="Crédito">
-                          Crédito
-                        </option>
-
-                      </select>
-
-                    </div>
-
-                  </div>
-
-
-                  <div className="pedido-form-group">
-
-                    <label>
-                      MONTO DEL ABONO (COP)
-                    </label>
-
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="0"
-                      value={
-                        formularioAbono.valor
-                      }
-                      onChange={(e) =>
-                        setFormularioAbono(
-                          (actual) => ({
-                            ...actual,
-                            valor:
-                              e.target.value
-                                .replace(
-                                  /[^0-9.]/g,
-                                  ""
-                                )
-                                .replace(
-                                  /(\..*)\./g,
-                                  "$1"
-                                )
-                          })
-                        )
-                      }
-                    />
-
-                  </div>
-
-
-                  <div className="pedido-abono-form-actions">
-
-                    <button
-                      type="button"
-                      className="pedido-cancel-button"
-                      onClick={() =>
-                        setMostrarFormAbono(
-                          false
-                        )
-                      }
-                    >
-
-                      Cancelar
-
-                    </button>
-
-
-                    <button
-                      type="button"
-                      className="pedido-create-button"
-                      onClick={registrarAbono}
-                    >
-
-                      <Wallet size={16} />
-
-                      Registrar abono
-
-                    </button>
-
-                  </div>
 
                 </div>
 

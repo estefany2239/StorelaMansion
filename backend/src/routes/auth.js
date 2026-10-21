@@ -62,7 +62,10 @@ router.post('/register', async (req, res) => {
       [correo]
     )
     if (existe.rowCount > 0) {
-      return res.status(409).json({ error: 'Este correo ya está registrado' })
+      return res.status(409).json({
+        error:
+          'Este correo ya está registrado. Revisa la invitación o pide que te la reenvíen; si ya tienes tu contraseña, inicia sesión.',
+      })
     }
 
     if (documento) {
@@ -84,10 +87,12 @@ router.post('/register', async (req, res) => {
     const apellidos = resto.join(' ')
     const hash = await bcrypt.hash(contrasena, 10)
 
+    // Quien se registra por su cuenta sí conoce su contraseña:
+    // acceso_web = TRUE (cuenta real, no ficha de panel).
     const { rows } = await pool.query(
       `INSERT INTO usuario (nombres, apellidos, correo, contrasena, id_rol,
-                            tipo_documento, documento, fecha_nacimiento)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                            tipo_documento, documento, fecha_nacimiento, acceso_web)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)
        RETURNING id_usuario`,
       [nombres, apellidos, correo, hash, rol.rows[0].id,
        tipoDocumento, documento, fechaNacimiento]
@@ -105,7 +110,10 @@ router.post('/register', async (req, res) => {
           return res.status(409).json({ error: 'Este documento ya está registrado' })
         }
       }
-      return res.status(409).json({ error: 'Este correo ya está registrado' })
+      return res.status(409).json({
+        error:
+          'Este correo ya está registrado. Revisa la invitación o pide que te la reenvíen; si ya tienes tu contraseña, inicia sesión.',
+      })
     }
     console.error('Error en /api/auth/register:', error.message)
     res.status(500).json({ error: 'No se pudo crear la cuenta' })
@@ -227,7 +235,7 @@ router.post('/cambiar-contrasena', verificarToken, async (req, res) => {
     await pool.query(
       `UPDATE usuario
        SET contrasena = $1, cambio_contrasena_obligatorio = FALSE,
-           contrasena_temporal_vencimiento = NULL
+           contrasena_temporal_vencimiento = NULL, acceso_web = TRUE
        WHERE id_usuario = $2`,
       [hash, usuario.id_usuario]
     )
