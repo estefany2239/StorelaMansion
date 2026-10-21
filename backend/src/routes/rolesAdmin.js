@@ -7,8 +7,10 @@ const router = Router()
 // Todo el módulo exige contraseña propia; la autorización por permiso va por ruta.
 router.use(verificarToken, bloquearCambioPendiente)
 
-// El rol Administrador es intocable: no se puede editar, desactivar ni eliminar.
-const ROL_PROTEGIDO = 'Administrador'
+// Los roles del sistema son intocables: no se pueden editar,
+// desactivar ni eliminar (ni siquiera con una petición directa
+// a la API que no venga del interruptor del panel).
+const ROLES_PROTEGIDOS = ['Administrador', 'Cliente']
 
 const responderError = (res, error, mensaje) => {
   console.error(mensaje, error.message)
@@ -22,7 +24,8 @@ const leerId = (req) => {
 
 const leerNombre = (body) => String(body.nombre || '').trim()
 
-const esProtegido = (rol) => rol && rol.nombre === ROL_PROTEGIDO
+const esProtegido = (rol) =>
+  Boolean(rol && ROLES_PROTEGIDOS.includes(rol.nombre))
 
 // ¿Existe otro rol con el mismo nombre sin distinguir mayúsculas?
 const nombreDuplicado = async (db, nombre, idExcluir = null) => {
@@ -212,7 +215,7 @@ router.put('/:id', requierePrivilegio('Roles', 'Actualizar'), async (req, res) =
     }
     if (esProtegido(rows[0])) {
       await db.query('ROLLBACK')
-      return res.status(403).json({ error: `El rol ${ROL_PROTEGIDO} no se puede editar` })
+      return res.status(403).json({ error: `El rol ${rows[0].nombre} no se puede editar: es un rol del sistema` })
     }
 
     if (await nombreDuplicado(db, nombre, id)) {
@@ -265,7 +268,7 @@ router.patch('/:id/estado', requierePrivilegio('Roles', 'Cambiar estado'), async
     }
     if (esProtegido(rol)) {
       await db.query('ROLLBACK')
-      return res.status(403).json({ error: 'El rol Administrador no se puede desactivar' })
+      return res.status(403).json({ error: `El rol ${rol.nombre} no se puede desactivar: es un rol del sistema` })
     }
     if (!activo) {
       const usuarios = await contarUsuarios(db, id)
@@ -305,7 +308,7 @@ router.delete('/:id', requierePrivilegio('Roles', 'Eliminar'), async (req, res) 
     }
     if (esProtegido(rol)) {
       await db.query('ROLLBACK')
-      return res.status(403).json({ error: 'El rol Administrador no se puede eliminar' })
+      return res.status(403).json({ error: `El rol ${rol.nombre} no se puede eliminar: es un rol del sistema` })
     }
 
     const usuarios = await contarUsuarios(db, id)

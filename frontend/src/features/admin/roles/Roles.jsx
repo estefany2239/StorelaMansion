@@ -77,6 +77,10 @@ const ROLES_PROTEGIDOS = ["Administrador", "Cliente"];
 const esRolProtegido = (rol) =>
   ROLES_PROTEGIDOS.includes(rol?.nombre);
 
+/* Aviso del interruptor bloqueado: tooltip y lectores de pantalla */
+const MENSAJE_ROL_SISTEMA =
+  "Rol del sistema: no se puede desactivar";
+
 const formatearIdRol = (id) => {
   if (id === null || id === undefined || id === "") {
     return "—";
@@ -874,41 +878,72 @@ export default function Roles({ user }) {
 
                   <td>
 
-                    <label className="switch-usuario-estado">
+                    {(() => {
 
-                      {tienePermiso(
+                      const bloqueado = esRolProtegido(rol);
+
+                      const puedeCambiarEstado = tienePermiso(
                         user,
                         "Roles",
                         "Cambiar estado"
-                      ) && !esRolProtegido(rol) && (
-                        <input
-                          type="checkbox"
-                          checked={rol.estado === "Activo"}
-                          onChange={() =>
-                            cambiarEstado(rol)
+                      );
+
+                      return (
+
+                        <label
+                          className={`switch-usuario-estado ${
+                            puedeCambiarEstado && bloqueado
+                              ? "bloqueado"
+                              : ""
+                          }`}
+                          title={
+                            puedeCambiarEstado && bloqueado
+                              ? MENSAJE_ROL_SISTEMA
+                              : undefined
                           }
-                        />
-                      )}
+                        >
 
-                      {tienePermiso(
-                        user,
-                        "Roles",
-                        "Cambiar estado"
-                      ) && !esRolProtegido(rol) && (
-                        <span className="slider-usuario"></span>
-                      )}
+                          {puedeCambiarEstado && (
+                            <input
+                              type="checkbox"
+                              checked={rol.estado === "Activo"}
+                              disabled={bloqueado}
+                              aria-disabled={bloqueado}
+                              title={
+                                bloqueado
+                                  ? MENSAJE_ROL_SISTEMA
+                                  : undefined
+                              }
+                              aria-label={
+                                bloqueado
+                                  ? MENSAJE_ROL_SISTEMA
+                                  : undefined
+                              }
+                              onChange={() =>
+                                cambiarEstado(rol)
+                              }
+                            />
+                          )}
 
-                      <span
-                        className={`estado-usuario-texto ${
-                          rol.estado === "Activo"
-                            ? "activo"
-                            : "inactivo"
-                        }`}
-                      >
-                        {rol.estado.toUpperCase()}
-                      </span>
+                          {puedeCambiarEstado && (
+                            <span className="slider-usuario"></span>
+                          )}
 
-                    </label>
+                          <span
+                            className={`estado-usuario-texto ${
+                              rol.estado === "Activo"
+                                ? "activo"
+                                : "inactivo"
+                            }`}
+                          >
+                            {rol.estado.toUpperCase()}
+                          </span>
+
+                        </label>
+
+                      );
+
+                    })()}
 
                   </td>
 
