@@ -14,8 +14,11 @@ import {
 } from "lucide-react";
 
 import { obtenerPrecio } from "../../features/store/pedidosCliente";
+import { esAgotado, hayStock } from "../cart/cantidad";
 import { crearPedido } from "../../services/api";
 import { useNotify } from "../notifications/useNotify.js";
+import { NOMBRE_COMPLETO_VALIDO } from "../../features/auth/validacionesRegistro";
+import DIVIPOLA from "../../data/divipola.json";
 
 import "./PaymentView.css";
 
@@ -27,29 +30,19 @@ const ABONOS_HABILITADOS = false;
 // Largo máximo de la columna domicilio.direccion_entrega (varchar(255)).
 const LARGO_MAX_DIRECCION = 255;
 
-// Une los datos de entrega en un único texto legible para el backend,
-// sin incluir campos vacíos. Formato fijo: "Nombre: X | Teléfono: Y | ...".
-const construirDireccion = ({
-  nombre,
-  telefono,
-  ciudad,
-  direccion,
-}) =>
-  [
-    ["Nombre", nombre],
-    ["Teléfono", telefono],
-    ["Ciudad", ciudad],
-    ["Dirección", direccion],
-  ]
-    .filter(([, valor]) => String(valor || "").trim())
-    .map(([etiqueta, valor]) => `${etiqueta}: ${String(valor).trim()}`)
-    .join(" | ");
+// Mismas reglas que el backend (utils/ubicaciones.js).
+const LARGO_MAX_NOMBRE = 100;
+const LARGO_MAX_BARRIO = 100;
+const LARGO_MAX_TELEFONO = 10;
+const BARRIO_VALIDO = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s'\-.]+$/;
 
 const ORDEN_CAMPOS = [
   "nombre",
   "telefono",
+  "departamento",
+  "municipio",
+  "barrio",
   "direccion",
-  "ciudad",
   "metodo",
   "transferencia",
   "comprobante",
@@ -59,8 +52,10 @@ const ORDEN_CAMPOS = [
 const ID_CAMPO = {
   nombre: "campo-nombre",
   telefono: "campo-telefono",
+  departamento: "campo-departamento",
+  municipio: "campo-municipio",
+  barrio: "campo-barrio",
   direccion: "campo-direccion",
-  ciudad: "campo-ciudad",
   metodo: "campo-metodo",
   transferencia: "campo-transferencia",
   comprobante: "campo-comprobante",
@@ -71,6 +66,7 @@ export default function PaymentView({
   cart,
   onBack,
   onConfirmarPedido,
+  onStockActualizado,
   darkMode,
 }) {
   const notify = useNotify();
@@ -86,13 +82,31 @@ export default function PaymentView({
 
   const [nombreEntrega, setNombreEntrega] = useState("");
   const [telefonoEntrega, setTelefonoEntrega] = useState("");
-  const [ciudadEntrega, setCiudadEntrega] = useState("");
+  // Se guardan los códigos DIVIPOLA seleccionados; los nombres oficiales
+  // se leen del catálogo antes de enviar.
+  const [departamentoCodigo, setDepartamentoCodigo] = useState("");
+  const [municipioCodigo, setMunicipioCodigo] = useState("");
+  const [barrioEntrega, setBarrioEntrega] = useState("");
 
   const [errores, setErrores] = useState({});
 
   const formatoPrecio = (valor) => {
     return `$${valor.toLocaleString("es-CO")} COP`;
   };
+
+  /* =========================================================
+     CONTROL DE STOCK DEL CARRITO
+     ========================================================= */
+
+  // Líneas sin unidades: bloquean el pago y se muestran en el resumen.
+  const agotados = cart.filter((item) => esAgotado(item.stock));
+
+  // Líneas cuya cantidad pide más de lo que hay (solo con stock informado).
+  const excedenStock = cart.filter(
+    (item) =>
+      hayStock(item.stock) &&
+      (Number(item.quantity) || 1) > Number(item.stock)
+  );
 
   /* =========================================================
      TOTAL
@@ -116,6 +130,37 @@ export default function PaymentView({
   const esContraEntrega = paymentMethod === "contra_entrega";
   const requiereBanco = esTransferencia || esContraEntrega;
   const esDomicilio = metodoEnvio === "domicilio";
+
+  /* =========================================================
+     CATÁLOGO DIVIPOLA (departamento -> municipio)
+  ========================================================= */
+
+  const municipiosDelDepartamento =
+    DIVIPOLA.departamentos.find((d) => d.codigo === departamentoCodigo)
+      ?.municipios ?? [];
+
+  const nombreDepartamento =
+    DIVIPOLA.departamentos.find((d) => d.codigo === departamentoCodigo)?.nombre ?? "";
+
+  const nombreMunicipio =
+    municipiosDelDepartamento.find((m) => m.codigo === municipioCodigo)?.nombre ?? "";
+
+  // Cambiar el departamento invalida el municipio y el barrio elegidos.
+  const cambiarDepartamento = (codigo) => {
+    setDepartamentoCodigo(codigo);
+    setMunicipioCodigo("");
+    setBarrioEntrega("");
+    limpiarError("departamento");
+    limpiarError("municipio");
+    limpiarError("barrio");
+  };
+
+  // Cambiar el municipio invalida el barrio elegido.
+  const cambiarMunicipio = (codigo) => {
+    setMunicipioCodigo(codigo);
+    limpiarError("municipio");
+    limpiarError("barrio");
+  };
 
   /* =========================================================
      COMPROBANTE
@@ -170,27 +215,50 @@ export default function PaymentView({
       faltan[clave] = { texto };
     };
 
-    if (!nombreEntrega.trim()) {
+    // Nombre: obligatorio, solo letras (tildes/ñ) y máx. 100, igual que
+    // el perfil y el backend.
+    const nombre = nombreEntrega.trim();
+    if (!nombre) {
       marcar("nombre", "Este campo es obligatorio.");
+    } else if (!NOMBRE_COMPLETO_VALIDO.test(nombre)) {
+      marcar("nombre", "El nombre solo puede contener letras, espacios, apóstrofes y guiones.");
+    } else if (nombre.length > LARGO_MAX_NOMBRE) {
+      marcar("nombre", `El nombre no puede superar los ${LARGO_MAX_NOMBRE} caracteres.`);
     }
 
-    if (!telefonoEntrega.trim()) {
+    // Teléfono: misma regla que el registro (solo dígitos, máx. 10).
+    const telefono = telefonoEntrega.trim();
+    if (!telefono) {
       marcar("telefono", "Este campo es obligatorio.");
+    } else if (!/^[0-9]+$/.test(telefono) || telefono.length > LARGO_MAX_TELEFONO) {
+      marcar("telefono", "El teléfono solo puede contener dígitos (máx. 10).");
     }
 
-    if (!telefonoEntrega.trim()) {
-      marcar("telefono", "Este campo es obligatorio.");
-    }
-
-    // La dirección y la ciudad solo aplican a envío a domicilio; con
+    // La ubicación y la dirección solo aplican a envío a domicilio; con
     // "Recoger en tienda" no se piden.
     if (esDomicilio) {
-      if (!direccionEntrega.trim()) {
-        marcar("direccion", "Este campo es obligatorio.");
+      if (!departamentoCodigo) {
+        marcar("departamento", "Selecciona un departamento.");
       }
 
-      if (!ciudadEntrega.trim()) {
-        marcar("ciudad", "Este campo es obligatorio.");
+      if (!municipioCodigo) {
+        marcar("municipio", "Selecciona una ciudad o municipio.");
+      }
+
+      const barrio = barrioEntrega.trim();
+      if (!barrio) {
+        marcar("barrio", "Este campo es obligatorio.");
+      } else if (barrio.length > LARGO_MAX_BARRIO) {
+        marcar("barrio", `El barrio no puede superar los ${LARGO_MAX_BARRIO} caracteres.`);
+      } else if (!BARRIO_VALIDO.test(barrio)) {
+        marcar("barrio", "El barrio solo puede contener letras, números, espacios, apóstrofes, puntos y guiones.");
+      }
+
+      const direccion = direccionEntrega.trim();
+      if (!direccion) {
+        marcar("direccion", "Este campo es obligatorio.");
+      } else if (direccion.length > LARGO_MAX_DIRECCION) {
+        marcar("direccion", `La dirección no puede superar los ${LARGO_MAX_DIRECCION} caracteres.`);
       }
     }
 
@@ -216,26 +284,6 @@ export default function PaymentView({
       }
     }
 
-    // Los datos de entrega se guardan juntos en direccion_entrega (varchar
-    // 255). Antes de enviar comprobamos que no se pase el largo permitido.
-    const direccionFinal = construirDireccion({
-      nombre: nombreEntrega,
-      telefono: telefonoEntrega,
-      ciudad: ciudadEntrega,
-      direccion: direccionEntrega,
-    });
-
-    if (
-      esDomicilio &&
-      !faltan.direccion &&
-      direccionFinal.length > LARGO_MAX_DIRECCION
-    ) {
-      marcar(
-        "direccion",
-        `Los datos de entrega superan el máximo permitido (${LARGO_MAX_DIRECCION} caracteres).`
-      );
-    }
-
     return faltan;
   };
 
@@ -259,13 +307,32 @@ export default function PaymentView({
 
     setErrores({});
 
-    // Mapa a la nomenclatura del backend.
+    // Stock real: una variante sin unidades bloquea el pago (se pide el
+    // stock otra vez al backend para refrescar cantidades permitidas).
+    if (agotados.length > 0) {
+      notify(
+        `"${agotados[0].name}" está agotado: elimínalo del carrito para continuar con tu compra.`,
+        "error"
+      );
+      if (onStockActualizado) onStockActualizado();
+      return;
+    }
+
+    if (excedenStock.length > 0) {
+      notify(
+        `La cantidad de "${excedenStock[0].name}" supera el stock disponible: solo quedan ${Number(
+          excedenStock[0].stock
+        )} unidad${Number(excedenStock[0].stock) === 1 ? "" : "es"}.`,
+        "error"
+      );
+      if (onStockActualizado) onStockActualizado();
+      return;
+    }
+
+    // Mapa a la nomenclatura del backend. "Crédito" se retiró del checkout:
+    // solo quedan Transferencia y Contra entrega.
     const metodoPago =
-      paymentMethod === "credito"
-        ? "Crédito"
-        : paymentMethod === "contra_entrega"
-          ? "Contra entrega"
-          : "Transferencia";
+      paymentMethod === "contra_entrega" ? "Contra entrega" : "Transferencia";
 
     const banco =
       requiereBanco && transferenciaTipo
@@ -284,17 +351,9 @@ export default function PaymentView({
       return;
     }
 
-    // Con "Recoger en tienda" el backend arma destino y metodo_envio; con
-    // "Domicilio" viaja aquí la cadena construida con los datos del formulario.
-    const direccion = esDomicilio
-      ? construirDireccion({
-          nombre: nombreEntrega,
-          telefono: telefonoEntrega,
-          ciudad: ciudadEntrega,
-          direccion: direccionEntrega,
-        })
-      : "";
-
+    // Con "Recoger en tienda" el backend no pide ubicación; con
+    // "Domicilio" viajan los campos separados (el backend los valida
+    // y los persiste en columnas propias de domicilio).
     setEnviando(true);
 
     try {
@@ -303,7 +362,14 @@ export default function PaymentView({
         metodo_pago: metodoPago,
         ...(banco ? { banco } : {}),
         metodo_envio: esDomicilio ? "Domicilio" : "Recoger en tienda",
-        direccion,
+        ...(esDomicilio
+          ? {
+              direccion: direccionEntrega.trim(),
+              departamento: nombreDepartamento,
+              municipio: nombreMunicipio,
+              barrio: barrioEntrega.trim(),
+            }
+          : {}),
         nombre_entrega: nombreEntrega.trim(),
         telefono_entrega: telefonoEntrega.trim(),
       });
@@ -313,6 +379,30 @@ export default function PaymentView({
       }
     } catch (error) {
       notify(error?.message || "No se pudo procesar el pago", "error");
+
+      // El backend indica el campo inválido ("campo" en snake_case):
+      // se muestra el mensaje bajo el input correcto y se lleva el foco.
+      if (error?.campo) {
+        const claveCampo = {
+          nombre_entrega: "nombre",
+          telefono_entrega: "telefono",
+          departamento: "departamento",
+          municipio: "municipio",
+          barrio: "barrio",
+          direccion: "direccion",
+        }[error.campo];
+
+        if (claveCampo) {
+          setErrores({ [claveCampo]: { texto: error.message } });
+          irACampo(ID_CAMPO[claveCampo]);
+        }
+      }
+
+      // 409: el backend rechazó el pedido por stock. Se repite el stock
+      // real y el carrito recorta las cantidades permitidas (con aviso).
+      if (error?.status === 409 && onStockActualizado) {
+        onStockActualizado();
+      }
     } finally {
       setEnviando(false);
     }
@@ -440,9 +530,12 @@ export default function PaymentView({
                 <input
                   type="tel"
                   placeholder="300 000 0000"
+                  inputMode="numeric"
+                  maxLength={LARGO_MAX_TELEFONO}
                   value={telefonoEntrega}
                   onChange={(e) => {
-                    setTelefonoEntrega(e.target.value);
+                    // Solo dígitos, máx. 10: misma regla que el backend.
+                    setTelefonoEntrega(e.target.value.replace(/\D/g, "").slice(0, LARGO_MAX_TELEFONO));
                     limpiarError("telefono");
                   }}
                 />
@@ -456,6 +549,102 @@ export default function PaymentView({
 
               {esDomicilio && (
               <div
+                className={`form-group ${errores.departamento ? "has-error" : ""}`}
+                id="campo-departamento"
+              >
+                <label>
+                  Departamento
+                </label>
+
+                <select
+                  value={departamentoCodigo}
+                  onChange={(e) => cambiarDepartamento(e.target.value)}
+                >
+                  <option value="">
+                    Selecciona un departamento
+                  </option>
+
+                  {DIVIPOLA.departamentos.map((dep) => (
+                    <option key={dep.codigo} value={dep.codigo}>
+                      {dep.nombre}
+                    </option>
+                  ))}
+                </select>
+
+                {errores.departamento && (
+                  <span className="field-error">
+                    {errores.departamento.texto}
+                  </span>
+                )}
+              </div>
+              )}
+
+              {esDomicilio && (
+              <div
+                className={`form-group ${errores.municipio ? "has-error" : ""}`}
+                id="campo-municipio"
+              >
+                <label>
+                  Ciudad o municipio
+                </label>
+
+                <select
+                  value={municipioCodigo}
+                  disabled={!departamentoCodigo}
+                  onChange={(e) => cambiarMunicipio(e.target.value)}
+                >
+                  <option value="">
+                    {departamentoCodigo
+                      ? "Selecciona una ciudad o municipio"
+                      : "Primero elige un departamento"}
+                  </option>
+
+                  {municipiosDelDepartamento.map((mun) => (
+                    <option key={mun.codigo} value={mun.codigo}>
+                      {mun.nombre}
+                    </option>
+                  ))}
+                </select>
+
+                {errores.municipio && (
+                  <span className="field-error">
+                    {errores.municipio.texto}
+                  </span>
+                )}
+              </div>
+              )}
+
+              {esDomicilio && (
+              <div
+                className={`form-group ${errores.barrio ? "has-error" : ""}`}
+                id="campo-barrio"
+              >
+                <label>
+                  Barrio
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Centro, La América..."
+                  maxLength={LARGO_MAX_BARRIO}
+                  disabled={!municipioCodigo}
+                  value={barrioEntrega}
+                  onChange={(e) => {
+                    setBarrioEntrega(e.target.value);
+                    limpiarError("barrio");
+                  }}
+                />
+
+                {errores.barrio && (
+                  <span className="field-error">
+                    {errores.barrio.texto}
+                  </span>
+                )}
+              </div>
+              )}
+
+              {esDomicilio && (
+              <div
                 className={`form-group ${errores.direccion ? "has-error" : ""}`}
                 id="campo-direccion"
               >
@@ -466,6 +655,7 @@ export default function PaymentView({
                 <input
                   type="text"
                   placeholder="Calle, carrera, número..."
+                  maxLength={LARGO_MAX_DIRECCION}
                   value={direccionEntrega}
                   onChange={(e) => {
                     setDireccionEntrega(e.target.value);
@@ -476,33 +666,6 @@ export default function PaymentView({
                 {errores.direccion && (
                   <span className="field-error">
                     {errores.direccion.texto}
-                  </span>
-                )}
-              </div>
-              )}
-
-              {esDomicilio && (
-              <div
-                className={`form-group ${errores.ciudad ? "has-error" : ""}`}
-                id="campo-ciudad"
-              >
-                <label>
-                  Ciudad
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Medellín"
-                  value={ciudadEntrega}
-                  onChange={(e) => {
-                    setCiudadEntrega(e.target.value);
-                    limpiarError("ciudad");
-                  }}
-                />
-
-                {errores.ciudad && (
-                  <span className="field-error">
-                    {errores.ciudad.texto}
                   </span>
                 )}
               </div>
@@ -539,7 +702,9 @@ export default function PaymentView({
             ================================================= */}
 
             <div
-              className={`payment-methods ${errores.metodo ? "has-error" : ""}`}
+              className={`payment-methods payment-methods--par ${
+                errores.metodo ? "has-error" : ""
+              }`}
               id="campo-metodo"
             >
 
@@ -578,47 +743,6 @@ export default function PaymentView({
                 </div>
 
                 {paymentMethod === "transferencia" && (
-                  <CheckCircle
-                    className="method-check"
-                    size={19}
-                  />
-                )}
-
-              </button>
-
-
-              {/* CRÉDITO */}
-
-              <button
-                type="button"
-                className={`payment-method ${
-                  paymentMethod === "credito"
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() => {
-                  setPaymentMethod("credito");
-                  limpiarError("metodo");
-                }}
-              >
-
-                <div className="method-icon">
-                  <CreditCard size={23} />
-                </div>
-
-                <div className="method-info">
-
-                  <strong>
-                    Crédito
-                  </strong>
-
-                  <span>
-                    Pago con tarjeta de crédito
-                  </span>
-
-                </div>
-
-                {paymentMethod === "credito" && (
                   <CheckCircle
                     className="method-check"
                     size={19}
@@ -1073,96 +1197,6 @@ export default function PaymentView({
 
             )}
 
-
-            {/* =================================================
-                CRÉDITO
-            ================================================= */}
-
-            {paymentMethod === "credito" && (
-
-              <div className="payment-extra">
-
-                <div className="extra-title">
-
-                  <CreditCard size={19} />
-
-                  <span>
-                    Datos de la tarjeta
-                  </span>
-
-                </div>
-
-                <div className="form-group">
-
-                  <label>
-                    Número de tarjeta
-                  </label>
-
-                  <input
-                    type="text"
-                    placeholder="0000 0000 0000 0000"
-                  />
-
-                </div>
-
-                <div className="form-grid">
-
-                  <div className="form-group">
-
-                    <label>
-                      Fecha de vencimiento
-                    </label>
-
-                    <input
-                      type="text"
-                      placeholder="MM/AA"
-                    />
-
-                  </div>
-
-                  <div className="form-group">
-
-                    <label>
-                      CVV
-                    </label>
-
-                    <input
-                      type="password"
-                      placeholder="123"
-                    />
-
-                  </div>
-
-                </div>
-
-                <div className="form-group">
-
-                  <label>
-                    Nombre del titular
-                  </label>
-
-                  <input
-                    type="text"
-                    placeholder="Nombre del titular"
-                  />
-
-                </div>
-
-                <div className="payment-notice">
-
-                  <ShieldCheck size={18} />
-
-                  <span>
-                    Tus datos de pago se manejan de forma
-                    segura.
-                  </span>
-
-                </div>
-
-              </div>
-
-            )}
-
           </section>
 
 
@@ -1235,8 +1269,10 @@ export default function PaymentView({
                 }`}
                 onClick={() => {
                   setMetodoEnvio("recoger");
+                  limpiarError("departamento");
+                  limpiarError("municipio");
+                  limpiarError("barrio");
                   limpiarError("direccion");
-                  limpiarError("ciudad");
                 }}
               >
 
@@ -1504,6 +1540,12 @@ export default function PaymentView({
                       Cantidad: {cantidad}
                     </p>
 
+                    {esAgotado(item.stock) && (
+                      <p className="summary-product-agotado" role="status">
+                        Agotado · no hay unidades disponibles
+                      </p>
+                    )}
+
                   </div>
 
 
@@ -1549,11 +1591,18 @@ export default function PaymentView({
 
           {/* CONFIRMAR */}
 
+          {agotados.length > 0 && (
+            <p className="payment-stock-alert" role="alert">
+              Hay productos agotados en tu pedido: elimínalos del carrito
+              para continuar.
+            </p>
+          )}
+
           <button
             type="button"
             className="confirm-payment-btn"
             onClick={handleConfirmPayment}
-            disabled={enviando}
+            disabled={enviando || agotados.length > 0}
           >
             Confirmar y pagar
           </button>

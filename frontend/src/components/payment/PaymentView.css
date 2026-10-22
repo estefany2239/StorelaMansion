@@ -397,6 +397,111 @@
 
 
 /* =========================================================
+   SELECTS (departamento y municipio del catálogo DIVIPOLA)
+   Mismo alto, radio y tipografía que los inputs; el chevron
+   es un SVG en background para no depender de librerías.
+========================================================= */
+
+.payment-page .form-group select {
+  width: 100% !important;
+
+  height: 54px !important;
+
+  min-height: 54px !important;
+
+  box-sizing: border-box !important;
+
+  padding: 0 40px 0 16px !important;
+
+  border-radius: 10px !important;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif !important;
+
+  font-size: 14px !important;
+
+  outline: none !important;
+
+  cursor: pointer;
+
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888888' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+
+  background-position: right 16px center;
+
+  transition:
+    border 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease !important;
+}
+
+
+/* LIGHT */
+
+.payment-light .form-group select {
+  background-color: #ffffff !important;
+
+  color: #111111 !important;
+
+  border:
+    1px solid #d8d8d8 !important;
+}
+
+
+/* DARK */
+
+.payment-page.payment-dark .form-group select {
+  background-color: #101010 !important;
+
+  color: #ffffff !important;
+
+  border:
+    1px solid #383838 !important;
+}
+
+
+/* Opciones del desplegable: en modo oscuro el sistema suele pintarlas
+   claras, así que se fija el fondo para que el texto siga legible. */
+
+.payment-page.payment-dark .form-group select option {
+  background: #101010 !important;
+
+  color: #ffffff !important;
+}
+
+
+/* FOCUS */
+
+.payment-page .form-group select:focus {
+  border-color:
+    #d4af37 !important;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(212, 175, 55, 0.12) !important;
+}
+
+
+/* DISABLED: municipio sin departamento elegido, barrio sin municipio. */
+
+.payment-page .form-group select:disabled,
+.payment-page .form-group input:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
    MÉTODOS DE PAGO
 ========================================================= */
 
@@ -409,6 +514,15 @@
     repeat(3, minmax(0, 1fr));
 
   gap: 15px;
+}
+
+
+/* Fila con solo dos opciones (Método de pago: Transferencia y Contra
+   entrega): ocupan el ancho completo, sin dejar un tercer hueco vacío. */
+
+.payment-methods.payment-methods--par {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 }
 
 .payment-method {
@@ -1338,6 +1452,30 @@
     0.55;
 }
 
+/* Línea del resumen sin unidades disponibles */
+.summary-product-agotado {
+  margin:
+    4px 0 0;
+
+  color:
+    #e05252;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.4px;
+
+  text-transform:
+    uppercase;
+
+  opacity:
+    1;
+}
+
 .summary-product > strong {
   color:
     #d4af37;
@@ -1500,6 +1638,61 @@
     rgba(212, 175, 55, 0.22);
 }
 
+.confirm-payment-btn:disabled {
+  background:
+    #6b6b6b;
+
+  color:
+    #d9d9d9;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+
+  box-shadow:
+    none;
+}
+
+.confirm-payment-btn:disabled:hover {
+  transform:
+    none;
+
+  box-shadow:
+    none;
+}
+
+/* Aviso de bloqueo cuando el pedido lleva productos agotados */
+.payment-stock-alert {
+  margin:
+    0 0 12px;
+
+  padding:
+    10px 12px;
+
+  border:
+    1px solid rgba(224, 82, 82, 0.45);
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(224, 82, 82, 0.1);
+
+  color:
+    #e05252;
+
+  font-size:
+    12px;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.4;
+}
+
 
 /* =========================================================
    RESPONSIVE
@@ -1531,6 +1724,11 @@
   }
 
   .payment-methods {
+    grid-template-columns:
+      1fr;
+  }
+
+  .payment-methods.payment-methods--par {
     grid-template-columns:
       1fr;
   }
@@ -1614,7 +1812,8 @@
    (campos en rojo + texto bajo el campo)
 ========================================================= */
 
-.payment-page .has-error input {
+.payment-page .has-error input,
+.payment-page .has-error select {
   border-color:
     #d92d20 !important;
 
@@ -1622,12 +1821,14 @@
     0 0 0 3px rgba(217, 45, 32, 0.15) !important;
 }
 
-.payment-page.payment-light .form-group.has-error input {
+.payment-page.payment-light .form-group.has-error input,
+.payment-page.payment-light .form-group.has-error select {
   border-color:
     #d92d20 !important;
 }
 
-.payment-page.payment-dark .form-group.has-error input {
+.payment-page.payment-dark .form-group.has-error input,
+.payment-page.payment-dark .form-group.has-error select {
   border-color:
     #f97066 !important;
 }
