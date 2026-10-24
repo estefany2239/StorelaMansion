@@ -17,6 +17,11 @@ import { modoSimulacion } from './services/correos.js'
 
 const app = express()
 
+// Detrás de un proxy (Render, Vercel, etc.) req.ip debe leerse de
+// X-Forwarded-For para que el límite de recuperación por IP funcione
+// por usuario real. En local no hay proxy y el valor no cambia.
+app.set('trust proxy', 1)
+
 // CORS_ORIGIN admite una lista separada por comas (varios dominios:
 // producción de Vercel + http://localhost:5173, etc.). Si no se define,
 // se conserva el valor por defecto de desarrollo.

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { pool } from '../db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
-import { leerIdentificacion } from '../utils/documentos.js'
+import { leerIdentificacion, validarFormatoDocumento } from '../utils/documentos.js'
 import { generarClaveTemporal, enviarInvitacion } from '../services/invitaciones.js'
 
 const router = Router()
@@ -30,8 +30,14 @@ const SELECT_CLIENTE = `
 `
 
 const correoValido = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
+// Sin números; permite tildes, ñ, espacios, apóstrofes y guiones.
 const nombreValido = (nombre) =>
-  /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre) && nombre.length <= 20
+  /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]+$/.test(nombre) && nombre.length <= 20
+// Mismos caracteres, con el límite del registro público y de las
+// columnas nombres/apellidos (100): el nombre del perfil propio es
+// nombres + apellidos ya guardados, que pueden superar los 20 del panel.
+const nombreValidoPerfil = (nombre) =>
+  /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]+$/.test(nombre) && nombre.length <= 100
 const telefonoValido = (telefono) => /^[0-9]+$/.test(telefono) && telefono.length <= 10
 
 // Mismo correo de otra persona: 409 con un mensaje distinto según lo que ya
@@ -231,6 +237,119 @@ router.post('/', requierePrivilegio('Clientes', 'Crear'), async (req, res) => {
     }
     console.error(error.message)
     res.status(500).json({ error: 'No se pudo crear el cliente' })
+  }
+})
+
+// PUT /api/clientes/mio -> el usuario autenticado actualiza SUS propios
+// datos personales (nombre, correo, teléfono y número de documento), tal
+// como los muestra la tarjeta "Datos personales" de Configuración.
+// La identidad se toma SIEMPRE del token (req.usuario.id): el cuerpo no
+// puede indicar a quién actualizar, así que un cliente jamás toca el
+// registro de otro. No requiere privilegio de panel (el rol Cliente no lo
+// tiene); solo verificarToken + bloquearCambioPendiente, que ya aplica
+// router.use. El TIPO de documento queda fijo (el ya registrado): solo se
+// admite cambiar el número, y únicamente si la cuenta ya tiene tipo.
+// No se tocan dirección, fecha de nacimiento, contraseña, rol ni estado.
+router.put('/mio', async (req, res) => {
+  const id = req.usuario.id
+  const rechazar = (error, campo) => res.status(400).json({ error, campo })
+
+  const nombre = String(req.body.nombre || '').trim()
+  const correo = String(req.body.correo || '').trim().toLowerCase()
+  const telefono = String(req.body.telefono || '').trim()
+
+  if (!nombre) {
+    return rechazar('El nombre es obligatorio.', 'nombre')
+  }
+  if (!nombreValidoPerfil(nombre)) {
+    return rechazar(
+      'El nombre solo puede contener letras, espacios, apóstrofes y guiones (máx. 100).',
+      'nombre'
+    )
+  }
+  if (!correo) {
+    return rechazar('El correo es obligatorio.', 'correo')
+  }
+  if (!correoValido(correo)) {
+    return rechazar('El correo no es válido.', 'correo')
+  }
+  if (telefono && !telefonoValido(telefono)) {
+    return rechazar('El teléfono solo puede contener dígitos (máx. 10).', 'telefono')
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT nombres, apellidos, correo, tipo_documento, documento
+         FROM usuario WHERE id_usuario = $1`,
+      [id]
+    )
+    const actual = rows[0]
+    if (!actual) {
+      return res.status(404).json({ error: 'Usuario no encontrado' })
+    }
+
+    // Unicidad del correo sin revelar datos de otra cuenta.
+    const correoDuplicado = await pool.query(
+      'SELECT 1 FROM usuario WHERE LOWER(correo) = $1 AND id_usuario <> $2',
+      [correo, id]
+    )
+    if (correoDuplicado.rowCount > 0) {
+      return res.status(409).json({ error: 'Este correo ya está registrado', campo: 'correo' })
+    }
+
+    // Documento: tipo fijo, número editable con las MISMAS reglas del
+    // registro (utils/documentos.js) y unicidad en la tabla usuario.
+    let documento = actual.documento
+    if (actual.tipo_documento) {
+      const numero = String(req.body.documento ?? '').trim()
+      if (!numero) {
+        return rechazar('El número de documento es obligatorio.', 'documento')
+      }
+      const formato = validarFormatoDocumento(actual.tipo_documento, numero)
+      if (formato) {
+        return rechazar(formato, 'documento')
+      }
+      const docDuplicado = await pool.query(
+        'SELECT 1 FROM usuario WHERE documento = $1 AND id_usuario <> $2',
+        [numero, id]
+      )
+      if (docDuplicado.rowCount > 0) {
+        return res.status(409).json({ error: 'Este documento ya está registrado', campo: 'documento' })
+      }
+      documento = numero
+    }
+
+    const [nombres, ...resto] = nombre.split(/\s+/)
+    const apellidos = resto.join(' ')
+
+    await pool.query(
+      `UPDATE usuario
+          SET nombres = $1, apellidos = $2, correo = $3,
+              telefono = $4, documento = $5
+        WHERE id_usuario = $6`,
+      [nombres, apellidos, correo, telefono || null, documento, id]
+    )
+
+    res.json({
+      id,
+      nombre,
+      email: correo,
+      telefono: telefono || null,
+      tipoDocumento: actual.tipo_documento,
+      documento,
+      mensaje: 'Datos actualizados correctamente',
+    })
+  } catch (error) {
+    // Carrera entre la comprobación y el UPDATE: la restricción única de
+    // la base (usuario_correo_key / usuario_documento_key) manda.
+    if (error.code === '23505') {
+      if (error.constraint === 'usuario_documento_key') {
+        return res.status(409).json({ error: 'Este documento ya está registrado', campo: 'documento' })
+      }
+      return res.status(409).json({ error: 'Este correo ya está registrado', campo: 'correo' })
+    }
+    console.error(error.message)
+    res.status(500).json({ error: 'No se pudieron actualizar tus datos' })
   }
 })
 

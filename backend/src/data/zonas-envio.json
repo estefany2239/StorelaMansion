@@ -1,0 +1,26 @@
+{
+  "fuente": "Códigos DANE DIVIPOLA de los municipios del Valle de Aburrá",
+  "actualizado": "2026-10-22",
+  "valleAburra": [
+    "05001",
+    "05079",
+    "05088",
+    "05129",
+    "05212",
+    "05266",
+    "05308",
+    "05360",
+    "05380",
+    "05631"
+  ],
+  "tarifas": {
+    "domicilio": {
+      "modo": "por_confirmar",
+      "valor": null
+    },
+    "transportadora": {
+      "modo": "por_confirmar",
+      "valor": null
+    }
+  }
+}

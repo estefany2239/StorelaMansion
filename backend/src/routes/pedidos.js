@@ -1,6 +1,18 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { verificarToken, soloRoles, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
+import {
+  validarNombreCompleto,
+  validarTelefonoEntrega,
+  validarBarrio,
+  validarDireccion,
+} from '../utils/ubicaciones.js'
+import {
+  METODOS_ENVIO,
+  calcularCostoEnvio,
+  metodosEnvioPermitidos,
+  validarUbicacionCodigos,
+} from '../utils/envios.js'
 
 const router = Router()
 
@@ -16,16 +28,25 @@ const ESTADO_ENTREGADO = 'Entregado'
 
 // Efectivo ya no se acepta en pedidos nuevos (las ventas de mostrador no
 // cambian: su lista vive en routes/ventas.js y su CHECK de la tabla venta se
-// mantiene intacto).
-const METODOS = ['Transferencia', 'Crédito', 'Contra entrega']
-const BANCOS = ['Nequi', 'Bancolombia']
-const METODOS_ENVIO = ['Domicilio', 'Recoger en tienda']
+// mantiene intacto). Crédito también se retiró del checkout: la lista de
+// abajo es solo para pedidos NUEVOS; los pagos históricos con "Crédito" en
+// la tabla pago siguen consultándose sin problema (esa columna no tiene CHECK).
+const METODOS = ['Transferencia', 'Contra entrega']
+const BANCOS = ['Nequi', 'Bancolombia', 'QR']
+
+const ESTADO_PAGO_PENDIENTE = 'Pendiente de verificación'
+const ESTADO_PAGO_CONFIRMADO = 'Pago confirmado'
+const ESTADO_PAGO_RECHAZADO = 'Pago rechazado'
+const ESTADO_PAGO_NO_APLICA = 'No aplica'
 
 // Error con código HTTP para responder desde los catch.
+// `campo` (opcional) permite que el frontend muestre el mensaje bajo el
+// input correcto, igual que hace auth.js con sus rechazos.
 class ErrorHttp extends Error {
-  constructor(status, message) {
+  constructor(status, message, campo) {
     super(message)
     this.status = status
+    this.campo = campo
   }
 }
 
@@ -37,17 +58,28 @@ const SELECT_PEDIDO = `
          p.descuento::float8 AS descuento,
          p.iva::float8 AS iva,
          p.total::float8 AS total,
+         p.costo_envio::float8 AS costo_envio,
+         p.costo_envio_pendiente,
          p.estado,
          TRIM(u.nombres || ' ' || u.apellidos) AS cliente,
          u.correo AS cliente_correo,
          u.tipo_documento,
          u.documento,
          u.telefono,
-         (SELECT metodo FROM pago WHERE id_pedido = p.id_pedido ORDER BY id_pago LIMIT 1) AS metodo_pago,
+         COALESCE(
+           p.metodo_pago,
+           (SELECT metodo FROM pago WHERE id_pedido = p.id_pedido ORDER BY id_pago LIMIT 1)
+         ) AS metodo_pago,
+         COALESCE(p.estado_pago, 'No aplica') AS estado_pago,
          (SELECT COALESCE(SUM(monto), 0)::float8 FROM pago WHERE id_pedido = p.id_pedido) AS monto_pagado,
          (p.total - (SELECT COALESCE(SUM(monto), 0) FROM pago WHERE id_pedido = p.id_pedido))::float8 AS saldo,
          (SELECT direccion_entrega FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS direccion,
-         (SELECT metodo_envio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS metodo_envio
+         (SELECT metodo_envio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS metodo_envio,
+         (SELECT departamento FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS departamento,
+         (SELECT municipio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS municipio,
+         (SELECT barrio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS barrio,
+         (SELECT nombre_destinatario FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS nombre_destinatario,
+         (SELECT telefono_destinatario FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS telefono_destinatario
   FROM pedido p
   JOIN usuario u ON u.id_usuario = p.id_usuario
 `
@@ -65,6 +97,7 @@ const bancoDeMetodo = (metodo) => {
   const texto = String(metodo || '')
   if (texto.includes('Nequi')) return 'Nequi'
   if (texto.includes('Bancolombia')) return 'Bancolombia'
+  if (texto.includes('QR')) return 'QR'
   return null
 }
 
@@ -176,14 +209,21 @@ const normalizarItems = (items) => {
 const normalizarPago = (body) => {
   const metodo = String(body.metodo_pago || '').trim()
 
+  // Crédito se retiró del checkout: se rechaza con mensaje propio para que
+  // no se pueda crear un pedido nuevo con ese valor (ni siquiera manipulando
+  // la petición). Los pedidos históricos solo se leen, nunca se validan aquí.
+  if (metodo === 'Crédito') {
+    throw new ErrorHttp(400, 'Este método de pago ya no está disponible')
+  }
+
   if (!METODOS.includes(metodo)) {
-    throw new ErrorHttp(400, 'Método de pago inválido. Usa: Transferencia, Crédito o Contra entrega')
+    throw new ErrorHttp(400, 'Método de pago inválido. Usa: Transferencia o Contra entrega')
   }
 
   if (metodo === 'Transferencia') {
     const banco = String(body.banco || body.transferencia_banco || '').trim()
     if (!BANCOS.includes(banco)) {
-      throw new ErrorHttp(400, 'Para transferencia indica el banco: Nequi o Bancolombia')
+      throw new ErrorHttp(400, 'Para transferencia indica el medio de pago: QR')
     }
     return { metodo_pago: metodo, metodo_guardado: `Transferencia - ${banco}` }
   }
@@ -193,7 +233,7 @@ const normalizarPago = (body) => {
   if (metodo === 'Contra entrega') {
     const banco = String(body.banco || body.transferencia_banco || '').trim()
     if (!BANCOS.includes(banco)) {
-      throw new ErrorHttp(400, 'Para contra entrega indica el banco del abono: Nequi o Bancolombia')
+      throw new ErrorHttp(400, 'Para contra entrega indica el medio del abono: QR')
     }
     return { metodo_pago: metodo, metodo_guardado: `Contra entrega - Abono 50% - ${banco}` }
   }
@@ -211,30 +251,72 @@ const normalizarEnvio = (body) => {
   return metodo
 }
 
-// Texto que se guarda en domicilio.direccion_entrega (varchar 255).
-// Con "Recoger en tienda" el destino es ese texto + nombre y teléfono del
-// checkout; con "Domicilio" se recibe ya construido desde el frontend.
-const construirDestino = (body, metodoEnvio) => {
+// Valida todos los datos de entrega y devuelve lo que se persiste.
+// La zona se decide SOLO por el código DANE del municipio: dentro del Valle
+// de Aburrá se permite Domicilio o Recoger en tienda; fuera, solo
+// Transportadora. Nunca se acepta la combinación enviada por el frontend sin
+// volver a comprobarla aquí.
+const validarEntrega = (body, metodoEnvio) => {
+  const nombre = String(body.nombre_entrega || '').trim()
+  const telefono = String(body.telefono_entrega || '').trim()
+
+  const errorNombre = validarNombreCompleto(nombre)
+  if (errorNombre) throw new ErrorHttp(400, errorNombre, 'nombre_entrega')
+
+  const errorTelefono = validarTelefonoEntrega(telefono)
+  if (errorTelefono) throw new ErrorHttp(400, errorTelefono, 'telefono_entrega')
+
+  const ubicacion = validarUbicacionCodigos(
+    body.departamento_codigo,
+    body.municipio_codigo
+  )
+  if (ubicacion.error) {
+    throw new ErrorHttp(400, ubicacion.error, ubicacion.campo)
+  }
+
+  const permitidos = metodosEnvioPermitidos(ubicacion.codigoMunicipio)
+  if (!permitidos.includes(metodoEnvio)) {
+    const mensaje = permitidos.includes('Transportadora')
+      ? 'Para municipios fuera del Valle de Aburrá el envío solo está disponible por Transportadora.'
+      : 'Transportadora solo aplica fuera del Valle de Aburrá. Dentro del Valle elige Domicilio o Recoger en tienda.'
+    throw new ErrorHttp(400, mensaje, 'metodo_envio')
+  }
+
+  const entrega = {
+    nombreDestinatario: nombre,
+    telefonoDestinatario: telefono,
+    departamento: ubicacion.departamento,
+    municipio: ubicacion.municipio,
+  }
+
   if (metodoEnvio === 'Recoger en tienda') {
-    const nombre = String(body.nombre_entrega || '').trim()
-    const telefono = String(body.telefono_entrega || '').trim()
-
-    let texto = 'Recoger en tienda'
-    if (nombre) texto += ` | Nombre: ${nombre}`
-    if (telefono) texto += ` | Teléfono: ${telefono}`
-
-    return texto.slice(0, 255)
+    // Se conserva la ubicación para validar la zona, pero no se pide
+    // dirección ni barrio de entrega.
+    return {
+      ...entrega,
+      direccion: 'Recoger en tienda',
+      barrio: null,
+    }
   }
 
   const direccion = String(body.direccion || '').trim()
-  if (!direccion) {
-    throw new ErrorHttp(400, 'La dirección de entrega es obligatoria')
-  }
-  if (direccion.length > 255) {
-    throw new ErrorHttp(400, 'Los datos de entrega superan el máximo permitido (255 caracteres)')
+  const errorDireccion = validarDireccion(direccion)
+  if (errorDireccion) throw new ErrorHttp(400, errorDireccion, 'direccion')
+
+  // Domicilio local exige barrio. En Transportadora el barrio es opcional
+  // (la dirección nacional puede no incluirlo).
+  let barrio = null
+  if (metodoEnvio === 'Domicilio') {
+    const errorBarrio = validarBarrio(body.barrio)
+    if (errorBarrio) throw new ErrorHttp(400, errorBarrio, 'barrio')
+    barrio = String(body.barrio).trim()
   }
 
-  return direccion
+  return {
+    ...entrega,
+    direccion,
+    barrio,
+  }
 }
 
 // POST / -> crea un pedido (solo Cliente). El precio lo calcula el backend.
@@ -243,9 +325,9 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
 
   try {
     const cantidades = normalizarItems(req.body.items)
-    const { metodo_pago, metodo_guardado } = normalizarPago(req.body)
+    const { metodo_guardado } = normalizarPago(req.body)
     const metodoEnvio = normalizarEnvio(req.body)
-    const direccion = construirDestino(req.body, metodoEnvio)
+    const entrega = validarEntrega(req.body, metodoEnvio)
 
     const ids = [...cantidades.keys()].sort((a, b) => a - b)
 
@@ -279,16 +361,34 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
       }
     }
 
-    const total = ids.reduce(
+    const subtotal = ids.reduce(
       (acumulado, id) => acumulado + mapa.get(id).precio * cantidades.get(id),
       0
     )
 
+    // El costo de envío también lo calcula el backend. Si la tarifa está
+    // pendiente se guarda NULL + pendiente=true y el total no inventa un
+    // valor de envío.
+    const { costo: costoEnvio, pendiente: costoEnvioPendiente } =
+      calcularCostoEnvio(metodoEnvio)
+    const total = subtotal + (costoEnvioPendiente ? 0 : costoEnvio)
+
     const { rows: pedidoRows } = await client.query(
-      `INSERT INTO pedido (id_usuario, subtotal, descuento, iva, total, estado)
-       VALUES ($1, $2, 0, 0, $3, $4)
+      `INSERT INTO pedido (id_usuario, subtotal, descuento, iva, total,
+                           costo_envio, costo_envio_pendiente, estado,
+                           metodo_pago, estado_pago)
+       VALUES ($1, $2, 0, 0, $3, $4, $5, $6, $7, $8)
        RETURNING id_pedido`,
-      [req.usuario.id, total, total, ESTADO_INICIAL]
+      [
+        req.usuario.id,
+        subtotal,
+        total,
+        costoEnvioPendiente ? null : costoEnvio,
+        costoEnvioPendiente,
+        ESTADO_INICIAL,
+        metodo_guardado,
+        ESTADO_PAGO_PENDIENTE,
+      ]
     )
     const idPedido = pedidoRows[0].id_pedido
 
@@ -313,24 +413,17 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
       }
     }
 
-    // Crédito deja saldo pendiente (monto 0); Contra entrega cobra el abono
-    // del 50 % redondeado; el resto registra el pago completo.
-    const monto =
-      metodo_pago === 'Crédito'
-        ? 0
-        : metodo_pago === 'Contra entrega'
-          ? Math.round(total * 0.5)
-          : total
-    await client.query(
-      `INSERT INTO pago (id_pedido, metodo, monto)
-       VALUES ($1, $2, $3)`,
-      [idPedido, metodo_guardado, monto]
-    )
+    // El pago NO se registra aquí: el pedido nace en "Pendiente de
+    // verificación" y la tienda lo confirma o rechaza desde el admin.
 
     await client.query(
-      `INSERT INTO domicilio (id_pedido, direccion_entrega, metodo_envio, estado)
-       VALUES ($1, $2, $3, $4)`,
-      [idPedido, direccion, metodoEnvio, 'Pendiente']
+      `INSERT INTO domicilio (id_pedido, direccion_entrega, metodo_envio, estado,
+                              departamento, municipio, barrio,
+                              nombre_destinatario, telefono_destinatario)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [idPedido, entrega.direccion, metodoEnvio, 'Pendiente',
+       entrega.departamento, entrega.municipio, entrega.barrio,
+       entrega.nombreDestinatario, entrega.telefonoDestinatario]
     )
 
     await client.query('COMMIT')
@@ -340,10 +433,154 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {})
     if (error.status) {
-      return res.status(error.status).json({ error: error.message })
+      // Incluye `campo` cuando existe para que el frontend muestre el
+      // mensaje bajo el input correcto (mismo patrón que auth.js).
+      const detalle = error.campo ? { error: error.message, campo: error.campo } : { error: error.message }
+      return res.status(error.status).json(detalle)
     }
     console.error('Error en POST /api/pedidos:', error.message)
     res.status(500).json({ error: 'No se pudo crear el pedido' })
+  } finally {
+    client.release()
+  }
+})
+
+// POST /:id/pago/confirmar -> registra el pago y confirma la verificación.
+// El monto depende del método guardado al crear el pedido: total para
+// Transferencia y abono del 50 % para Contra entrega.
+router.post('/:id/pago/confirmar', requierePrivilegio('Pedidos', 'Cambiar estado'), async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    const { rows } = await client.query(
+      `SELECT id_pedido, estado, total, metodo_pago, estado_pago
+         FROM pedido
+        WHERE id_pedido = $1
+        FOR UPDATE`,
+      [id]
+    )
+    const pedido = rows[0]
+
+    if (!pedido) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Pedido no encontrado' })
+    }
+    if (pedido.estado === ESTADO_CANCELADO) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pedido está cancelado' })
+    }
+
+    const estadoPago = pedido.estado_pago || ESTADO_PAGO_NO_APLICA
+    if (estadoPago === ESTADO_PAGO_CONFIRMADO) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pago ya está confirmado' })
+    }
+    if (estadoPago !== ESTADO_PAGO_PENDIENTE && estadoPago !== ESTADO_PAGO_RECHAZADO) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pedido no tiene un pago pendiente de verificación' })
+    }
+    if (!pedido.metodo_pago) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pedido no tiene un método de pago registrado' })
+    }
+
+    const { rows: pagosRows } = await client.query(
+      'SELECT 1 FROM pago WHERE id_pedido = $1 LIMIT 1',
+      [id]
+    )
+    if (pagosRows.length > 0) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pedido ya tiene pagos registrados' })
+    }
+
+    const total = Number(pedido.total)
+    const monto = String(pedido.metodo_pago).startsWith('Contra entrega')
+      ? Math.round(total * 0.5)
+      : total
+
+    await client.query(
+      `INSERT INTO pago (id_pedido, metodo, monto)
+       VALUES ($1, $2, $3)`,
+      [id, pedido.metodo_pago, monto]
+    )
+    await client.query(
+      'UPDATE pedido SET estado_pago = $1 WHERE id_pedido = $2',
+      [ESTADO_PAGO_CONFIRMADO, id]
+    )
+
+    await client.query('COMMIT')
+
+    const actualizado = await obtenerPedidoPorId(id)
+    res.json(actualizado)
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message })
+    }
+    console.error('Error en POST /api/pedidos/:id/pago/confirmar:', error.message)
+    res.status(500).json({ error: 'No se pudo confirmar el pago' })
+  } finally {
+    client.release()
+  }
+})
+
+// POST /:id/pago/rechazar -> deja constancia del rechazo sin registrar pago.
+router.post('/:id/pago/rechazar', requierePrivilegio('Pedidos', 'Cambiar estado'), async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    const { rows } = await client.query(
+      `SELECT id_pedido, estado, estado_pago
+         FROM pedido
+        WHERE id_pedido = $1
+        FOR UPDATE`,
+      [id]
+    )
+    const pedido = rows[0]
+
+    if (!pedido) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Pedido no encontrado' })
+    }
+    if (pedido.estado === ESTADO_CANCELADO) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pedido está cancelado' })
+    }
+
+    const estadoPago = pedido.estado_pago || ESTADO_PAGO_NO_APLICA
+    if (estadoPago !== ESTADO_PAGO_PENDIENTE) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'El pago no está pendiente de verificación' })
+    }
+
+    await client.query(
+      'UPDATE pedido SET estado_pago = $1 WHERE id_pedido = $2',
+      [ESTADO_PAGO_RECHAZADO, id]
+    )
+
+    await client.query('COMMIT')
+
+    const actualizado = await obtenerPedidoPorId(id)
+    res.json(actualizado)
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message })
+    }
+    console.error('Error en POST /api/pedidos/:id/pago/rechazar:', error.message)
+    res.status(500).json({ error: 'No se pudo rechazar el pago' })
   } finally {
     client.release()
   }
@@ -461,7 +698,8 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     // Contra entrega: al entregar se cobra el saldo restante en la MISMA
     // transacción, con el método "Contra entrega - Saldo" (sin banco). El
     // saldo se calcula con una consulta hecha después del bloqueo FOR UPDATE
-    // de arriba. Crédito no registra nada aquí (queda como hasta ahora).
+    // de arriba. Otros métodos (Transferencia; históricamente Crédito) no
+    // registran nada aquí.
     if (estado === ESTADO_ENTREGADO) {
       const { rows: pagosRows } = await client.query(
         'SELECT metodo FROM pago WHERE id_pedido = $1 ORDER BY id_pago LIMIT 1',
