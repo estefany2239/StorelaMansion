@@ -21,14 +21,14 @@ import {
   Lock,
 } from "lucide-react";
 
-import { obtenerPrecio } from "../../features/store/data/pedidosCliente";
-import { esAgotado, hayStock } from "../../shared/components/cart/cantidad";
-import { crearPedido } from "../../shared/services/api";
-import { useNotify } from "../../shared/components/notifications/useNotify.js";
-import { NOMBRE_COMPLETO_VALIDO } from "../../shared/utils/validacionesRegistro";
-import { calcularCostoEnvio, esValleAburra } from "../../shared/utils/envio";
-import DIVIPOLA from "../../shared/data/divipola.json";
-import QR_PAGO from "../../assets/img/QR.jpeg";
+import { obtenerPrecio } from "../../store/data/pedidosCliente";
+import { esAgotado, hayStock } from "../../../shared/components/cart/cantidad";
+import { crearPedido } from "../../../shared/services/api";
+import { useNotify } from "../../../shared/components/notifications/useNotify.js";
+import { NOMBRE_COMPLETO_VALIDO } from "../../../shared/utils/validacionesRegistro";
+import { calcularCostoEnvio, esValleAburra } from "../../../shared/utils/envio";
+import DIVIPOLA from "../../../shared/data/divipola.json";
+import QR_PAGO from "../../../assets/img/QR.jpeg";
 
 import "./PaymentView.css";
 

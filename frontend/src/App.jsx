@@ -22,7 +22,7 @@ import {
   esAgotado,
   hayStock,
 } from "./shared/components/cart/cantidad";
-import PaymentView from "./components/payment/PaymentView";
+import PaymentView from "./features/checkout/pages/PaymentView";
 import { useNotify } from "./shared/components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
