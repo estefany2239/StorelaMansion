@@ -11,10 +11,10 @@ import {
   solicitarCodigoRecuperacion,
   verificarCodigoRecuperacion,
   restablecerContrasena
-} from "../../shared/services/api";
+} from "../../../shared/services/api";
 import "./Login.css";
 
-const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
+const authBg = new URL("../../../assets/img/img.png", import.meta.url).href;
 
 export default function ForgotPassword({ onBackToLogin }) {
   const [paso, setPaso] = useState("correo");

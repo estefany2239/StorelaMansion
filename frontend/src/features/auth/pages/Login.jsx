@@ -8,11 +8,11 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import { iniciarSesion } from "../../shared/services/api";
+import { iniciarSesion } from "../../../shared/services/api";
 
 import "./Login.css";
 
-const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
+const authBg = new URL("../../../assets/img/img.png", import.meta.url).href;
 
 export default function Login({
   onBackToHome,

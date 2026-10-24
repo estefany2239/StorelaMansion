@@ -7,11 +7,11 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import { cambiarContrasena } from "../../shared/services/api";
+import { cambiarContrasena } from "../../../shared/services/api";
 
 import "./Login.css";
 
-const authBg = new URL("../../assets/img/img.png", import.meta.url).href;
+const authBg = new URL("../../../assets/img/img.png", import.meta.url).href;
 
 // Pantalla "Establecer nueva contraseña". Se muestra después de iniciar
 // sesión con la contraseña temporal de una invitación (el backend marca

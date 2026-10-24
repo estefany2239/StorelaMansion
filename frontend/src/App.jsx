@@ -10,10 +10,10 @@ import FeaturedProducts from "./features/home/products/FeaturedProducts";
 import Nosotros from "./features/home/Nosotros";
 import Footer from "./shared/components/layout/Footer";
 
-import Login from "./features/auth/Login";
-import Register from "./features/auth/Register";
-import ForgotPassword from "./features/auth/ForgotPassword";
-import CambiarContrasena from "./features/auth/CambiarContrasena";
+import Login from "./features/auth/pages/Login";
+import Register from "./features/auth/pages/Register";
+import ForgotPassword from "./features/auth/pages/ForgotPassword";
+import CambiarContrasena from "./features/auth/pages/CambiarContrasena";
 
 import CartDrawer from "./shared/components/cart/CartDrawer";
 import CantidadControl from "./shared/components/cart/CantidadControl";
