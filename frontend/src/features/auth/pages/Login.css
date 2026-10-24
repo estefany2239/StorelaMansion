@@ -51,6 +51,20 @@
   transform: translateX(-3px);
 }
 
+/* Campo trampa del registro: fuera de pantalla, no enfocable, pero sigue
+   siendo un <input> real que un relleno automático sí escribe. */
+.auth__trampa {
+  position: absolute !important;
+  left: -9999px !important;
+  top: auto !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* --- CONTENEDOR --- */
 
 .auth-container {

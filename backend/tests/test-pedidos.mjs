@@ -123,6 +123,7 @@ const prepararUsuarios = async () => {
       tipo_documento: 'CC',
       documento: '1000000011',
       fecha_nacimiento: '1995-06-15',
+      ts: Date.now() - 5000,
     },
   })
   await pedir('POST', '/auth/register', {
@@ -134,6 +135,7 @@ const prepararUsuarios = async () => {
       tipo_documento: 'CC',
       documento: '1000000022',
       fecha_nacimiento: '1992-03-20',
+      ts: Date.now() - 5000,
     },
   })
 }

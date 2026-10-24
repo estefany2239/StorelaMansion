@@ -3,6 +3,12 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { pool } from '../config/db.js'
 import { verificarToken, bloquearCambioPendiente, obtenerPermisos } from '../middlewares/auth.js'
+import {
+  limitadorLogin,
+  limitadorRegistro,
+  limitadorRecuperacionCodigos,
+} from '../middlewares/limitadores.js'
+import { proteccionRegistro } from '../middlewares/honeypot.js'
 import { enviarBienvenidaRegistro } from '../services/invitaciones.js'
 import {
   faltaSecretoRecuperacion,
@@ -50,7 +56,7 @@ const datosPublicos = (usuario) => ({
 // por los usuarios antiguos.
 const telefonoValido = (telefono) => /^[0-9]+$/.test(telefono) && telefono.length <= 10
 
-router.post('/register', async (req, res) => {
+router.post('/register', limitadorRegistro, proteccionRegistro, async (req, res) => {
   const {
     tipo: tipoDocumento,
     documento,
@@ -188,7 +194,7 @@ router.post('/register', async (req, res) => {
 // Si la cuenta tiene una contraseña temporal pendiente (invitación), se
 // marca con cambioContrasena: el navegador debe mostrar "Establecer nueva
 // contraseña" y no dejar pasar al panel hasta que la cambie.
-router.post('/login', async (req, res) => {
+router.post('/login', limitadorLogin, async (req, res) => {
   try {
     const correo = String(req.body.correo || '').trim().toLowerCase()
     const contrasena = String(req.body.contrasena || '')
@@ -395,7 +401,7 @@ router.post('/recuperar/solicitar', async (req, res) => {
   }
 })
 
-router.post('/recuperar/verificar', async (req, res) => {
+router.post('/recuperar/verificar', limitadorRecuperacionCodigos, async (req, res) => {
   try {
     const correo = String(req.body.correo || '').trim().toLowerCase()
     const codigo = String(req.body.codigo || '').trim()
@@ -478,7 +484,7 @@ router.post('/recuperar/verificar', async (req, res) => {
   }
 })
 
-router.post('/recuperar/restablecer', async (req, res) => {
+router.post('/recuperar/restablecer', limitadorRecuperacionCodigos, async (req, res) => {
   try {
     const token = String(req.body.token || '')
     const contrasena = String(req.body.contrasena || '')

@@ -1,5 +1,10 @@
    const base = 'http://localhost:3000/api/auth'
-   const datos = { nombre: 'Prueba Uno', correo: 'prueba@test.com', contrasena: 'Clave12345' }
+   const datos = {
+     nombre: 'Prueba Uno',
+     correo: 'prueba@test.com',
+     contrasena: 'Clave12345',
+     ts: Date.now() - 5000
+   }
 
    const llamar = async (ruta, cuerpo) => {
      const respuesta = await fetch(`${base}/${ruta}`, {

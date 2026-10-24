@@ -25,8 +25,14 @@ export default function Register({ onBackToLogin }) {
     documento: '',
     fechaNacimiento: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    website: ''
   });
+
+  // Instante en que se abrió el formulario. El backend exige que medien al
+  // menos unos segundos entre aquí y el envío: una petición hecha a mano
+  // contra la API no lo lleva (o lo lleva inventado) y se descarta.
+  const [tsFormulario] = useState(() => Date.now());
 
   const {
     errores,
@@ -71,7 +77,9 @@ export default function Register({ onBackToLogin }) {
           telefono: formData.telefono.trim(),
           tipoDocumento: formData.tipoDocumento,
           documento: formData.documento.trim(),
-          fechaNacimiento: formData.fechaNacimiento
+          fechaNacimiento: formData.fechaNacimiento,
+          website: formData.website,
+          ts: tsFormulario
         }
       );
 
@@ -131,6 +139,22 @@ export default function Register({ onBackToLogin }) {
           </div>
 
           <form className="auth__form" onSubmit={handleSubmit} noValidate>
+            {/* Campo trampa: invisible para las personas, presente para los
+                rellenadores automáticos. Si llega con texto, el servidor
+                descarta el registro sin avisar (respuesta idéntica a la de un
+                registro bien hecho). */}
+            <input
+              type="text"
+              name="website"
+              id="campo-website"
+              value={formData.website}
+              onChange={handleChange}
+              autoComplete="off"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="auth__trampa"
+            />
+
             <section className="auth-section">
               <h3 className="auth-section__title">Datos personales</h3>
 

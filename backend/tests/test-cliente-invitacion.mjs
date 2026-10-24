@@ -221,7 +221,7 @@ const main = async () => {
   // =====================================================
   const clavePropia = crypto.randomBytes(12).toString('base64url')
   const reg = await pedir('POST', '/auth/register', {
-    body: { nombre: 'Cuenta Real', correo: CORREO_R, contrasena: clavePropia },
+    body: { nombre: 'Cuenta Real', correo: CORREO_R, contrasena: clavePropia, ts: Date.now() - 5000 },
   })
   comprobar('3) Registro público -> 201', reg.status === 201, `status=${reg.status}`)
   idR = reg.data?.id

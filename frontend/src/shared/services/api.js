@@ -26,11 +26,23 @@ export async function obtenerCategorias() {
 // documento y fechaNacimiento ('YYYY-MM-DD'); en el registro público son
 // obligatorios, igual que telefono. Si el backend rechaza la petición con
 // `campo`, el error lo lleva añadido para mostrarlo bajo ese input.
+//
+// `ts` es el instante en que se abrió el formulario y `website` el campo
+// trampa (siempre vacío: sólo un relleno automático lo rellena). El backend
+// los usa para descartar registros automáticos sin decirle al atacante que
+// algo falló, por eso van siempre en la petición.
 export async function registrarUsuario(
   nombre,
   correo,
   contrasena,
-  { telefono = '', tipoDocumento = '', documento = '', fechaNacimiento = '' } = {}
+  {
+    telefono = '',
+    tipoDocumento = '',
+    documento = '',
+    fechaNacimiento = '',
+    website = '',
+    ts = 0
+  } = {}
 ) {
   let respuesta
   try {
@@ -44,7 +56,9 @@ export async function registrarUsuario(
         telefono,
         tipo_documento: tipoDocumento,
         documento,
-        fecha_nacimiento: fechaNacimiento
+        fecha_nacimiento: fechaNacimiento,
+        website,
+        ts
       })
     })
   } catch {

@@ -108,6 +108,9 @@ const registrar = async (nombre, correo, contrasena) => {
       tipo_documento: 'CC',
       documento: String(crypto.randomBytes(4).readUInt32BE(0)).slice(0, 10),
       fecha_nacimiento: '1990-01-01',
+      // Fase A: el registro exige la marca de tiempo del formulario; sin ella
+      // el servidor descarta la petición (respuesta falsa, sin crear cuenta).
+      ts: Date.now() - 5000,
     }),
   })
   const data = await respuesta.json().catch(() => null)
