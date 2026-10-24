@@ -20,7 +20,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-import { useNotify } from "../../components/notifications/useNotify.js";
+import { useNotify } from "../../shared/components/notifications/useNotify.js";
 import useValidacionFormulario from "../../shared/hooks/useValidacionFormulario";
 import { obtenerPerfil, actualizarMiPerfil } from "../../shared/services/api";
 import { REGLAS as REGLAS_REGISTRO } from "../../shared/utils/validacionesRegistro";

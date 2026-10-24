@@ -1,29 +1,29 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight, Lock, Trash2 } from "lucide-react";
 
-import SplashScreen from "./components/splash/SplashScreen";
+import SplashScreen from "./shared/components/splash/SplashScreen";
 
-import Navbar from "./components/layout/Navbar";
+import Navbar from "./shared/components/layout/Navbar";
 import Hero from "./features/home/Hero";
 import Categories from "./features/categories/Categories";
 import FeaturedProducts from "./features/home/products/FeaturedProducts";
 import Nosotros from "./features/home/Nosotros";
-import Footer from "./components/layout/Footer";
+import Footer from "./shared/components/layout/Footer";
 
 import Login from "./features/auth/Login";
 import Register from "./features/auth/Register";
 import ForgotPassword from "./features/auth/ForgotPassword";
 import CambiarContrasena from "./features/auth/CambiarContrasena";
 
-import CartDrawer from "./components/cart/CartDrawer";
-import CantidadControl from "./components/cart/CantidadControl";
+import CartDrawer from "./shared/components/cart/CartDrawer";
+import CantidadControl from "./shared/components/cart/CantidadControl";
 import {
   cantidadParaCarrito,
   esAgotado,
   hayStock,
-} from "./components/cart/cantidad";
+} from "./shared/components/cart/cantidad";
 import PaymentView from "./components/payment/PaymentView";
-import { useNotify } from "./components/notifications/useNotify.js";
+import { useNotify } from "./shared/components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
 import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./shared/hooks/useCatalogo";

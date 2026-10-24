@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight, IdCard, Calendar, Phone } from 'lucide-react';
 import { registrarUsuario } from '../../shared/services/api';
-import { useNotify } from '../../components/notifications/useNotify.js';
+import { useNotify } from '../../shared/components/notifications/useNotify.js';
 import useValidacionFormulario from '../../shared/hooks/useValidacionFormulario';
 // Reglas, cálculo de edad y mapeo de `campo` del backend viven en un
 // módulo plano para que el formulario y las pruebas usen el mismo código.

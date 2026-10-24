@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye, ChevronDown, X } from "lucide-react";
 import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
-import { esAgotado } from '../../components/cart/cantidad';
+import { esAgotado } from '../../shared/components/cart/cantidad';
 import { useCatalogo } from '../../shared/hooks/useCatalogo';
 import ProductDetailPage from '../product/ProductDetailPage';
 import "./CategoryProductsView.css";
