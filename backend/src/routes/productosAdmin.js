@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()

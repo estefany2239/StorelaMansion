@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 import { leerIdentificacion, validarFormatoDocumento } from '../utils/documentos.js'
 import { generarClaveTemporal, enviarInvitacion } from '../services/invitaciones.js'

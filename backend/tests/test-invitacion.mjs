@@ -14,7 +14,7 @@ import 'dotenv/config'
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import pg from 'pg'
-import { enviarCorreo, modoSimulacion, buzonSimulado } from './src/services/correos.js'
+import { enviarCorreo, modoSimulacion, buzonSimulado } from '../src/services/correos.js'
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 
@@ -515,7 +515,7 @@ const main = async () => {
   let servidorProd = null
   let poolApp = null
   try {
-    const { default: appProd } = await import('./src/app.js?modo-produccion')
+    const { default: appProd } = await import('../src/app.js?modo-produccion')
     servidorProd = appProd.listen(0)
     await new Promise((resolve) => servidorProd.once('listening', resolve))
     const puertoProd = servidorProd.address().port
@@ -529,7 +529,7 @@ const main = async () => {
     comprobar('producción: la bandeja simulada responde 404', false, error.message)
   } finally {
     if (servidorProd) await new Promise((resolve) => servidorProd.close(resolve))
-    const db = await import('./src/db.js')
+    const db = await import('../src/config/db.js')
     poolApp = db.pool
     if (poolApp) await poolApp.end().catch(() => {})
     if (envOriginal.NODE_ENV === undefined) delete process.env.NODE_ENV

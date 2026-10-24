@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import { verificarToken, bloquearCambioPendiente, obtenerPermisos } from '../middlewares/auth.js'
 import { enviarBienvenidaRegistro } from '../services/invitaciones.js'
 import {

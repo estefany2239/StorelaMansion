@@ -1,6 +1,6 @@
 import 'dotenv/config'
-import app from './src/app.js'
-import { inicializarCategorias } from './src/models/categorias.js'
+import app from './app.js'
+import { inicializarCategorias } from './models/categorias.js'
 
 // Variables obligatorias. Se comprueba solo su presencia: nunca se imprime
 // su valor (podría contener credenciales o el secreto JWT).

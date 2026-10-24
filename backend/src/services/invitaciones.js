@@ -13,7 +13,7 @@
 //   de contraseña solo aparece después de entrar con la temporal.
 
 import bcrypt from 'bcryptjs'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import {
   enviarCorreo,
   generarContrasenaTemporal,

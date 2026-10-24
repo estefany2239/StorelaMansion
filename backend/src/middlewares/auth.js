@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 
 export function verificarToken(req, res, next) {
   const header = req.headers.authorization || ''
