@@ -11,7 +11,7 @@
 //
 // Requiere jsdom, que no es dependencia del proyecto:
 //   npm install --no-save jsdom
-// y se ejecuta con: node test-roles-render.mjs
+// y se ejecuta con: node tests/test-roles-render.mjs
 
 import { JSDOM } from 'jsdom'
 
