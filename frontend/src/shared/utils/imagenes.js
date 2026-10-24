@@ -1,4 +1,4 @@
-const imagenes = import.meta.glob('../assets/img/*', {
+const imagenes = import.meta.glob('../../assets/img/*', {
   eager: true,
   query: '?url',
   import: 'default',
@@ -7,5 +7,5 @@ const imagenes = import.meta.glob('../assets/img/*', {
 export const urlImagen = (nombre) => {
   if (!nombre) return ''
   if (/^https?:\/\//.test(nombre)) return nombre
-  return imagenes[`../assets/img/${nombre}`] || ''
+  return imagenes[`../../assets/img/${nombre}`] || ''
 }

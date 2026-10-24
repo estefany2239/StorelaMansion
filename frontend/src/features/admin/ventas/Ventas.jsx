@@ -27,7 +27,7 @@ import {
   obtenerVariantesVenta,
   obtenerClientesVenta,
   crearVenta
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
 const REGISTROS_POR_PAGINA = 6;
 

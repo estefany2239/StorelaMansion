@@ -8,7 +8,7 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import { iniciarSesion } from "../../services/api";
+import { iniciarSesion } from "../../shared/services/api";
 
 import "./Login.css";
 

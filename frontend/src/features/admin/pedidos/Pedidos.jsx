@@ -26,7 +26,7 @@ import {
   cambiarEstadoPedido as cambiarEstadoPedidoApi,
   confirmarPagoPedido,
   rechazarPagoPedido
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
 
 const ESTADOS_PEDIDO = [

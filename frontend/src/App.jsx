@@ -26,8 +26,8 @@ import PaymentView from "./components/payment/PaymentView";
 import { useNotify } from "./components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
-import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./hooks/useCatalogo";
-import { obtenerPerfil } from "./services/api";
+import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./shared/hooks/useCatalogo";
+import { obtenerPerfil } from "./shared/services/api";
 
 // VISTAS DEL CLIENTE LOGUEADO
 import MisPedidos from "./features/store/MisPedidos";

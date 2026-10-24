@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight, IdCard, Calendar, Phone } from 'lucide-react';
-import { registrarUsuario } from '../../services/api';
+import { registrarUsuario } from '../../shared/services/api';
 import { useNotify } from '../../components/notifications/useNotify.js';
-import useValidacionFormulario from '../../hooks/useValidacionFormulario';
+import useValidacionFormulario from '../../shared/hooks/useValidacionFormulario';
 // Reglas, cálculo de edad y mapeo de `campo` del backend viven en un
 // módulo plano para que el formulario y las pruebas usen el mismo código.
 import {
   REGLAS as REGLAS_REGISTER,
   CAMPOS_BACKEND,
   maxFechaNacimiento
-} from './validacionesRegistro';
+} from '../../shared/utils/validacionesRegistro';
 import './Login.css';
 
 const authBg = new URL("../../assets/img/img.png", import.meta.url).href;

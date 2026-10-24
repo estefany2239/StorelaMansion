@@ -16,7 +16,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
-import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
+import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
 import {
@@ -26,9 +26,9 @@ import {
   actualizarProductoAdmin,
   cambiarEstadoProductoAdmin,
   eliminarProductoAdmin
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
-import { urlImagen } from "../../../utils/imagenes";
+import { urlImagen } from "../../../shared/utils/imagenes";
 
 const REGISTROS_POR_PAGINA = 6;
 

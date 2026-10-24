@@ -7,7 +7,7 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import { cambiarContrasena } from "../../services/api";
+import { cambiarContrasena } from "../../shared/services/api";
 
 import "./Login.css";
 

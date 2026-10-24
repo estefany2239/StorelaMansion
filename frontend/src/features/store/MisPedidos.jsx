@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 
 import { getTotalAbonado, getSaldoPendiente } from "./pedidosCliente";
-import { obtenerMisPedidos } from "../../services/api";
-import { useCatalogo } from "../../hooks/useCatalogo";
+import { obtenerMisPedidos } from "../../shared/services/api";
+import { useCatalogo } from "../../shared/hooks/useCatalogo";
 import "./MisPedidos.css";
 
 // Estados del backend -> estados visuales del cliente.

@@ -21,13 +21,13 @@ import {
   actualizarRolAdmin,
   cambiarEstadoRolAdmin,
   eliminarRolAdmin,
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
 import "./Roles.css";
 
 import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
-import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
+import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 
 /* =====================================================
    NIVEL 3 DE SEGURIDAD

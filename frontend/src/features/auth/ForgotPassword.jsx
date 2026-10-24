@@ -11,7 +11,7 @@ import {
   solicitarCodigoRecuperacion,
   verificarCodigoRecuperacion,
   restablecerContrasena
-} from "../../services/api";
+} from "../../shared/services/api";
 import "./Login.css";
 
 const authBg = new URL("../../assets/img/img.png", import.meta.url).href;

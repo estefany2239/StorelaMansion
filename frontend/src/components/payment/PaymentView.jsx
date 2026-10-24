@@ -23,11 +23,11 @@ import {
 
 import { obtenerPrecio } from "../../features/store/pedidosCliente";
 import { esAgotado, hayStock } from "../cart/cantidad";
-import { crearPedido } from "../../services/api";
+import { crearPedido } from "../../shared/services/api";
 import { useNotify } from "../notifications/useNotify.js";
-import { NOMBRE_COMPLETO_VALIDO } from "../../features/auth/validacionesRegistro";
-import { calcularCostoEnvio, esValleAburra } from "../../utils/envio";
-import DIVIPOLA from "../../data/divipola.json";
+import { NOMBRE_COMPLETO_VALIDO } from "../../shared/utils/validacionesRegistro";
+import { calcularCostoEnvio, esValleAburra } from "../../shared/utils/envio";
+import DIVIPOLA from "../../shared/data/divipola.json";
 import QR_PAGO from "../../assets/img/QR.jpeg";
 
 import "./PaymentView.css";
