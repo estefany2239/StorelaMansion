@@ -1,10 +1,12 @@
 // =========================================================
 // CONFIGURACIÓN DEL CLIENTE - STORE LA MANSIÓN
 // =========================================================
-// Datos MOCK de la sección "Configuración" del cliente.
-// El objeto `user` del login solo trae { nombre, email, rol },
-// por eso el perfil extendido (teléfono) vive en localStorage
-// bajo 'perfilCliente', junto con direcciones y preferencias.
+// Caché inicial de la sección "Configuración" del cliente.
+// Los DATOS PERSONALES se sincronizan con el backend: la tarjeta los
+// carga con GET /api/auth/perfil y los guarda con PUT /api/clientes/mio;
+// este objeto solo aporta los valores con los que entra la vista (y los
+// últimos guardados) mientras carga o si no hay conexión. El teléfono,
+// el tipo y el número de documento se conservan aquí como copia local.
 
 export const cargarPerfilCliente = (user) => {
   const guardado = JSON.parse(localStorage.getItem("perfilCliente"));
@@ -12,7 +14,9 @@ export const cargarPerfilCliente = (user) => {
   return {
     nombre: user?.nombre || "",
     email: user?.email || "",
-    telefono: ""
+    telefono: "",
+    tipoDocumento: "",
+    documento: ""
   };
 };
 
@@ -39,14 +43,17 @@ export const cargarDireccionesCliente = () => {
 };
 
 export const preferenciasClienteIniciales = {
-  notificacionesEmail: true,
-  notificacionesSMS: false
+  notificacionesEmail: true
 };
 
 export const cargarPreferenciasCliente = () => {
   const guardado = JSON.parse(localStorage.getItem("preferenciasCliente"));
+  const resto = { ...(guardado || {}) };
+  // notificacionesSMS se eliminó junto con su interruptor: si quedó en
+  // una copia vieja de localStorage se descarta al cargar.
+  delete resto.notificacionesSMS;
   return {
     ...preferenciasClienteIniciales,
-    ...(guardado || {})
+    ...resto
   };
 };

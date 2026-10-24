@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, Lock, Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock, Trash2 } from "lucide-react";
 
 import SplashScreen from "./components/splash/SplashScreen";
 
@@ -16,11 +16,17 @@ import ForgotPassword from "./features/auth/ForgotPassword";
 import CambiarContrasena from "./features/auth/CambiarContrasena";
 
 import CartDrawer from "./components/cart/CartDrawer";
+import CantidadControl from "./components/cart/CantidadControl";
+import {
+  cantidadParaCarrito,
+  esAgotado,
+  hayStock,
+} from "./components/cart/cantidad";
 import PaymentView from "./components/payment/PaymentView";
 import { useNotify } from "./components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
-import { useCatalogo } from "./hooks/useCatalogo";
+import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./hooks/useCatalogo";
 import { obtenerPerfil } from "./services/api";
 
 // VISTAS DEL CLIENTE LOGUEADO
@@ -284,6 +290,78 @@ export default function App() {
     localStorage.setItem("cartStoremansion", JSON.stringify(cart));
   }, [cart]);
 
+  // Sincroniza el stock real de cada variante en las líneas del carrito:
+  // los ítems guardados en localStorage pueden no traerlo y el catálogo ya
+  // incluye producto_variante.stock. useCatalogo avisa con cada ida al
+  // backend (al cargar la tienda, al agregar un producto, al ir al pago y
+  // tras un 409 del servidor); con ese aviso se recorta la cantidad al
+  // máximo disponible y se explica el cambio con toast (nunca alert()).
+  useEffect(() => {
+    const alCambiarStock = (filas) => {
+      if (!Array.isArray(filas) || filas.length === 0) return;
+      if (cart.length === 0) return;
+
+      const cambios = [];
+
+      const siguiente = cart.map((item) => {
+        const fila = filas.find(
+          (producto) => String(producto.id) === String(item.id)
+        );
+
+        // Sin fila o sin stock informado no se toca la línea.
+        if (!fila || !hayStock(fila.stock)) return item;
+
+        const stock = Number(fila.stock);
+        const quantity = cantidadParaCarrito(item.quantity, stock);
+
+        if (fila.stock === item.stock && quantity === item.quantity) {
+          return item;
+        }
+
+        const anterior = Number(item.quantity) || 1;
+        cambios.push({
+          item,
+          stock,
+          quantity,
+          // Solo interesa avisar cuando el cliente pierde unidades o la
+          // variante se queda sin stock (el resto es un dato silencioso).
+          afecta: stock <= 0 || quantity < anterior,
+        });
+
+        return { ...item, stock, quantity };
+      });
+
+      if (cambios.length === 0) return;
+
+      setCart(siguiente);
+
+      cambios
+        .filter((cambio) => cambio.afecta)
+        .forEach(({ item, stock, quantity }) => {
+          const nombre = item.name || "Un producto de tu carrito";
+
+          if (stock <= 0) {
+            notify(
+              `Sin stock: "${nombre}" se agotó. Elimínalo del carrito para continuar con tu compra.`,
+              "error"
+            );
+            return;
+          }
+
+          notify(
+            `Stock actualizado: "${nombre}" ahora tiene ${stock} unidad${
+              stock === 1 ? "" : "es"
+            } disponible${stock === 1 ? "" : "s"}; ajustamos tu cantidad a ${quantity}.`,
+            "info"
+          );
+        });
+    };
+
+    // El callback corre cuando termina una consulta del catálogo (no en el
+    // cuerpo del effect), así el carrito se ajusta sin renders en cascada.
+    return suscribirCatalogo(alCambiarStock);
+  }, [cart, notify]);
+
 
   // ==========================================
   // ESTADO DEL CARRITO
@@ -334,34 +412,70 @@ export default function App() {
 
   const addToCart = (product) => {
 
-    setCart((prevCart) => {
-
-      const existing = prevCart.find(
-        (item) => item.id === product.id
+    // Variante sin unidades: no se agrega ni se compra. Se avisa con el
+    // toast del proyecto (nunca alert()).
+    if (esAgotado(product.stock)) {
+      notify(
+        `"${product.name}" está agotado: no se puede agregar al carrito.`,
+        "error"
       );
+      return false;
+    }
 
-      if (existing) {
+    // Cantidad pedida desde el detalle de producto (por defecto 1),
+    // recortada al stock real de la variante.
+    const pedidas = cantidadParaCarrito(product.quantity, product.stock);
 
-        return prevCart.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1
-              }
-            : item
-        );
+    const existente = cart.find(
+      (item) => item.id === product.id
+    );
 
-      }
-
-      return [
-        ...prevCart,
+    if (!existente) {
+      setCart([
+        ...cart,
         {
           ...product,
-          quantity: 1
+          quantity: pedidas
         }
-      ];
+      ]);
+      return true;
+    }
 
-    });
+    // El stock más reciente manda: el del producto si lo trae,
+    // si no el que ya tenía la línea del carrito.
+    const stock = hayStock(product.stock)
+      ? Number(product.stock)
+      : existente.stock;
+
+    const anterior = Number(existente.quantity) || 1;
+    const deseado = anterior + pedidas;
+    const quantity = cantidadParaCarrito(deseado, stock);
+
+    setCart(
+      cart.map((item) => {
+        if (item.id !== product.id) return item;
+
+        return {
+          ...item,
+          stock: hayStock(product.stock)
+            ? Number(product.stock)
+            : item.stock,
+          quantity
+        };
+      })
+    );
+
+    // La suma pasó del stock disponible: se queda en el máximo y se avisa.
+    if (quantity < deseado) {
+      notify(
+        `Alcanzaste el máximo disponible: ${quantity} unidad${
+          quantity === 1 ? "" : "es"
+        } de "${product.name}".`,
+        "info"
+      );
+    }
+
+    return true;
 
   };
 
@@ -388,14 +502,16 @@ export default function App() {
   const updateQuantity = (productId, quantity) => {
 
     setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId
-          ? {
-              ...item,
-              quantity: Math.max(1, Number(quantity) || 1)
-            }
-          : item
-      )
+      prevCart.map((item) => {
+        if (item.id !== productId) return item;
+
+        // Siempre un entero positivo: nunca baja de 1 ni supera el
+        // stock de la variante.
+        return {
+          ...item,
+          quantity: cantidadParaCarrito(quantity, item.stock)
+        };
+      })
     );
 
   };
@@ -413,9 +529,15 @@ export default function App() {
       return;
     }
 
-    addToCart(product);
+    // Si la variante está agotada no se agrega ni se abre el carrito
+    // (addToCart ya avisó con el toast).
+    if (!addToCart(product)) return;
 
     setIsCartOpen(true);
+
+    // Pide el stock otra vez al backend: si cambió, el efecto de
+    // sincronización recorta cantidades y avisa qué producto cambió.
+    refrescarCatalogo();
 
   };
 
@@ -426,8 +548,21 @@ export default function App() {
 
   const handleContinuarCompra = () => {
 
+    // Una línea sin unidades bloquea el paso al pago: hay que eliminarla.
+    if (cart.some((item) => esAgotado(item.stock))) {
+      notify(
+        "Hay productos agotados en tu carrito: elimínalos para continuar con tu compra.",
+        "error"
+      );
+      return;
+    }
+
     // Cerramos el drawer en todos los casos
     setIsCartOpen(false);
+
+    // Última consulta de stock antes de pagar: si algo cambió, el efecto
+    // de sincronización recorta las cantidades y avisa en el resumen.
+    refrescarCatalogo();
 
     // Si ya hay sesión iniciada, ir directo al pago
     if (user) {
@@ -500,6 +635,8 @@ export default function App() {
     // Si venía del flujo de compra (gate), avanzar al pago
     if (flujoCheckout) {
       setFlujoCheckout(false);
+      // Pregunta al backend por el stock una vez más antes de pagar.
+      refrescarCatalogo();
       setCurrentView("pago");
       return;
     }
@@ -523,6 +660,28 @@ export default function App() {
     setUser(null);
     setFlujoCheckout(false);
     setCurrentView("home");
+
+  };
+
+
+  // ==========================================
+  // PERFIL ACTUALIZADO DESDE CONFIGURACIÓN
+  // ==========================================
+
+  // Tras guardar en PUT /api/clientes/mio, la sesión guardada (menú de
+  // cuenta) refleja el nombre y el correo nuevos. El token NO se toca:
+  // solo contiene id y rol, así que sigue siendo válido con el correo
+  // cambiado, y el próximo login usará el correo nuevo.
+  const handlePerfilActualizado = (datos) => {
+
+    const actualizado = {
+      ...user,
+      nombre: datos.nombre,
+      email: datos.email
+    };
+
+    localStorage.setItem("usuario", JSON.stringify(actualizado));
+    setUser(actualizado);
 
   };
 
@@ -775,6 +934,7 @@ export default function App() {
           darkMode={theme === "dark"}
           onConfirmarPedido={handleConfirmarPedido}
           onBack={handleSeguirComprando}
+          onStockActualizado={refrescarCatalogo}
         />
 
       )}
@@ -839,6 +999,8 @@ export default function App() {
           perfilCliente={perfilCliente}
 
           setPerfilCliente={setPerfilCliente}
+
+          onPerfilActualizado={handlePerfilActualizado}
 
           direccionesCliente={direccionesCliente}
 
@@ -949,36 +1111,25 @@ export default function App() {
                               {item.size ? `Talla: ${item.size}` : ""}
                             </span>
                           )}
+
+                          {esAgotado(item.stock) && (
+                            <span className="checkout-login-item-agotado" role="status">
+                              Agotado · no hay unidades disponibles
+                            </span>
+                          )}
                         </div>
 
                         <div className="checkout-login-item-controls">
 
-                          <div className="checkout-login-qty">
-                            <button
-                              type="button"
-                              aria-label="Disminuir cantidad"
-                              disabled={cantidad <= 1}
-                              onClick={() =>
-                                updateQuantity &&
-                                updateQuantity(item.id, cantidad - 1)
-                              }
-                            >
-                              <Minus size={15} />
-                            </button>
-
-                            <span>{cantidad}</span>
-
-                            <button
-                              type="button"
-                              aria-label="Aumentar cantidad"
-                              onClick={() =>
-                                updateQuantity &&
-                                updateQuantity(item.id, cantidad + 1)
-                              }
-                            >
-                              <Plus size={15} />
-                            </button>
-                          </div>
+                          <CantidadControl
+                            className="checkout-login-qty"
+                            cantidad={cantidad}
+                            stock={item.stock}
+                            onChange={(valor) =>
+                              updateQuantity &&
+                              updateQuantity(item.id, valor)
+                            }
+                          />
 
                           <span className="checkout-login-item-price">
                             {formatoPrecio(obtenerPrecio(item.price))}
@@ -1024,12 +1175,12 @@ export default function App() {
                     <div className="checkout-login-summary-row">
                       <span>Envío</span>
                       <span className="checkout-login-summary-amount">
-                        {formatoPrecio(0)}
+                        Se calcula en el checkout
                       </span>
                     </div>
 
                     <div className="checkout-login-summary-row checkout-login-summary-total">
-                      <span>Total</span>
+                      <span>Total productos</span>
                       <span className="checkout-login-summary-amount">
                         {formatoPrecio(subtotalCarrito)}
                       </span>

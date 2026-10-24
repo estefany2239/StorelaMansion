@@ -203,6 +203,12 @@ body.dark-mode .pdp-main-image {
   justify-content: center;
 }
 
+/* + deshabilitado al llegar al máximo o con la variante agotada */
+.pdp-qty button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .pdp-qty span {
   min-width: 40px;
   text-align: center;
@@ -221,6 +227,20 @@ body.dark-mode .pdp-main-image {
   align-items: center;
   gap: 8px;
   justify-content: center;
+}
+
+/* Variante sin unidades: compra bloqueada con el estilo del proyecto */
+.pdp-addtocart.is-agotado,
+.pdp-addtocart:disabled {
+  background: rgba(224, 82, 82, 0.14);
+  color: #e05252;
+  border: 1px solid rgba(224, 82, 82, 0.55);
+  cursor: not-allowed;
+}
+
+.pdp-addtocart.is-agotado:hover,
+.pdp-addtocart:disabled:hover {
+  background: rgba(224, 82, 82, 0.14);
 }
 
 .pdp-benefits {

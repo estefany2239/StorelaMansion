@@ -81,10 +81,23 @@ const mapearPedido = (pedido, catalogo) => {
     id: pedido.id,
     fecha: pedido.fecha,
     estado,
+    estadoPago: pedido.estado_pago || "No aplica",
     mensajeEstado: MENSAJES_ESTADO[estado],
     estimadoEntrega: null,
     metodoEnvio: pedido.metodo_envio || "Domicilio",
+    costoEnvio:
+      pedido.costo_envio === null || pedido.costo_envio === undefined
+        ? null
+        : Number(pedido.costo_envio) || 0,
+    costoEnvioPendiente: Boolean(pedido.costo_envio_pendiente),
     direccion: pedido.direccion,
+    // Pedidos nuevos: datos estructurados de entrega. Pedidos históricos
+    // llegan vacíos y se muestra la cadena vieja de `direccion`.
+    departamento: pedido.departamento || "",
+    municipio: pedido.municipio || "",
+    barrio: pedido.barrio || "",
+    nombreDestinatario: pedido.nombre_destinatario || "",
+    telefonoDestinatario: pedido.telefono_destinatario || "",
     productos,
     total: Number(pedido.total) || 0,
     abonos: pagos.map((pago) => ({
@@ -97,6 +110,14 @@ const mapearPedido = (pedido, catalogo) => {
 
 const formatearPrecio = (valor) =>
   "$" + Number(valor || 0).toLocaleString("es-CO");
+
+const claseEstadoPago = (estadoPago) => {
+  const valor = String(estadoPago || "No aplica").toLowerCase();
+  if (valor.includes("confirmado")) return "confirmado";
+  if (valor.includes("rechazado")) return "rechazado";
+  if (valor.includes("pendiente")) return "pendiente";
+  return "no-aplica";
+};
 
 const formatearFecha = (iso) => {
   const [anio, mes, dia] = iso.split("-").map(Number);
@@ -353,14 +374,31 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                     {icono} {pedido.estado}
                   </span>
 
+                  {pedido.estadoPago !== "No aplica" && (
+                    <div className="mp-payment-status">
+                      <span>Pago:</span>
+                      <span className={`mp-pago-estado ${claseEstadoPago(pedido.estadoPago)}`}>
+                        {pedido.estadoPago}
+                      </span>
+                    </div>
+                  )}
+
                   <p className="mp-msg">{pedido.mensajeEstado}</p>
                   {muestraEstimado && (
                     <p className="mp-estimado">{pedido.estimadoEntrega}</p>
                   )}
 
                   <div className="mp-finance">
+                    <div className="mp-finance-row">
+                      <span>Método de envío</span>
+                      <span className="mp-amount">{pedido.metodoEnvio}</span>
+                    </div>
                     <div className="mp-finance-row mp-total">
-                      <span>Total del pedido</span>
+                      <span>
+                        {pedido.costoEnvioPendiente
+                          ? "Total productos"
+                          : "Total del pedido"}
+                      </span>
                       <span className="mp-amount-total">
                         {formatearPrecio(pedido.total)}
                       </span>
@@ -465,6 +503,77 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                   ))}
                 </div>
 
+                {/* Datos de entrega: los pedidos nuevos muestran la
+                    ubicación estructurada; los históricos, la cadena
+                    original guardada en direccion_entrega. */}
+                <div className="mp-entrega">
+                  <h4 className="mp-entrega-title">Datos de entrega</h4>
+
+                  {modalPedido.nombreDestinatario ||
+                  modalPedido.departamento ? (
+                    <>
+                      {modalPedido.nombreDestinatario && (
+                        <div className="mp-finance-row">
+                          <span>Destinatario</span>
+                          <span className="mp-amount">
+                            {modalPedido.nombreDestinatario}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.telefonoDestinatario && (
+                        <div className="mp-finance-row">
+                          <span>Teléfono</span>
+                          <span className="mp-amount">
+                            {modalPedido.telefonoDestinatario}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.departamento && (
+                        <div className="mp-finance-row">
+                          <span>Departamento</span>
+                          <span className="mp-amount">
+                            {modalPedido.departamento}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.municipio && (
+                        <div className="mp-finance-row">
+                          <span>Ciudad o municipio</span>
+                          <span className="mp-amount">
+                            {modalPedido.municipio}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.barrio && (
+                        <div className="mp-finance-row">
+                          <span>Barrio</span>
+                          <span className="mp-amount">
+                            {modalPedido.barrio}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.direccion &&
+                        modalPedido.metodoEnvio !== "Recoger en tienda" && (
+                          <div className="mp-finance-row">
+                            <span>Dirección</span>
+                            <span className="mp-amount">
+                              {modalPedido.direccion}
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  ) : (
+                    modalPedido.direccion && (
+                      <div className="mp-finance-row">
+                        <span>Dirección de entrega</span>
+                        <span className="mp-amount">
+                          {modalPedido.direccion}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+
                 <div className="mp-finance mp-finance-modal">
                   <div className="mp-finance-row">
                     <span>Método de envío</span>
@@ -472,8 +581,24 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                       {modalPedido.metodoEnvio}
                     </span>
                   </div>
+                  <div className="mp-finance-row">
+                    <span>Costo de envío</span>
+                    <span className="mp-amount">
+                      {modalPedido.costoEnvioPendiente
+                        ? "Por confirmar"
+                        : modalPedido.costoEnvio === null
+                          ? "No registrado"
+                          : modalPedido.costoEnvio === 0
+                            ? "Sin costo"
+                            : formatearPrecio(modalPedido.costoEnvio)}
+                    </span>
+                  </div>
                   <div className="mp-finance-row mp-total">
-                    <span>Total del pedido</span>
+                    <span>
+                      {modalPedido.costoEnvioPendiente
+                        ? "Total productos"
+                        : "Total del pedido"}
+                    </span>
                     <span className="mp-amount-total">
                       {formatearPrecio(modalPedido.total)}
                     </span>
@@ -488,6 +613,12 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                     <span>Saldo pendiente</span>
                     <span className={getSaldoPendiente(modalPedido) > 0 ? "mp-saldo-pendiente" : "mp-saldo-cero"}>
                       {formatearPrecio(getSaldoPendiente(modalPedido))}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row">
+                    <span>Estado del pago</span>
+                    <span className={`mp-pago-estado ${claseEstadoPago(modalPedido.estadoPago)}`}>
+                      {modalPedido.estadoPago || "No aplica"}
                     </span>
                   </div>
                 </div>

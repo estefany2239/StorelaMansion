@@ -319,8 +319,7 @@ export const crearPedido = ({
         ? "Transferencia (Nequi)"
         : "Transferencia (Bancolombia)"
       : {
-          efectivo: "Efectivo",
-          credito: "Crédito"
+          efectivo: "Efectivo"
         }[paymentMethod] || "—";
 
   const fecha = new Date().toISOString().split("T")[0];

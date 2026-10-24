@@ -1,4 +1,6 @@
-import { X, Trash2, Minus, Plus } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
+import CantidadControl from "./CantidadControl";
+import { esAgotado } from "./cantidad";
 import "./CartDrawer.css";
 
 export default function CartDrawer({
@@ -49,14 +51,17 @@ export default function CartDrawer({
     return acc + precio * cantidad;
   }, 0);
 
-  // No existe lógica real de envío: se muestra $0.
-  const envio = 0;
-  const total = subtotal + envio;
+  // El costo de envío se define en el checkout, cuando ya se eligió la
+  // ubicación. Aquí no se muestra $0 como si fuera una tarifa real.
+  const total = subtotal;
 
   const totalItems = cart.reduce(
     (acc, item) => acc + (Number(item.quantity) || 1),
     0
   );
+
+  // Alguna línea sin unidades: no se puede avanzar al pago con ella.
+  const hayAgotado = cart.some((item) => esAgotado(item.stock));
 
   // =========================================================
   // FORMATO DE PESOS COLOMBIANOS
@@ -141,30 +146,34 @@ export default function CartDrawer({
                       </p>
                     )}
 
+                    {esAgotado(item.stock) && (
+                      <p className="cart-item-agotado" role="status">
+                        Agotado · no hay unidades disponibles
+                      </p>
+                    )}
+
                     <p className="cart-item-price">
                       {formatoPrecio(precio)}
+
+                      {cantidad > 1 && (
+                        <span className="cart-item-line-total">
+                          {" · Subtotal "}
+                          {formatoPrecio(precio * cantidad)}
+                        </span>
+                      )}
                     </p>
 
                     <div className="cart-item-controls">
 
-                      <div className="cart-qty">
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity && updateQuantity(item.id, cantidad - 1)}
-                          disabled={cantidad <= 1}
-                          aria-label="Disminuir cantidad"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span>{cantidad}</span>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity && updateQuantity(item.id, cantidad + 1)}
-                          aria-label="Aumentar cantidad"
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
+                      <CantidadControl
+                        className="cart-qty"
+                        cantidad={cantidad}
+                        stock={item.stock}
+                        onChange={(valor) =>
+                          updateQuantity &&
+                          updateQuantity(item.id, valor)
+                        }
+                      />
 
                       <button
                         className="remove-item-btn"
@@ -205,17 +214,25 @@ export default function CartDrawer({
 
               <div className="cart-summary-row">
                 <span>Envío</span>
-                <span>{formatoPrecio(envio)}</span>
+                <span>Se calcula en el checkout</span>
               </div>
 
               <div className="cart-total">
-                <span>Total</span>
+                <span>Total productos</span>
                 <strong>{formatoPrecio(total)}</strong>
               </div>
             </div>
 
+            {hayAgotado && (
+              <p className="cart-stock-alert" role="alert">
+                Hay productos agotados en tu carrito: elimínalos para
+                continuar con tu compra.
+              </p>
+            )}
+
             <button
               className="continue-btn"
+              disabled={hayAgotado}
               onClick={() => {
                 if (onContinuarCompra) {
                   onContinuarCompra();

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ShoppingBag, Minus, Plus, Truck, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Truck, ShieldCheck } from "lucide-react";
 import { getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
+import { esAgotado } from '../../components/cart/cantidad';
+import CantidadControl from '../../components/cart/CantidadControl';
 import "./ProductDetailPage.css";
 
 const normalizarTalla = (t) => String(t).trim().toUpperCase();
@@ -8,6 +10,28 @@ const normalizarTalla = (t) => String(t).trim().toUpperCase();
 const NOMBRES_CATEGORIA = { busos: "Buzos" };
 const nombreCategoria = (catKey) =>
   NOMBRES_CATEGORIA[catKey] || (catKey ? catKey.charAt(0).toUpperCase() + catKey.slice(1) : "");
+
+// Fila real (id_variante) del grupo para la talla pedida, prefiriendo el
+// mismo color del producto abierto. El carrito y el stock salen de esa
+// variante, no de la etiqueta de la talla.
+const variantePorTalla = (producto, talla, catalogo) => {
+  if (!producto || talla == null) return null;
+  if (normalizarTalla(talla) === normalizarTalla(producto.size)) return producto;
+
+  const candidatas = (Array.isArray(catalogo) ? catalogo : []).filter(
+    (item) =>
+      item &&
+      producto.grupoId !== undefined &&
+      producto.grupoId !== null &&
+      String(item.grupoId) === String(producto.grupoId) &&
+      item.size &&
+      normalizarTalla(item.size) === normalizarTalla(talla)
+  );
+
+  if (candidatas.length === 0) return null;
+
+  return candidatas.find((item) => item.color === producto.color) || candidatas[0];
+};
 
 export default function ProductDetailPage({ product, onBack, addToCart, catalogoCompleto }) {
   const [cantidad, setCantidad] = useState(1);
@@ -27,6 +51,31 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
         ...tallasDisponibles.filter((t) => !TALLAS_ESTANDAR.includes(normalizarTalla(t)))
       ]
     : tallasDisponibles;
+
+  // Variante real de la talla seleccionada: de aquí salen id, stock,
+  // imagen y etiqueta que viajan al carrito.
+  const varianteSel =
+    (tallaSel != null && variantePorTalla(product, tallaSel, catalogoCompleto)) ||
+    product;
+
+  // Variante sin unidades: no se puede comprar.
+  const agotado = esAgotado(varianteSel?.stock);
+
+  // Cambia la talla y, si corresponde, la variante real asociada
+  // (id_variante, stock e imagen). Al cambiar de variante la cantidad
+  // vuelve a 1: cada stock se controla por separado.
+  const seleccionarTalla = (talla) => {
+    const variante =
+      (talla != null && variantePorTalla(product, talla, catalogoCompleto)) ||
+      product;
+
+    setTallaSel(talla);
+
+    if (variante && variante.id !== varianteSel?.id) {
+      setCantidad(1);
+      if (variante.image) setImagenPrincipal(variante.image);
+    }
+  };
 
   useEffect(() => {
     setImagenPrincipal(product?.image);
@@ -154,7 +203,7 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
                         className={`pdp-size-btn${activa ? ' active' : ''}${disponible ? '' : ' disabled'}`}
                         disabled={!disponible}
                         title={disponible ? `Talla ${s}` : `Talla ${s} no disponible`}
-                        onClick={() => setTallaSel(s)}
+                        onClick={() => seleccionarTalla(s)}
                       >
                         {s}
                       </button>
@@ -166,15 +215,27 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
 
             <div className="pdp-group">
               <div className="pdp-label">Cantidad</div>
-              <div className="pdp-qty">
-                <button type="button" onClick={() => setCantidad(q => Math.max(1, q-1))}><Minus size={14} /></button>
-                <span>{cantidad}</span>
-                <button type="button" onClick={() => setCantidad(q => q+1)}><Plus size={14} /></button>
-              </div>
+              <CantidadControl
+                className="pdp-qty"
+                cantidad={cantidad}
+                stock={varianteSel.stock}
+                onChange={setCantidad}
+              />
             </div>
 
-            <button className="pdp-addtocart" onClick={() => addToCart({ ...product, quantity: cantidad, ...(tallaSel ? { size: tallaSel } : {}) })}>
-              <ShoppingBag size={16} /> Agregar al carrito
+            <button
+              className={`pdp-addtocart${agotado ? " is-agotado" : ""}`}
+              disabled={agotado}
+              title={agotado ? "Producto agotado: no hay unidades disponibles" : "Agregar al carrito"}
+              onClick={() =>
+                addToCart({
+                  ...varianteSel,
+                  quantity: cantidad,
+                  ...(varianteSel.size ? { size: varianteSel.size } : {}),
+                })
+              }
+            >
+              <ShoppingBag size={16} /> {agotado ? "Agotado" : "Agregar al carrito"}
             </button>
 
             <div className="pdp-benefits">

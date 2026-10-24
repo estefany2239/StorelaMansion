@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   User,
@@ -20,6 +20,11 @@ import {
   AlertTriangle
 } from "lucide-react";
 
+import { useNotify } from "../../components/notifications/useNotify.js";
+import useValidacionFormulario from "../../hooks/useValidacionFormulario";
+import { obtenerPerfil, actualizarMiPerfil } from "../../services/api";
+import { REGLAS as REGLAS_REGISTRO } from "../auth/validacionesRegistro";
+
 import "./Configuracion.css";
 
 export default function Configuracion({
@@ -30,16 +35,28 @@ export default function Configuracion({
   onBack,
   perfilCliente,
   setPerfilCliente,
+  onPerfilActualizado,
   direccionesCliente,
   setDireccionesCliente,
   preferenciasCliente,
   setPreferenciasCliente
 }) {
+  const notify = useNotify();
+
   const [formPerfil, setFormPerfil] = useState({
     nombre: perfilCliente?.nombre || "",
     email: perfilCliente?.email || "",
-    telefono: perfilCliente?.telefono || ""
+    telefono: perfilCliente?.telefono || "",
+    documento: perfilCliente?.documento || ""
   });
+
+  // Tipo de documento ya registrado: en la tarjeta es de solo lectura
+  // (el backend de /api/clientes/mio no permite cambiarlo).
+  const [tipoDocumento, setTipoDocumento] = useState(
+    perfilCliente?.tipoDocumento || ""
+  );
+
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false);
 
   const [passwordForm, setPasswordForm] = useState({
     actual: "",
@@ -65,14 +82,142 @@ export default function Configuracion({
     window.setTimeout(() => setMensajeExito(""), 3200);
   };
 
-  const guardarPerfil = () => {
-    setPerfilCliente({
-      ...perfilCliente,
-      nombre: formPerfil.nombre.trim(),
-      email: formPerfil.email.trim(),
-      telefono: formPerfil.telefono.trim()
-    });
-    mostrarToast("Tus datos personales se guardaron correctamente.");
+  // ==========================================
+  // DATOS PERSONALES — sincronizados con el backend
+  // ==========================================
+
+  // Reglas alineadas con PUT /api/clientes/mio (backend/src/routes/clientes.js):
+  // nombre sin números (tildes, ñ, espacios, apóstrofes y guiones, máx. 100),
+  // correo con formato, teléfono solo dígitos (máx. 10, vacío permitido) y
+  // documento con las MISMAS reglas del registro público, atadas al tipo ya
+  // registrado (REGLAS_REGISTRO.documento recibe el tipo en el formulario).
+  const reglasPerfil = {
+    nombre: (valor) => {
+      const nombre = String(valor || "").trim();
+
+      if (!nombre) {
+        return "El nombre es obligatorio.";
+      }
+
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]+$/.test(nombre)) {
+        return "El nombre solo puede contener letras, espacios, apóstrofes y guiones.";
+      }
+
+      if (nombre.length > 100) {
+        return "El nombre no puede superar los 100 caracteres.";
+      }
+
+      return "";
+    },
+    email: REGLAS_REGISTRO.email,
+    telefono: (valor) => {
+      const telefono = String(valor || "").trim();
+
+      if (!telefono) {
+        return "";
+      }
+
+      if (!/^[0-9]+$/.test(telefono) || telefono.length > 10) {
+        return "El teléfono solo puede contener dígitos (máx. 10).";
+      }
+
+      return "";
+    },
+    ...(tipoDocumento
+      ? {
+          documento: (valor, form) =>
+            REGLAS_REGISTRO.documento(valor, { ...form, tipoDocumento })
+        }
+      : {})
+  };
+
+  const {
+    errores,
+    manejarBlur,
+    revisarCampo,
+    validarTodo,
+    setErrores
+  } = useValidacionFormulario(reglasPerfil);
+
+  // El backend es la fuente de verdad (es la MISMA que lee el panel
+  // admin): al abrir la tarjeta se cargan nombre, correo, teléfono y
+  // documento desde GET /api/auth/perfil. Sin conexión se conservan los
+  // datos con los que entró la vista.
+  useEffect(() => {
+    let cancelado = false;
+
+    obtenerPerfil()
+      .then((perfil) => {
+        if (cancelado) return;
+
+        setFormPerfil({
+          nombre: perfil.nombre || "",
+          email: perfil.email || "",
+          telefono: perfil.telefono || "",
+          documento: perfil.documento || ""
+        });
+        setTipoDocumento(perfil.tipoDocumento || "");
+      })
+      .catch(() => {
+        // Sin conexión o sesión inválida: se muestran los datos guardados.
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  // Guarda en el registro EXISTENTE del cliente (PUT /api/clientes/mio):
+  // la identidad la toma el backend del token, así que nunca se crea un
+  // cliente nuevo ni se puede tocar el registro de otra persona.
+  const guardarPerfil = async () => {
+    if (!validarTodo(formPerfil)) return;
+
+    setGuardandoPerfil(true);
+
+    try {
+      const actualizado = await actualizarMiPerfil({
+        nombre: formPerfil.nombre.trim(),
+        correo: formPerfil.email.trim(),
+        telefono: formPerfil.telefono.trim(),
+        ...(tipoDocumento
+          ? { documento: String(formPerfil.documento || "").trim() }
+          : {})
+      });
+
+      setPerfilCliente((prev) => ({
+        ...prev,
+        nombre: actualizado.nombre,
+        email: actualizado.email,
+        telefono: actualizado.telefono || "",
+        tipoDocumento: actualizado.tipoDocumento || "",
+        documento: actualizado.documento || ""
+      }));
+
+      // Refleja el nombre y el correo nuevos en la sesión guardada del
+      // navegador. El token NO se reemite: solo contiene id y rol, por
+      // lo que la sesión sigue siendo válida con el correo cambiado.
+      onPerfilActualizado?.(actualizado);
+
+      mostrarToast("Tus datos personales se guardaron correctamente.");
+    } catch (error) {
+      // Rechazo de un campo concreto (correo o documento duplicados,
+      // formato): mensaje pequeño debajo del input, sin alert().
+      const campo = {
+        nombre: "nombre",
+        correo: "email",
+        telefono: "telefono",
+        documento: "documento"
+      }[error.campo];
+
+      if (campo) {
+        setErrores((actuales) => ({ ...actuales, [campo]: error.message }));
+      } else {
+        notify(error.message, "error");
+      }
+    } finally {
+      setGuardandoPerfil(false);
+    }
   };
 
   const guardarPassword = () => {
@@ -173,49 +318,116 @@ export default function Configuracion({
 
             <div className="cfg-field-grid">
               <div className="cfg-form-group">
-                <label className="cfg-label">NOMBRE</label>
+                <label className="cfg-label" htmlFor="campo-nombre">
+                  NOMBRE
+                </label>
                 <input
+                  id="campo-nombre"
                   type="text"
                   className="cfg-input"
                   value={formPerfil.nombre}
-                  onChange={(e) =>
-                    setFormPerfil({ ...formPerfil, nombre: e.target.value })
+                  onChange={(e) => {
+                    setFormPerfil({ ...formPerfil, nombre: e.target.value });
+                    revisarCampo("nombre", e.target.value, formPerfil);
+                  }}
+                  onBlur={() =>
+                    manejarBlur("nombre", formPerfil.nombre, formPerfil)
                   }
                 />
+                {errores.nombre && (
+                  <p className="cfg-error">{errores.nombre}</p>
+                )}
               </div>
 
               <div className="cfg-form-group">
-                <label className="cfg-label">CORREO</label>
+                <label className="cfg-label" htmlFor="campo-email">
+                  CORREO
+                </label>
                 <input
+                  id="campo-email"
                   type="email"
                   className="cfg-input"
                   value={formPerfil.email}
-                  onChange={(e) =>
-                    setFormPerfil({ ...formPerfil, email: e.target.value })
+                  onChange={(e) => {
+                    setFormPerfil({ ...formPerfil, email: e.target.value });
+                    revisarCampo("email", e.target.value, formPerfil);
+                  }}
+                  onBlur={() =>
+                    manejarBlur("email", formPerfil.email, formPerfil)
                   }
                 />
+                {errores.email && (
+                  <p className="cfg-error">{errores.email}</p>
+                )}
               </div>
 
               <div className="cfg-form-group">
-                <label className="cfg-label">TELÉFONO</label>
+                <label className="cfg-label" htmlFor="campo-telefono">
+                  TELÉFONO
+                </label>
                 <input
+                  id="campo-telefono"
                   type="tel"
                   className="cfg-input"
                   placeholder="Ej. 300 123 4567"
                   value={formPerfil.telefono}
-                  onChange={(e) =>
-                    setFormPerfil({ ...formPerfil, telefono: e.target.value })
+                  onChange={(e) => {
+                    setFormPerfil({ ...formPerfil, telefono: e.target.value });
+                    revisarCampo("telefono", e.target.value, formPerfil);
+                  }}
+                  onBlur={() =>
+                    manejarBlur("telefono", formPerfil.telefono, formPerfil)
                   }
                 />
+                {errores.telefono && (
+                  <p className="cfg-error">{errores.telefono}</p>
+                )}
               </div>
+
+              {/* Tipo de documento fijo (el ya registrado); solo se
+                  edita el número. Si la cuenta no tiene tipo, no se
+                  muestra el campo. */}
+              {tipoDocumento && (
+                <div className="cfg-form-group">
+                  <label className="cfg-label" htmlFor="campo-documento">
+                    DOCUMENTO ({tipoDocumento})
+                  </label>
+                  <input
+                    id="campo-documento"
+                    type="text"
+                    className="cfg-input"
+                    value={formPerfil.documento}
+                    onChange={(e) => {
+                      setFormPerfil({
+                        ...formPerfil,
+                        documento: e.target.value
+                      });
+                      revisarCampo("documento", e.target.value, formPerfil);
+                    }}
+                    onBlur={() =>
+                      manejarBlur(
+                        "documento",
+                        formPerfil.documento,
+                        formPerfil
+                      )
+                    }
+                  />
+                  {errores.documento && (
+                    <p className="cfg-error">{errores.documento}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <button
               type="button"
               className="cfg-btn cfg-btn-primary"
               onClick={guardarPerfil}
+              disabled={
+                guardandoPerfil || Object.keys(errores).length > 0
+              }
             >
-              Guardar cambios
+              {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
             </button>
           </div>
 
@@ -463,25 +675,6 @@ export default function Configuracion({
                   className={`cfg-switch ${preferenciasCliente.notificacionesEmail ? "on" : ""}`}
                   onClick={() => togglePreferencia("notificacionesEmail")}
                   aria-label="Notificaciones por correo"
-                >
-                  <span className="cfg-switch-knob" />
-                </button>
-              </div>
-
-              <div className="cfg-pref-row">
-                <div>
-                  <span className="cfg-pref-title">
-                    Recibir notificaciones por SMS
-                  </span>
-                  <span className="cfg-pref-desc">
-                    Avisos de envío a tu teléfono
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className={`cfg-switch ${preferenciasCliente.notificacionesSMS ? "on" : ""}`}
-                  onClick={() => togglePreferencia("notificacionesSMS")}
-                  aria-label="Notificaciones por SMS"
                 >
                   <span className="cfg-switch-knob" />
                 </button>

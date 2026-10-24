@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye, ChevronDown, X } from "lucide-react";
 import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
+import { esAgotado } from '../../components/cart/cantidad';
 import { useCatalogo } from '../../hooks/useCatalogo';
 import ProductDetailPage from '../product/ProductDetailPage';
 import "./CategoryProductsView.css";
@@ -52,6 +53,29 @@ const getColorStyle = (nombre) => {
     };
   }
   return { backgroundColor: getColorHex(nombre) };
+};
+
+// Fila real (id_variante) del grupo para la talla pedida, prefiriendo el
+// mismo color de la tarjeta. Así el carrito y el backend usan la variante
+// correcta y su stock real, no solo la etiqueta de la talla.
+const variantePorTalla = (producto, talla, catalogo) => {
+  if (!producto) return null;
+
+  const candidatas = (Array.isArray(catalogo) ? catalogo : []).filter(
+    (item) =>
+      item &&
+      producto.grupoId !== undefined &&
+      producto.grupoId !== null &&
+      String(item.grupoId) === String(producto.grupoId) &&
+      item.size &&
+      normalizarTalla(item.size) === normalizarTalla(talla)
+  );
+
+  if (candidatas.length === 0) return null;
+
+  return (
+    candidatas.find((item) => item.color === producto.color) || candidatas[0]
+  );
 };
 
 export default function CategoryProductsView({ category, onBack, addToCart, likedProducts = [], toggleLike, initialGender = null }) {
@@ -545,13 +569,20 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                   const overlayAbierto = overlayComprar === String(product.id);
                   const tallasNorm = new Set(tallas.map(normalizarTalla));
                   const tallaPropia = product.size && tallasNorm.has(normalizarTalla(product.size));
+                  // Variante de esta tarjeta sin unidades: no se compra.
+                  const agotado = esAgotado(product.stock);
 
                   const agregarTallaAlCarrito = (size) => {
                     setOverlayComprar(null);
-                    addToCart({ ...product, size });
+                    // Se agrega la fila real de esa talla/color (id_variante
+                    // y stock verdaderos), no solo la etiqueta de la talla.
+                    const variante =
+                      variantePorTalla(product, size, allProducts) || product;
+                    addToCart({ ...variante, size: variante.size || size });
                   };
 
                   const manejarComprar = () => {
+                    if (agotado) return;
                     if (tallaUnica) {
                       if (tallas.length > 0) agregarTallaAlCarrito(tallas[0]);
                       else addToCart({ ...product });
@@ -595,15 +626,27 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                             <div className="product__size-overlay-sizes">
                               {tallasVisiblesPara(tallas).map((s) => {
                                 const disponible = tallasNorm.has(normalizarTalla(s));
+                                const varianteTalla = disponible
+                                  ? variantePorTalla(product, s, allProducts)
+                                  : null;
+                                // Talla real cuya variante no tiene unidades.
+                                const sinStock = disponible && esAgotado(varianteTalla?.stock);
                                 const activa = disponible && tallaPropia && normalizarTalla(product.size) === normalizarTalla(s);
+                                const puedeAgregar = disponible && !sinStock;
                                 return (
                                   <button
                                     key={s}
                                     type="button"
-                                    className={`product__size-btn${activa ? ' active' : ''}${disponible ? '' : ' disabled'}`}
-                                    disabled={!disponible}
-                                    title={disponible ? `Agregar en talla ${s}` : `Talla ${s} no disponible`}
-                                    onClick={(e) => { e.stopPropagation(); if (disponible) agregarTallaAlCarrito(s); }}
+                                    className={`product__size-btn${activa ? ' active' : ''}${puedeAgregar ? '' : ' disabled'}`}
+                                    disabled={!puedeAgregar}
+                                    title={
+                                      !disponible
+                                        ? `Talla ${s} no disponible`
+                                        : sinStock
+                                          ? `Talla ${s} agotada`
+                                          : `Agregar en talla ${s}`
+                                    }
+                                    onClick={(e) => { e.stopPropagation(); if (puedeAgregar) agregarTallaAlCarrito(s); }}
                                   >
                                     {s}
                                   </button>
@@ -659,11 +702,18 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                             {/* BOTÓN COMPRAR / CARRITO */}
                             <button 
                               type="button"
-                              className="product__add-btn"
+                              className={`product__add-btn${agotado ? " is-agotado" : ""}`}
                               onClick={manejarComprar}
-                              title={tallaUnica ? (tallas.length > 0 ? `Agregar en talla ${tallas[0]}` : "Agregar al carrito") : "Elegir talla"}
+                              disabled={agotado}
+                              title={
+                                agotado
+                                  ? "Producto agotado: no hay unidades disponibles"
+                                  : tallaUnica
+                                    ? (tallas.length > 0 ? `Agregar en talla ${tallas[0]}` : "Agregar al carrito")
+                                    : "Elegir talla"
+                              }
                             >
-                              <ShoppingBag size={16} /> {tallaUnica ? "Comprar" : "Elige talla"}
+                              <ShoppingBag size={16} /> {agotado ? "Agotado" : tallaUnica ? "Comprar" : "Elige talla"}
                             </button>
                           </div>
                         </div>

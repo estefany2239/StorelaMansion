@@ -141,6 +141,13 @@
   font-weight: bold;
 }
 
+/* Subtotal de la línea (precio x cantidad), solo con más de 1 unidad */
+.cart-item-line-total {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 .cart-item-specs {
   font-size: 0.75rem;
   opacity: 0.7;
@@ -273,6 +280,48 @@
   background: #b58f1f;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(201, 162, 39, 0.3);
+}
+
+/* Bloqueo del paso al pago cuando hay una línea sin unidades */
+.continue-btn:disabled {
+  background: #6b6b6b;
+  color: #d9d9d9;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.continue-btn:disabled:hover {
+  background: #6b6b6b;
+  transform: none;
+  box-shadow: none;
+}
+
+.cart-stock-alert {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(224, 82, 82, 0.45);
+  border-radius: 10px;
+  background: rgba(224, 82, 82, 0.1);
+  color: #e05252;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Etiqueta de variante sin stock dentro de la línea del carrito */
+.cart-item-agotado {
+  margin: 4px 0 0;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(224, 82, 82, 0.14);
+  border: 1px solid rgba(224, 82, 82, 0.5);
+  color: #e05252;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .keep-shopping-btn {
@@ -421,6 +470,22 @@
   font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+/* Etiqueta de variante sin stock en la vista "Tu pedido" */
+.checkout-login-item-agotado {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(224, 82, 82, 0.14);
+  border: 1px solid rgba(224, 82, 82, 0.5);
+  color: #e05252;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .checkout-login-item-controls {

@@ -10,12 +10,13 @@ export default function CompraExitosa({ onVerMisPedidos }) {
           <CheckCircle size={64} strokeWidth={1.6} />
         </div>
 
-        <h2 className="compra-exitosa-title">¡Compra exitosa!</h2>
+        <h2 className="compra-exitosa-title">¡Pedido registrado!</h2>
 
         <p className="compra-exitosa-copy">
           Muchas gracias por tu compra en{" "}
-          <strong>La Mansión Store</strong>. Tu pedido está siendo procesado
-          y llegará pronto a tu dirección.
+          <strong>La Mansión Store</strong>. Tu pedido fue registrado y el pago
+          queda en estado <strong>Pendiente de verificación</strong>: la tienda
+          lo revisará y te contactará cuando lo confirme.
         </p>
 
         <button

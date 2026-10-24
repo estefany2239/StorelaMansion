@@ -1,16 +1,24 @@
 import { useState } from "react";
 import {
   ArrowLeft,
+  ArrowRight,
   CreditCard,
   Smartphone,
   Building2,
   Upload,
   CheckCircle,
-  Receipt,
+  ShoppingBag,
   Wallet,
   ShieldCheck,
   Truck,
+  Package,
   Store,
+  User,
+  Phone,
+  Map,
+  MapPin,
+  Home,
+  Lock,
 } from "lucide-react";
 
 import { obtenerPrecio } from "../../features/store/pedidosCliente";
@@ -18,7 +26,9 @@ import { esAgotado, hayStock } from "../cart/cantidad";
 import { crearPedido } from "../../services/api";
 import { useNotify } from "../notifications/useNotify.js";
 import { NOMBRE_COMPLETO_VALIDO } from "../../features/auth/validacionesRegistro";
+import { calcularCostoEnvio, esValleAburra } from "../../utils/envio";
 import DIVIPOLA from "../../data/divipola.json";
+import QR_PAGO from "../../assets/img/QR.jpeg";
 
 import "./PaymentView.css";
 
@@ -44,7 +54,6 @@ const ORDEN_CAMPOS = [
   "barrio",
   "direccion",
   "metodo",
-  "transferencia",
   "comprobante",
   "abono",
 ];
@@ -57,7 +66,6 @@ const ID_CAMPO = {
   barrio: "campo-barrio",
   direccion: "campo-direccion",
   metodo: "campo-metodo",
-  transferencia: "campo-transferencia",
   comprobante: "campo-comprobante",
   abono: "campo-abono",
 };
@@ -72,8 +80,8 @@ export default function PaymentView({
   const notify = useNotify();
   const [enviando, setEnviando] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [transferenciaTipo, setTransferenciaTipo] = useState("");
   const [proofFile, setProofFile] = useState(null);
+  const [qrDisponible, setQrDisponible] = useState(true);
 
   const [direccionEntrega, setDireccionEntrega] = useState("");
   const [tipoPago, setTipoPago] = useState("completo");
@@ -112,7 +120,7 @@ export default function PaymentView({
      TOTAL
   ========================================================= */
 
-  const total = cart.reduce((acumulado, item) => {
+  const subtotalProductos = cart.reduce((acumulado, item) => {
     const precio = obtenerPrecio(item.price);
     const cantidad = Number(item.quantity) || 1;
 
@@ -123,13 +131,76 @@ export default function PaymentView({
      DERIVADOS
   ========================================================= */
 
+  const ubicacionSeleccionada = Boolean(departamentoCodigo && municipioCodigo);
+
+  // La zona se decide exclusivamente por el código DANE del municipio.
+  const metodoEnvioFinal = !ubicacionSeleccionada
+    ? null
+    : esValleAburra(municipioCodigo)
+      ? metodoEnvio === "recoger"
+        ? "Recoger en tienda"
+        : "Domicilio"
+      : "Transportadora";
+
+  const envio = ubicacionSeleccionada
+    ? calcularCostoEnvio(metodoEnvioFinal)
+    : { costo: 0, pendiente: false };
+  const costoEnvio = envio.costo;
+  const envioPendiente = envio.pendiente;
+  const total = subtotalProductos + (envioPendiente ? 0 : costoEnvio);
+
   // Abono del 50 % de "Contra entrega" (mismo redondeo que el backend).
   const abonoContraEntrega = Math.round(total * 0.5);
 
   const esTransferencia = paymentMethod === "transferencia";
   const esContraEntrega = paymentMethod === "contra_entrega";
   const requiereBanco = esTransferencia || esContraEntrega;
-  const esDomicilio = metodoEnvio === "domicilio";
+  const esDomicilio = metodoEnvioFinal === "Domicilio";
+  const esRecoger = metodoEnvioFinal === "Recoger en tienda";
+  const esTransportadora = metodoEnvioFinal === "Transportadora";
+  const pideDireccion = esDomicilio || esTransportadora;
+
+  const textoCostoEnvio = !ubicacionSeleccionada
+    ? "Selecciona tu ubicación para ver las opciones de envío."
+    : esRecoger
+      ? "Sin costo de envío."
+      : envioPendiente
+        ? "Costo de envío por confirmar."
+        : `Costo de envío: ${formatoPrecio(costoEnvio)}.`;
+
+  /* =========================================================
+     ESTADO VÁLIDO DE LOS CAMPOS (solo presentación)
+     Misma regla que validarPago; decide si se muestra el
+     check verde. Nunca se muestra con el campo vacío.
+  ========================================================= */
+
+  const nombreTrim = nombreEntrega.trim();
+  const telefonoTrim = telefonoEntrega.trim();
+  const barrioTrim = barrioEntrega.trim();
+  const direccionTrim = direccionEntrega.trim();
+
+  const nombreValido =
+    !errores.nombre &&
+    Boolean(nombreTrim) &&
+    nombreTrim.length <= LARGO_MAX_NOMBRE &&
+    NOMBRE_COMPLETO_VALIDO.test(nombreTrim);
+
+  const telefonoValido =
+    !errores.telefono &&
+    Boolean(telefonoTrim) &&
+    /^[0-9]+$/.test(telefonoTrim) &&
+    telefonoTrim.length <= LARGO_MAX_TELEFONO;
+
+  const barrioValido =
+    !errores.barrio &&
+    Boolean(barrioTrim) &&
+    barrioTrim.length <= LARGO_MAX_BARRIO &&
+    BARRIO_VALIDO.test(barrioTrim);
+
+  const direccionValida =
+    !errores.direccion &&
+    Boolean(direccionTrim) &&
+    direccionTrim.length <= LARGO_MAX_DIRECCION;
 
   /* =========================================================
      CATÁLOGO DIVIPOLA (departamento -> municipio)
@@ -138,12 +209,6 @@ export default function PaymentView({
   const municipiosDelDepartamento =
     DIVIPOLA.departamentos.find((d) => d.codigo === departamentoCodigo)
       ?.municipios ?? [];
-
-  const nombreDepartamento =
-    DIVIPOLA.departamentos.find((d) => d.codigo === departamentoCodigo)?.nombre ?? "";
-
-  const nombreMunicipio =
-    municipiosDelDepartamento.find((m) => m.codigo === municipioCodigo)?.nombre ?? "";
 
   // Cambiar el departamento invalida el municipio y el barrio elegidos.
   const cambiarDepartamento = (codigo) => {
@@ -155,11 +220,29 @@ export default function PaymentView({
     limpiarError("barrio");
   };
 
-  // Cambiar el municipio invalida el barrio elegido.
+  // Cambiar el municipio invalida el barrio elegido y recalcula el método de
+  // envío según la zona DANE del municipio.
   const cambiarMunicipio = (codigo) => {
     setMunicipioCodigo(codigo);
     limpiarError("municipio");
     limpiarError("barrio");
+    limpiarError("metodo_envio");
+
+    if (!codigo) return;
+
+    if (!esValleAburra(codigo) && metodoEnvio !== "transportadora") {
+      setMetodoEnvio("transportadora");
+      notify(
+        "El municipio está fuera del Valle de Aburrá: el pedido se enviará por transportadora.",
+        "info"
+      );
+    } else if (esValleAburra(codigo) && metodoEnvio === "transportadora") {
+      setMetodoEnvio("domicilio");
+      notify(
+        "El municipio está dentro del Valle de Aburrá: elige Domicilio o Recoger en tienda.",
+        "info"
+      );
+    }
   };
 
   /* =========================================================
@@ -193,6 +276,15 @@ export default function PaymentView({
 
       return siguiente;
     });
+  };
+
+  // Presentación: marca el aviso de campo obligatorio al salir de un campo
+  // vacío. No reemplaza la validación real: validarPago sigue siendo quien
+  // decide si el pedido puede crearse.
+  const marcarVacio = (clave, valor, texto = "Este campo es obligatorio.") => {
+    if (!String(valor ?? "").trim()) {
+      setErrores((previos) => ({ ...previos, [clave]: { texto } }));
+    }
   };
 
   const irACampo = (id) => {
@@ -234,17 +326,19 @@ export default function PaymentView({
       marcar("telefono", "El teléfono solo puede contener dígitos (máx. 10).");
     }
 
-    // La ubicación y la dirección solo aplican a envío a domicilio; con
-    // "Recoger en tienda" no se piden.
+    // La ubicación (departamento + municipio) es siempre necesaria para
+    // decidir la zona de envío, incluso con Recoger en tienda. La dirección
+    // solo se exige para Domicilio y Transportadora; el barrio solo para
+    // Domicilio local.
+    if (!departamentoCodigo) {
+      marcar("departamento", "Selecciona un departamento.");
+    }
+
+    if (!municipioCodigo) {
+      marcar("municipio", "Selecciona una ciudad o municipio.");
+    }
+
     if (esDomicilio) {
-      if (!departamentoCodigo) {
-        marcar("departamento", "Selecciona un departamento.");
-      }
-
-      if (!municipioCodigo) {
-        marcar("municipio", "Selecciona una ciudad o municipio.");
-      }
-
       const barrio = barrioEntrega.trim();
       if (!barrio) {
         marcar("barrio", "Este campo es obligatorio.");
@@ -253,7 +347,9 @@ export default function PaymentView({
       } else if (!BARRIO_VALIDO.test(barrio)) {
         marcar("barrio", "El barrio solo puede contener letras, números, espacios, apóstrofes, puntos y guiones.");
       }
+    }
 
+    if (pideDireccion) {
       const direccion = direccionEntrega.trim();
       if (!direccion) {
         marcar("direccion", "Este campo es obligatorio.");
@@ -264,10 +360,6 @@ export default function PaymentView({
 
     if (!paymentMethod) {
       marcar("metodo", "Selecciona una opción.");
-    }
-
-    if (requiereBanco && !transferenciaTipo) {
-      marcar("transferencia", "Selecciona un medio.");
     }
 
     if (requiereBanco && !proofFile) {
@@ -334,12 +426,7 @@ export default function PaymentView({
     const metodoPago =
       paymentMethod === "contra_entrega" ? "Contra entrega" : "Transferencia";
 
-    const banco =
-      requiereBanco && transferenciaTipo
-        ? transferenciaTipo === "nequi"
-          ? "Nequi"
-          : "Bancolombia"
-        : undefined;
+    const banco = requiereBanco ? "QR" : undefined;
 
     const items = cart.map((item) => ({
       id_variante: Number(item.id),
@@ -351,9 +438,9 @@ export default function PaymentView({
       return;
     }
 
-    // Con "Recoger en tienda" el backend no pide ubicación; con
-    // "Domicilio" viajan los campos separados (el backend los valida
-    // y los persiste en columnas propias de domicilio).
+    // El backend decide la zona por los códigos DANE, no por los nombres.
+    // Con "Recoger en tienda" no se envía dirección ni barrio; con Domicilio
+    // y Transportadora sí. El costo de envío nunca viaja desde el frontend.
     setEnviando(true);
 
     try {
@@ -361,13 +448,13 @@ export default function PaymentView({
         items,
         metodo_pago: metodoPago,
         ...(banco ? { banco } : {}),
-        metodo_envio: esDomicilio ? "Domicilio" : "Recoger en tienda",
-        ...(esDomicilio
+        metodo_envio: metodoEnvioFinal,
+        departamento_codigo: departamentoCodigo,
+        municipio_codigo: municipioCodigo,
+        ...(pideDireccion
           ? {
               direccion: direccionEntrega.trim(),
-              departamento: nombreDepartamento,
-              municipio: nombreMunicipio,
-              barrio: barrioEntrega.trim(),
+              ...(esDomicilio ? { barrio: barrioEntrega.trim() } : {}),
             }
           : {}),
         nombre_entrega: nombreEntrega.trim(),
@@ -386,6 +473,8 @@ export default function PaymentView({
         const claveCampo = {
           nombre_entrega: "nombre",
           telefono_entrega: "telefono",
+          departamento_codigo: "departamento",
+          municipio_codigo: "municipio",
           departamento: "departamento",
           municipio: "municipio",
           barrio: "barrio",
@@ -498,176 +587,294 @@ export default function PaymentView({
                 className={`form-group ${errores.nombre ? "has-error" : ""}`}
                 id="campo-nombre"
               >
-                <label>
+                <label htmlFor="input-nombre">
                   Nombre completo
+                  <span className="required-star" aria-hidden="true"> *</span>
                 </label>
 
-                <input
-                  type="text"
-                  placeholder="Ingresa tu nombre"
-                  value={nombreEntrega}
-                  onChange={(e) => {
-                    setNombreEntrega(e.target.value);
-                    limpiarError("nombre");
-                  }}
-                />
+                <div className="input-wrap">
 
-                {errores.nombre && (
-                  <span className="field-error">
+                  <User
+                    className="field-icon"
+                    size={17}
+                    aria-hidden="true"
+                  />
+
+                  <input
+                    id="input-nombre"
+                    type="text"
+                    placeholder="Ingresa tu nombre"
+                    value={nombreEntrega}
+                    aria-invalid={Boolean(errores.nombre)}
+                    aria-describedby={errores.nombre ? "error-nombre" : undefined}
+                    onChange={(e) => {
+                      setNombreEntrega(e.target.value);
+                      limpiarError("nombre");
+                    }}
+                    onBlur={() => marcarVacio("nombre", nombreEntrega)}
+                  />
+
+                </div>
+
+                {errores.nombre ? (
+                  <span className="field-error" id="error-nombre">
                     {errores.nombre.texto}
                   </span>
-                )}
+                ) : nombreValido ? (
+                  <span className="field-valid">
+                    <CheckCircle size={13} aria-hidden="true" />
+                    Nombre válido
+                  </span>
+                ) : null}
               </div>
 
               <div
                 className={`form-group ${errores.telefono ? "has-error" : ""}`}
                 id="campo-telefono"
               >
-                <label>
+                <label htmlFor="input-telefono">
                   Teléfono
+                  <span className="required-star" aria-hidden="true"> *</span>
                 </label>
 
-                <input
-                  type="tel"
-                  placeholder="300 000 0000"
-                  inputMode="numeric"
-                  maxLength={LARGO_MAX_TELEFONO}
-                  value={telefonoEntrega}
-                  onChange={(e) => {
-                    // Solo dígitos, máx. 10: misma regla que el backend.
-                    setTelefonoEntrega(e.target.value.replace(/\D/g, "").slice(0, LARGO_MAX_TELEFONO));
-                    limpiarError("telefono");
-                  }}
-                />
+                <div className="input-wrap">
 
-                {errores.telefono && (
-                  <span className="field-error">
+                  <Phone
+                    className="field-icon"
+                    size={17}
+                    aria-hidden="true"
+                  />
+
+                  <input
+                    id="input-telefono"
+                    type="tel"
+                    placeholder="300 000 0000"
+                    inputMode="numeric"
+                    maxLength={LARGO_MAX_TELEFONO}
+                    value={telefonoEntrega}
+                    aria-invalid={Boolean(errores.telefono)}
+                    aria-describedby={errores.telefono ? "error-telefono" : undefined}
+                    onChange={(e) => {
+                      // Solo dígitos, máx. 10: misma regla que el backend.
+                      setTelefonoEntrega(e.target.value.replace(/\D/g, "").slice(0, LARGO_MAX_TELEFONO));
+                      limpiarError("telefono");
+                    }}
+                    onBlur={() => marcarVacio("telefono", telefonoEntrega)}
+                  />
+
+                </div>
+
+                {errores.telefono ? (
+                  <span className="field-error" id="error-telefono">
                     {errores.telefono.texto}
                   </span>
-                )}
+                ) : telefonoValido ? (
+                  <span className="field-valid">
+                    <CheckCircle size={13} aria-hidden="true" />
+                    Número de teléfono válido
+                  </span>
+                ) : null}
               </div>
 
-              {esDomicilio && (
               <div
                 className={`form-group ${errores.departamento ? "has-error" : ""}`}
                 id="campo-departamento"
               >
-                <label>
+                <label htmlFor="input-departamento">
                   Departamento
+                  <span className="required-star" aria-hidden="true"> *</span>
                 </label>
 
-                <select
-                  value={departamentoCodigo}
-                  onChange={(e) => cambiarDepartamento(e.target.value)}
-                >
-                  <option value="">
-                    Selecciona un departamento
-                  </option>
+                <div className="input-wrap">
 
-                  {DIVIPOLA.departamentos.map((dep) => (
-                    <option key={dep.codigo} value={dep.codigo}>
-                      {dep.nombre}
+                  <Map
+                    className="field-icon"
+                    size={17}
+                    aria-hidden="true"
+                  />
+
+                  <select
+                    id="input-departamento"
+                    value={departamentoCodigo}
+                    aria-invalid={Boolean(errores.departamento)}
+                    aria-describedby={errores.departamento ? "error-departamento" : undefined}
+                    onChange={(e) => cambiarDepartamento(e.target.value)}
+                    onBlur={() =>
+                      marcarVacio(
+                        "departamento",
+                        departamentoCodigo,
+                        "Selecciona un departamento."
+                      )
+                    }
+                  >
+                    <option value="">
+                      Selecciona un departamento
                     </option>
-                  ))}
-                </select>
+
+                    {DIVIPOLA.departamentos.map((dep) => (
+                      <option key={dep.codigo} value={dep.codigo}>
+                        {dep.nombre}
+                      </option>
+                    ))}
+                  </select>
+
+                </div>
 
                 {errores.departamento && (
-                  <span className="field-error">
+                  <span className="field-error" id="error-departamento">
                     {errores.departamento.texto}
                   </span>
                 )}
               </div>
-              )}
 
-              {esDomicilio && (
               <div
                 className={`form-group ${errores.municipio ? "has-error" : ""}`}
                 id="campo-municipio"
               >
-                <label>
+                <label htmlFor="input-municipio">
                   Ciudad o municipio
+                  <span className="required-star" aria-hidden="true"> *</span>
                 </label>
 
-                <select
-                  value={municipioCodigo}
-                  disabled={!departamentoCodigo}
-                  onChange={(e) => cambiarMunicipio(e.target.value)}
-                >
-                  <option value="">
-                    {departamentoCodigo
-                      ? "Selecciona una ciudad o municipio"
-                      : "Primero elige un departamento"}
-                  </option>
+                <div className="input-wrap">
 
-                  {municipiosDelDepartamento.map((mun) => (
-                    <option key={mun.codigo} value={mun.codigo}>
-                      {mun.nombre}
+                  <Building2
+                    className="field-icon"
+                    size={17}
+                    aria-hidden="true"
+                  />
+
+                  <select
+                    id="input-municipio"
+                    value={municipioCodigo}
+                    disabled={!departamentoCodigo}
+                    aria-invalid={Boolean(errores.municipio)}
+                    aria-describedby={errores.municipio ? "error-municipio" : undefined}
+                    onChange={(e) => cambiarMunicipio(e.target.value)}
+                    onBlur={() =>
+                      marcarVacio(
+                        "municipio",
+                        municipioCodigo,
+                        "Selecciona una ciudad o municipio."
+                      )
+                    }
+                  >
+                    <option value="">
+                      {departamentoCodigo
+                        ? "Selecciona una ciudad o municipio"
+                        : "Primero elige un departamento"}
                     </option>
-                  ))}
-                </select>
+
+                    {municipiosDelDepartamento.map((mun) => (
+                      <option key={mun.codigo} value={mun.codigo}>
+                        {mun.nombre}
+                      </option>
+                    ))}
+                  </select>
+
+                </div>
 
                 {errores.municipio && (
-                  <span className="field-error">
+                  <span className="field-error" id="error-municipio">
                     {errores.municipio.texto}
                   </span>
                 )}
               </div>
-              )}
 
               {esDomicilio && (
               <div
                 className={`form-group ${errores.barrio ? "has-error" : ""}`}
                 id="campo-barrio"
               >
-                <label>
+                <label htmlFor="input-barrio">
                   Barrio
+                  <span className="required-star" aria-hidden="true"> *</span>
                 </label>
 
-                <input
-                  type="text"
-                  placeholder="Centro, La América..."
-                  maxLength={LARGO_MAX_BARRIO}
-                  disabled={!municipioCodigo}
-                  value={barrioEntrega}
-                  onChange={(e) => {
-                    setBarrioEntrega(e.target.value);
-                    limpiarError("barrio");
-                  }}
-                />
+                <div className="input-wrap">
 
-                {errores.barrio && (
-                  <span className="field-error">
+                  <Home
+                    className="field-icon"
+                    size={17}
+                    aria-hidden="true"
+                  />
+
+                  <input
+                    id="input-barrio"
+                    type="text"
+                    placeholder="Centro, La América..."
+                    maxLength={LARGO_MAX_BARRIO}
+                    disabled={!municipioCodigo}
+                    value={barrioEntrega}
+                    aria-invalid={Boolean(errores.barrio)}
+                    aria-describedby={errores.barrio ? "error-barrio" : undefined}
+                    onChange={(e) => {
+                      setBarrioEntrega(e.target.value);
+                      limpiarError("barrio");
+                    }}
+                    onBlur={() => marcarVacio("barrio", barrioEntrega)}
+                  />
+
+                </div>
+
+                {errores.barrio ? (
+                  <span className="field-error" id="error-barrio">
                     {errores.barrio.texto}
                   </span>
-                )}
+                ) : barrioValido ? (
+                  <span className="field-valid">
+                    <CheckCircle size={13} aria-hidden="true" />
+                    Barrio válido
+                  </span>
+                ) : null}
               </div>
               )}
 
-              {esDomicilio && (
+              {pideDireccion && (
               <div
                 className={`form-group ${errores.direccion ? "has-error" : ""}`}
                 id="campo-direccion"
               >
-                <label>
+                <label htmlFor="input-direccion">
                   Dirección
+                  <span className="required-star" aria-hidden="true"> *</span>
                 </label>
 
-                <input
-                  type="text"
-                  placeholder="Calle, carrera, número..."
-                  maxLength={LARGO_MAX_DIRECCION}
-                  value={direccionEntrega}
-                  onChange={(e) => {
-                    setDireccionEntrega(e.target.value);
-                    limpiarError("direccion");
-                  }}
-                />
+                <div className="input-wrap">
 
-                {errores.direccion && (
-                  <span className="field-error">
+                  <MapPin
+                    className="field-icon"
+                    size={17}
+                    aria-hidden="true"
+                  />
+
+                  <input
+                    id="input-direccion"
+                    type="text"
+                    placeholder="Calle, carrera, número..."
+                    maxLength={LARGO_MAX_DIRECCION}
+                    value={direccionEntrega}
+                    aria-invalid={Boolean(errores.direccion)}
+                    aria-describedby={errores.direccion ? "error-direccion" : undefined}
+                    onChange={(e) => {
+                      setDireccionEntrega(e.target.value);
+                      limpiarError("direccion");
+                    }}
+                    onBlur={() => marcarVacio("direccion", direccionEntrega)}
+                  />
+
+                </div>
+
+                {errores.direccion ? (
+                  <span className="field-error" id="error-direccion">
                     {errores.direccion.texto}
                   </span>
-                )}
+                ) : direccionValida ? (
+                  <span className="field-valid">
+                    <CheckCircle size={13} aria-hidden="true" />
+                    Dirección válida
+                  </span>
+                ) : null}
               </div>
               )}
 
@@ -717,14 +924,15 @@ export default function PaymentView({
                     ? "selected"
                     : ""
                 }`}
+                aria-pressed={paymentMethod === "transferencia"}
                 onClick={() => {
                   setPaymentMethod("transferencia");
-                  setTransferenciaTipo("");
                   limpiarError("metodo");
-                  limpiarError("transferencia");
                   limpiarError("comprobante");
                 }}
               >
+
+                <span className="method-radio" aria-hidden="true" />
 
                 <div className="method-icon">
                   <Building2 size={23} />
@@ -761,14 +969,15 @@ export default function PaymentView({
                     ? "selected"
                     : ""
                 }`}
+                aria-pressed={paymentMethod === "contra_entrega"}
                 onClick={() => {
                   setPaymentMethod("contra_entrega");
-                  setTransferenciaTipo("");
                   limpiarError("metodo");
-                  limpiarError("transferencia");
                   limpiarError("comprobante");
                 }}
               >
+
+                <span className="method-radio" aria-hidden="true" />
 
                 <div className="method-icon">
                   <Wallet size={23} />
@@ -809,394 +1018,115 @@ export default function PaymentView({
             ================================================= */}
 
             {requiereBanco && (
-
-              <>
-
-                <div className="payment-extra">
-
-                  <div className="extra-title">
-
-                    <Building2 size={19} />
-
-                    <span>
-                      {esContraEntrega
-                        ? "Medio para el abono del 50 %"
-                        : "Medio de transferencia"}
-                    </span>
-
-                  </div>
-
-                  <p className="payment-instruction">
+              <div className="payment-extra qr-payment">
+                <div className="extra-title">
+                  <Smartphone size={19} />
+                  <span>
                     {esContraEntrega
-                      ? `Para apartar tu pedido paga hoy el abono de ${formatoPrecio(abonoContraEntrega)} por el medio que prefieras.`
-                      : "Selecciona el medio por el que realizarás la transferencia."}
-                  </p>
-
-                  <div
-                    className={`payment-methods ${errores.transferencia ? "has-error" : ""}`}
-                    id="campo-transferencia"
-                  >
-
-                    {/* NEQUI */}
-
-                    <button
-                      type="button"
-                      className={`payment-method ${
-                        transferenciaTipo === "nequi"
-                          ? "selected"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        setTransferenciaTipo("nequi");
-                        limpiarError("transferencia");
-                      }}
-                    >
-
-                      <div className="method-icon">
-                        <Smartphone size={23} />
-                      </div>
-
-                      <div className="method-info">
-
-                        <strong>
-                          Nequi
-                        </strong>
-
-                        <span>
-                          Pago desde Nequi
-                        </span>
-
-                      </div>
-
-                      {transferenciaTipo === "nequi" && (
-                        <CheckCircle
-                          className="method-check"
-                          size={19}
-                        />
-                      )}
-
-                    </button>
-
-
-                    {/* BANCOLOMBIA */}
-
-                    <button
-                      type="button"
-                      className={`payment-method ${
-                        transferenciaTipo === "bancolombia"
-                          ? "selected"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        setTransferenciaTipo("bancolombia");
-                        limpiarError("transferencia");
-                      }}
-                    >
-
-                      <div className="method-icon">
-                        <Building2 size={23} />
-                      </div>
-
-                      <div className="method-info">
-
-                        <strong>
-                          Bancolombia
-                        </strong>
-
-                        <span>
-                          Transferencia bancaria
-                        </span>
-
-                      </div>
-
-                      {transferenciaTipo === "bancolombia" && (
-                        <CheckCircle
-                          className="method-check"
-                          size={19}
-                        />
-                      )}
-
-                    </button>
-
-                  </div>
-
-                  {errores.transferencia && (
-                    <span className="field-error">
-                      {errores.transferencia.texto}
-                    </span>
-                  )}
-
-                  {esContraEntrega && (
-                    <div className="payment-notice">
-
-                      <CheckCircle size={18} />
-
-                      <span>
-                        El saldo restante se paga al recibir
-                        tu pedido.
-                      </span>
-
-                    </div>
-                  )}
-
+                      ? "Pago del abono del 50 %"
+                      : "Pago por transferencia"}
+                  </span>
                 </div>
 
+                <h3 className="qr-payment-title">
+                  Paga escaneando el código QR
+                </h3>
 
-                {/* NEQUI - INSTRUCCIONES */}
+                <p className="payment-instruction">
+                  {esContraEntrega
+                    ? `Escanea el código y paga el abono de ${formatoPrecio(abonoContraEntrega)} para apartar tu pedido.`
+                    : "Escanea el código y realiza la transferencia por el valor total de tu pedido."}
+                </p>
 
-                {transferenciaTipo === "nequi" && (
+                <div className="qr-payment-figure">
+                  <div className="qr-payment-frame">
+                    {qrDisponible ? (
+                      <img
+                        src={QR_PAGO}
+                        alt="Código QR oficial de pago de Store La Mansión"
+                        className="qr-payment-image"
+                        onError={() => setQrDisponible(false)}
+                      />
+                    ) : (
+                      <p className="qr-payment-unavailable" role="status">
+                        QR de pago no disponible por el momento.
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-                  <div className="payment-extra">
+                <div className="qr-payment-amount">
+                  <span>
+                    {esContraEntrega ? "Abono a pagar hoy" : "Valor a pagar"}
+                  </span>
+                  <strong>
+                    {formatoPrecio(esContraEntrega ? abonoContraEntrega : total)}
+                  </strong>
+                  {envioPendiente && (
+                    <small>
+                      El costo de envío se cobra aparte cuando la tienda lo confirme.
+                    </small>
+                  )}
+                </div>
 
-                    <div className="extra-title">
-
-                      <Smartphone size={19} />
-
-                      <span>
-                        Pago por Nequi
-                      </span>
-
+                {esContraEntrega && (
+                  <>
+                    <div className="qr-payment-balance">
+                      <span>Saldo al recibir</span>
+                      <strong>{formatoPrecio(total - abonoContraEntrega)}</strong>
                     </div>
-
-                    <p className="payment-instruction">
-                      {esContraEntrega
-                        ? `Realiza el abono de ${formatoPrecio(abonoContraEntrega)} al número de Nequi registrado por Store La Mansión.`
-                        : "Realiza el pago al número de Nequi registrado por Store La Mansión."}
-                    </p>
-
-
-                    {/* NÚMERO NEQUI */}
-
-                    <div className="payment-account">
-
-                      <div>
-
-                        <span>
-                          Número Nequi
-                        </span>
-
-                        <strong>
-                          300 000 0000
-                        </strong>
-
-                      </div>
-
-                      <Smartphone size={22} />
-
-                    </div>
-
-
-                    {/* AVISO */}
 
                     <div className="payment-notice">
-
                       <CheckCircle size={18} />
-
                       <span>
-                        Después de realizar el pago, adjunta
-                        una captura o imagen del comprobante.
+                        El saldo restante se paga al recibir tu pedido.
                       </span>
-
                     </div>
-
-
-                    {/* COMPROBANTE */}
-
-                    <div
-                      className={`proof-upload ${errores.comprobante ? "has-error" : ""}`}
-                      id="campo-comprobante"
-                    >
-
-                      <label className="proof-label">
-                        Comprobante de pago
-                      </label>
-
-                      <label className="upload-proof-btn">
-
-                        <Upload size={18} />
-
-                        <span>
-                          {proofFile
-                            ? proofFile.name
-                            : "Subir comprobante"}
-                        </span>
-
-                        <input
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleProofChange}
-                        />
-
-                      </label>
-
-
-                      {proofFile && (
-                        <div className="proof-success">
-
-                          <CheckCircle size={17} />
-
-                          <span>
-                            Comprobante seleccionado
-                          </span>
-
-                        </div>
-                      )}
-
-                    </div>
-
-                    {errores.comprobante && (
-                      <span className="field-error">
-                        {errores.comprobante.texto}
-                      </span>
-                    )}
-
-                  </div>
-
+                  </>
                 )}
 
+                <div className="payment-notice">
+                  <ShieldCheck size={18} />
+                  <span>
+                    Tu pago será verificado por la tienda antes de procesar el pedido.
+                  </span>
+                </div>
 
-                {/* BANCOLOMBIA - DATOS DE LA CUENTA */}
+                <div
+                  className={`proof-upload ${errores.comprobante ? "has-error" : ""}`}
+                  id="campo-comprobante"
+                >
+                  <label className="proof-label">
+                    Comprobante de pago
+                  </label>
 
-                {transferenciaTipo === "bancolombia" && (
+                  <label className="upload-proof-btn">
+                    <Upload size={18} />
+                    <span>
+                      {proofFile ? proofFile.name : "Subir comprobante"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={handleProofChange}
+                    />
+                  </label>
 
-                  <div className="payment-extra">
-
-                    <div className="extra-title">
-
-                      <Building2 size={19} />
-
-                      <span>
-                        Transferencia bancaria
-                      </span>
-
+                  {proofFile && (
+                    <div className="proof-success">
+                      <CheckCircle size={17} />
+                      <span>Comprobante seleccionado</span>
                     </div>
+                  )}
+                </div>
 
-
-                    <div className="transfer-layout">
-
-                      <div className="transfer-data">
-
-                        <p className="payment-instruction">
-                          {esContraEntrega
-                            ? `Realiza la transferencia del abono (${formatoPrecio(abonoContraEntrega)}) utilizando los siguientes datos.`
-                            : "Realiza la transferencia utilizando los siguientes datos."}
-                        </p>
-
-
-                        <div className="bank-data">
-
-                          <span>
-                            Banco
-                          </span>
-
-                          <strong>
-                            Bancolombia
-                          </strong>
-
-                        </div>
-
-
-                        <div className="bank-data">
-
-                          <span>
-                            Tipo de cuenta
-                          </span>
-
-                          <strong>
-                            Cuenta de ahorros
-                          </strong>
-
-                        </div>
-
-
-                        <div className="bank-data">
-
-                          <span>
-                            Número
-                          </span>
-
-                          <strong>
-                            000 000 0000
-                          </strong>
-
-                        </div>
-
-
-                        <div className="bank-data">
-
-                          <span>
-                            Titular
-                          </span>
-
-                          <strong>
-                            Store La Mansión
-                          </strong>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-
-                    {/* COMPROBANTE */}
-
-                    <div
-                      className={`proof-upload ${errores.comprobante ? "has-error" : ""}`}
-                      id="campo-comprobante"
-                    >
-
-                      <label className="proof-label">
-                        Comprobante de pago
-                      </label>
-
-                      <label className="upload-proof-btn">
-
-                        <Upload size={18} />
-
-                        <span>
-                          {proofFile
-                            ? proofFile.name
-                            : "Subir comprobante"}
-                        </span>
-
-                        <input
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleProofChange}
-                        />
-
-                      </label>
-
-
-                      {proofFile && (
-                        <div className="proof-success">
-
-                          <CheckCircle size={17} />
-
-                          <span>
-                            Comprobante seleccionado
-                          </span>
-
-                        </div>
-                      )}
-
-                    </div>
-
-                    {errores.comprobante && (
-                      <span className="field-error">
-                        {errores.comprobante.texto}
-                      </span>
-                    )}
-
-                  </div>
-
+                {errores.comprobante && (
+                  <span className="field-error">
+                    {errores.comprobante.texto}
+                  </span>
                 )}
-
-              </>
-
+              </div>
             )}
-
           </section>
 
 
@@ -1222,90 +1152,149 @@ export default function PaymentView({
 
             </div>
 
-            <div className="payment-methods">
+            {!ubicacionSeleccionada && (
+              <p className="envio-aviso" role="status">
+                Selecciona tu ubicación para ver las opciones de envío.
+              </p>
+            )}
 
-              <button
-                type="button"
-                className={`payment-method ${
-                  metodoEnvio === "domicilio"
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() => setMetodoEnvio("domicilio")}
-              >
+            {esTransportadora && (
+              <div className="payment-methods payment-methods--una">
 
-                <div className="method-icon">
-                  <Truck size={23} />
-                </div>
+                <div
+                  className="payment-method selected payment-method--fija"
+                  aria-label="Envío por transportadora"
+                >
 
-                <div className="method-info">
+                  <span className="method-radio" aria-hidden="true" />
 
-                  <strong>
-                    Domicilio
-                  </strong>
+                  <div className="method-icon">
+                    <Package size={23} />
+                  </div>
 
-                  <span>
-                    Lo enviamos a tu dirección
-                  </span>
+                  <div className="method-info">
 
-                </div>
+                    <strong>
+                      Transportadora
+                    </strong>
 
-                {metodoEnvio === "domicilio" && (
+                    <span>
+                      Envío nacional a tu dirección
+                    </span>
+
+                  </div>
+
                   <CheckCircle
                     className="method-check"
                     size={19}
                   />
-                )}
-
-              </button>
-
-
-              <button
-                type="button"
-                className={`payment-method ${
-                  metodoEnvio === "recoger"
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() => {
-                  setMetodoEnvio("recoger");
-                  limpiarError("departamento");
-                  limpiarError("municipio");
-                  limpiarError("barrio");
-                  limpiarError("direccion");
-                }}
-              >
-
-                <div className="method-icon">
-                  <Store size={23} />
-                </div>
-
-                <div className="method-info">
-
-                  <strong>
-                    Recoger en tienda
-                  </strong>
-
-                  <span>
-                    Recógelo en nuestra tienda
-                  </span>
 
                 </div>
 
-                {metodoEnvio === "recoger" && (
-                  <CheckCircle
-                    className="method-check"
-                    size={19}
-                  />
-                )}
+              </div>
+            )}
 
-              </button>
+            {esTransportadora && (
+              <p className="payment-instruction">
+                El pedido se enviará por transportadora porque el municipio
+                está fuera del Valle de Aburrá.
+              </p>
+            )}
 
-            </div>
+            {ubicacionSeleccionada && !esTransportadora && (
+              <div className="payment-methods payment-methods--par">
 
-            <p className="payment-instruction">
-              Costo de envío: $0. No se cobra envío.
-            </p>
+                <button
+                  type="button"
+                  className={`payment-method ${
+                    metodoEnvio === "domicilio"
+                      ? "selected"
+                      : ""
+                  }`}
+                  aria-pressed={metodoEnvio === "domicilio"}
+                  onClick={() => setMetodoEnvio("domicilio")}
+                >
+
+                  <span className="method-radio" aria-hidden="true" />
+
+                  <div className="method-icon">
+                    <Truck size={23} />
+                  </div>
+
+                  <div className="method-info">
+
+                    <strong>
+                      Domicilio
+                    </strong>
+
+                    <span>
+                      Lo enviamos a tu dirección
+                    </span>
+
+                  </div>
+
+                  {metodoEnvio === "domicilio" && (
+                    <CheckCircle
+                      className="method-check"
+                      size={19}
+                    />
+                  )}
+
+                </button>
+
+
+                <button
+                  type="button"
+                  className={`payment-method ${
+                    metodoEnvio === "recoger"
+                      ? "selected"
+                      : ""
+                  }`}
+                  aria-pressed={metodoEnvio === "recoger"}
+                  onClick={() => {
+                    setMetodoEnvio("recoger");
+                    limpiarError("departamento");
+                    limpiarError("municipio");
+                    limpiarError("barrio");
+                    limpiarError("direccion");
+                  }}
+                >
+
+                  <span className="method-radio" aria-hidden="true" />
+
+                  <div className="method-icon">
+                    <Store size={23} />
+                  </div>
+
+                  <div className="method-info">
+
+                    <strong>
+                      Recoger en tienda
+                    </strong>
+
+                    <span>
+                      Recógelo en nuestra tienda
+                    </span>
+
+                  </div>
+
+                  {metodoEnvio === "recoger" && (
+                    <CheckCircle
+                      className="method-check"
+                      size={19}
+                    />
+                  )}
+
+                </button>
+
+              </div>
+            )}
+
+            {ubicacionSeleccionada && (
+              <p className="payment-instruction">
+                {textoCostoEnvio}
+              </p>
+            )}
 
           </section>
 
@@ -1426,7 +1415,8 @@ export default function PaymentView({
                 </div>
 
                 <p className="payment-instruction">
-                  Total del pedido: {formatoPrecio(total)}.
+                  {envioPendiente ? "Total productos" : "Total del pedido"}:{" "}
+                  {formatoPrecio(total)}.
                   ¿Cuánto deseas abonar hoy?
                 </p>
 
@@ -1489,7 +1479,7 @@ export default function PaymentView({
 
             </div>
 
-            <Receipt size={23} />
+            <ShoppingBag size={23} />
 
           </div>
 
@@ -1561,12 +1551,45 @@ export default function PaymentView({
           </div>
 
 
-          {/* TOTAL */}
+          {/* SUBTOTAL / ENVÍO / TOTAL */}
+
+          <div className="summary-line">
+
+            <span>
+              Subtotal ({cart.length} producto
+              {cart.length !== 1 ? "s" : ""})
+            </span>
+
+            <strong>
+              {formatoPrecio(subtotalProductos)}
+            </strong>
+
+          </div>
+
+          <div className="summary-line">
+
+            <span>
+              Envío
+            </span>
+
+            <strong>
+              {!ubicacionSeleccionada
+                ? "Se calcula al elegir ubicación"
+                : esRecoger
+                  ? "Sin costo"
+                  : envioPendiente
+                    ? "Por confirmar"
+                    : formatoPrecio(costoEnvio)}
+            </strong>
+
+          </div>
 
           <div className="summary-total">
 
             <span>
-              Total
+              {!ubicacionSeleccionada || envioPendiente
+                ? "Total productos"
+                : "Total"}
             </span>
 
             <strong>
@@ -1602,14 +1625,36 @@ export default function PaymentView({
             type="button"
             className="confirm-payment-btn"
             onClick={handleConfirmPayment}
-            disabled={enviando || agotados.length > 0}
+            disabled={
+              enviando ||
+              agotados.length > 0 ||
+              Object.keys(errores).length > 0
+            }
           >
+            <Lock size={17} aria-hidden="true" />
+
             Confirmar y pagar
+
+            <ArrowRight size={17} aria-hidden="true" />
           </button>
 
         </aside>
 
       </div>
+
+      {/* =====================================================
+          VOLVER (pie)
+      ===================================================== */}
+
+      <button
+        type="button"
+        className="payment-back payment-back--bottom"
+        onClick={onBack}
+      >
+        <ArrowLeft size={18} />
+
+        Volver a la tienda
+      </button>
 
     </div>
   );

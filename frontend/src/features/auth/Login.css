@@ -70,6 +70,10 @@
   border-radius: 24px;
   padding: 40px 36px;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  /* La tarjeta de autenticación es oscura en ambos temas: el texto y
+     los widgets nativos (fecha, autofill) se renderizan en modo oscuro. */
+  color: #ffffff;
+  color-scheme: dark;
 }
 
 /* --- MARCA / LOGO --- */
@@ -161,6 +165,51 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
   font-weight: 600;
+}
+
+/* --- SECCIONES DEL FORMULARIO (registro) --- */
+
+.auth-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* index.css aplica a todo <section> fondo var(--bg-main) y color de
+     texto del tema con !important: dentro de la tarjeta oscura deben
+     anularse para que Light y Dark se vean idénticos. */
+  padding: 0;
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.auth-section__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--gold, #c9a227);
+  font-weight: 700;
+}
+
+.auth-section__title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(201, 162, 39, 0.35),
+    rgba(201, 162, 39, 0.04)
+  );
+}
+
+/* --- ERROR DE CAMPO: texto pequeño bajo cada input --- */
+
+.auth-field__error {
+  color: #f87171;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 /* --- INPUTS --- */
@@ -420,14 +469,29 @@
 
 /* =========================================================
    AUTOFILL — DARK
+   El navegador pinta un fondo propio sobre el campo autocompletado.
+   Un box-shadow interior opaco del mismo tono del campo lo cubre,
+   manteniendo fondo, texto y foco iguales al resto de los inputs.
    ========================================================= */
 
 .auth-input-wrap input:-webkit-autofill,
-.auth-input-wrap input:-webkit-autofill:hover,
-.auth-input-wrap input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px rgba(18, 18, 18, 0.9) inset !important;
+.auth-input-wrap input:-webkit-autofill:hover {
+  -webkit-box-shadow: 0 0 0 1000px #1f1f1f inset !important;
+  box-shadow: 0 0 0 1000px #1f1f1f inset !important;
   -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
   caret-color: #ffffff;
+  transition: background-color 999999s ease-out 0s;
+}
+
+.auth-input-wrap input:-webkit-autofill:focus {
+  border-color: var(--gold, #c9a227);
+  -webkit-box-shadow: 0 0 0 1000px #1f1f1f inset, 0 0 0 3px rgba(201, 162, 39, 0.08) !important;
+  box-shadow: 0 0 0 1000px #1f1f1f inset, 0 0 0 3px rgba(201, 162, 39, 0.08) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  caret-color: #ffffff;
+  transition: background-color 999999s ease-out 0s;
 }
 
 /* =========================================================

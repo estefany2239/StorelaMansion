@@ -264,6 +264,67 @@
 }
 
 /* =========================================================
+   ESTADO DEL PAGO
+   ========================================================= */
+
+.mp-payment-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: -2px 0 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mp-pago-estado {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mp-pago-estado.pendiente {
+  background-color: rgba(201, 162, 39, 0.16);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  color: var(--gold-dark);
+}
+
+.mp-pago-estado.confirmado {
+  background-color: rgba(67, 140, 94, 0.14);
+  border: 1px solid rgba(67, 140, 94, 0.28);
+  color: #2e7d4f;
+}
+
+.mp-pago-estado.rechazado {
+  background-color: rgba(190, 70, 60, 0.14);
+  border: 1px solid rgba(190, 70, 60, 0.28);
+  color: #a64032;
+}
+
+.mp-pago-estado.no-aplica {
+  background-color: rgba(120, 120, 120, 0.1);
+  border: 1px solid rgba(120, 120, 120, 0.22);
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .mp-pago-estado.pendiente {
+  color: #f0d48a;
+}
+
+:root[data-theme="dark"] .mp-pago-estado.confirmado {
+  color: #7fd0a0;
+}
+
+:root[data-theme="dark"] .mp-pago-estado.rechazado {
+  color: #e2857a;
+}
+
+/* =========================================================
    MENSAJE Y ESTIMADO
    ========================================================= */
 
@@ -721,6 +782,28 @@
 
 .mp-finance-modal {
   margin-top: 18px;
+}
+
+/* =========================================================
+   MODAL - DATOS DE ENTREGA
+   Mismas variables que mp-finance para conservar el diseño.
+   ========================================================= */
+
+.mp-entrega {
+  margin-top: 18px;
+  padding: 14px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-main);
+}
+
+.mp-entrega-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 /* =========================================================

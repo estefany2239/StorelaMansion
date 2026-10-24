@@ -22,14 +22,15 @@ export async function obtenerCategorias() {
   return respuesta.json()
 }
 
-// identificacion (opcional): tipoDocumento ('CC' | 'CE' | 'NIT' |
-// 'Pasaporte'), documento y fechaNacimiento ('YYYY-MM-DD'). El registro
-// también funciona sin esos campos.
+// identificacion: tipoDocumento ('CC' | 'CE' | 'NIT' | 'Pasaporte'),
+// documento y fechaNacimiento ('YYYY-MM-DD'); en el registro público son
+// obligatorios, igual que telefono. Si el backend rechaza la petición con
+// `campo`, el error lo lleva añadido para mostrarlo bajo ese input.
 export async function registrarUsuario(
   nombre,
   correo,
   contrasena,
-  { tipoDocumento = '', documento = '', fechaNacimiento = '' } = {}
+  { telefono = '', tipoDocumento = '', documento = '', fechaNacimiento = '' } = {}
 ) {
   let respuesta
   try {
@@ -40,6 +41,7 @@ export async function registrarUsuario(
         nombre,
         correo,
         contrasena,
+        telefono,
         tipo_documento: tipoDocumento,
         documento,
         fecha_nacimiento: fechaNacimiento
@@ -51,7 +53,9 @@ export async function registrarUsuario(
 
   if (!respuesta.ok) {
     const data = await respuesta.json().catch(() => ({}))
-    throw new Error(data.error || 'No se pudo registrar el usuario')
+    const error = new Error(data.error || 'No se pudo registrar el usuario')
+    if (data.campo) error.campo = data.campo
+    throw error
   }
   return respuesta.json()
 }
@@ -75,6 +79,71 @@ export async function iniciarSesion(correo, contrasena) {
   return respuesta.json()
 }
 
+// Flujo público de recuperación de contraseña (código de 6 dígitos por
+// correo). Solicitar siempre responde igual, exista o no el correo.
+export async function solicitarCodigoRecuperacion(correo) {
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}/api/auth/recuperar/solicitar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo })
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  if (!respuesta.ok) {
+    const data = await respuesta.json().catch(() => ({}))
+    throw new Error(data.error || 'No se pudo enviar el código')
+  }
+  return respuesta.json()
+}
+
+// Valida el código contra el backend y devuelve un token corto para
+// restablecer la contraseña.
+export async function verificarCodigoRecuperacion(correo, codigo) {
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}/api/auth/recuperar/verificar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo, codigo })
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  if (!respuesta.ok) {
+    const data = await respuesta.json().catch(() => ({}))
+    const error = new Error(data.error || 'El código es incorrecto o ha expirado')
+    if (data.campo) error.campo = data.campo
+    throw error
+  }
+  return respuesta.json()
+}
+
+export async function restablecerContrasena(token, contrasena) {
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}/api/auth/recuperar/restablecer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, contrasena })
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  if (!respuesta.ok) {
+    const data = await respuesta.json().catch(() => ({}))
+    const error = new Error(data.error || 'No se pudo restablecer la contraseña')
+    if (data.campo) error.campo = data.campo
+    throw error
+  }
+  return respuesta.json()
+}
+
 // Datos del usuario autenticado (incluye sus permisos "Módulo:Privilegio").
 // Se usa al cargar la app para refrescar la sesión guardada.
 export async function obtenerPerfil() {
@@ -90,6 +159,18 @@ export async function cambiarContrasena(contrasenaActual, contrasenaNueva) {
     metodo: 'POST',
     cuerpo: { contrasenaActual, contrasenaNueva },
     mensajeError: 'No se pudo cambiar la contraseña'
+  })
+}
+
+// Actualiza los datos personales del PROPIO usuario autenticado
+// (tarjeta "Datos personales" de Configuración). La identidad la toma
+// el backend del token, nunca del cuerpo de la petición.
+// datos: { nombre, correo, telefono, documento? }
+export async function actualizarMiPerfil(datos) {
+  return peticionAdmin('/api/clientes/mio', {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudieron actualizar tus datos'
   })
 }
 
@@ -117,7 +198,14 @@ const procesarRespuesta = async (respuesta, mensajeError) => {
 
   if (!respuesta.ok) {
     const data = await respuesta.json().catch(() => ({}))
-    throw new Error(data.error || mensajeError)
+    const error = new Error(data.error || mensajeError)
+    // Código HTTP del backend: 409 se usa para conflictos de stock y
+    // permite refrescar las cantidades permitidas en el carrito.
+    error.status = respuesta.status
+    // El backend indica el campo inválido/duplicado para que el
+    // formulario lo muestre debajo del input correcto.
+    if (data.campo) error.campo = data.campo
+    throw error
   }
 
   return respuesta.json()
@@ -216,6 +304,20 @@ export async function cambiarEstadoPedido(id, estado) {
     body: JSON.stringify({ estado })
   })
   return procesarRespuesta(respuesta, 'No se pudo cambiar el estado del pedido')
+}
+
+export async function confirmarPagoPedido(id) {
+  return peticionAdmin(`/api/pedidos/${id}/pago/confirmar`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo confirmar el pago'
+  })
+}
+
+export async function rechazarPagoPedido(id) {
+  return peticionAdmin(`/api/pedidos/${id}/pago/rechazar`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo rechazar el pago'
+  })
 }
 
 // ===== VENTAS (módulo Ventas del panel) =====

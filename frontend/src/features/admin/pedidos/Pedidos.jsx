@@ -23,7 +23,9 @@ import { formatoCliente } from "../utils/ids";
 
 import {
   obtenerPedidos,
-  cambiarEstadoPedido as cambiarEstadoPedidoApi
+  cambiarEstadoPedido as cambiarEstadoPedidoApi,
+  confirmarPagoPedido,
+  rechazarPagoPedido
 } from "../../../services/api";
 
 
@@ -84,10 +86,25 @@ const mapearPedidoBackend = (pedido) => {
     fecha: pedido.fecha,
     total,
     estado: pedido.estado,
+    estadoPago: pedido.estado_pago || "No aplica",
     metodoPago: pedido.metodo_pago || "—",
-    banco: pagos[0]?.banco || "",
+    banco:
+      pagos[0]?.banco ||
+      (String(pedido.metodo_pago || "").includes("QR") ? "QR" : ""),
     metodoEnvio: pedido.metodo_envio || "Domicilio",
+    costoEnvio:
+      pedido.costo_envio === null || pedido.costo_envio === undefined
+        ? null
+        : Number(pedido.costo_envio) || 0,
+    costoEnvioPendiente: Boolean(pedido.costo_envio_pendiente),
     direccion: pedido.direccion || "",
+    // Pedidos nuevos: ubicación estructurada. Los históricos quedan
+    // vacíos y su dirección vieja se ve tal cual en `direccion`.
+    departamento: pedido.departamento || "",
+    municipio: pedido.municipio || "",
+    barrio: pedido.barrio || "",
+    nombreDestinatario: pedido.nombre_destinatario || "",
+    telefonoDestinatario: pedido.telefono_destinatario || "",
     productos: (pedido.items || []).map((item) => ({
       nombre: item.nombre,
       cantidad: item.cantidad,
@@ -99,6 +116,23 @@ const mapearPedidoBackend = (pedido) => {
     totalPagado,
     saldo: Math.max(0, total - totalPagado)
   };
+};
+
+
+const claseEstadoPago = (estadoPago) => {
+  const valor = String(estadoPago || "No aplica").toLowerCase();
+  if (valor.includes("confirmado")) return "confirmado";
+  if (valor.includes("rechazado")) return "rechazado";
+  if (valor.includes("pendiente")) return "pendiente";
+  return "no-aplica";
+};
+
+const montoPagoEsperado = (pedido) => {
+  if (!pedido) return 0;
+
+  return String(pedido.metodoPago || "").startsWith("Contra entrega")
+    ? Math.round((Number(pedido.total) || 0) * 0.5)
+    : Number(pedido.total) || 0;
 };
 
 
@@ -180,6 +214,12 @@ export default function Pedidos({ vendedorId, user }) {
 
   const [pedidoACancelar, setPedidoACancelar] =
     useState(null);
+
+  const [pedidoPagoAccion, setPedidoPagoAccion] =
+    useState(null);
+
+  const [pagoEnProceso, setPagoEnProceso] =
+    useState(false);
 
   const { toast, mostrarToast } = useToast();
 
@@ -906,6 +946,57 @@ export default function Pedidos({ vendedorId, user }) {
   };
 
 
+  const actualizarPedidoEnPantalla = (actualizado) => {
+    const mapeado = mapearPedidoBackend(actualizado);
+
+    setPedidos((prev) =>
+      prev.map((item) =>
+        item.id === mapeado.id ? mapeado : item
+      )
+    );
+
+    setPedidoSeleccionado((prev) =>
+      prev && prev.id === mapeado.id ? mapeado : prev
+    );
+
+    setPedidoAbonos((prev) =>
+      prev && prev.id === mapeado.id ? mapeado : prev
+    );
+  };
+
+
+  const ejecutarAccionPago = async () => {
+    if (!pedidoPagoAccion) return;
+
+    const { pedido, accion } = pedidoPagoAccion;
+
+    setPedidoPagoAccion(null);
+    setPagoEnProceso(true);
+
+    try {
+      const actualizado =
+        accion === "confirmar"
+          ? await confirmarPagoPedido(pedido.id)
+          : await rechazarPagoPedido(pedido.id);
+
+      actualizarPedidoEnPantalla(actualizado);
+
+      mostrarToast(
+        accion === "confirmar"
+          ? "Pago confirmado con éxito"
+          : "Pago rechazado"
+      );
+    } catch (error) {
+      mostrarToast(
+        error?.message || "No se pudo actualizar el pago",
+        "error"
+      );
+    } finally {
+      setPagoEnProceso(false);
+    }
+  };
+
+
   const avanzarEstado = async (id) => {
 
     const pedido = pedidos.find((item) => item.id === id);
@@ -1217,13 +1308,27 @@ export default function Pedidos({ vendedorId, user }) {
 
                   <td>
 
-                    <strong className="pedido-total">
+                    <div className="pedido-total-cell">
 
-                      {formatearPrecio(
-                        pedido.total
+                      <strong className="pedido-total">
+
+                        {formatearPrecio(
+                          pedido.total
+                        )}
+
+                      </strong>
+
+                      {pedido.estadoPago !== "No aplica" && (
+                        <span
+                          className={`pedido-pago-badge ${claseEstadoPago(
+                            pedido.estadoPago
+                          )}`}
+                        >
+                          {pedido.estadoPago}
+                        </span>
                       )}
 
-                    </strong>
+                    </div>
 
                   </td>
 
@@ -1787,9 +1892,14 @@ export default function Pedidos({ vendedorId, user }) {
                       Transferencia
                     </option>
 
-                    <option value="Crédito">
-                      Crédito
-                    </option>
+                    {/* Crédito se retiró del checkout: esta opción solo
+                        aparece para seguir mostrando (en lectura) los
+                        pedidos históricos creados con ese método. */}
+                    {formulario.metodoPago === "Crédito" && (
+                      <option value="Crédito">
+                        Crédito
+                      </option>
+                    )}
 
                     <option value="Contra entrega">
                       Contra entrega
@@ -2356,6 +2466,89 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
+              {/* Pedidos nuevos (columnas de domicilio): los históricos
+                  no tienen estos valores y no se muestran. */}
+
+              {(pedidoSeleccionado.nombreDestinatario ||
+                pedidoSeleccionado.telefonoDestinatario) && (
+                <div className="pedido-form-row">
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      DESTINATARIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.nombreDestinatario || "—"}
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      TELÉFONO DESTINATARIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.telefonoDestinatario || "—"}
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+
+              {(pedidoSeleccionado.departamento ||
+                pedidoSeleccionado.municipio ||
+                pedidoSeleccionado.barrio) && (
+                <div className="pedido-form-row">
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      DEPARTAMENTO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.departamento || "—"}
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      CIUDAD O MUNICIPIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.municipio || "—"}
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      BARRIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.barrio || "—"}
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+
               <div className="pedido-form-row">
 
                 <div className="pedido-info-group">
@@ -2632,6 +2825,95 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
+              {/* VERIFICACIÓN DEL PAGO */}
+
+              <div className="pedido-payment-verification">
+
+                <div className="pedido-payment-status">
+
+                  <span>
+                    ESTADO DEL PAGO
+                  </span>
+
+                  <span
+                    className={`pedido-pago-badge ${claseEstadoPago(
+                      pedidoSeleccionado.estadoPago
+                    )}`}
+                  >
+                    {pedidoSeleccionado.estadoPago || "No aplica"}
+                  </span>
+
+                </div>
+
+                {(pedidoSeleccionado.estadoPago ===
+                  "Pendiente de verificación" ||
+                  pedidoSeleccionado.estadoPago ===
+                    "Pago rechazado") && (
+
+                  <>
+
+                    <p className="pedido-payment-amount">
+
+                      Monto a registrar:{" "}
+
+                      <strong>
+                        {formatearPrecio(
+                          montoPagoEsperado(
+                            pedidoSeleccionado
+                          )
+                        )}
+                      </strong>
+
+                    </p>
+
+                    {puedeCambiarEstado && (
+
+                      <div className="pedido-payment-actions">
+
+                        <button
+                          type="button"
+                          className="pedido-payment-confirm"
+                          disabled={pagoEnProceso}
+                          onClick={() =>
+                            setPedidoPagoAccion({
+                              pedido: pedidoSeleccionado,
+                              accion: "confirmar"
+                            })
+                          }
+                        >
+                          Confirmar pago recibido
+                        </button>
+
+                        {pedidoSeleccionado.estadoPago ===
+                          "Pendiente de verificación" && (
+
+                          <button
+                            type="button"
+                            className="pedido-payment-reject"
+                            disabled={pagoEnProceso}
+                            onClick={() =>
+                              setPedidoPagoAccion({
+                                pedido: pedidoSeleccionado,
+                                accion: "rechazar"
+                              })
+                            }
+                          >
+                            Rechazar pago
+                          </button>
+
+                        )}
+
+                      </div>
+
+                    )}
+
+                  </>
+
+                )}
+
+              </div>
+
+
               {/* REGLA DE NEGOCIO */}
 
               {pedidoSeleccionado.estado ===
@@ -2744,7 +3026,28 @@ export default function Pedidos({ vendedorId, user }) {
                 <div className="pedido-abonos-resumen-item">
 
                   <span>
-                    Total del pedido
+                    Costo de envío
+                  </span>
+
+                  <strong>
+                    {pedidoAbonos.costoEnvioPendiente
+                      ? "Por confirmar"
+                      : pedidoAbonos.costoEnvio === null
+                        ? "No registrado"
+                        : pedidoAbonos.costoEnvio === 0
+                          ? "Sin costo"
+                          : formatearPrecio(pedidoAbonos.costoEnvio)}
+                  </strong>
+
+                </div>
+
+
+                <div className="pedido-abonos-resumen-item">
+
+                  <span>
+                    {pedidoAbonos.costoEnvioPendiente
+                      ? "Total productos"
+                      : "Total del pedido"}
                   </span>
 
                   <strong>
@@ -2957,6 +3260,43 @@ export default function Pedidos({ vendedorId, user }) {
         variante="peligro"
         onConfirmar={confirmarCancelarPedido}
         onCancelar={() => setPedidoACancelar(null)}
+      />
+
+      <ConfirmDialog
+        abierto={!!pedidoPagoAccion}
+        titulo={
+          pedidoPagoAccion?.accion === "confirmar"
+            ? "Confirmar pago"
+            : "Rechazar pago"
+        }
+        mensaje={
+          pedidoPagoAccion?.accion === "confirmar" ? (
+            <>¿Confirmas que recibiste el pago del pedido{" "}
+              <strong>{pedidoPagoAccion?.pedido.id}</strong> por{" "}
+              <strong>
+                {formatearPrecio(
+                  montoPagoEsperado(pedidoPagoAccion?.pedido)
+                )}
+              </strong>? Se registrará en el historial del pedido.</>
+          ) : (
+            <>¿Deseas rechazar el pago del pedido{" "}
+              <strong>{pedidoPagoAccion?.pedido.id}</strong>? No se
+              registrará ningún pago.</>
+          )
+        }
+        textoConfirmar={
+          pedidoPagoAccion?.accion === "confirmar"
+            ? "Sí, confirmar pago"
+            : "Sí, rechazar pago"
+        }
+        textoCancelar="Volver"
+        variante={
+          pedidoPagoAccion?.accion === "confirmar"
+            ? "info"
+            : "peligro"
+        }
+        onConfirmar={ejecutarAccionPago}
+        onCancelar={() => setPedidoPagoAccion(null)}
       />
 
       <Toast toast={toast} />

@@ -80,6 +80,11 @@
   color: #d4af37;
 }
 
+/* Enlace del pie: «Volver a la tienda», abajo a la izquierda. */
+.payment-back--bottom {
+  margin-top: 34px;
+}
+
 
 /* =========================================================
    TÍTULO
@@ -397,6 +402,50 @@
 
 
 /* =========================================================
+   ICONO DENTRO DEL CAMPO + ASTERISCO OBLIGATORIO
+   El icono se posiciona sobre el input/select (que lleva
+   padding-left extra); no intercepta clics.
+========================================================= */
+
+.input-wrap {
+  position: relative;
+
+  width: 100%;
+}
+
+.input-wrap .field-icon {
+  position: absolute;
+
+  left: 15px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #9a9a9a;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.payment-page.payment-dark .input-wrap .field-icon {
+  color: #777777;
+}
+
+.payment-page .input-wrap input,
+.payment-page .input-wrap select {
+  padding-left: 44px !important;
+}
+
+.required-star {
+  color: #d4af37;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
    SELECTS (departamento y municipio del catálogo DIVIPOLA)
    Mismo alto, radio y tipografía que los inputs; el chevron
    es un SVG en background para no depender de librerías.
@@ -525,6 +574,36 @@
     repeat(2, minmax(0, 1fr));
 }
 
+/* Una sola opción disponible (Transportadora). */
+.payment-methods.payment-methods--una {
+  grid-template-columns:
+    minmax(0, 1fr);
+}
+
+/* La tarjeta de Transportadora es informativa: no se puede cambiar. */
+.payment-method--fija {
+  cursor: default;
+}
+
+.payment-method--fija:hover {
+  border-color: #d4af37;
+  transform: none;
+}
+
+.envio-aviso {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed #d4af37;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.08);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.payment-page.payment-dark .envio-aviso {
+  background: rgba(212, 175, 55, 0.1);
+}
+
 .payment-method {
   position: relative;
 
@@ -615,6 +694,50 @@
 
   border:
     2px solid #d4af37 !important;
+}
+
+
+/* =========================================================
+   RADIO DE SELECCIÓN (izquierda de cada tarjeta de método)
+========================================================= */
+
+.method-radio {
+  position: relative;
+
+  width: 18px;
+  height: 18px;
+
+  min-width: 18px;
+
+  border-radius: 50%;
+
+  border: 2px solid #c9c9c9;
+
+  flex-shrink: 0;
+
+  transition:
+    border-color 0.2s ease;
+}
+
+.payment-page.payment-dark .method-radio {
+  border-color: #555555;
+}
+
+.payment-method:hover .method-radio,
+.payment-method.selected .method-radio {
+  border-color: #d4af37;
+}
+
+.payment-method.selected .method-radio::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 2px;
+
+  border-radius: 50%;
+
+  background: #d4af37;
 }
 
 
@@ -1492,6 +1615,60 @@
 
 
 /* =========================================================
+   SUBTOTAL Y ENVÍO (filas del resumen)
+========================================================= */
+
+.summary-line {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+
+  padding:
+    11px 0;
+
+  border-bottom:
+    1px solid;
+}
+
+.payment-light .summary-line {
+  border-color:
+    #eeeeee;
+}
+
+.payment-page.payment-dark .summary-line {
+  border-color:
+    #303030;
+}
+
+.summary-line span {
+  font-size:
+    13px;
+
+  opacity:
+    0.7;
+}
+
+.summary-line strong {
+  font-size:
+    14px;
+
+  font-weight:
+    700;
+
+  white-space:
+    nowrap;
+}
+
+
+/* =========================================================
    TOTAL
 ========================================================= */
 
@@ -1543,7 +1720,7 @@
 
 
 /* =========================================================
-   PAGO SEGURO
+   PAGO SEGURO (sello)
 ========================================================= */
 
 .secure-payment {
@@ -1559,14 +1736,48 @@
   gap:
     7px;
 
+  width:
+    fit-content;
+
+  margin:
+    16px auto 0;
+
   padding:
-    15px 0;
+    9px 14px;
+
+  border-radius:
+    999px;
 
   font-size:
     11px;
 
-  opacity:
-    0.55;
+  font-weight:
+    600;
+
+  letter-spacing:
+    0.2px;
+}
+
+.payment-light .secure-payment {
+  background:
+    rgba(212, 175, 55, 0.08);
+
+  border:
+    1px solid rgba(212, 175, 55, 0.28);
+
+  color:
+    #8a6d1f;
+}
+
+.payment-page.payment-dark .secure-payment {
+  background:
+    rgba(212, 175, 55, 0.10);
+
+  border:
+    1px solid rgba(212, 175, 55, 0.30);
+
+  color:
+    #e6cf8a;
 }
 
 .secure-payment svg {
@@ -1584,7 +1795,7 @@
     100%;
 
   height:
-    55px;
+    56px;
 
   box-sizing:
     border-box;
@@ -1593,10 +1804,10 @@
     none;
 
   border-radius:
-    11px;
+    12px;
 
   background:
-    #d4af37;
+    linear-gradient(135deg, #e8c96a 0%, #d4af37 55%, #b8912b 100%);
 
   color:
     #000000;
@@ -1609,6 +1820,9 @@
 
   justify-content:
     center;
+
+  gap:
+    9px;
 
   font-family:
     Arial,
@@ -1866,4 +2080,274 @@
 
 .payment-page .has-error {
   scroll-margin-top: 24px;
+}
+
+
+/* =========================================================
+   ESTADO VÁLIDO (check verde bajo el campo)
+   Solo se pinta cuando el campo tiene contenido válido:
+   nunca en campos vacíos sin interactuar.
+========================================================= */
+
+.field-valid {
+  display: flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 8px;
+
+  color: #2e7d32;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  line-height: 1.4;
+}
+
+.payment-page.payment-dark .field-valid {
+  color: #66bb6a;
+}
+
+
+/* =========================================================
+   FOCO VISIBLE (accesibilidad)
+========================================================= */
+
+.payment-page .payment-back:focus-visible,
+.payment-page .payment-method:focus-visible,
+.payment-page .confirm-payment-btn:focus-visible,
+.payment-page .upload-proof-btn:focus-visible {
+  outline: 2px solid #d4af37;
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   PAGO CON QR
+========================================================= */
+
+.qr-payment-title {
+  margin: 0 0 8px;
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+  line-height: 1.3;
+
+  color: inherit;
+}
+
+.qr-payment-figure {
+  display: flex;
+
+  justify-content: center;
+
+  margin: 18px 0;
+}
+
+.qr-payment-frame {
+  width: 100%;
+
+  max-width: 420px;
+
+  box-sizing: border-box;
+
+  padding: 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e2e2;
+
+  border-radius: 18px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.qr-payment-image {
+  display: block;
+
+  width: 100%;
+
+  height: auto;
+
+  border-radius: 12px;
+}
+
+.qr-payment-unavailable {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 260px;
+
+  margin: 0;
+
+  padding: 24px;
+
+  color: #8a6d1d;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+.qr-payment-amount {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 4px;
+
+  margin: 4px 0 14px;
+
+  padding: 14px 16px;
+
+  background: rgba(212, 175, 55, 0.12);
+
+  border: 1px solid rgba(212, 175, 55, 0.28);
+
+  border-radius: 12px;
+
+  text-align: center;
+}
+
+.qr-payment-amount span {
+  color: #8a6d1d;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+}
+
+.qr-payment-amount strong {
+  color: #6f5410;
+
+  font-size: 24px;
+
+  font-weight: 800;
+}
+
+.qr-payment-amount small {
+  max-width: 420px;
+
+  color: #6b6b6b;
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
+
+.qr-payment-balance {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin: 0 0 14px;
+
+  padding: 12px 16px;
+
+  background: #ffffff;
+
+  border: 1px dashed #d8c37a;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+}
+
+.qr-payment-balance span {
+  color: #6b6b6b;
+}
+
+.qr-payment-balance strong {
+  color: #6f5410;
+
+  font-size: 16px;
+}
+
+.payment-dark .qr-payment-frame {
+  background: #ffffff;
+
+  border-color: #4a4a4a;
+}
+
+.payment-dark .qr-payment-unavailable {
+  color: #f0d48a;
+}
+
+.payment-dark .qr-payment-amount {
+  background: rgba(212, 175, 55, 0.14);
+
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+.payment-dark .qr-payment-amount span {
+  color: #f0d48a;
+}
+
+.payment-dark .qr-payment-amount strong {
+  color: #ffe6a3;
+}
+
+.payment-dark .qr-payment-amount small {
+  color: #c9c9c9;
+}
+
+.payment-dark .qr-payment-balance {
+  background: #181818;
+
+  border-color: #5c4c1f;
+}
+
+.payment-dark .qr-payment-balance span {
+  color: #c9c9c9;
+}
+
+.payment-dark .qr-payment-balance strong {
+  color: #ffe6a3;
+}
+
+@media (max-width: 480px) {
+  .qr-payment-frame {
+    padding: 10px;
+
+    border-radius: 14px;
+  }
+
+  .qr-payment-image {
+    border-radius: 10px;
+  }
+
+  .qr-payment-amount strong {
+    font-size: 21px;
+  }
+
+  .qr-payment-balance {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 4px;
+  }
 }
