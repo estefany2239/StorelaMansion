@@ -12,9 +12,9 @@ import {
   XCircle
 } from "lucide-react";
 
-import { getTotalAbonado, getSaldoPendiente } from "./pedidosCliente";
-import { obtenerMisPedidos } from "../../shared/services/api";
-import { useCatalogo } from "../../shared/hooks/useCatalogo";
+import { getTotalAbonado, getSaldoPendiente } from "../data/pedidosCliente";
+import { obtenerMisPedidos } from "../../../shared/services/api";
+import { useCatalogo } from "../../../shared/hooks/useCatalogo";
 import "./MisPedidos.css";
 
 // Estados del backend -> estados visuales del cliente.

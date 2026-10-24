@@ -30,18 +30,18 @@ import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./shared/hook
 import { obtenerPerfil } from "./shared/services/api";
 
 // VISTAS DEL CLIENTE LOGUEADO
-import MisPedidos from "./features/store/MisPedidos";
-import Configuracion from "./features/store/Configuracion";
-import CompraExitosa from "./features/store/CompraExitosa";
+import MisPedidos from "./features/store/pages/MisPedidos";
+import Configuracion from "./features/store/pages/Configuracion";
+import CompraExitosa from "./features/store/pages/CompraExitosa";
 import {
   pedidosClienteIniciales,
   pedidosDeCliente
-} from "./features/store/pedidosCliente";
+} from "./features/store/data/pedidosCliente";
 import {
   cargarPerfilCliente,
   cargarDireccionesCliente,
   cargarPreferenciasCliente
-} from "./features/store/configuracionCliente";
+} from "./features/store/data/configuracionCliente";
 
 // PANEL ADMINISTRATIVO
 import AdminLayout from "./features/admin/AdminLayout";

@@ -21,7 +21,7 @@ import {
   Lock,
 } from "lucide-react";
 
-import { obtenerPrecio } from "../../features/store/pedidosCliente";
+import { obtenerPrecio } from "../../features/store/data/pedidosCliente";
 import { esAgotado, hayStock } from "../../shared/components/cart/cantidad";
 import { crearPedido } from "../../shared/services/api";
 import { useNotify } from "../../shared/components/notifications/useNotify.js";

@@ -18,7 +18,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Camiseta Clásica",
-        imagen: new URL("../../assets/img/camisa.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/camisa.png", import.meta.url).href,
         cantidad: 1,
         talla: "M",
         color: "Negro",
@@ -26,7 +26,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Tenis Urban Classic",
-        imagen: new URL("../../assets/img/roj.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/roj.png", import.meta.url).href,
         cantidad: 1,
         talla: "39",
         color: "Blanco",
@@ -34,7 +34,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Gorra Tone",
-        imagen: new URL("../../assets/img/gor.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/gor.png", import.meta.url).href,
         cantidad: 1,
         talla: "Única",
         color: "Negro",
@@ -56,7 +56,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Blazer Estructurado Beige",
-        imagen: new URL("../../assets/img/tar.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/tar.png", import.meta.url).href,
         cantidad: 1,
         talla: "S",
         color: "Beige",
@@ -76,7 +76,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Top Satén Escote Halter",
-        imagen: new URL("../../assets/img/suda.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/suda.png", import.meta.url).href,
         cantidad: 1,
         talla: "M",
         color: "Champagne",
@@ -84,7 +84,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Pantalón Tiro Alto Palazzo",
-        imagen: new URL("../../assets/img/crop.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/crop.png", import.meta.url).href,
         cantidad: 1,
         talla: "S",
         color: "Crema",
@@ -107,7 +107,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Traje Slim Fit Marrón",
-        imagen: new URL("../../assets/img/jeta.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/jeta.png", import.meta.url).href,
         cantidad: 1,
         talla: "42",
         color: "Marrón",
@@ -115,7 +115,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Camisa de Lino Blanca",
-        imagen: new URL("../../assets/img/saco.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/saco.png", import.meta.url).href,
         cantidad: 1,
         talla: "M",
         color: "Blanco",
@@ -137,7 +137,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Tenis Sport Low",
-        imagen: new URL("../../assets/img/oso.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/oso.png", import.meta.url).href,
         cantidad: 1,
         talla: "36",
         color: "Negro",
@@ -145,7 +145,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Sudadera Oversize",
-        imagen: new URL("../../assets/img/sud.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/sud.png", import.meta.url).href,
         cantidad: 1,
         talla: "M",
         color: "Gris",
@@ -167,7 +167,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Gorra Dad Cap",
-        imagen: new URL("../../assets/img/gorra.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/gorra.png", import.meta.url).href,
         cantidad: 1,
         talla: "Única",
         color: "Negro",
@@ -175,7 +175,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Reloj Minimalista Dorado",
-        imagen: new URL("../../assets/img/lone.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/lone.png", import.meta.url).href,
         cantidad: 1,
         talla: "Única",
         color: "Dorado",
@@ -197,7 +197,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Buzo Deportivo Premium",
-        imagen: new URL("../../assets/img/buso.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/buso.png", import.meta.url).href,
         cantidad: 1,
         talla: "L",
         color: "Negro",
@@ -205,7 +205,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Jogger Cargo Beige",
-        imagen: new URL("../../assets/img/panta.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/panta.png", import.meta.url).href,
         cantidad: 1,
         talla: "32",
         color: "Beige",
@@ -227,7 +227,7 @@ export const pedidosClienteIniciales = [
     productos: [
       {
         nombre: "Camisa de Lino Blanca",
-        imagen: new URL("../../assets/img/saco.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/saco.png", import.meta.url).href,
         cantidad: 1,
         talla: "M",
         color: "Blanco",
@@ -235,7 +235,7 @@ export const pedidosClienteIniciales = [
       },
       {
         nombre: "Pantalón Chino Beige",
-        imagen: new URL("../../assets/img/gor.png", import.meta.url).href,
+        imagen: new URL("../../../assets/img/gor.png", import.meta.url).href,
         cantidad: 1,
         talla: "32",
         color: "Beige",
