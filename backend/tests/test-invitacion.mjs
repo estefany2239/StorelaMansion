@@ -519,7 +519,13 @@ const main = async () => {
     servidorProd = appProd.listen(0)
     await new Promise((resolve) => servidorProd.once('listening', resolve))
     const puertoProd = servidorProd.address().port
-    const respuesta = await fetch(`http://localhost:${puertoProd}/api/pruebas/invitaciones-simuladas`)
+    // La ruta lleva token porque desde la Fase B toda ruta fuera de la lista
+    // blanca exige sesión (denegar por defecto): sin token se respondería 401
+    // antes de llegar al 404. Con sesión válida, la ruta inexistente en
+    // producción cae de verdad en el manejador 404.
+    const respuesta = await fetch(`http://localhost:${puertoProd}/api/pruebas/invitaciones-simuladas`, {
+      headers: { Authorization: `Bearer ${tokenAdmin2}` },
+    })
     comprobar(
       'producción: /api/pruebas/invitaciones-simuladas -> 404',
       respuesta.status === 404,

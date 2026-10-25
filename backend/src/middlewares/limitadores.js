@@ -1,6 +1,6 @@
 import { rateLimit } from 'express-rate-limit'
 
-// Límites de tasa POR IP, en memoria (Fase A).
+// Límites de tasa POR IP, en memoria (Fase A + B).
 //
 // El backend corre con UNA sola instancia en Render, así que no hace falta
 // un store compartido: si algún día hay varias instancias, los contadores
@@ -23,11 +23,20 @@ const enteroPositivo = (clave, defecto) => {
 
 const mensajeLimite = 'Demasiadas peticiones desde esta conexión. Intenta más tarde.'
 
-const crearLimitador = ({ ventanaClave, ventanaDefecto, maximoClave, maximoDefecto }) =>
+const crearLimitador = ({
+  ventanaClave,
+  ventanaDefecto,
+  maximoClave,
+  maximoDefecto,
+  soloFallos = false,
+}) =>
   rateLimit({
     windowMs: enteroPositivo(ventanaClave, ventanaDefecto) * 60_000,
     limit: () => enteroPositivo(maximoClave, maximoDefecto),
     skip: desactivado,
+    // Cuando sólo se cuentan los fallos, un inicio de sesión correcto no
+    // consume el presupuesto de la IP: sólo los intentos rechazados pesan.
+    skipSuccessfulRequests: soloFallos,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     statusCode: 429,
@@ -39,12 +48,23 @@ const crearLimitador = ({ ventanaClave, ventanaDefecto, maximoClave, maximoDefec
     },
   })
 
-// Inicios de sesión fallidos o repetidos desde la misma IP.
+// Barrera general de la API: corta ráfagas de cualquier origen (scraping,
+// fuerza bruta distribuida en una misma IP, bucles rotos). Va montada DESPUÉS
+// de /api/health para que la sonda de Render no pueda quedar bloqueada.
+export const limitadorGeneral = crearLimitador({
+  ventanaClave: 'GENERAL_VENTANA_MIN',
+  ventanaDefecto: 15,
+  maximoClave: 'GENERAL_MAX_POR_IP',
+  maximoDefecto: 300,
+})
+
+// Inicios de sesión fallidos desde la misma IP.
 export const limitadorLogin = crearLimitador({
   ventanaClave: 'LOGIN_VENTANA_MIN',
   ventanaDefecto: 15,
   maximoClave: 'LOGIN_MAX_POR_IP',
   maximoDefecto: 10,
+  soloFallos: true,
 })
 
 // Registros públicos desde la misma IP.

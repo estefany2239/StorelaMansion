@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import productosRouter from './routes/productos.js'
 import authRouter from './routes/auth.js'
 import clientesRouter from './routes/clientes.js'
@@ -14,6 +15,8 @@ import tallasAdminRouter from './routes/tallasAdmin.js'
 import coloresAdminRouter from './routes/coloresAdmin.js'
 import pruebasRouter from './routes/pruebas.js'
 import { modoSimulacion } from './services/correos.js'
+import { limitadorGeneral } from './middlewares/limitadores.js'
+import { guardSesion } from './middlewares/guardSesion.js'
 
 const app = express()
 
@@ -21,6 +24,15 @@ const app = express()
 // X-Forwarded-For para que el límite de recuperación por IP funcione
 // por usuario real. En local no hay proxy y el valor no cambia.
 app.set('trust proxy', 1)
+
+// Cabeceras de seguridad por defecto (X-Frame-Options, X-Content-Type-Options,
+// HSTS, etc.). Cross-Origin-Resource-Policy se abre a 'cross-origin' porque el
+// navegador consume la API desde otro origen (Vercel).
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+)
 
 // CORS_ORIGIN admite una lista separada por comas (varios dominios:
 // producción de Vercel + http://localhost:5173, etc.). Si no se define,
@@ -31,8 +43,13 @@ const origenesPermitidos = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .filter(Boolean)
 
 app.use(cors({ origin: origenesPermitidos }))
-app.use(express.json())
 
+// Cuerpos acotados: una petición enorme sólo sirve para saturar memoria.
+// El rechazo se responde como 413 genérico en el manejador de errores.
+app.use(express.json({ limit: '100kb' }))
+
+// /api/health se monta ANTES del limitador general para que la sonda de
+// Render (y el monitoreo) nunca pueda quedar bloqueada por una ráfaga.
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -40,6 +57,13 @@ app.get('/api/health', (req, res) => {
     commit: (process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7),
   })
 })
+
+// Barrera general de tasa por IP (Fase B).
+app.use(limitadorGeneral)
+
+// DENEGAR POR DEFECTO: todo lo que sigue, hasta la lista blanca de
+// middlewares/rutasPublicas.js, exige un token válido y vivo.
+app.use('/api', guardSesion)
 
 app.use('/api/productos', productosRouter)
 app.use('/api/auth', authRouter)
@@ -67,8 +91,32 @@ app.use((req, res) => {
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err)
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' })
+  if (res.headersSent) {
+    return next(err)
+  }
+
+  // JSON mal formado: el cuerpo enviado NO se ecoa ni se registra (puede
+  // contener credenciales a medio escribir).
+  if (err?.type === 'entity.parse.failed') {
+    console.error('[http] Cuerpo JSON inválido:', req.method, req.path)
+    return res.status(400).json({ error: 'La petición no es válida' })
+  }
+
+  // Cuerpo por encima del límite.
+  if (err?.type === 'entity.too.large') {
+    console.error('[http] Cuerpo demasiado grande:', req.method, req.path)
+    return res.status(413).json({ error: 'La petición es demasiado grande' })
+  }
+
+  const estado = Number(err?.status || err?.statusCode)
+  if (estado >= 400 && estado < 500) {
+    console.error('[http]', estado, req.method, req.path)
+    return res.status(estado).json({ error: 'La petición no es válida' })
+  }
+
+  // 5xx: al cliente sólo un mensaje genérico; el detalle queda en el registro.
+  console.error('[http] 500', err?.message, err?.stack)
+  res.status(500).json({ error: 'Error interno del servidor' })
 })
 
 export default app

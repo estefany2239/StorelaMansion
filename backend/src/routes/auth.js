@@ -36,7 +36,7 @@ const crearToken = (usuario) => {
   return jwt.sign(
     { id: usuario.id_usuario, rol: usuario.rol },
     process.env.JWT_SECRET,
-    { expiresIn: '8h' }
+    { expiresIn: '8h', algorithm: 'HS256' }
   )
 }
 
@@ -471,10 +471,12 @@ router.post('/recuperar/verificar', limitadorRecuperacionCodigos, async (req, re
       registro.id_recuperacion,
     ])
 
+    // Token de UN SOLO USO: la marca `proposito` hace que verificarToken lo
+    // rechace como sesión (Fase B) y sólo sirve para /recuperar/restablecer.
     const token = jwt.sign(
       { id: usuario.id_usuario, proposito: 'recuperacion' },
       process.env.JWT_SECRET,
-      { expiresIn: '10m' }
+      { expiresIn: '10m', algorithm: 'HS256' }
     )
 
     res.json({ token, mensaje: 'Código verificado' })
@@ -496,7 +498,7 @@ router.post('/recuperar/restablecer', limitadorRecuperacionCodigos, async (req, 
 
     let payload = null
     try {
-      payload = jwt.verify(token, process.env.JWT_SECRET)
+      payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
     } catch {
       payload = null
     }
