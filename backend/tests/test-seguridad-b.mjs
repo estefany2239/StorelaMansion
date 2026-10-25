@@ -7,6 +7,8 @@
 //   3. Los tokens de un solo uso (recuperación) no sirven como sesión.
 //   4. Cuerpo JSON acotado a 100kb y errores que no aterrizan en respuestas
 //      500 con mensajes internos.
+//   5. El preflight CORS (OPTIONS) se resuelve ANTES del guard: 204 con las
+//      cabeceras CORS, nunca 401.
 //
 // Arranca su propia instancia del backend en un puerto efímero, sin correo
 // real (borra BREVO_API_KEY para que además se monte /api/pruebas, que es la
@@ -76,6 +78,33 @@ const sondear = async (metodo, ruta, { token, cuerpo, crudo } = {}) => {
     data = null
   }
   return { status: respuesta.status, data, texto }
+}
+
+// Preflight CORS: OPTIONS con un Origin permitido y
+// Access-Control-Request-Headers: authorization,content-type. Lo resuelve el
+// middleware de CORS ANTES del guard, así que jamás debe devolver 401 ni
+// llegar a ninguna ruta protegida.
+const ORIGEN_PERMITIDO = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origen) => origen.trim())
+  .filter(Boolean)[0]
+
+const preflight = async (ruta, metodoSolicitado = 'GET') => {
+  const respuesta = await fetch(`${BASE}${ruta}`, {
+    method: 'OPTIONS',
+    headers: {
+      Origin: ORIGEN_PERMITIDO,
+      'Access-Control-Request-Method': metodoSolicitado,
+      'Access-Control-Request-Headers': 'authorization,content-type',
+    },
+  })
+  return {
+    status: respuesta.status,
+    origen: respuesta.headers.get('access-control-allow-origin'),
+    metodos: respuesta.headers.get('access-control-allow-methods') || '',
+    encabezados: respuesta.headers.get('access-control-allow-headers') || '',
+    cuerpo: await respuesta.text().catch(() => ''),
+  }
 }
 
 const firmarToken = (usuario, opciones = {}) =>
@@ -371,6 +400,47 @@ const main = async () => {
     '8) se comprobaron las entradas de la lista blanca',
     blancasComprobadas >= 6,
     `entradas=${blancasComprobadas}`
+  )
+
+  // =====================================================
+  // 9) Preflight CORS: se resuelve ANTES del guard
+  // =====================================================
+  // Tanto en una ruta privada como en una pública el preflight debe volver
+  // 204 con las cabeceras CORS y con el cuerpo vacío: si llegara al guard,
+  // devolvería 401 con JSON y el navegador bloquearía el propio preflight.
+  const traeCors = (r) =>
+    r.origen === ORIGEN_PERMITIDO &&
+    /GET/i.test(r.metodos) &&
+    /authorization/i.test(r.encabezados) &&
+    /content-type/i.test(r.encabezados)
+
+  const preflightPrivado = await preflight('/admin/usuarios', 'GET')
+  comprobar(
+    '9) preflight de una ruta privada -> 204',
+    preflightPrivado.status === 204,
+    `status=${preflightPrivado.status}`
+  )
+  comprobar(
+    '9) trae las cabeceras CORS con authorization y content-type',
+    traeCors(preflightPrivado),
+    `origen=${preflightPrivado.origen} metodos=${preflightPrivado.metodos} headers=${preflightPrivado.encabezados}`
+  )
+  comprobar(
+    '9) y NO llega al guard (cuerpo vacío, sin 401)',
+    preflightPrivado.cuerpo === '' && preflightPrivado.status !== 401,
+    `status=${preflightPrivado.status} cuerpo=${preflightPrivado.cuerpo}`
+  )
+
+  const preflightPublico = await preflight('/auth/login', 'POST')
+  comprobar(
+    '9) preflight de una ruta pública -> 204',
+    preflightPublico.status === 204,
+    `status=${preflightPublico.status}`
+  )
+  comprobar(
+    '9) el preflight público también trae las cabeceras CORS',
+    traeCors(preflightPublico),
+    `origen=${preflightPublico.origen} headers=${preflightPublico.encabezados}`
   )
 }
 
