@@ -17,11 +17,19 @@ import multer from 'multer'
 import {
   guardar as guardarComprobante,
   leer as leerComprobantes,
+  leerParaRevision,
+  marcarAprobado,
+  marcarRechazado,
   resumen as resumenComprobantes,
   detectarTipoComprobante,
   MAX_BYTES_COMPROBANTE,
   MAX_INTENTOS_COMPROBANTE,
 } from '../services/comprobantes.js'
+import {
+  enviarCorreo,
+  plantillaPagoAprobado,
+  plantillaPagoRechazado,
+} from '../services/correos.js'
 
 const router = Router()
 
@@ -32,6 +40,7 @@ router.use(verificarToken, bloquearCambioPendiente)
 // `estado` en la tabla pedido es varchar sin CHECK, por eso se valida aquí.
 const ESTADOS = ['Registrado', 'En preparación', 'Despachado', 'Entregado', 'Cancelado']
 const ESTADO_INICIAL = 'Registrado'
+const ESTADO_EN_PREPARACION = 'En preparación'
 const ESTADO_CANCELADO = 'Cancelado'
 const ESTADO_ENTREGADO = 'Entregado'
 
@@ -56,6 +65,76 @@ class ErrorHttp extends Error {
     super(message)
     this.status = status
     this.campo = campo
+  }
+}
+
+// Envía el correo de la decisión DESPUÉS del COMMIT y deja constancia en
+// notificacion_correo. La fila se reserva antes del envío con el UNIQUE
+// (id_comprobante, tipo): si ya existe, no se vuelve a enviar. Un fallo de
+// Brevo se guarda como Fallido con su error y NUNCA revierte la decisión.
+const notificarDecisionComprobante = async ({
+  tipo,
+  idPedido,
+  idComprobante,
+  motivo = null,
+}) => {
+  const { rows } = await pool.query(
+    `SELECT p.id_pedido, u.correo,
+            TRIM(u.nombres || ' ' || u.apellidos) AS nombre
+       FROM pedido p
+       JOIN usuario u ON u.id_usuario = p.id_usuario
+      WHERE p.id_pedido = $1`,
+    [idPedido]
+  )
+  const datos = rows[0]
+  if (!datos?.correo) return false
+
+  const plantilla =
+    tipo === 'pago_aprobado'
+      ? plantillaPagoAprobado({
+          nombre: datos.nombre,
+          numeroPedido: datos.id_pedido,
+        })
+      : plantillaPagoRechazado({
+          nombre: datos.nombre,
+          numeroPedido: datos.id_pedido,
+          motivo,
+        })
+
+  const reserva = await pool.query(
+    `INSERT INTO notificacion_correo
+       (id_pedido, id_comprobante, tipo, destinatario, estado, error)
+     VALUES ($1, $2, $3, $4, 'Fallido', 'Envío no completado')
+     ON CONFLICT (id_comprobante, tipo) DO NOTHING
+     RETURNING id`,
+    [idPedido, idComprobante, tipo, datos.correo]
+  )
+
+  if (reserva.rows.length === 0) return false
+  const idNotificacion = reserva.rows[0].id
+
+  try {
+    await enviarCorreo({
+      para: datos.correo,
+      asunto: plantilla.asunto,
+      html: plantilla.html,
+      texto: plantilla.texto,
+    })
+    await pool.query(
+      `UPDATE notificacion_correo
+          SET estado = 'Enviado', error = NULL, enviado_en = now()
+        WHERE id = $1`,
+      [idNotificacion]
+    )
+    return true
+  } catch (error) {
+    await pool
+      .query(
+        `UPDATE notificacion_correo SET estado = 'Fallido', error = $2 WHERE id = $1`,
+        [idNotificacion, String(error.message || 'Error al enviar el correo').slice(0, 2000)]
+      )
+      .catch(() => {})
+    return false
   }
 }
 
@@ -792,6 +871,219 @@ router.post(
   }
 )
 
+// POST /:id/comprobantes/:idc/aprobar -> confirma el pago del pedido y deja
+// la venta Pagada (salvo Contra entrega, que se cobra al entregar).
+router.post(
+  '/:id/comprobantes/:idc/aprobar',
+  requierePrivilegio('Pedidos', 'Actualizar'),
+  async (req, res) => {
+    const id = Number.parseInt(req.params.id, 10)
+    const idc = Number.parseInt(req.params.idc, 10)
+    if (Number.isNaN(id) || Number.isNaN(idc)) {
+      return res.status(400).json({ error: 'Identificador inválido' })
+    }
+
+    const client = await pool.connect()
+    let comprobanteRevisado = null
+    try {
+      await client.query('BEGIN')
+
+      const { rows } = await client.query(
+        `SELECT id_pedido, estado, estado_pago, metodo_pago
+           FROM pedido
+          WHERE id_pedido = $1
+          FOR UPDATE`,
+        [id]
+      )
+      const pedido = rows[0]
+
+      if (!pedido) {
+        throw new ErrorHttp(404, 'Pedido no encontrado')
+      }
+      if (pedido.estado === ESTADO_CANCELADO) {
+        throw new ErrorHttp(409, 'El pedido está cancelado')
+      }
+
+      const comprobante = await leerParaRevision(id, idc, client)
+      if (!comprobante) {
+        throw new ErrorHttp(404, 'Comprobante no encontrado')
+      }
+      if (comprobante.estado !== 'Pendiente') {
+        throw new ErrorHttp(409, 'El comprobante ya fue revisado')
+      }
+
+      comprobanteRevisado = await marcarAprobado(id, idc, req.usuario.id, client)
+      if (!comprobanteRevisado) {
+        throw new ErrorHttp(409, 'El comprobante ya fue revisado')
+      }
+
+      await client.query(
+        `UPDATE pedido
+            SET estado_pago = $1,
+                estado = CASE WHEN estado = $2 THEN $3 ELSE estado END
+          WHERE id_pedido = $4`,
+        [ESTADO_PAGO_CONFIRMADO, ESTADO_INICIAL, ESTADO_EN_PREPARACION, id]
+      )
+
+      // Contra entrega: el abono se verifica aquí, pero la venta solo queda
+      // Pagada cuando el pedido se marca Entregado.
+      if (!String(pedido.metodo_pago || '').startsWith('Contra entrega')) {
+        await client.query(
+          `UPDATE venta
+              SET estado_pago = 'Pagada',
+                  fecha_pago = COALESCE(fecha_pago, CURRENT_DATE)
+            WHERE id_pedido = $1
+              AND estado_pago <> 'Pagada'`,
+          [id]
+        )
+      }
+
+      await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {})
+      if (error.status) {
+        return res.status(error.status).json({ error: error.message })
+      }
+      console.error('Error en POST /api/pedidos/:id/comprobantes/:idc/aprobar:', error.message)
+      return res.status(500).json({ error: 'No se pudo aprobar el comprobante' })
+    } finally {
+      client.release()
+    }
+
+    // A partir de aquí la decisión ya está confirmada: un fallo del correo
+    // solo se informa y queda registrado, nunca revierte la aprobación.
+    let correoEnviado = false
+    try {
+      correoEnviado = await notificarDecisionComprobante({
+        tipo: 'pago_aprobado',
+        idPedido: id,
+        idComprobante: idc,
+      })
+    } catch (error) {
+      console.error('Error al registrar la notificación de pago aprobado:', error.message)
+    }
+
+    try {
+      const actualizado = await obtenerPedidoPorId(id)
+      const comprobanteActualizado = await leerComprobantes(id, { idComprobante: idc })
+      return res.json({
+        ...actualizado,
+        comprobante: comprobanteActualizado,
+        correo_enviado: correoEnviado,
+      })
+    } catch (error) {
+      console.error('Error al cargar el pedido tras aprobar el comprobante:', error.message)
+      return res.json({
+        id,
+        comprobante: comprobanteRevisado,
+        correo_enviado: correoEnviado,
+      })
+    }
+  }
+)
+
+// POST /:id/comprobantes/:idc/rechazar -> deja el pedido Registrado y el pago
+// rechazado, sin tocar stock ni cancelar nada. El cliente puede subir otro.
+router.post(
+  '/:id/comprobantes/:idc/rechazar',
+  requierePrivilegio('Pedidos', 'Actualizar'),
+  async (req, res) => {
+    const id = Number.parseInt(req.params.id, 10)
+    const idc = Number.parseInt(req.params.idc, 10)
+    if (Number.isNaN(id) || Number.isNaN(idc)) {
+      return res.status(400).json({ error: 'Identificador inválido' })
+    }
+
+    const motivo = String(req.body?.motivo || '').trim()
+    if (motivo.length < 5 || motivo.length > 300) {
+      return res.status(400).json({
+        error: 'El motivo del rechazo debe tener entre 5 y 300 caracteres',
+        campo: 'motivo',
+      })
+    }
+
+    const client = await pool.connect()
+    let comprobanteRevisado = null
+    try {
+      await client.query('BEGIN')
+
+      const { rows } = await client.query(
+        `SELECT id_pedido, estado, estado_pago, metodo_pago
+           FROM pedido
+          WHERE id_pedido = $1
+          FOR UPDATE`,
+        [id]
+      )
+      const pedido = rows[0]
+
+      if (!pedido) {
+        throw new ErrorHttp(404, 'Pedido no encontrado')
+      }
+      if (pedido.estado === ESTADO_CANCELADO) {
+        throw new ErrorHttp(409, 'El pedido está cancelado')
+      }
+
+      const comprobante = await leerParaRevision(id, idc, client)
+      if (!comprobante) {
+        throw new ErrorHttp(404, 'Comprobante no encontrado')
+      }
+      if (comprobante.estado !== 'Pendiente') {
+        throw new ErrorHttp(409, 'El comprobante ya fue revisado')
+      }
+
+      comprobanteRevisado = await marcarRechazado(id, idc, req.usuario.id, motivo, client)
+      if (!comprobanteRevisado) {
+        throw new ErrorHttp(409, 'El comprobante ya fue revisado')
+      }
+
+      await client.query(
+        'UPDATE pedido SET estado_pago = $1 WHERE id_pedido = $2',
+        [ESTADO_PAGO_RECHAZADO, id]
+      )
+
+      await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {})
+      if (error.status) {
+        return res.status(error.status).json({ error: error.message })
+      }
+      console.error('Error en POST /api/pedidos/:id/comprobantes/:idc/rechazar:', error.message)
+      return res.status(500).json({ error: 'No se pudo rechazar el comprobante' })
+    } finally {
+      client.release()
+    }
+
+    let correoEnviado = false
+    try {
+      correoEnviado = await notificarDecisionComprobante({
+        tipo: 'pago_rechazado',
+        idPedido: id,
+        idComprobante: idc,
+        motivo,
+      })
+    } catch (error) {
+      console.error('Error al registrar la notificación de pago rechazado:', error.message)
+    }
+
+    try {
+      const actualizado = await obtenerPedidoPorId(id)
+      const comprobanteActualizado = await leerComprobantes(id, { idComprobante: idc })
+      return res.json({
+        ...actualizado,
+        comprobante: comprobanteActualizado,
+        correo_enviado: correoEnviado,
+      })
+    } catch (error) {
+      console.error('Error al cargar el pedido tras rechazar el comprobante:', error.message)
+      return res.json({
+        id,
+        comprobante: comprobanteRevisado,
+        correo_enviado: correoEnviado,
+      })
+    }
+  }
+)
+
 router.get(
   '/:id/comprobantes',
   autorizarConsultaComprobantes,
@@ -920,7 +1212,7 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     await client.query('BEGIN')
 
     const { rows } = await client.query(
-      'SELECT id_pedido, estado, total FROM pedido WHERE id_pedido = $1 FOR UPDATE',
+      'SELECT id_pedido, estado, total, metodo_pago FROM pedido WHERE id_pedido = $1 FOR UPDATE',
       [id]
     )
     const pedido = rows[0]
@@ -990,6 +1282,18 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
             [id, 'Contra entrega - Saldo', saldo]
           )
         }
+      }
+
+      // Contra entrega: la venta pasa a Pagada justo al entregarse.
+      if (String(pedido.metodo_pago || '').startsWith('Contra entrega')) {
+        await client.query(
+          `UPDATE venta
+              SET estado_pago = 'Pagada',
+                  fecha_pago = COALESCE(fecha_pago, CURRENT_DATE)
+            WHERE id_pedido = $1
+              AND estado_pago <> 'Pagada'`,
+          [id]
+        )
       }
     }
 

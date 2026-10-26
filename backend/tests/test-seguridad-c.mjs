@@ -33,10 +33,14 @@ if (!process.env.JWT_SECRET) {
 }
 
 const SECRETARIO_ORIGINAL = process.env.TURNSTILE_SECRET_KEY
+const HOSTNAMES_ORIGINAL = process.env.TURNSTILE_HOSTNAMES
+const TIMEOUT_ORIGINAL = process.env.TURNSTILE_TIMEOUT_MS
 const CARPETA_BACKEND = fileURLToPath(new URL('..', import.meta.url))
 
 const { default: app } = await import('../src/app.js')
-const { problemaDelSecreto } = await import('../src/middlewares/verificarCaptcha.js')
+const { problemaDelSecreto, problemaDeHostnames } = await import(
+  '../src/middlewares/verificarCaptcha.js'
+)
 const { esperaCorreo } = await import('../src/services/recuperacion.js')
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 
@@ -91,7 +95,7 @@ globalThis.fetch = async (url, opciones = {}) => {
     if (!simulacion) return fetchOriginal(url, opciones)
 
     if (simulacion.tipo === 'timeout') {
-      // Se dispara cuando el AbortController del middleware corta a los 3 s.
+      // Se dispara cuando el AbortController del middleware corta por timeout.
       return new Promise((_, rechazar) => {
         opciones.signal?.addEventListener('abort', () => {
           const error = new Error('The operation was aborted')
@@ -204,6 +208,19 @@ const main = async () => {
     `status=${r2.status} codigo=${r2.data?.codigo}`)
   comprobar('2) y no se creó la cuenta', !(await existeEnBase(rechazado.correo)))
 
+  // Un secreto rechazado por Cloudflare es un fallo de configuración, no un
+  // token inválido del usuario: se responde 503 y no se crea la cuenta.
+  simularSiteverify({
+    tipo: 'json',
+    valor: { success: false, 'error-codes': ['invalid-input-secret'] },
+  })
+  const secretoInvalido = cuerpo('secreto-invalido')
+  const r2b = await pedir('POST', '/auth/register', secretoInvalido)
+  comprobar('2b) invalid-input-secret -> 503 CAPTCHA_NO_DISPONIBLE',
+    r2b.status === 503 && r2b.data?.codigo === 'CAPTCHA_NO_DISPONIBLE',
+    `status=${r2b.status} codigo=${r2b.data?.codigo}`)
+  comprobar('2b) y no se creó la cuenta', !(await existeEnBase(secretoInvalido.correo)))
+
   // =====================================================
   // 3) Token válido (clave de prueba de Cloudflare, con red real)
   // =====================================================
@@ -225,8 +242,9 @@ const main = async () => {
     parametros.get('response') === tokenDePrueba && Boolean(parametros.get('secret')))
 
   // =====================================================
-  // 5) Timeout (los 3 s del AbortController) y error de red
+  // 5) Timeout (TURNSTILE_TIMEOUT_MS) y error de red
   // =====================================================
+  process.env.TURNSTILE_TIMEOUT_MS = '50'
   const porTiempo = cuerpo('timeout')
   simularSiteverify({ tipo: 'timeout' })
   const r5 = await pedir('POST', '/auth/register', porTiempo)
@@ -234,6 +252,7 @@ const main = async () => {
     r5.status === 503 && r5.data?.codigo === 'CAPTCHA_NO_DISPONIBLE',
     `status=${r5.status} codigo=${r5.data?.codigo}`)
   comprobar('5) y no se creó la cuenta', !(await existeEnBase(porTiempo.correo)))
+  delete process.env.TURNSTILE_TIMEOUT_MS
 
   simularSiteverify({ tipo: 'red' })
   const r6 = await pedir('POST', '/auth/register', cuerpo('red'))
@@ -284,30 +303,67 @@ const main = async () => {
   // 10) Acción del widget (token de otra acción)
   // =====================================================
   process.env.TURNSTILE_SECRET_KEY = '0xsecreto-real-de-ejemplo-0123456789abcdef'
-  simularSiteverify({ tipo: 'json', valor: { success: true, action: 'recuperacion' } })
+  simularSiteverify({
+    tipo: 'json',
+    valor: { success: true, action: 'recuperacion', hostname: 'localhost' },
+  })
   const r10 = await pedir('POST', '/auth/register', cuerpo('accion-mala'))
   comprobar('10) Secreto real + acción distinta -> 400 CAPTCHA_INVALIDO',
     r10.status === 400 && r10.data?.codigo === 'CAPTCHA_INVALIDO',
     `status=${r10.status} codigo=${r10.data?.codigo}`)
 
-  simularSiteverify({ tipo: 'json', valor: { success: true, action: 'registro' } })
+  simularSiteverify({
+    tipo: 'json',
+    valor: { success: true, action: 'registro', hostname: 'localhost' },
+  })
   const r11 = await pedir('POST', '/auth/register', { ...cuerpo('accion-buena'), nombre: '' })
-  comprobar('10) Secreto real + acción correcta -> pasa al validador',
+  comprobar('10) Secreto real + acción y hostname correctos -> pasa al validador',
     r11.status === 400 && r11.data?.campo === 'nombre',
     `status=${r11.status} campo=${r11.data?.campo}`)
 
-  // Con secreto de PRUEBA Cloudflare no devuelve action: no se exige.
+  simularSiteverify({
+    tipo: 'json',
+    valor: { success: true, action: 'registro', hostname: 'otro.example' },
+  })
+  const r11b = await pedir('POST', '/auth/register', { ...cuerpo('hostname-malo'), nombre: '' })
+  comprobar('10) Secreto real + hostname no permitido -> 400 CAPTCHA_INVALIDO',
+    r11b.status === 400 && r11b.data?.codigo === 'CAPTCHA_INVALIDO',
+    `status=${r11b.status} codigo=${r11b.data?.codigo}`)
+
+  simularSiteverify({ tipo: 'json', valor: { success: true, action: 'registro' } })
+  const r11c = await pedir('POST', '/auth/register', { ...cuerpo('hostname-ausente'), nombre: '' })
+  comprobar('10) Secreto real + hostname ausente -> 400 CAPTCHA_INVALIDO',
+    r11c.status === 400 && r11c.data?.codigo === 'CAPTCHA_INVALIDO',
+    `status=${r11c.status} codigo=${r11c.data?.codigo}`)
+
+  process.env.TURNSTILE_HOSTNAMES = 'app.example.test'
+  simularSiteverify({
+    tipo: 'json',
+    valor: { success: true, action: 'registro', hostname: 'app.example.test' },
+  })
+  const r11d = await pedir('POST', '/auth/register', { ...cuerpo('hostname-configurado'), nombre: '' })
+  comprobar('10) Secreto real + hostname configurado -> pasa al validador',
+    r11d.status === 400 && r11d.data?.campo === 'nombre',
+    `status=${r11d.status} campo=${r11d.data?.campo}`)
+
+  if (HOSTNAMES_ORIGINAL === undefined) delete process.env.TURNSTILE_HOSTNAMES
+  else process.env.TURNSTILE_HOSTNAMES = HOSTNAMES_ORIGINAL
+
+  // Con secreto de PRUEBA Cloudflare no devuelve action ni hostname: no se exigen.
   process.env.TURNSTILE_SECRET_KEY = SECRETARIO_ORIGINAL
   simularSiteverify({ tipo: 'json', valor: { success: true } })
   const r12 = await pedir('POST', '/auth/register', { ...cuerpo('clave-prueba'), nombre: '' })
-  comprobar('10) Con clave de prueba no se exige action -> pasa al validador',
+  comprobar('10) Con clave de prueba no se exigen action ni hostname -> pasa al validador',
     r12.status === 400 && r12.data?.campo === 'nombre',
     `status=${r12.status} campo=${r12.data?.campo}`)
 
   // =====================================================
   // 11) Token reutilizado (timeout-or-duplicate)
   // =====================================================
-  simularSiteverify({ tipo: 'json', valor: { success: true, action: 'registro' } })
+  simularSiteverify({
+    tipo: 'json',
+    valor: { success: true, action: 'registro', hostname: 'localhost' },
+  })
   const r13 = await pedir('POST', '/auth/register', { ...cuerpo('uso-1'), nombre: '' })
   comprobar('11) Primer uso del token -> pasa Turnstile',
     r13.status === 400 && r13.data?.campo === 'nombre',
@@ -389,17 +445,48 @@ const main = async () => {
   comprobar('16) y el motivo es que es una clave de prueba',
     /prueba/i.test(conClavePrueba.salida))
 
+  const sinHostnames = await arrancarServidor({
+    NODE_ENV: 'production',
+    TURNSTILE_SECRET_KEY: '0xsecreto-real-de-ejemplo-0123456789abcdef',
+    TURNSTILE_HOSTNAMES: '',
+  })
+  comprobar('17) Producción sin TURNSTILE_HOSTNAMES -> el proceso termina con error',
+    sinHostnames.codigo === 1, `codigo=${sinHostnames.codigo}`)
+  comprobar('17) y el motivo es TURNSTILE_HOSTNAMES',
+    /TURNSTILE_HOSTNAMES/.test(sinHostnames.salida))
+
+  const conLocalhost = await arrancarServidor({
+    NODE_ENV: 'production',
+    TURNSTILE_SECRET_KEY: '0xsecreto-real-de-ejemplo-0123456789abcdef',
+    TURNSTILE_HOSTNAMES: 'localhost',
+  })
+  comprobar('18) Producción con localhost en TURNSTILE_HOSTNAMES -> el proceso termina con error',
+    conLocalhost.codigo === 1, `codigo=${conLocalhost.codigo}`)
+  comprobar('18) y el motivo es el hostname local',
+    /localhost/i.test(conLocalhost.salida))
+
   // =====================================================
   // 15) Reglas de configuración (unidad)
   // =====================================================
-  comprobar('17) Secreto real en producción -> sin problema',
+  comprobar('19) Secreto real en producción -> sin problema',
     problemaDelSecreto({ secreto: '0xsecreto-real-de-ejemplo-0123456789abcdef', produccion: true }) === null)
-  comprobar('17) Clave de prueba en producción -> hay problema',
+  comprobar('19) Clave de prueba en producción -> hay problema',
     typeof problemaDelSecreto({ secreto: '1x0000000000000000000000000000000AA', produccion: true }) === 'string')
-  comprobar('17) Clave de prueba fuera de producción -> sin problema (desarrollo)',
+  comprobar('19) Clave de prueba fuera de producción -> sin problema (desarrollo)',
     problemaDelSecreto({ secreto: '1x0000000000000000000000000000000AA', produccion: false }) === null)
-  comprobar('17) Sin secreto fuera de producción -> lo describe (server.js sólo sale en producción)',
+  comprobar('19) Sin secreto fuera de producción -> lo describe (server.js sólo sale en producción)',
     typeof problemaDelSecreto({ secreto: '', produccion: false }) === 'string')
+
+  comprobar('19) Sin TURNSTILE_HOSTNAMES en producción -> hay problema',
+    typeof problemaDeHostnames({ hostnames: '', produccion: true }) === 'string')
+  comprobar('19) localhost en producción -> hay problema',
+    typeof problemaDeHostnames({ hostnames: 'localhost', produccion: true }) === 'string')
+  comprobar('19) Dominio real en producción -> sin problema',
+    problemaDeHostnames({ hostnames: 'app.example.test', produccion: true }) === null)
+  comprobar('19) Sin TURNSTILE_HOSTNAMES en desarrollo -> sin problema (hay valores locales por defecto)',
+    problemaDeHostnames({ hostnames: '', produccion: false }) === null)
+  comprobar('19) Hostname con protocolo -> hay problema',
+    typeof problemaDeHostnames({ hostnames: 'https://app.example.test', produccion: true }) === 'string')
 }
 
 main()
@@ -410,6 +497,10 @@ main()
   .finally(async () => {
     globalThis.fetch = fetchOriginal
     if (SECRETARIO_ORIGINAL) process.env.TURNSTILE_SECRET_KEY = SECRETARIO_ORIGINAL
+    if (HOSTNAMES_ORIGINAL === undefined) delete process.env.TURNSTILE_HOSTNAMES
+    else process.env.TURNSTILE_HOSTNAMES = HOSTNAMES_ORIGINAL
+    if (TIMEOUT_ORIGINAL === undefined) delete process.env.TURNSTILE_TIMEOUT_MS
+    else process.env.TURNSTILE_TIMEOUT_MS = TIMEOUT_ORIGINAL
     try {
       await pool.end()
     } catch (error) {

@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import app from './app.js'
 import { inicializarCategorias } from './models/categorias.js'
-import { problemaDelSecreto } from './middlewares/verificarCaptcha.js'
+import { problemaDelSecreto, problemaDeHostnames } from './middlewares/verificarCaptcha.js'
 
 // Variables obligatorias. Se comprueba solo su presencia: nunca se imprime
 // su valor (podría contener credenciales o el secreto JWT).
@@ -17,15 +17,28 @@ if (faltantes.length > 0) {
 }
 
 // Fase C (Turnstile): en producción el secreto es obligatorio y no puede
-// ser una clave de prueba de Cloudflare. En ese caso el proceso no arranca:
-// si lo hiciera, el registro y la recuperación quedarían abiertos o
-// bloqueados sin que nadie lo notara. Fuera de producción no se sale:
-// el middleware responde 503 (fallo cerrado) y anota el motivo en el log.
+// ser una clave de prueba de Cloudflare; además, TURNSTILE_HOSTNAMES debe
+// existir y no puede contener hostnames locales. En ese caso el proceso no
+// arranca: si lo hiciera, el registro y la recuperación quedarían abiertos,
+// aceptarían tokens de otro sitio o se bloquearían sin que nadie lo notara.
+// Fuera de producción no se sale: el middleware responde 503 (fallo cerrado)
+// y anota el motivo en el log.
 if (process.env.NODE_ENV === 'production') {
-  const problemaTurnstile = problemaDelSecreto({ produccion: true })
-  if (problemaTurnstile) {
-    console.error(`[config] ${problemaTurnstile}`)
+  const problemasTurnstile = [
+    problemaDelSecreto({ produccion: true }),
+    problemaDeHostnames({ produccion: true }),
+  ].filter(Boolean)
+
+  if (problemasTurnstile.length > 0) {
+    problemasTurnstile.forEach((problema) => console.error(`[config] ${problema}`))
     process.exit(1)
+  }
+} else {
+  // En desarrollo una lista inválida no impide arrancar, pero se avisa:
+  // el middleware fallará cerrado si ningún hostname coincide.
+  const problemaHostnames = problemaDeHostnames({ produccion: false })
+  if (problemaHostnames) {
+    console.error(`[config] ${problemaHostnames}`)
   }
 }
 

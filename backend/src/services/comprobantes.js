@@ -163,6 +163,65 @@ export async function resumen(idPedido, db = pool) {
   }
 }
 
+// Lee un comprobante del pedido bloqueándolo para revisión. La fila queda
+// bloqueada hasta que la transacción termine, así dos revisiones simultáneas
+// no pueden decidir sobre el mismo comprobante.
+export async function leerParaRevision(idPedido, idComprobante, db = pool) {
+  const { rows } = await db.query(
+    `SELECT c.id_comprobante AS id,
+            c.id_pedido,
+            c.estado,
+            c.motivo_rechazo,
+            c.intento,
+            c.creado_en AS fecha_carga
+       FROM comprobante_pago c
+      WHERE c.id_pedido = $1 AND c.id_comprobante = $2
+      FOR UPDATE`,
+    [idPedido, idComprobante]
+  )
+  return rows[0] || null
+}
+
+export async function marcarAprobado(idPedido, idComprobante, revisadoPor, db = pool) {
+  const { rows } = await db.query(
+    `UPDATE comprobante_pago
+        SET estado = 'Aprobado',
+            motivo_rechazo = NULL,
+            revisado_por = $3,
+            revisado_en = now()
+      WHERE id_pedido = $1
+        AND id_comprobante = $2
+        AND estado = 'Pendiente'
+      RETURNING id_comprobante AS id, id_pedido, estado,
+                revisado_por AS revisor_id, revisado_en AS fecha_revision`,
+    [idPedido, idComprobante, revisadoPor]
+  )
+  return rows[0] || null
+}
+
+export async function marcarRechazado(
+  idPedido,
+  idComprobante,
+  revisadoPor,
+  motivo,
+  db = pool
+) {
+  const { rows } = await db.query(
+    `UPDATE comprobante_pago
+        SET estado = 'Rechazado',
+            motivo_rechazo = $4,
+            revisado_por = $3,
+            revisado_en = now()
+      WHERE id_pedido = $1
+        AND id_comprobante = $2
+        AND estado = 'Pendiente'
+      RETURNING id_comprobante AS id, id_pedido, estado, motivo_rechazo,
+                revisado_por AS revisor_id, revisado_en AS fecha_revision`,
+    [idPedido, idComprobante, revisadoPor, motivo]
+  )
+  return rows[0] || null
+}
+
 export async function borrar(idComprobante, db = pool) {
   const { rowCount } = await db.query(
     'DELETE FROM comprobante_pago WHERE id_comprobante = $1',
