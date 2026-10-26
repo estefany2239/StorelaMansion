@@ -13,6 +13,15 @@ import {
   metodosEnvioPermitidos,
   validarUbicacionCodigos,
 } from '../utils/envios.js'
+import multer from 'multer'
+import {
+  guardar as guardarComprobante,
+  leer as leerComprobantes,
+  resumen as resumenComprobantes,
+  detectarTipoComprobante,
+  MAX_BYTES_COMPROBANTE,
+  MAX_INTENTOS_COMPROBANTE,
+} from '../services/comprobantes.js'
 
 const router = Router()
 
@@ -47,6 +56,65 @@ class ErrorHttp extends Error {
     super(message)
     this.status = status
     this.campo = campo
+  }
+}
+
+const subidaComprobante = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_BYTES_COMPROBANTE, files: 1 },
+})
+
+const recibirComprobante = (req, res, next) => {
+  subidaComprobante.single('comprobante')(req, res, (error) => {
+    if (!error) return next()
+
+    if (error instanceof multer.MulterError) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({
+          error: 'El comprobante supera el tamaño máximo de 2 MB',
+        })
+      }
+      if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({
+          error: 'Campo de archivo inesperado. Envía el comprobante en el campo "comprobante"',
+        })
+      }
+      return res.status(400).json({
+        error: 'No se pudo procesar el comprobante adjunto',
+      })
+    }
+
+    console.error('Error al recibir el comprobante:', error.message)
+    res.status(400).json({ error: 'No se pudo procesar el comprobante adjunto' })
+  })
+}
+
+const autorizarConsultaComprobantes = async (req, res, next) => {
+  const id = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'SELECT id_usuario FROM pedido WHERE id_pedido = $1',
+      [id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' })
+    }
+
+    if (req.usuario?.rol === 'Cliente') {
+      if (rows[0].id_usuario !== req.usuario.id) {
+        return res.status(403).json({ error: 'No tienes permisos para acceder a este recurso' })
+      }
+      return next()
+    }
+
+    return requierePrivilegio('Pedidos', 'Consultar')(req, res, next)
+  } catch (error) {
+    console.error('Error al autorizar comprobantes:', error.message)
+    res.status(500).json({ error: 'No se pudieron verificar los permisos' })
   }
 }
 
@@ -585,6 +653,160 @@ router.post('/:id/pago/rechazar', requierePrivilegio('Pedidos', 'Cambiar estado'
     client.release()
   }
 })
+
+router.post(
+  '/:id/comprobantes',
+  soloRoles('Cliente'),
+  recibirComprobante,
+  async (req, res) => {
+    const id = Number.parseInt(req.params.id, 10)
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'Identificador inválido' })
+    }
+
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+
+      const { rows } = await client.query(
+        `SELECT id_pedido, id_usuario, estado
+           FROM pedido
+          WHERE id_pedido = $1
+          FOR UPDATE`,
+        [id]
+      )
+      const pedido = rows[0]
+
+      if (!pedido) {
+        throw new ErrorHttp(404, 'Pedido no encontrado')
+      }
+      if (pedido.id_usuario !== req.usuario.id) {
+        throw new ErrorHttp(403, 'No tienes permisos para acceder a este recurso')
+      }
+      if (pedido.estado === ESTADO_CANCELADO) {
+        throw new ErrorHttp(409, 'El pedido está cancelado')
+      }
+      if (pedido.estado !== ESTADO_INICIAL) {
+        throw new ErrorHttp(409, 'Solo se puede subir el comprobante a un pedido Registrado')
+      }
+
+      const resumen = await resumenComprobantes(id, client)
+
+      if (resumen.pendiente) {
+        throw new ErrorHttp(409, 'Ya existe un comprobante pendiente de revisión para este pedido')
+      }
+      if (resumen.aprobado) {
+        throw new ErrorHttp(409, 'El pago de este pedido ya fue aprobado')
+      }
+      if (resumen.intentos >= MAX_INTENTOS_COMPROBANTE) {
+        throw new ErrorHttp(409, 'Se alcanzó el máximo de 3 intentos para este pedido')
+      }
+
+      if (!req.file) {
+        throw new ErrorHttp(400, 'Adjunta el comprobante en el campo "comprobante"')
+      }
+      if (!req.file.size) {
+        throw new ErrorHttp(400, 'El archivo está vacío')
+      }
+      if (req.file.size > MAX_BYTES_COMPROBANTE) {
+        throw new ErrorHttp(413, 'El comprobante supera el tamaño máximo de 2 MB')
+      }
+
+      const tipoMime = detectarTipoComprobante(req.file.buffer)
+      if (!tipoMime) {
+        throw new ErrorHttp(
+          400,
+          'El comprobante debe ser una imagen JPEG, PNG o WEBP, o un PDF válido'
+        )
+      }
+
+      const comprobante = await guardarComprobante(
+        {
+          idPedido: id,
+          subidoPor: req.usuario.id,
+          contenido: req.file.buffer,
+          tipoMime,
+          nombreOriginal: req.file.originalname,
+          intento: resumen.siguiente_intento,
+        },
+        client
+      )
+
+      await client.query(
+        'UPDATE pedido SET estado_pago = $1 WHERE id_pedido = $2',
+        [ESTADO_PAGO_PENDIENTE, id]
+      )
+
+      await client.query('COMMIT')
+      res.status(201).json(comprobante)
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {})
+      if (error.status) {
+        return res.status(error.status).json({ error: error.message })
+      }
+      if (error.code === '23505') {
+        return res.status(409).json({
+          error: 'Ya existe un comprobante pendiente o aprobado para este pedido',
+        })
+      }
+      console.error('Error en POST /api/pedidos/:id/comprobantes:', error.message)
+      res.status(500).json({ error: 'No se pudo guardar el comprobante' })
+    } finally {
+      client.release()
+    }
+  }
+)
+
+router.get(
+  '/:id/comprobantes',
+  autorizarConsultaComprobantes,
+  async (req, res) => {
+    const id = Number.parseInt(req.params.id, 10)
+
+    try {
+      const historial = await leerComprobantes(id)
+      res.json(historial)
+    } catch (error) {
+      console.error('Error en GET /api/pedidos/:id/comprobantes:', error.message)
+      res.status(500).json({ error: 'No se pudo cargar el historial de comprobantes' })
+    }
+  }
+)
+
+router.get(
+  '/:id/comprobantes/:idc/archivo',
+  autorizarConsultaComprobantes,
+  async (req, res) => {
+    const id = Number.parseInt(req.params.id, 10)
+    const idc = Number.parseInt(req.params.idc, 10)
+    if (Number.isNaN(idc)) {
+      return res.status(400).json({ error: 'Identificador inválido' })
+    }
+
+    try {
+      const archivo = await leerComprobantes(id, {
+        idComprobante: idc,
+        incluirContenido: true,
+      })
+
+      if (!archivo || !archivo.contenido) {
+        return res.status(404).json({ error: 'Comprobante no encontrado' })
+      }
+
+      const nombre = String(archivo.nombre_original || 'comprobante').replace(/["\\]/g, '_')
+      res.set({
+        'Content-Type': archivo.tipo_mime,
+        'Content-Disposition': `inline; filename="${nombre}"`,
+        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'private, no-store',
+      })
+      res.send(archivo.contenido)
+    } catch (error) {
+      console.error('Error en GET /api/pedidos/:id/comprobantes/:idc/archivo:', error.message)
+      res.status(500).json({ error: 'No se pudo cargar el comprobante' })
+    }
+  }
+)
 
 // GET /mis -> pedidos del cliente autenticado (solo Cliente)
 router.get('/mis', soloRoles('Cliente'), async (req, res) => {
