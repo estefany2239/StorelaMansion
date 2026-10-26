@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight, IdCard, Calendar, Phone } from 'lucide-react';
 import { registrarUsuario } from '../../../shared/services/api';
 import TurnstileWidget from '../../../shared/components/TurnstileWidget';
@@ -14,6 +14,9 @@ import {
 import './Login.css';
 
 const authBg = new URL("../../../assets/img/img.png", import.meta.url).href;
+
+const MENSAJE_DEMASIADOS_INTENTOS =
+  'Demasiados intentos, intenta de nuevo en unos minutos.';
 
 export default function Register({ onBackToLogin }) {
   const notify = useNotify();
@@ -39,6 +42,10 @@ export default function Register({ onBackToLogin }) {
   // intento fallido lo gasta, así que el widget se vuelve a pintar.
   const [tokenTurnstile, setTokenTurnstile] = useState('');
   const [reiniciarCaptcha, setReiniciarCaptcha] = useState(0);
+
+  // Evita que un doble clic (o un doble Enter) envíe dos registros.
+  const [enviando, setEnviando] = useState(false);
+  const enviandoRef = useRef(false);
 
   const {
     errores,
@@ -70,9 +77,15 @@ export default function Register({ onBackToLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Si ya hay una petición en curso, se ignora el segundo envío.
+    if (enviandoRef.current) return;
+
     // Valida todos los campos (documento, fecha/edad, teléfono, correo,
     // contraseñas) y enfoca el primer inválido.
     if (!validarTodo(formData)) return;
+
+    enviandoRef.current = true;
+    setEnviando(true);
 
     try {
       await registrarUsuario(
@@ -101,6 +114,13 @@ export default function Register({ onBackToLogin }) {
       setTokenTurnstile('');
       setReiniciarCaptcha((n) => n + 1);
 
+      // Límite de peticiones del servidor: aviso claro en vez de un error
+      // genérico o un mensaje sólo en la consola.
+      if (error.status === 429) {
+        notify(error.message || MENSAJE_DEMASIADOS_INTENTOS, 'error');
+        return;
+      }
+
       const campo = CAMPOS_BACKEND[error.campo];
 
       // El backend identificó el campo exacto (duplicados incluidos):
@@ -123,6 +143,9 @@ export default function Register({ onBackToLogin }) {
       }
 
       notify(error.message, "error");
+    } finally {
+      enviandoRef.current = false;
+      setEnviando(false);
     }
   };
 
@@ -363,9 +386,9 @@ export default function Register({ onBackToLogin }) {
             <button
               type="submit"
               className="auth-submit-btn"
-              disabled={!tokenTurnstile}
+              disabled={!tokenTurnstile || enviando}
             >
-              Registrarse <ArrowRight size={18} />
+              {enviando ? 'Registrando…' : 'Registrarse'} <ArrowRight size={18} />
             </button>
 
             <div className="auth-footer-text">

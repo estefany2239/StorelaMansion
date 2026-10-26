@@ -2115,3 +2115,307 @@
     width: 100%;
   }
 }
+
+/* =========================================================
+   COMPROBANTES DE PAGO
+   ========================================================= */
+
+.pedido-comprobante-preview {
+  margin-top: 14px;
+
+  min-height: 220px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e1e1e1;
+  border-radius: 10px;
+
+  background: #f8f9fb;
+}
+
+.pedido-comprobante-imagen {
+  max-width: 100%;
+  max-height: 520px;
+
+  object-fit: contain;
+
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.pedido-comprobante-pdf {
+  width: 100%;
+  height: 520px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #ffffff;
+}
+
+.pedido-comprobante-enlace {
+  color: var(--admin-gold);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pedido-comprobante-error {
+  color: #e53935;
+
+  font-size: 13px;
+  text-align: center;
+}
+
+.pedido-comprobante-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+
+  padding: 3px 9px;
+
+  border-radius: 20px;
+
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.pedido-comprobante-badge.pendiente {
+  background: #fff2d2;
+  color: #c68a00;
+}
+
+.pedido-comprobante-badge.aprobado {
+  background: #dff5e8;
+  color: #0ca653;
+}
+
+.pedido-comprobante-badge.rechazado {
+  background: #fde5e5;
+  color: #e53935;
+}
+
+.pedido-comprobante-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+.pedido-comprobante-rechazo {
+  margin-top: 14px;
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  border: 1px dashed rgba(201, 162, 39, 0.5);
+  border-radius: 10px;
+
+  background: rgba(201, 162, 39, 0.05);
+}
+
+.pedido-comprobante-rechazo label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+
+  color: #667085;
+}
+
+.pedido-comprobante-rechazo textarea {
+  width: 100%;
+  min-height: 90px;
+
+  padding: 10px 12px;
+
+  box-sizing: border-box;
+  resize: vertical;
+
+  border: 1px solid #d7d7d7;
+  border-radius: 9px;
+  outline: none;
+
+  background: #ffffff;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 14px;
+  color: #222222;
+}
+
+.pedido-comprobante-rechazo textarea:focus {
+  border-color: var(--admin-gold);
+
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+}
+
+.pedido-comprobante-rechazo-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pedido-comprobante-contador {
+  margin-right: auto;
+
+  font-size: 11px;
+  color: #8a94a6;
+}
+
+.pedido-comprobante-rechazo-footer .pedido-cancel-button {
+  height: 38px;
+}
+
+.pedido-comprobante-rechazo-footer .pedido-payment-reject {
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+.pedido-comprobantes-list {
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid #e1e1e1;
+  border-radius: 9px;
+}
+
+.pedido-comprobante-item {
+  padding: 12px 14px;
+
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.pedido-comprobante-item:last-child {
+  border-bottom: none;
+}
+
+.pedido-comprobante-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pedido-comprobante-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pedido-comprobante-item-head strong {
+  font-size: 13px;
+  color: #222222;
+}
+
+.pedido-comprobante-item-info > span {
+  font-size: 12px;
+  color: #738096;
+}
+
+.pedido-comprobante-motivo {
+  margin: 2px 0 0;
+
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #c62828;
+}
+
+.admin-container.admin-dark .pedido-comprobante-preview {
+  background: #181818;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-container.admin-dark .pedido-comprobante-error {
+  color: #ff8a80;
+}
+
+.admin-container.admin-dark .pedido-comprobante-badge.pendiente {
+  background: rgba(201, 162, 39, 0.18);
+  color: #f0d48a;
+}
+
+.admin-container.admin-dark .pedido-comprobante-badge.aprobado {
+  background: rgba(67, 140, 94, 0.18);
+  color: #7fd0a0;
+}
+
+.admin-container.admin-dark .pedido-comprobante-badge.rechazado {
+  background: rgba(190, 70, 60, 0.18);
+  color: #e2857a;
+}
+
+.admin-container.admin-dark .pedido-comprobante-rechazo {
+  border-color: rgba(194, 168, 120, 0.35);
+  background: rgba(194, 168, 120, 0.06);
+}
+
+.admin-container.admin-dark .pedido-comprobante-rechazo label {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .pedido-comprobante-rechazo textarea {
+  background: #181818;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .pedido-comprobante-contador {
+  color: #a0a0a0;
+}
+
+.admin-container.admin-dark .pedido-comprobantes-list {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.admin-container.admin-dark .pedido-comprobante-item {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.admin-container.admin-dark .pedido-comprobante-item-head strong {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .pedido-comprobante-item-info > span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .pedido-comprobante-motivo {
+  color: #e2857a;
+}
+
+@media (max-width: 600px) {
+  .pedido-comprobante-pdf {
+    height: 380px;
+  }
+
+  .pedido-comprobante-actions {
+    flex-direction: column;
+  }
+
+  .pedido-comprobante-actions .pedido-payment-confirm,
+  .pedido-comprobante-actions .pedido-payment-reject {
+    width: 100%;
+  }
+
+  .pedido-comprobante-rechazo-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pedido-comprobante-contador {
+    margin-right: 0;
+  }
+}

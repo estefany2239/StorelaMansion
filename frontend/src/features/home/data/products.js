@@ -8,7 +8,7 @@ export const featuredProducts = [
     id: "f1",
     name: "Gorras",
     price: 310000,
-    image: new URL("../assets/img/tar.png", import.meta.url).href,
+    image: new URL("../../../assets/img/tar.png", import.meta.url).href,
     tag: "Destacado"
   },
 
@@ -16,7 +16,7 @@ export const featuredProducts = [
     id: "f2",
     name: "Tenis",
     price: 420000,
-    image: new URL("../assets/img/jeta.png", import.meta.url).href,
+    image: new URL("../../../assets/img/jeta.png", import.meta.url).href,
     tag: "Exclusivo"
   },
 
@@ -24,7 +24,7 @@ export const featuredProducts = [
     id: "f3",
     name: "Top ",
     price: 240000,
-    image: new URL("../assets/img/top.png", import.meta.url).href,
+    image: new URL("../../../assets/img/top.png", import.meta.url).href,
     tag: "Nuevo"
   },
 
@@ -33,7 +33,7 @@ export const featuredProducts = [
     name: "Pantaloneta",
     price: 180000,
     priceFormatted: "$180.000",
-    image: new URL("../assets/img/lone.png", import.meta.url).href,
+    image: new URL("../../../assets/img/lone.png", import.meta.url).href,
     tag: "Top"
   }
 ];
@@ -51,7 +51,7 @@ export const womenProducts = [
     category: "mujer",
     price: 240000,
     priceFormatted: "$240.000",
-    image: new URL("../assets/img/camisa.png", import.meta.url).href,
+    image: new URL("../../../assets/img/camisa.png", import.meta.url).href,
     tag: "Nuevo"
   },
 
@@ -61,7 +61,7 @@ export const womenProducts = [
     category: "mujer",
     price: 310000,
     priceFormatted: "$310.000",
-    image: new URL("../assets/img/ten.png", import.meta.url).href,
+    image: new URL("../../../assets/img/ten.png", import.meta.url).href,
     tag: "Exclusivo"
   },
 
@@ -71,7 +71,7 @@ export const womenProducts = [
     category: "mujer",
     price: 285000,
     priceFormatted: "$285.000",
-    image: new URL("../assets/img/reloj.png", import.meta.url).href,
+    image: new URL("../../../assets/img/reloj.png", import.meta.url).href,
     tag: "Tendencia"
   },
 
@@ -81,7 +81,7 @@ export const womenProducts = [
     category: "mujer",
     price: 135000,
     priceFormatted: "$135.000",
-    image: new URL("../assets/img/suda.png", import.meta.url).href,
+    image: new URL("../../../assets/img/suda.png", import.meta.url).href,
     tag: "Básico"
   },
 
@@ -91,7 +91,7 @@ export const womenProducts = [
     category: "mujer",
     price: 195000,
     priceFormatted: "$195.000",
-    image: new URL("../assets/img/crop.png", import.meta.url).href,
+    image: new URL("../../../assets/img/crop.png", import.meta.url).href,
     tag: "Popular"
   },
 
@@ -101,7 +101,7 @@ export const womenProducts = [
     category: "mujer",
     price: 175000,
     priceFormatted: "$175.000",
-    image: new URL("../assets/img/gorra.png", import.meta.url).href,
+    image: new URL("../../../assets/img/gorra.png", import.meta.url).href,
     tag: "Destacado"
   },
 
@@ -111,7 +111,7 @@ export const womenProducts = [
     category: "mujer",
     price: 450000,
     priceFormatted: "$450.000",
-    image: new URL("../assets/img/buso.png", import.meta.url).href,
+    image: new URL("../../../assets/img/buso.png", import.meta.url).href,
     tag: "Exclusivo"
   },
 
@@ -121,7 +121,7 @@ export const womenProducts = [
     category: "mujer",
     price: 450000,
     priceFormatted: "$450.000",
-    image: new URL("../assets/img/teni.png", import.meta.url).href,
+    image: new URL("../../../assets/img/teni.png", import.meta.url).href,
     tag: "Exclusivo"
   }
 ];
@@ -139,7 +139,7 @@ export const menProducts = [
     category: "hombre",
     price: 420000,
     priceFormatted: "$420.000",
-    image: new URL("../assets/img/cam.png", import.meta.url).href,
+    image: new URL("../../../assets/img/cam.png", import.meta.url).href,
     tag: "Exclusivo"
   },
 
@@ -149,7 +149,7 @@ export const menProducts = [
     category: "hombre",
     price: 380000,
     priceFormatted: "$380.000",
-    image: new URL("../assets/img/puma.png", import.meta.url).href,
+    image: new URL("../../../assets/img/puma.png", import.meta.url).href,
     tag: "Nuevo"
   },
 
@@ -159,7 +159,7 @@ export const menProducts = [
     category: "hombre",
     price: 165000,
     priceFormatted: "$165.000",
-    image: new URL("../assets/img/saco.png", import.meta.url).href,
+    image: new URL("../../../assets/img/saco.png", import.meta.url).href,
     tag: "Tendencia"
   },
 
@@ -169,7 +169,7 @@ export const menProducts = [
     category: "hombre",
     price: 190000,
     priceFormatted: "$190.000",
-    image: new URL("../assets/img/gor.png", import.meta.url).href,
+    image: new URL("../../../assets/img/gor.png", import.meta.url).href,
     tag: "Básico"
   },
 
@@ -179,7 +179,7 @@ export const menProducts = [
     category: "hombre",
     price: 490000,
     priceFormatted: "$490.000",
-    image: new URL("../assets/img/panta.png", import.meta.url).href,
+    image: new URL("../../../assets/img/panta.png", import.meta.url).href,
     tag: "Destacado"
   },
 
@@ -189,7 +189,7 @@ export const menProducts = [
     category: "hombre",
     price: 210000,
     priceFormatted: "$210.000",
-    image: new URL("../assets/img/sud.png", import.meta.url).href,
+    image: new URL("../../../assets/img/sud.png", import.meta.url).href,
     tag: "Popular"
   },
 
@@ -199,7 +199,7 @@ export const menProducts = [
     category: "hombre",
     price: 210000,
     priceFormatted: "$210.000",
-    image: new URL("../assets/img/rojo.png", import.meta.url).href,
+    image: new URL("../../../assets/img/rojo.png", import.meta.url).href,
     tag: "Popular"
   },
 
@@ -209,7 +209,7 @@ export const menProducts = [
     category: "hombre",
     price: 210000,
     priceFormatted: "$210.000",
-    image: new URL("../assets/img/per.png", import.meta.url).href,
+    image: new URL("../../../assets/img/per.png", import.meta.url).href,
     tag: "Popular"
   }
 ];

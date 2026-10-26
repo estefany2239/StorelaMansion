@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ShoppingBag, Truck, ShieldCheck } from "lucide-react";
-import { getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../data/productsData';
+import { getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../shared/utils/catalogo';
 import { esAgotado } from '../../shared/components/cart/cantidad';
 import CantidadControl from '../../shared/components/cart/CantidadControl';
 import "./ProductDetailPage.css";

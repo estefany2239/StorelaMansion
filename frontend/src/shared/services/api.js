@@ -334,6 +334,64 @@ export async function subirComprobantePedido(id, archivo) {
   return procesarRespuesta(respuesta, 'No se pudo subir el comprobante')
 }
 
+// Historial de comprobantes de pago de un pedido (más reciente primero).
+export async function obtenerComprobantesPedido(id) {
+  return peticionAdmin(`/api/pedidos/${id}/comprobantes`, {
+    mensajeError: 'No se pudieron cargar los comprobantes'
+  })
+}
+
+// El archivo se sirve con el token: se descarga como Blob para mostrarlo con
+// un object URL y no exponer la URL privada del backend.
+export async function obtenerArchivoComprobantePedido(id, idComprobante) {
+  let respuesta
+  try {
+    respuesta = await fetch(
+      `${API_URL}/api/pedidos/${id}/comprobantes/${idComprobante}/archivo`,
+      { headers: authHeaders() }
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  if (respuesta.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('usuario')
+    window.location.href = '/'
+    throw new Error('Sesión expirada')
+  }
+
+  if (!respuesta.ok) {
+    const data = await respuesta.json().catch(() => ({}))
+    const error = new Error(data.error || 'No se pudo cargar el comprobante')
+    error.status = respuesta.status
+    throw error
+  }
+
+  return respuesta.blob()
+}
+
+export async function aprobarComprobantePedido(id, idComprobante) {
+  return peticionAdmin(
+    `/api/pedidos/${id}/comprobantes/${idComprobante}/aprobar`,
+    {
+      metodo: 'POST',
+      mensajeError: 'No se pudo aprobar el comprobante'
+    }
+  )
+}
+
+export async function rechazarComprobantePedido(id, idComprobante, motivo) {
+  return peticionAdmin(
+    `/api/pedidos/${id}/comprobantes/${idComprobante}/rechazar`,
+    {
+      metodo: 'POST',
+      cuerpo: { motivo },
+      mensajeError: 'No se pudo rechazar el comprobante'
+    }
+  )
+}
+
 export async function obtenerMisPedidos() {
   const respuesta = await fetch(`${API_URL}/api/pedidos/mis`, {
     headers: authHeaders()

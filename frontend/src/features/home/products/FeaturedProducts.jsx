@@ -1,5 +1,5 @@
 import FeaturedProductCard from "./FeaturedProductCard";
-import {featuredProducts} from "../../../data/products";
+import {featuredProducts} from "../data/products";
 import "./FeaturedProducts.css";
 
 // TODO: descripciones de respaldo provisionales. Cuando el catálogo incluya

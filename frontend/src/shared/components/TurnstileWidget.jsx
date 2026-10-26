@@ -10,8 +10,8 @@ import { useEffect, useRef, useState } from 'react';
 // - Sin clave pública no se pide token y el padre mantiene el botón
 //   deshabilitado (fallo cerrado también en el navegador).
 //
-// Los avisos se actualizan sólo en callbacks de Turnstile o de la carga del
-// script: nunca dentro del cuerpo de un efecto.
+// Los avisos se actualizan en callbacks de Turnstile, en la carga del script
+// y al reiniciar el widget; nunca durante el render.
 
 const URL_SCRIPTO = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 const CLAVE_PUBLICA = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
@@ -46,6 +46,7 @@ export default function TurnstileWidget({ accion, onChange, reiniciar = 0 }) {
   const widget = useRef(null);
   const avisar = useRef(onChange);
   const primeraVez = useRef(true);
+  const resetPendiente = useRef(false);
   const [texto, setTexto] = useState('');
 
   // Mantener a mano la última función del padre sin volver a pintar.
@@ -82,6 +83,19 @@ export default function TurnstileWidget({ accion, onChange, reiniciar = 0 }) {
             setTexto('No se pudo completar la verificación. Inténtalo de nuevo.');
           },
         });
+
+        // Si el padre pidió reiniciar antes de que el script terminara de
+        // cargar, el reset se aplica ahora que el widget ya existe.
+        if (resetPendiente.current) {
+          resetPendiente.current = false;
+          try {
+            turnstile.reset(widget.current);
+            setTexto('');
+          } catch {
+            // El widget acaba de pintarse; si reset falla, el próximo
+            // reinicio explícito lo intentará de nuevo.
+          }
+        }
       })
       .catch(() => {
         if (cancelado) return;
@@ -110,7 +124,15 @@ export default function TurnstileWidget({ accion, onChange, reiniciar = 0 }) {
       return;
     }
     if (widget.current && window.turnstile) {
-      window.turnstile.reset(widget.current);
+      try {
+        window.turnstile.reset(widget.current);
+        resetPendiente.current = false;
+      } catch {
+        resetPendiente.current = true;
+      }
+    } else {
+      // El widget todavía no está listo: se reinicia al terminar el render.
+      resetPendiente.current = true;
     }
   }, [reiniciar]);
 
