@@ -41,8 +41,15 @@ router.use(verificarToken, bloquearCambioPendiente)
 const ESTADOS = ['Registrado', 'En preparación', 'Despachado', 'Entregado', 'Cancelado']
 const ESTADO_INICIAL = 'Registrado'
 const ESTADO_EN_PREPARACION = 'En preparación'
+const ESTADO_DESPACHADO = 'Despachado'
 const ESTADO_CANCELADO = 'Cancelado'
 const ESTADO_ENTREGADO = 'Entregado'
+
+const SIGUIENTE_ESTADO = {
+  [ESTADO_INICIAL]: ESTADO_EN_PREPARACION,
+  [ESTADO_EN_PREPARACION]: ESTADO_DESPACHADO,
+  [ESTADO_DESPACHADO]: ESTADO_ENTREGADO,
+}
 
 // Efectivo ya no se acepta en pedidos nuevos (las ventas de mostrador no
 // cambian: su lista vive en routes/ventas.js y su CHECK de la tabla venta se
@@ -1212,7 +1219,14 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     await client.query('BEGIN')
 
     const { rows } = await client.query(
-      'SELECT id_pedido, estado, total, metodo_pago FROM pedido WHERE id_pedido = $1 FOR UPDATE',
+      `SELECT p.id_pedido, p.estado, p.total, p.estado_pago,
+              COALESCE(
+                p.metodo_pago,
+                (SELECT metodo FROM pago WHERE id_pedido = p.id_pedido ORDER BY id_pago LIMIT 1)
+              ) AS metodo_pago
+         FROM pedido p
+        WHERE p.id_pedido = $1
+        FOR UPDATE`,
       [id]
     )
     const pedido = rows[0]
@@ -1228,6 +1242,33 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     if (pedido.estado === ESTADO_CANCELADO) {
       await client.query('ROLLBACK')
       return res.status(409).json({ error: 'El pedido ya está cancelado' })
+    }
+
+    if (estado !== ESTADO_CANCELADO) {
+      const siguiente = SIGUIENTE_ESTADO[pedido.estado]
+      if (siguiente !== estado) {
+        await client.query('ROLLBACK')
+        return res.status(409).json({
+          error: siguiente
+            ? `Transición inválida de "${pedido.estado}" a "${estado}". El siguiente estado permitido es "${siguiente}".`
+            : `Transición inválida desde "${pedido.estado}".`,
+        })
+      }
+
+      if (estado === ESTADO_EN_PREPARACION) {
+        const estadoPago = pedido.estado_pago || ESTADO_PAGO_NO_APLICA
+        const metodo = String(pedido.metodo_pago || '')
+        const contraEntrega = metodo.startsWith('Contra entrega')
+        const pagoValidado =
+          estadoPago === ESTADO_PAGO_CONFIRMADO || estadoPago === ESTADO_PAGO_NO_APLICA
+
+        if (!contraEntrega && !pagoValidado) {
+          await client.query('ROLLBACK')
+          return res.status(409).json({
+            error: `No se puede pasar a "${ESTADO_EN_PREPARACION}": el pago debe estar confirmado.`,
+          })
+        }
+      }
     }
 
     // Al cancelar se devuelve el stock en la misma transacción.
@@ -1263,9 +1304,11 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
         'SELECT metodo FROM pago WHERE id_pedido = $1 ORDER BY id_pago LIMIT 1',
         [id]
       )
-      const primerMetodo = String(pagosRows[0]?.metodo || '')
+      const esContraEntrega = String(
+        pedido.metodo_pago || pagosRows[0]?.metodo || ''
+      ).startsWith('Contra entrega')
 
-      if (primerMetodo.startsWith('Contra entrega')) {
+      if (esContraEntrega) {
         const { rows: saldoRows } = await client.query(
           `SELECT (p.total - COALESCE(
                      (SELECT SUM(monto) FROM pago WHERE id_pedido = p.id_pedido), 0
@@ -1285,7 +1328,7 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
       }
 
       // Contra entrega: la venta pasa a Pagada justo al entregarse.
-      if (String(pedido.metodo_pago || '').startsWith('Contra entrega')) {
+      if (esContraEntrega) {
         await client.query(
           `UPDATE venta
               SET estado_pago = 'Pagada',
