@@ -450,6 +450,14 @@ export async function obtenerVenta(id) {
   })
 }
 
+// Indicadores del módulo Ventas: total, pagadas, pendientes, canceladas y
+// valor total de las ventas pagadas.
+export async function obtenerResumenVentas() {
+  return peticionAdmin('/api/ventas/resumen', {
+    mensajeError: 'No se pudo cargar el resumen de ventas'
+  })
+}
+
 // La única transición permitida por el backend es Completada -> Anulada.
 export async function anularVenta(id) {
   return peticionAdmin(`/api/ventas/${id}/estado`, {
