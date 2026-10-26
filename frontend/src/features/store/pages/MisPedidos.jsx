@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   X,
@@ -9,11 +9,27 @@ import {
   Clock,
   Truck,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Upload,
+  RotateCw,
+  CircleAlert,
+  FileText
 } from "lucide-react";
 
-import { getTotalAbonado, getSaldoPendiente } from "../data/pedidosCliente";
-import { obtenerMisPedidos } from "../../../shared/services/api";
+import {
+  CLASES_ESTADO_COMPROBANTE,
+  ETIQUETAS_ESTADO_COMPROBANTE,
+  getTotalAbonado,
+  getSaldoPendiente,
+  normalizarHistorialComprobantes,
+  permiteNuevoComprobante,
+  validarComprobante
+} from "../data/pedidosCliente";
+import {
+  obtenerComprobantesPedido,
+  obtenerMisPedidos,
+  subirComprobantePedido
+} from "../../../shared/services/api";
 import { useCatalogo } from "../../../shared/hooks/useCatalogo";
 import "./MisPedidos.css";
 
@@ -81,6 +97,7 @@ const mapearPedido = (pedido, catalogo) => {
     id: pedido.id,
     fecha: pedido.fecha,
     estado,
+    estadoBackend: pedido.estado,
     estadoPago: pedido.estado_pago || "No aplica",
     mensajeEstado: MENSAJES_ESTADO[estado],
     estimadoEntrega: null,
@@ -126,6 +143,20 @@ const formatearFecha = (iso) => {
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
   ];
   return `${dia} de ${meses[mes - 1]}, ${anio}`;
+};
+
+const formatearFechaHora = (valor) => {
+  if (!valor) return "";
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) return String(valor).slice(0, 10);
+
+  return fecha.toLocaleString("es-CO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 };
 
 const ESTADOS = [
@@ -240,6 +271,165 @@ function StepperPedido({ pedido }) {
   );
 }
 
+function AdjuntarComprobante({ pedidoId, onSubido }) {
+  const inputRef = useRef(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [error, setError] = useState("");
+
+  const seleccionarArchivo = async (event) => {
+    const archivo = event.target.files?.[0];
+    event.target.value = "";
+    if (!archivo) return;
+
+    const mensaje = validarComprobante(archivo);
+    if (mensaje) {
+      setError(mensaje);
+      return;
+    }
+
+    setError("");
+    setSubiendo(true);
+    try {
+      await subirComprobantePedido(pedidoId, archivo);
+      await onSubido();
+    } catch (err) {
+      setError(err?.message || "No se pudo subir el comprobante");
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
+  return (
+    <div className="mp-comprobante-upload">
+      <input
+        ref={inputRef}
+        type="file"
+        hidden
+        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+        onChange={seleccionarArchivo}
+      />
+      <button
+        type="button"
+        className="mp-btn mp-btn-outline"
+        disabled={subiendo}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload size={15} />
+        {subiendo ? "Subiendo comprobante..." : "Adjuntar nuevo comprobante"}
+      </button>
+      {error && (
+        <p className="mp-comprobante-alerta" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BloqueComprobantes({
+  pedido,
+  cargando,
+  error,
+  onReintentar,
+  onSubido
+}) {
+  const historial = pedido.comprobantes || [];
+  const ultimo = historial[0] || null;
+  const puedeSubir = permiteNuevoComprobante(
+    pedido.estadoBackend,
+    historial
+  );
+
+  return (
+    <div className="mp-comprobantes">
+      <div className="mp-comprobantes-head">
+        <span className="mp-comprobantes-title">
+          <FileText size={14} /> Comprobante de pago
+        </span>
+        {!cargando && !error && ultimo && (
+          <span
+            className={`mp-pago-estado ${
+              CLASES_ESTADO_COMPROBANTE[ultimo.estado] || "no-aplica"
+            }`}
+          >
+            {ETIQUETAS_ESTADO_COMPROBANTE[ultimo.estado] || ultimo.estado}
+          </span>
+        )}
+      </div>
+
+      {error ? (
+        <div className="mp-comprobantes-error" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="mp-btn-reintentar"
+            onClick={onReintentar}
+          >
+            <RotateCw size={14} /> Reintentar
+          </button>
+        </div>
+      ) : cargando ? (
+        <p className="mp-comprobante-vacio">
+          Consultando el estado del comprobante...
+        </p>
+      ) : historial.length === 0 ? (
+        <p className="mp-comprobante-vacio">
+          Todavía no hay comprobantes registrados para este pedido.
+        </p>
+      ) : (
+        <>
+          {ultimo.estado === "Rechazado" && (
+            <div className="mp-comprobante-motivo">
+              <span className="mp-comprobante-motivo-label">
+                Motivo del rechazo
+              </span>
+              <p>{ultimo.motivoRechazo || "No se registró un motivo."}</p>
+            </div>
+          )}
+
+          <ul className="mp-comprobantes-historial">
+            {historial.map((comprobante, indice) => (
+              <li
+                className="mp-comprobante-item"
+                key={comprobante.id ?? indice}
+              >
+                <div className="mp-comprobante-info">
+                  <span className="mp-comprobante-fecha">
+                    {formatearFechaHora(comprobante.fechaCarga)}
+                  </span>
+                  {comprobante.intento > 0 && (
+                    <span className="mp-comprobante-intento">
+                      Intento {comprobante.intento}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className={`mp-pago-estado ${
+                    CLASES_ESTADO_COMPROBANTE[comprobante.estado] ||
+                    "no-aplica"
+                  }`}
+                >
+                  {ETIQUETAS_ESTADO_COMPROBANTE[comprobante.estado] ||
+                    comprobante.estado}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {puedeSubir && (
+            <AdjuntarComprobante pedidoId={pedido.id} onSubido={onSubido} />
+          )}
+          {!puedeSubir && ultimo.estado === "Rechazado" && (
+            <p className="mp-comprobante-nota">
+              Este pedido ya no admite nuevos comprobantes.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function MisPedidos({ pedidos = [], onBack }) {
   const { catalogo } = useCatalogo();
   const [filtro, setFiltro] = useState("todos");
@@ -247,29 +437,160 @@ export default function MisPedidos({ pedidos = [], onBack }) {
   const [modalTipo, setModalTipo] = useState(null);
   const [pedidosApi, setPedidosApi] = useState(null);
   const [errorPedidos, setErrorPedidos] = useState("");
+  const [cargandoPedidos, setCargandoPedidos] = useState(true);
+  const [comprobantes, setComprobantes] = useState({});
+  const [erroresComprobantes, setErroresComprobantes] = useState({});
+  const [cargandoComprobantes, setCargandoComprobantes] = useState({});
+
+  const cargarPedidos = useCallback(async () => {
+    setCargandoPedidos(true);
+    setErrorPedidos("");
+
+    try {
+      const respuesta = await obtenerMisPedidos();
+      setPedidosApi(Array.isArray(respuesta) ? respuesta : []);
+    } catch (error) {
+      setPedidosApi(null);
+      setComprobantes({});
+      setErroresComprobantes({});
+      setCargandoComprobantes({});
+      setErrorPedidos(error?.message || "No se pudieron cargar tus pedidos");
+    } finally {
+      setCargandoPedidos(false);
+    }
+  }, []);
+
+  const refrescarPedidos = useCallback(async () => {
+    const respuesta = await obtenerMisPedidos().catch(() => null);
+    if (!Array.isArray(respuesta)) return;
+
+    setPedidosApi(respuesta);
+    setErrorPedidos("");
+  }, []);
 
   useEffect(() => {
-    let activo = true;
+    cargarPedidos();
+  }, [cargarPedidos]);
 
-    obtenerMisPedidos()
-      .then((respuesta) => {
-        if (activo) setPedidosApi(respuesta);
-      })
-      .catch((error) => {
-        if (activo) {
-          setErrorPedidos(error?.message || "No se pudieron cargar tus pedidos");
-        }
+  useEffect(() => {
+    if (!pedidosApi || pedidosApi.length === 0) return;
+
+    let activo = true;
+    const ids = pedidosApi.map((pedido) => pedido.id);
+
+    setCargandoComprobantes((previo) => {
+      const siguiente = { ...previo };
+      ids.forEach((id) => {
+        siguiente[id] = true;
       });
+      return siguiente;
+    });
+
+    Promise.all(
+      ids.map(async (id) => {
+        try {
+          const historial = await obtenerComprobantesPedido(id);
+          return { id, historial: normalizarHistorialComprobantes(historial) };
+        } catch (error) {
+          return {
+            id,
+            error: error?.message || "No se pudo cargar el comprobante"
+          };
+        }
+      })
+    ).then((resultados) => {
+      if (!activo) return;
+
+      setComprobantes((previo) => {
+        const siguiente = { ...previo };
+        resultados.forEach((resultado) => {
+          if (resultado.error) {
+            delete siguiente[resultado.id];
+          } else {
+            siguiente[resultado.id] = resultado.historial;
+          }
+        });
+        return siguiente;
+      });
+
+      setErroresComprobantes((previo) => {
+        const siguiente = { ...previo };
+        resultados.forEach((resultado) => {
+          if (resultado.error) {
+            siguiente[resultado.id] = resultado.error;
+          } else {
+            delete siguiente[resultado.id];
+          }
+        });
+        return siguiente;
+      });
+
+      setCargandoComprobantes((previo) => {
+        const siguiente = { ...previo };
+        ids.forEach((id) => {
+          delete siguiente[id];
+        });
+        return siguiente;
+      });
+    });
 
     return () => {
       activo = false;
     };
+  }, [pedidosApi]);
+
+  const recargarComprobantes = useCallback(async (id) => {
+    setCargandoComprobantes((previo) => ({ ...previo, [id]: true }));
+
+    try {
+      const historial = await obtenerComprobantesPedido(id);
+      setComprobantes((previo) => ({
+        ...previo,
+        [id]: normalizarHistorialComprobantes(historial)
+      }));
+      setErroresComprobantes((previo) => {
+        const siguiente = { ...previo };
+        delete siguiente[id];
+        return siguiente;
+      });
+    } catch (error) {
+      setErroresComprobantes((previo) => ({
+        ...previo,
+        [id]: error?.message || "No se pudo cargar el comprobante"
+      }));
+    } finally {
+      setCargandoComprobantes((previo) => {
+        const siguiente = { ...previo };
+        delete siguiente[id];
+        return siguiente;
+      });
+    }
   }, []);
 
-  const pedidosMapeados = useMemo(
-    () => (pedidosApi ? pedidosApi.map((p) => mapearPedido(p, catalogo)) : null),
-    [pedidosApi, catalogo]
+  const manejarComprobanteSubido = useCallback(
+    async (id) => {
+      await recargarComprobantes(id);
+      await refrescarPedidos();
+    },
+    [recargarComprobantes, refrescarPedidos]
   );
+
+  const pedidosMapeados = useMemo(() => {
+    if (!pedidosApi) return null;
+
+    return pedidosApi.map((pedido) => ({
+      ...mapearPedido(pedido, catalogo),
+      comprobantes: comprobantes[pedido.id] || [],
+      cargandoComprobante: Boolean(cargandoComprobantes[pedido.id]),
+      errorComprobante: erroresComprobantes[pedido.id] || ""
+    }));
+  }, [
+    pedidosApi,
+    catalogo,
+    comprobantes,
+    cargandoComprobantes,
+    erroresComprobantes
+  ]);
 
   const lista = pedidosMapeados ?? pedidos;
 
@@ -317,9 +638,22 @@ export default function MisPedidos({ pedidos = [], onBack }) {
         </div>
 
         {errorPedidos && (
-          <p className="mp-subtitle" role="alert">
-            {errorPedidos}
-          </p>
+          <div className="mp-api-error" role="alert">
+            <p>
+              <CircleAlert size={16} />
+              No pudimos cargar tus pedidos desde el servidor. El estado de los
+              comprobantes no está disponible. {errorPedidos}
+            </p>
+            <button
+              type="button"
+              className="mp-btn-reintentar"
+              onClick={cargarPedidos}
+              disabled={cargandoPedidos}
+            >
+              <RotateCw size={14} />
+              {cargandoPedidos ? "Reintentando..." : "Reintentar"}
+            </button>
+          </div>
         )}
 
         <div className="mp-tabs">
@@ -381,6 +715,16 @@ export default function MisPedidos({ pedidos = [], onBack }) {
                         {pedido.estadoPago}
                       </span>
                     </div>
+                  )}
+
+                  {pedido.estadoBackend && (
+                    <BloqueComprobantes
+                      pedido={pedido}
+                      cargando={pedido.cargandoComprobante}
+                      error={pedido.errorComprobante}
+                      onReintentar={() => recargarComprobantes(pedido.id)}
+                      onSubido={() => manejarComprobanteSubido(pedido.id)}
+                    />
                   )}
 
                   <p className="mp-msg">{pedido.mensajeEstado}</p>

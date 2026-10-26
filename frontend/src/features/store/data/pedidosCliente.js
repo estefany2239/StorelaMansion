@@ -247,6 +247,93 @@ export const pedidosClienteIniciales = [
   }
 ];
 
+export const MAX_BYTES_COMPROBANTE = 2 * 1024 * 1024;
+export const MAX_INTENTOS_COMPROBANTE = 3;
+export const TIPOS_COMPROBANTE_PERMITIDOS = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf"
+];
+
+export const ETIQUETAS_ESTADO_COMPROBANTE = {
+  Pendiente: "Pendiente de revisión",
+  Aprobado: "Aprobado",
+  Rechazado: "Rechazado"
+};
+
+export const CLASES_ESTADO_COMPROBANTE = {
+  Pendiente: "pendiente",
+  Aprobado: "confirmado",
+  Rechazado: "rechazado"
+};
+
+export const validarComprobante = (archivo) => {
+  if (!archivo) return "Selecciona un comprobante.";
+  if (!archivo.size) return "El archivo está vacío.";
+
+  const tipo = String(archivo.type || "").toLowerCase();
+  if (!TIPOS_COMPROBANTE_PERMITIDOS.includes(tipo)) {
+    return "El comprobante debe ser una imagen JPEG, PNG o WEBP, o un PDF.";
+  }
+
+  if (archivo.size > MAX_BYTES_COMPROBANTE) {
+    return "El comprobante supera el tamaño máximo de 2 MB.";
+  }
+
+  return "";
+};
+
+export const normalizarComprobante = (comprobante = {}) => ({
+  id: comprobante.id,
+  estado: comprobante.estado || "",
+  intento: Number(comprobante.intento) || 0,
+  motivoRechazo: comprobante.motivo_rechazo || "",
+  fechaCarga: comprobante.fecha_carga || "",
+  fechaRevision: comprobante.fecha_revision || "",
+  nombreOriginal: comprobante.nombre_original || "",
+  tipoMime: comprobante.tipo_mime || "",
+  tamano: Number(comprobante.tamano_bytes) || 0
+});
+
+const fechaComprobante = (comprobante) => {
+  const fecha = new Date(comprobante.fechaCarga).getTime();
+  return Number.isNaN(fecha) ? 0 : fecha;
+};
+
+export const normalizarHistorialComprobantes = (historial) => {
+  if (!Array.isArray(historial)) return [];
+
+  return historial
+    .map((comprobante) => normalizarComprobante(comprobante))
+    .sort(
+      (a, b) =>
+        fechaComprobante(b) - fechaComprobante(a) || b.intento - a.intento
+    );
+};
+
+export const permiteNuevoComprobante = (estadoBackend, historial) => {
+  if (estadoBackend !== "Registrado") return false;
+
+  const lista = Array.isArray(historial) ? historial : [];
+  const ultimo = lista[0];
+  if (!ultimo || ultimo.estado !== "Rechazado") return false;
+
+  const tienePendienteOAprobado = lista.some(
+    (comprobante) =>
+      comprobante.estado === "Pendiente" ||
+      comprobante.estado === "Aprobado"
+  );
+  if (tienePendienteOAprobado) return false;
+
+  const intentos = lista.reduce(
+    (maximo, comprobante) => Math.max(maximo, comprobante.intento || 0),
+    lista.length
+  );
+
+  return intentos < MAX_INTENTOS_COMPROBANTE;
+};
+
 export const getTotalAbonado = (pedido) =>
   pedido.abonos.reduce((acc, a) => acc + a.valor, 0);
 
