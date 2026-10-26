@@ -31,6 +31,9 @@ export async function obtenerCategorias() {
 // trampa (siempre vacío: sólo un relleno automático lo rellena). El backend
 // los usa para descartar registros automáticos sin decirle al atacante que
 // algo falló, por eso van siempre en la petición.
+//
+// `turnstileToken` es el token de Turnstile (Fase C): sin él el backend
+// responde 400 CAPTCHA_REQUERIDO y no se crea la cuenta.
 export async function registrarUsuario(
   nombre,
   correo,
@@ -41,7 +44,8 @@ export async function registrarUsuario(
     documento = '',
     fechaNacimiento = '',
     website = '',
-    ts = 0
+    ts = 0,
+    turnstileToken = ''
   } = {}
 ) {
   let respuesta
@@ -58,7 +62,8 @@ export async function registrarUsuario(
         documento,
         fecha_nacimiento: fechaNacimiento,
         website,
-        ts
+        ts,
+        turnstileToken
       })
     })
   } catch {
@@ -69,6 +74,7 @@ export async function registrarUsuario(
     const data = await respuesta.json().catch(() => ({}))
     const error = new Error(data.error || 'No se pudo registrar el usuario')
     if (data.campo) error.campo = data.campo
+    if (data.codigo) error.codigo = data.codigo
     throw error
   }
   return respuesta.json()
@@ -95,13 +101,15 @@ export async function iniciarSesion(correo, contrasena) {
 
 // Flujo público de recuperación de contraseña (código de 6 dígitos por
 // correo). Solicitar siempre responde igual, exista o no el correo.
-export async function solicitarCodigoRecuperacion(correo) {
+// `turnstileToken` es obligatorio (Fase C): sin él responde
+// 400 CAPTCHA_REQUERIDO y no se envía ningún código.
+export async function solicitarCodigoRecuperacion(correo, turnstileToken = '') {
   let respuesta
   try {
     respuesta = await fetch(`${API_URL}/api/auth/recuperar/solicitar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correo })
+      body: JSON.stringify({ correo, turnstileToken })
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')
@@ -109,7 +117,9 @@ export async function solicitarCodigoRecuperacion(correo) {
 
   if (!respuesta.ok) {
     const data = await respuesta.json().catch(() => ({}))
-    throw new Error(data.error || 'No se pudo enviar el código')
+    const error = new Error(data.error || 'No se pudo enviar el código')
+    if (data.codigo) error.codigo = data.codigo
+    throw error
   }
   return respuesta.json()
 }

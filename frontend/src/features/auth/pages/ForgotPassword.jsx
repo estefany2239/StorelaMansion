@@ -12,6 +12,7 @@ import {
   verificarCodigoRecuperacion,
   restablecerContrasena
 } from "../../../shared/services/api";
+import TurnstileWidget from "../../../shared/components/TurnstileWidget";
 import "./Login.css";
 
 const authBg = new URL("../../../assets/img/img.png", import.meta.url).href;
@@ -26,16 +27,31 @@ export default function ForgotPassword({ onBackToLogin }) {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
+  // Turnstile sólo hace falta para pedir el código (y para reenviarlo):
+  // verificar y restablecer no lo piden. El token es de un solo uso, así
+  // que cada envío fallido obliga a pedir uno nuevo al widget.
+  const [tokenTurnstile, setTokenTurnstile] = useState("");
+  const [reiniciarCaptcha, setReiniciarCaptcha] = useState(0);
+
   const correoNormalizado = () => correo.trim().toLowerCase();
+
+  // El token de Turnstile es de un solo uso: cada envío agota el suyo y el
+  // widget se vuelve a pintar para ofrecer uno nuevo.
+  const agotarToken = () => {
+    setTokenTurnstile('');
+    setReiniciarCaptcha((n) => n + 1);
+  };
 
   const enviarSolicitud = async () => {
     setError("");
     setCargando(true);
     try {
-      await solicitarCodigoRecuperacion(correoNormalizado());
+      await solicitarCodigoRecuperacion(correoNormalizado(), tokenTurnstile);
+      setTokenTurnstile("");
       setPaso("codigo");
     } catch (err) {
       setError(err.message);
+      agotarToken();
     } finally {
       setCargando(false);
     }
@@ -50,10 +66,13 @@ export default function ForgotPassword({ onBackToLogin }) {
     setError("");
     setCargando(true);
     try {
-      await solicitarCodigoRecuperacion(correoNormalizado());
+      await solicitarCodigoRecuperacion(correoNormalizado(), tokenTurnstile);
       setCodigo("");
+      // El token quedó gastado en el servidor: otro nuevo para el próximo.
+      agotarToken();
     } catch (err) {
       setError(err.message);
+      agotarToken();
     } finally {
       setCargando(false);
     }
@@ -68,6 +87,8 @@ export default function ForgotPassword({ onBackToLogin }) {
       setToken(data.token);
       setContrasena("");
       setConfirmar("");
+      // El widget de esta pantalla se desmonta: sin token viejo.
+      setTokenTurnstile("");
       setPaso("nueva");
     } catch (err) {
       setError(err.message);
@@ -103,6 +124,7 @@ export default function ForgotPassword({ onBackToLogin }) {
   const volverAlCodigo = () => {
     setError("");
     setCodigo("");
+    setTokenTurnstile("");
     setPaso("codigo");
   };
 
@@ -110,6 +132,7 @@ export default function ForgotPassword({ onBackToLogin }) {
     setError("");
     setCodigo("");
     setToken("");
+    setTokenTurnstile("");
     setPaso("correo");
   };
 
@@ -166,7 +189,17 @@ export default function ForgotPassword({ onBackToLogin }) {
 
               {error && <div className="auth-error">{error}</div>}
 
-              <button type="submit" className="auth-submit-btn" disabled={cargando}>
+              <TurnstileWidget
+                accion="recuperacion"
+                onChange={setTokenTurnstile}
+                reiniciar={reiniciarCaptcha}
+              />
+
+              <button
+                type="submit"
+                className="auth-submit-btn"
+                disabled={cargando || !tokenTurnstile}
+              >
                 {cargando ? "Enviando..." : "Enviar código"} <ArrowRight size={18} />
               </button>
 
@@ -207,8 +240,21 @@ export default function ForgotPassword({ onBackToLogin }) {
                 {cargando ? "Verificando..." : "Verificar código"} <ArrowRight size={18} />
               </button>
 
+              {/* El reenvío vuelve a llamar a solicitar, así que también
+                  pide Turnstile (token de un solo uso). */}
+              <TurnstileWidget
+                accion="recuperacion"
+                onChange={setTokenTurnstile}
+                reiniciar={reiniciarCaptcha}
+              />
+
               <div className="auth-row-between">
-                <button type="button" onClick={handleReenviar} className="auth-link" disabled={cargando}>
+                <button
+                  type="button"
+                  onClick={handleReenviar}
+                  className="auth-link"
+                  disabled={cargando || !tokenTurnstile}
+                >
                   Reenviar código
                 </button>
                 <button type="button" onClick={cambiarCorreo} className="auth-link">

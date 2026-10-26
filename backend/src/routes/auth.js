@@ -9,6 +9,7 @@ import {
   limitadorRecuperacionCodigos,
 } from '../middlewares/limitadores.js'
 import { proteccionRegistro } from '../middlewares/honeypot.js'
+import { verificarCaptcha } from '../middlewares/verificarCaptcha.js'
 import { enviarBienvenidaRegistro } from '../services/invitaciones.js'
 import {
   faltaSecretoRecuperacion,
@@ -54,9 +55,18 @@ const datosPublicos = (usuario) => ({
 // nacimiento, que además debe cumplir la mayoría de edad). La obligatoriedad
 // es solo de este flujo: las columnas de usuario siguen admitiendo nulos
 // por los usuarios antiguos.
+//
+// El orden de las capas importa: primero el límite por IP, después el
+// campo trampa (que descarta en silencio), después Turnstile con
+// data-action 'registro' y sólo entonces el validador de datos.
 const telefonoValido = (telefono) => /^[0-9]+$/.test(telefono) && telefono.length <= 10
 
-router.post('/register', limitadorRegistro, proteccionRegistro, async (req, res) => {
+router.post(
+  '/register',
+  limitadorRegistro,
+  proteccionRegistro,
+  verificarCaptcha({ accion: 'registro' }),
+  async (req, res) => {
   const {
     tipo: tipoDocumento,
     documento,
@@ -188,7 +198,8 @@ router.post('/register', limitadorRegistro, proteccionRegistro, async (req, res)
     console.error('Error en /api/auth/register:', error.message)
     res.status(500).json({ error: 'No se pudo crear la cuenta' })
   }
-})
+  }
+)
 
 // POST /api/auth/login  -> devuelve un token y los datos del usuario.
 // Si la cuenta tiene una contraseña temporal pendiente (invitación), se
@@ -339,7 +350,10 @@ const falloRecuperacion = (res) => {
   return res.status(500).json({ error: mensajeServicioNoDisponible })
 }
 
-router.post('/recuperar/solicitar', async (req, res) => {
+// Turnstile con data-action 'recuperacion' antes de todo: un token de
+// registro no sirve aquí. El resto del flujo responde siempre igual,
+// exista o no el correo.
+router.post('/recuperar/solicitar', verificarCaptcha({ accion: 'recuperacion' }), async (req, res) => {
   try {
     const correo = String(req.body.correo || '').trim().toLowerCase()
     if (!correoValido(correo)) {

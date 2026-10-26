@@ -111,6 +111,9 @@ const registrar = async (nombre, correo, contrasena) => {
       // Fase A: el registro exige la marca de tiempo del formulario; sin ella
       // el servidor descarta la petición (respuesta falsa, sin crear cuenta).
       ts: Date.now() - 5000,
+      // Fase C: Turnstile. La clave local es la de prueba de Cloudflare,
+      // que siempre aprueba este token.
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
     }),
   })
   const data = await respuesta.json().catch(() => null)

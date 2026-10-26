@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import app from './app.js'
 import { inicializarCategorias } from './models/categorias.js'
+import { problemaDelSecreto } from './middlewares/verificarCaptcha.js'
 
 // Variables obligatorias. Se comprueba solo su presencia: nunca se imprime
 // su valor (podría contener credenciales o el secreto JWT).
@@ -13,6 +14,19 @@ if (faltantes.length > 0) {
       'Defínelas en backend/.env (ver backend/.env.example).'
   )
   process.exit(1)
+}
+
+// Fase C (Turnstile): en producción el secreto es obligatorio y no puede
+// ser una clave de prueba de Cloudflare. En ese caso el proceso no arranca:
+// si lo hiciera, el registro y la recuperación quedarían abiertos o
+// bloqueados sin que nadie lo notara. Fuera de producción no se sale:
+// el middleware responde 503 (fallo cerrado) y anota el motivo en el log.
+if (process.env.NODE_ENV === 'production') {
+  const problemaTurnstile = problemaDelSecreto({ produccion: true })
+  if (problemaTurnstile) {
+    console.error(`[config] ${problemaTurnstile}`)
+    process.exit(1)
+  }
 }
 
 const PORT = process.env.PORT || 3000

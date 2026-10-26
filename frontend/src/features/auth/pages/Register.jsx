@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight, IdCard, Calendar, Phone } from 'lucide-react';
 import { registrarUsuario } from '../../../shared/services/api';
+import TurnstileWidget from '../../../shared/components/TurnstileWidget';
 import { useNotify } from '../../../shared/components/notifications/useNotify.js';
 import useValidacionFormulario from '../../../shared/hooks/useValidacionFormulario';
 // Reglas, cálculo de edad y mapeo de `campo` del backend viven en un
@@ -33,6 +34,11 @@ export default function Register({ onBackToLogin }) {
   // menos unos segundos entre aquí y el envío: una petición hecha a mano
   // contra la API no lo lleva (o lo lleva inventado) y se descarta.
   const [tsFormulario] = useState(() => Date.now());
+
+  // Token de Turnstile: el botón de enviar no se habilita sin él, y cada
+  // intento fallido lo gasta, así que el widget se vuelve a pintar.
+  const [tokenTurnstile, setTokenTurnstile] = useState('');
+  const [reiniciarCaptcha, setReiniciarCaptcha] = useState(0);
 
   const {
     errores,
@@ -79,7 +85,8 @@ export default function Register({ onBackToLogin }) {
           documento: formData.documento.trim(),
           fechaNacimiento: formData.fechaNacimiento,
           website: formData.website,
-          ts: tsFormulario
+          ts: tsFormulario,
+          turnstileToken: tokenTurnstile
         }
       );
 
@@ -89,6 +96,11 @@ export default function Register({ onBackToLogin }) {
       );
       onBackToLogin();
     } catch (error) {
+      // Cualquier envío fallido gasta el token: se limpia aquí y se pide
+      // uno nuevo al widget (que se vuelve a pintar al cambiar `reiniciar`).
+      setTokenTurnstile('');
+      setReiniciarCaptcha((n) => n + 1);
+
       const campo = CAMPOS_BACKEND[error.campo];
 
       // El backend identificó el campo exacto (duplicados incluidos):
@@ -342,7 +354,17 @@ export default function Register({ onBackToLogin }) {
               </div>
             </section>
 
-            <button type="submit" className="auth-submit-btn">
+            <TurnstileWidget
+              accion="registro"
+              onChange={setTokenTurnstile}
+              reiniciar={reiniciarCaptcha}
+            />
+
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={!tokenTurnstile}
+            >
               Registrarse <ArrowRight size={18} />
             </button>
 

@@ -74,6 +74,10 @@ const cuerpoValido = (clave) => ({
   fecha_nacimiento: '1990-01-01',
   ts: Date.now() - 5000,
   website: '',
+  // Fase C: el registro exige Turnstile. La clave local es la de prueba de
+  // Cloudflare, que siempre aprueba este token, así que estas peticiones
+  // llegan a las capas que esta prueba comprueba.
+  turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
 })
 
 const existeEnBase = async (correo) => {
@@ -137,10 +141,16 @@ const main = async () => {
   // octava debe caer en el límite.
   const vistos = [r1.status, r2.status, r3.status, r4.status, r5.status]
   for (let i = 6; i <= 7; i += 1) {
-    const r = await pedir('POST', '/auth/register', { ts: Date.now() - 5000 })
+    const r = await pedir('POST', '/auth/register', {
+      ts: Date.now() - 5000,
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+    })
     vistos.push(r.status)
   }
-  const rLimite = await pedir('POST', '/auth/register', { ts: Date.now() - 5000 })
+  const rLimite = await pedir('POST', '/auth/register', {
+    ts: Date.now() - 5000,
+    turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+  })
   vistos.push(rLimite.status)
   comprobar(
     '6) Registro por IP: las primeras 7 peticiones no están limitadas',

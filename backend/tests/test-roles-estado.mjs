@@ -106,7 +106,14 @@ const main = async () => {
   comprobar('6b) Login con clave errónea -> 401', mala.status === 401, `status=${mala.status}`)
 
   const registro = await pedir('POST', '/auth/register', {
-    body: { nombre: `Publico ${SUFIJO}`, correo: PUBLICO_CORREO, contrasena: CLAVE, ts: Date.now() - 5000 },
+    body: {
+      nombre: `Publico ${SUFIJO}`,
+      correo: PUBLICO_CORREO,
+      contrasena: CLAVE,
+      ts: Date.now() - 5000,
+      // Fase C: Turnstile (clave local de prueba, siempre aprueba).
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+    },
   })
   comprobar('6c) Registro público -> 201', registro.status === 201, `status=${registro.status}`)
 

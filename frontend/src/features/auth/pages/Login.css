@@ -531,3 +531,9 @@
     left: 16px;
   }
 }
+
+/* Turnstile (Fase C): hueco del widget de verificacion en el formulario. */
+.auth-captcha {
+  margin: 2px 0 4px;
+}
+

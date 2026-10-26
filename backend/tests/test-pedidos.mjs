@@ -124,6 +124,8 @@ const prepararUsuarios = async () => {
       documento: '1000000011',
       fecha_nacimiento: '1995-06-15',
       ts: Date.now() - 5000,
+      // Fase C: Turnstile (clave local de prueba, siempre aprueba).
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
     },
   })
   await pedir('POST', '/auth/register', {
@@ -136,6 +138,8 @@ const prepararUsuarios = async () => {
       documento: '1000000022',
       fecha_nacimiento: '1992-03-20',
       ts: Date.now() - 5000,
+      // Fase C: Turnstile (clave local de prueba, siempre aprueba).
+      turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
     },
   })
 }
