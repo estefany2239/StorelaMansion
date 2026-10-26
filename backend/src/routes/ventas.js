@@ -29,9 +29,14 @@ const SELECT_VENTA = `
          v.estado,
          v.total::float8 AS total,
          v.id_vendedor,
-         TRIM(u.nombres || ' ' || u.apellidos) AS vendedor
-  FROM venta v
-  JOIN usuario u ON u.id_usuario = v.id_vendedor
+         TRIM(u.nombres || ' ' || u.apellidos) AS vendedor,
+         v.origen,
+         v.estado_pago,
+         TO_CHAR(v.fecha_pago, 'YYYY-MM-DD') AS fecha_pago,
+         v.id_pedido,
+         v.id_pedido AS numero_pedido
+   FROM venta v
+   LEFT JOIN usuario u ON u.id_usuario = v.id_vendedor
 `
 
 const SELECT_DETALLE = `
@@ -168,6 +173,31 @@ router.get('/', requierePrivilegio('Ventas', 'Consultar'), async (req, res) => {
   }
 })
 
+// GET /resumen -> indicadores de ventas (Ventas:Consultar). Declarado ANTES
+// de /:id para que Express no lo interprete como un identificador.
+router.get('/resumen', requierePrivilegio('Ventas', 'Consultar'), async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS total_ventas,
+              COUNT(*) FILTER (
+                WHERE estado <> 'Anulada' AND estado_pago = 'Pagada'
+              )::int AS pagadas,
+              COUNT(*) FILTER (
+                WHERE estado <> 'Anulada' AND estado_pago = 'Pendiente'
+              )::int AS pendientes,
+              COUNT(*) FILTER (WHERE estado = 'Anulada')::int AS canceladas,
+              COALESCE(SUM(total) FILTER (
+                WHERE estado <> 'Anulada' AND estado_pago = 'Pagada'
+              ), 0)::float8 AS valor_total_pagadas
+         FROM venta`
+    )
+    res.json(rows[0])
+  } catch (error) {
+    console.error('Error en GET /api/ventas/resumen:', error.message)
+    res.status(500).json({ error: 'No se pudo cargar el resumen de ventas' })
+  }
+})
+
 // GET /:id -> detalle de una venta con sus productos (Ventas:Consultar)
 router.get('/:id', requierePrivilegio('Ventas', 'Consultar'), async (req, res) => {
   try {
@@ -274,8 +304,10 @@ router.post('/', requierePrivilegio('Ventas', 'Crear'), async (req, res) => {
     )
 
     const { rows: ventaRows } = await client.query(
-      `INSERT INTO venta (id_cliente, nombre_cliente, id_vendedor, fecha, metodo_pago, estado, total)
-       VALUES ($1, $2, $3, COALESCE($4::date, CURRENT_DATE), $5, $6, $7)
+      `INSERT INTO venta (id_cliente, nombre_cliente, id_vendedor, fecha, metodo_pago,
+                          estado, total, origen, estado_pago, fecha_pago)
+       VALUES ($1, $2, $3, COALESCE($4::date, CURRENT_DATE), $5, $6, $7,
+               'Mostrador', 'Pagada', CURRENT_DATE)
        RETURNING id_venta`,
       [idCliente, nombreCliente, req.usuario.id, fecha, metodo, ESTADO_COMPLETADA, total]
     )
@@ -337,7 +369,7 @@ router.patch('/:id/estado', requierePrivilegio('Ventas', 'Cambiar estado'), asyn
     await client.query('BEGIN')
 
     const { rows } = await client.query(
-      'SELECT id_venta, estado FROM venta WHERE id_venta = $1 FOR UPDATE',
+      'SELECT id_venta, estado, id_pedido FROM venta WHERE id_venta = $1 FOR UPDATE',
       [id]
     )
     const venta = rows[0]
@@ -345,6 +377,12 @@ router.patch('/:id/estado', requierePrivilegio('Ventas', 'Cambiar estado'), asyn
     if (!venta) {
       await client.query('ROLLBACK')
       return res.status(404).json({ error: 'Venta no encontrada' })
+    }
+    if (venta.id_pedido !== null) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({
+        error: 'Esta venta pertenece a un pedido; se gestiona cancelando el pedido',
+      })
     }
     if (venta.estado === ESTADO_ANULADA) {
       await client.query('ROLLBACK')

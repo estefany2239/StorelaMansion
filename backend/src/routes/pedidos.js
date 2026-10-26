@@ -481,6 +481,41 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
       }
     }
 
+    // La venta del pedido se crea en la MISMA transacción. El stock ya se
+    // descontó arriba con el pedido: aquí no se vuelve a tocar.
+    const { rows: ventaRows } = await client.query(
+      `INSERT INTO venta (id_pedido, id_cliente, nombre_cliente, id_vendedor,
+                          fecha, metodo_pago, estado, total, origen,
+                          estado_pago, fecha_pago)
+       SELECT p.id_pedido,
+              p.id_usuario,
+              TRIM(u.nombres || ' ' || u.apellidos),
+              NULL,
+              p.fecha,
+              p.metodo_pago,
+              'Completada',
+              p.total,
+              'Tienda virtual',
+              'Pendiente',
+              NULL
+         FROM pedido p
+         JOIN usuario u ON u.id_usuario = p.id_usuario
+        WHERE p.id_pedido = $1
+       ON CONFLICT (id_pedido) DO NOTHING
+       RETURNING id_venta`,
+      [idPedido]
+    )
+
+    if (ventaRows.length > 0) {
+      await client.query(
+        `INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario)
+         SELECT $1, id_variante, cantidad, precio_unitario
+           FROM detalle_pedido
+          WHERE id_pedido = $2`,
+        [ventaRows[0].id_venta, idPedido]
+      )
+    }
+
     // El pago NO se registra aquí: el pedido nace en "Pendiente de
     // verificación" y la tienda lo confirma o rechaza desde el admin.
 
@@ -915,6 +950,15 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
           [detalle.cantidad, detalle.id_variante]
         )
       }
+
+      // La venta asociada queda anulada sin volver a tocar el stock.
+      await client.query(
+        `UPDATE venta
+            SET estado = 'Anulada'
+          WHERE id_pedido = $1
+            AND estado <> 'Anulada'`,
+        [id]
+      )
     }
 
     // Contra entrega: al entregar se cobra el saldo restante en la MISMA
