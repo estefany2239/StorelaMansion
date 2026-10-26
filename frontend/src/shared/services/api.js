@@ -1,5 +1,8 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
+const MENSAJE_DEMASIADOS_INTENTOS =
+  'Demasiados intentos, intenta de nuevo en unos minutos.'
+
 export async function obtenerProductos(filtros = {}) {
   const params = new URLSearchParams()
   Object.entries(filtros).forEach(([clave, valor]) => {
@@ -72,7 +75,12 @@ export async function registrarUsuario(
 
   if (!respuesta.ok) {
     const data = await respuesta.json().catch(() => ({}))
-    const error = new Error(data.error || 'No se pudo registrar el usuario')
+    const error = new Error(
+      respuesta.status === 429
+        ? data.message || data.error || MENSAJE_DEMASIADOS_INTENTOS
+        : data.error || 'No se pudo registrar el usuario'
+    )
+    error.status = respuesta.status
     if (data.campo) error.campo = data.campo
     if (data.codigo) error.codigo = data.codigo
     throw error
@@ -94,7 +102,14 @@ export async function iniciarSesion(correo, contrasena) {
 
   if (!respuesta.ok) {
     const data = await respuesta.json().catch(() => ({}))
-    throw new Error(data.error || 'Correo o contraseña incorrectos')
+    const error = new Error(
+      respuesta.status === 429
+        ? data.message || data.error || MENSAJE_DEMASIADOS_INTENTOS
+        : data.error || 'Correo o contraseña incorrectos'
+    )
+    error.status = respuesta.status
+    if (data.codigo) error.codigo = data.codigo
+    throw error
   }
   return respuesta.json()
 }
@@ -298,6 +313,25 @@ export async function crearPedido(pedido) {
     throw new Error('No se pudo conectar con el servidor')
   }
   return procesarRespuesta(respuesta, 'No se pudo crear el pedido')
+}
+
+// Sube el comprobante de pago de un pedido. El FormData fija el
+// Content-Type multipart (con su boundary); no se debe enviar a mano.
+export async function subirComprobantePedido(id, archivo) {
+  const formData = new FormData()
+  formData.append('comprobante', archivo)
+
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}/api/pedidos/${id}/comprobantes`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: formData
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+  return procesarRespuesta(respuesta, 'No se pudo subir el comprobante')
 }
 
 export async function obtenerMisPedidos() {

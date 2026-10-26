@@ -933,6 +933,10 @@ export default function App() {
           user={user}
           darkMode={theme === "dark"}
           onConfirmarPedido={handleConfirmarPedido}
+          onIrAMisPedidos={() => {
+            setCurrentView("mis-pedidos");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           onBack={handleSeguirComprando}
           onStockActualizado={refrescarCatalogo}
         />

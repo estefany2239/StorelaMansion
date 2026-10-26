@@ -23,7 +23,10 @@ import {
 
 import { obtenerPrecio } from "../../store/data/pedidosCliente";
 import { esAgotado, hayStock } from "../../../shared/components/cart/cantidad";
-import { crearPedido } from "../../../shared/services/api";
+import {
+  crearPedido,
+  subirComprobantePedido,
+} from "../../../shared/services/api";
 import { useNotify } from "../../../shared/components/notifications/useNotify.js";
 import { NOMBRE_COMPLETO_VALIDO } from "../../../shared/utils/validacionesRegistro";
 import { calcularCostoEnvio, esValleAburra } from "../../../shared/utils/envio";
@@ -39,6 +42,36 @@ const ABONOS_HABILITADOS = false;
 
 // Largo máximo de la columna domicilio.direccion_entrega (varchar(255)).
 const LARGO_MAX_DIRECCION = 255;
+
+// Mismas reglas que el backend para el comprobante de pago.
+const MAX_COMPROBANTE_BYTES = 2 * 1024 * 1024;
+const TIPOS_COMPROBANTE = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+];
+const EXTENSION_COMPROBANTE = /\.(jpe?g|png|webp|pdf)$/i;
+
+const validarArchivoComprobante = (file) => {
+  const tipo = String(file?.type || "").toLowerCase();
+  const nombre = String(file?.name || "");
+
+  const tipoValido =
+    TIPOS_COMPROBANTE.includes(tipo) ||
+    ((!tipo || tipo === "application/octet-stream") &&
+      EXTENSION_COMPROBANTE.test(nombre));
+
+  if (!tipoValido) {
+    return "El comprobante debe ser una imagen JPEG, PNG o WEBP, o un PDF.";
+  }
+
+  if (file.size > MAX_COMPROBANTE_BYTES) {
+    return "El comprobante no puede superar los 2 MB.";
+  }
+
+  return "";
+};
 
 // Mismas reglas que el backend (utils/ubicaciones.js).
 const LARGO_MAX_NOMBRE = 100;
@@ -74,6 +107,7 @@ export default function PaymentView({
   cart,
   onBack,
   onConfirmarPedido,
+  onIrAMisPedidos,
   onStockActualizado,
   darkMode,
 }) {
@@ -256,6 +290,18 @@ export default function PaymentView({
       return;
     }
 
+    const errorComprobante = validarArchivoComprobante(file);
+
+    if (errorComprobante) {
+      event.target.value = "";
+      setProofFile(null);
+      setErrores((previos) => ({
+        ...previos,
+        comprobante: { texto: errorComprobante },
+      }));
+      return;
+    }
+
     setProofFile(file);
     limpiarError("comprobante");
   };
@@ -362,8 +408,16 @@ export default function PaymentView({
       marcar("metodo", "Selecciona una opción.");
     }
 
-    if (requiereBanco && !proofFile) {
-      marcar("comprobante", "Adjunta el comprobante.");
+    if (requiereBanco) {
+      if (!proofFile) {
+        marcar("comprobante", "Adjunta el comprobante.");
+      } else {
+        const errorComprobante = validarArchivoComprobante(proofFile);
+
+        if (errorComprobante) {
+          marcar("comprobante", errorComprobante);
+        }
+      }
     }
 
     const montoNum = Number(montoAbono);
@@ -460,6 +514,26 @@ export default function PaymentView({
         nombre_entrega: nombreEntrega.trim(),
         telefono_entrega: telefonoEntrega.trim(),
       });
+
+      // El pedido ya existe: si la subida falla no se vuelve a crear.
+      if (proofFile) {
+        try {
+          await subirComprobantePedido(pedido.id, proofFile);
+        } catch {
+          notify(
+            "Tu pedido quedó registrado, pero el comprobante no se pudo subir. Puedes subirlo desde Mis pedidos",
+            "error"
+          );
+
+          if (onConfirmarPedido) {
+            onConfirmarPedido(pedido);
+          }
+          if (onIrAMisPedidos) {
+            onIrAMisPedidos();
+          }
+          return;
+        }
+      }
 
       if (onConfirmarPedido) {
         onConfirmarPedido(pedido);
@@ -1107,7 +1181,7 @@ export default function PaymentView({
                     </span>
                     <input
                       type="file"
-                      accept="image/*,.pdf"
+                      accept="image/jpeg,image/png,image/webp,.pdf"
                       onChange={handleProofChange}
                     />
                   </label>
