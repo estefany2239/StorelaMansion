@@ -111,7 +111,7 @@
 
 .admin-logo h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 18px;
   line-height: 1;
   font-weight: 700;

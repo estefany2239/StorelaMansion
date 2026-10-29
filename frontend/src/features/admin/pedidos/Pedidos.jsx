@@ -8,7 +8,11 @@ import {
   Pencil,
   X,
   Trash2,
-  Receipt
+  Receipt,
+  FileText,
+  ZoomIn,
+  ImageOff,
+  Loader2
 } from "lucide-react";
 
 import "./Pedidos.css";
@@ -172,6 +176,219 @@ const claseEstado = (estado) => {
 const REGISTROS_POR_PAGINA = 6;
 
 
+const esTipoImagen = (tipo) =>
+  String(tipo || "")
+    .toLowerCase()
+    .startsWith("image/");
+
+
+// Miniatura perezosa de un comprobante. Descarga el archivo con el token
+// cuando entra en pantalla y libera el object URL al desmontarse (al cerrar
+// el modal).
+function ComprobanteMiniatura({ pedidoId, comprobante, onAbrir }) {
+
+  const contenedorRef = useRef(null);
+  const urlRef = useRef("");
+
+  const [estado, setEstado] =
+    useState("cargando");
+
+  const [archivo, setArchivo] =
+    useState(null);
+
+  useEffect(() => {
+
+    const nodo = contenedorRef.current;
+
+    if (!nodo) return undefined;
+
+    let activo = true;
+    let observador = null;
+
+    const cargar = async () => {
+
+      if (!activo) return;
+
+      setEstado("cargando");
+
+      try {
+
+        const blob =
+          await obtenerArchivoComprobantePedido(
+            pedidoId,
+            comprobante.id
+          );
+
+        if (!activo) return;
+
+        const url = URL.createObjectURL(blob);
+
+        if (urlRef.current) {
+          URL.revokeObjectURL(urlRef.current);
+        }
+
+        urlRef.current = url;
+
+        setArchivo({
+          url,
+          tipo:
+            comprobante.tipo_mime ||
+            blob.type ||
+            ""
+        });
+
+        setEstado("listo");
+
+      } catch {
+
+        if (activo) {
+          setEstado("error");
+        }
+
+      }
+
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+
+      cargar();
+
+    } else {
+
+      observador = new IntersectionObserver(
+        (entradas) => {
+          if (
+            entradas.some(
+              (entrada) => entrada.isIntersecting
+            )
+          ) {
+            observador.disconnect();
+            observador = null;
+            cargar();
+          }
+        },
+        { rootMargin: "120px" }
+      );
+
+      observador.observe(nodo);
+
+    }
+
+    return () => {
+
+      activo = false;
+
+      if (observador) {
+        observador.disconnect();
+      }
+
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+        urlRef.current = "";
+      }
+
+    };
+
+  }, [pedidoId, comprobante.id, comprobante.tipo_mime]);
+
+  const esImagen =
+    estado === "listo" &&
+    esTipoImagen(archivo?.tipo);
+
+  return (
+
+    <div
+      className="pedido-comprobante-miniatura"
+      ref={contenedorRef}
+    >
+
+      {estado === "cargando" && (
+
+        <div className="pedido-comprobante-miniatura-cargando">
+
+          <Loader2
+            size={22}
+            className="pedido-comprobante-spinner"
+          />
+
+          <span>Cargando...</span>
+
+        </div>
+
+      )}
+
+      {estado === "error" && (
+
+        <div
+          className="pedido-comprobante-miniatura-error"
+          title="No se pudo cargar el archivo"
+        >
+
+          <ImageOff size={26} />
+
+          <span>Error</span>
+
+        </div>
+
+      )}
+
+      {esImagen && (
+
+        <button
+          type="button"
+          className="pedido-comprobante-miniatura-boton"
+          title="Ampliar comprobante"
+          onClick={() =>
+            onAbrir({
+              url: archivo.url,
+              tipo: archivo.tipo,
+              intento: comprobante.intento
+            })
+          }
+        >
+
+          <img
+            src={archivo.url}
+            alt={`Comprobante del intento ${comprobante.intento}`}
+            loading="lazy"
+          />
+
+          <span className="pedido-comprobante-miniatura-lupa">
+
+            <ZoomIn size={22} />
+
+          </span>
+
+        </button>
+
+      )}
+
+      {estado === "listo" && !esImagen && (
+
+        <div className="pedido-comprobante-miniatura-documento">
+
+          <FileText size={30} />
+
+          <a
+            href={archivo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pedido-comprobante-miniatura-abrir"
+          >
+            Abrir
+          </a>
+
+        </div>
+
+      )}
+
+    </div>
+
+  );
+
+}
+
+
 export default function Pedidos({ vendedorId, user }) {
 
   // =====================================================
@@ -180,7 +397,6 @@ export default function Pedidos({ vendedorId, user }) {
 
   const puedeCrear = tienePermiso(user, "Pedidos", "Crear");
   const puedeActualizar = tienePermiso(user, "Pedidos", "Actualizar");
-  const puedeEliminar = tienePermiso(user, "Pedidos", "Eliminar");
   const puedeCambiarEstado = tienePermiso(user, "Pedidos", "Cambiar estado");
   const puedeConsultar = tienePermiso(user, "Pedidos", "Consultar");
 
@@ -214,9 +430,6 @@ export default function Pedidos({ vendedorId, user }) {
     useState(false);
 
   const [pedidoSeleccionado, setPedidoSeleccionado] =
-    useState(null);
-
-  const [pedidoEliminar, setPedidoEliminar] =
     useState(null);
 
   const [confirmarEdicion, setConfirmarEdicion] =
@@ -256,14 +469,8 @@ export default function Pedidos({ vendedorId, user }) {
   const [errorComprobantes, setErrorComprobantes] =
     useState("");
 
-  const [archivoComprobante, setArchivoComprobante] =
+  const [lightboxComprobante, setLightboxComprobante] =
     useState(null);
-
-  const [cargandoArchivo, setCargandoArchivo] =
-    useState(false);
-
-  const [errorArchivo, setErrorArchivo] =
-    useState("");
 
   // Existencias por pedido para habilitar/deshabilitar el icono de la tabla.
   // undefined = sin consultar, null = error, array = historial real.
@@ -284,8 +491,6 @@ export default function Pedidos({ vendedorId, user }) {
 
   const [comprobanteEnProceso, setComprobanteEnProceso] =
     useState(false);
-
-  const archivoComprobanteUrlRef = useRef("");
 
   const comprobantesSolicitadosRef = useRef(
     new Set()
@@ -600,17 +805,26 @@ export default function Pedidos({ vendedorId, user }) {
   }, [pedidosPaginados, comprobantesPorPedido]);
 
 
-  // Libera el object URL del comprobante al desmontar la pantalla.
-  useEffect(
-    () => () => {
-      if (archivoComprobanteUrlRef.current) {
-        URL.revokeObjectURL(
-          archivoComprobanteUrlRef.current
-        );
+  // Cierra el lightbox del comprobante con Esc.
+  useEffect(() => {
+
+    if (!lightboxComprobante) return undefined;
+
+    const cerrarConEsc = (evento) => {
+
+      if (evento.key === "Escape") {
+        setLightboxComprobante(null);
       }
-    },
-    []
-  );
+
+    };
+
+    document.addEventListener("keydown", cerrarConEsc);
+
+    return () => {
+      document.removeEventListener("keydown", cerrarConEsc);
+    };
+
+  }, [lightboxComprobante]);
 
 
   // =========================================================
@@ -1054,30 +1268,6 @@ export default function Pedidos({ vendedorId, user }) {
 
 
   // =====================================================
-  // ELIMINAR PEDIDO
-  // =====================================================
-
-  const eliminarPedido = (pedido) => {
-
-    setPedidoEliminar(pedido);
-
-  };
-
-  const confirmarEliminarPedido = () => {
-
-    setPedidos(
-      (prev) =>
-        prev.filter(
-          (item) => item.id !== pedidoEliminar.id
-        )
-    );
-
-    setPedidoEliminar(null);
-
-  };
-
-
-  // =====================================================
   // AVANZAR ESTADO
   // =====================================================
 
@@ -1277,87 +1467,17 @@ export default function Pedidos({ vendedorId, user }) {
     comprobantesPorPedido[id] !== undefined;
 
 
-  const liberarArchivoComprobante = () => {
-
-    if (archivoComprobanteUrlRef.current) {
-      URL.revokeObjectURL(
-        archivoComprobanteUrlRef.current
-      );
-
-      archivoComprobanteUrlRef.current = "";
-    }
-
-    setArchivoComprobante(null);
-
-  };
-
-
-  const cargarArchivoComprobante = async (
-    pedidoId,
-    comprobante
-  ) => {
-
-    if (!comprobante) return;
-
-    setCargandoArchivo(true);
-    setErrorArchivo("");
-
-    try {
-
-      const blob =
-        await obtenerArchivoComprobantePedido(
-          pedidoId,
-          comprobante.id
-        );
-
-      const url = URL.createObjectURL(blob);
-
-      if (archivoComprobanteUrlRef.current) {
-        URL.revokeObjectURL(
-          archivoComprobanteUrlRef.current
-        );
-      }
-
-      archivoComprobanteUrlRef.current = url;
-
-      setArchivoComprobante({
-        url,
-        tipo:
-          comprobante.tipo_mime ||
-          blob.type ||
-          ""
-      });
-
-    } catch (error) {
-
-      setErrorArchivo(
-        error?.message ||
-          "No se pudo cargar el archivo del comprobante"
-      );
-
-    } finally {
-
-      setCargandoArchivo(false);
-
-    }
-
-  };
-
-
   const abrirComprobante = async (pedido) => {
 
     setMostrarComprobante(true);
     setPedidoComprobante(pedido);
     setComprobantes([]);
     setErrorComprobantes("");
-    setErrorArchivo("");
     setConfirmarAprobarComprobante(false);
     setMostrarRechazoComprobante(false);
     setMotivoRechazo("");
     setErrorMotivoRechazo("");
     setCargandoComprobantes(true);
-
-    liberarArchivoComprobante();
 
     try {
 
@@ -1374,13 +1494,6 @@ export default function Pedidos({ vendedorId, user }) {
         ...actual,
         [pedido.id]: lista
       }));
-
-      if (lista[0]) {
-        await cargarArchivoComprobante(
-          pedido.id,
-          lista[0]
-        );
-      }
 
     } catch (error) {
 
@@ -1413,9 +1526,7 @@ export default function Pedidos({ vendedorId, user }) {
     setMostrarRechazoComprobante(false);
     setMotivoRechazo("");
     setErrorMotivoRechazo("");
-    setErrorArchivo("");
-
-    liberarArchivoComprobante();
+    setLightboxComprobante(null);
 
   };
 
@@ -2105,28 +2216,6 @@ export default function Pedidos({ vendedorId, user }) {
                         >
 
                           <X size={18} />
-
-                        </button>
-
-                        )}
-
-
-                      {/* ELIMINAR */}
-
-                        {puedeEliminar && (
-
-                        <button
-                          type="button"
-                          className="pedido-delete-button"
-                          title="Eliminar pedido"
-                          onClick={() =>
-                            eliminarPedido(
-                              pedido
-                            )
-                          }
-                        >
-
-                          <Trash2 size={18} />
 
                         </button>
 
@@ -3901,78 +3990,6 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
-              {/* ARCHIVO */}
-
-              <div className="pedido-comprobante-preview">
-
-                {cargandoComprobantes ? (
-
-                  <div className="pedido-no-products">
-                    Cargando comprobantes...
-                  </div>
-
-                ) : errorComprobantes ? (
-
-                  <div className="pedido-comprobante-error">
-                    {errorComprobantes}
-                  </div>
-
-                ) : !ultimoComprobante ? (
-
-                  <div className="pedido-no-products">
-                    Este pedido no tiene comprobantes de pago.
-                  </div>
-
-                ) : cargandoArchivo ? (
-
-                  <div className="pedido-no-products">
-                    Cargando archivo...
-                  </div>
-
-                ) : errorArchivo ? (
-
-                  <div className="pedido-comprobante-error">
-                    {errorArchivo}
-                  </div>
-
-                ) : archivoComprobante ? (
-
-                  (archivoComprobante.tipo || "")
-                    .startsWith("image/") ? (
-
-                    <img
-                      src={archivoComprobante.url}
-                      alt={`Comprobante del pedido ${pedidoComprobante.id}`}
-                      className="pedido-comprobante-imagen"
-                    />
-
-                  ) : archivoComprobante.tipo ===
-                    "application/pdf" ? (
-
-                    <iframe
-                      src={archivoComprobante.url}
-                      title={`Comprobante del pedido ${pedidoComprobante.id}`}
-                      className="pedido-comprobante-pdf"
-                    />
-
-                  ) : (
-
-                    <a
-                      href={archivoComprobante.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="pedido-comprobante-enlace"
-                    >
-                      Abrir comprobante
-                    </a>
-
-                  )
-
-                ) : null}
-
-              </div>
-
-
               {/* ACCIONES */}
 
               {puedeActualizar &&
@@ -4090,6 +4107,12 @@ export default function Pedidos({ vendedorId, user }) {
                     Cargando historial...
                   </div>
 
+                ) : errorComprobantes ? (
+
+                  <div className="pedido-comprobante-error">
+                    {errorComprobantes}
+                  </div>
+
                 ) : comprobantes.length === 0 ? (
 
                   <div className="pedido-no-products">
@@ -4107,6 +4130,12 @@ export default function Pedidos({ vendedorId, user }) {
                           className="pedido-comprobante-item"
                           key={comprobante.id}
                         >
+
+                          <ComprobanteMiniatura
+                            pedidoId={pedidoComprobante.id}
+                            comprobante={comprobante}
+                            onAbrir={setLightboxComprobante}
+                          />
 
                           <div className="pedido-comprobante-item-info">
 
@@ -4176,24 +4205,44 @@ export default function Pedidos({ vendedorId, user }) {
       )}
 
 
-      {pedidoEliminar && (
-        <ConfirmDialog
-          abierto={pedidoEliminar !== null}
-          titulo="Eliminar pedido"
-          mensaje={
-            <>¿Deseas eliminar el pedido "
-              <strong>{pedidoEliminar.id}</strong>"? Esta
-              acción no se puede deshacer.</>
-          }
-          textoConfirmar="Eliminar"
-          textoCancelar="Cancelar"
-          variante="peligro"
-          onConfirmar={confirmarEliminarPedido}
-          onCancelar={() =>
-            setPedidoEliminar(null)
-          }
-        />
+      {/* =================================================
+          LIGHTBOX DEL COMPROBANTE
+      ================================================= */}
+
+      {lightboxComprobante && (
+
+        <div
+          className="pedido-lightbox-overlay"
+          onClick={() => setLightboxComprobante(null)}
+        >
+
+          <div
+            className="pedido-lightbox"
+            onClick={(evento) => evento.stopPropagation()}
+          >
+
+            <button
+              type="button"
+              className="pedido-lightbox-close"
+              title="Cerrar"
+              onClick={() => setLightboxComprobante(null)}
+            >
+
+              <X size={22} />
+
+            </button>
+
+            <img
+              src={lightboxComprobante.url}
+              alt={`Comprobante del intento ${lightboxComprobante.intento}`}
+            />
+
+          </div>
+
+        </div>
+
       )}
+
 
       <ConfirmDialog
         abierto={confirmarEdicion}

@@ -39,6 +39,32 @@ const responderError = (res, error, mensaje) => {
   res.status(500).json({ error: mensaje })
 }
 
+// Nombre tal como se guarda: sin espacios al inicio/final y con los espacios
+// internos colapsados a uno solo.
+const normalizarNombre = (nombre) => String(nombre || '').trim().replace(/\s+/g, ' ')
+
+// Comparación de nombres: además de mayúsculas/minúsculas y espacios, ignora
+// las tildes (la diéresis y la ñ se normalizan a su letra base) para que
+// "Camiseta básica" y "camiseta  BASICA " cuenten como el mismo nombre.
+const ACENTOS = 'áàäâãçéèëêíìïîñóòöôõúùüûýÿ'
+const SIN_ACENTOS = 'aaaaaceeeeiiiinooooouuuuyy'
+const NOMBRE_CLAVE_SQL = (expresion) =>
+  `translate(lower(regexp_replace(btrim(${expresion}), '\\s+', ' ', 'g')), '${ACENTOS}', '${SIN_ACENTOS}')`
+
+// Busca otro producto con el mismo nombre normalizado. En edición se excluye
+// el producto que se está actualizando (idProductoExcluir).
+const existeNombreDuplicado = async (db, nombre, idProductoExcluir = null) => {
+  const { rows } = await db.query(
+    `SELECT 1
+       FROM producto
+      WHERE ${NOMBRE_CLAVE_SQL('nombre')} = ${NOMBRE_CLAVE_SQL('$1')}
+        AND ($2::int IS NULL OR id_producto <> $2)
+      LIMIT 1`,
+    [nombre, idProductoExcluir]
+  )
+  return rows.length > 0
+}
+
 // Busca el id de una categoría, talla o color por su nombre (tabla y columna son fijas, no vienen del usuario)
 const idPorNombre = async (db, tabla, columnaId, nombre) => {
   const { rows } = await db.query(
@@ -88,7 +114,7 @@ const validarTallaCategoria = (tipoCategoria, talla) => {
 // Valida y limpia lo que llega del formulario
 const leerCuerpo = (body) => {
   const datos = {
-    nombre: String(body.nombre || '').trim(),
+    nombre: normalizarNombre(body.nombre),
     categoria: String(body.categoria || '').trim(),
     genero: String(body.genero || '').trim().toLowerCase(),
     talla: String(body.talla || '').trim(),
@@ -216,6 +242,13 @@ router.post('/', requierePrivilegio('Productos', 'Crear'), async (req, res) => {
   try {
     await db.query('BEGIN')
 
+    // Validación dentro de la transacción para no crear un producto con un
+    // nombre que ya existe (comparación normalizada, sin distinguir mayúsculas).
+    if (await existeNombreDuplicado(db, datos.nombre)) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+    }
+
     const ids = await resolverIds(db, datos)
     if (ids.error) {
       await db.query('ROLLBACK')
@@ -230,25 +263,26 @@ router.post('/', requierePrivilegio('Productos', 'Crear'), async (req, res) => {
 
     // El código se genera en el servidor dentro de la misma transacción:
     // 'PROD-' + id del producto con relleno de 6 dígitos. No se acepta del
-    // formulario y en editar no se puede cambiar.
+    // formulario y en editar no se puede cambiar. Va en dos pasos porque un
+    // UPDATE en la misma CTE no ve la fila recién insertada (mismo snapshot).
     const producto = await db.query(
-      `WITH nuevo AS (
-         INSERT INTO producto (nombre, precio, id_categoria, genero, estado)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id_producto
-       )
-       UPDATE producto p
-          SET codigo = 'PROD-' || LPAD(p.id_producto::text, 6, '0')
-         FROM nuevo
-        WHERE p.id_producto = nuevo.id_producto
-        RETURNING p.id_producto`,
+      `INSERT INTO producto (nombre, precio, id_categoria, genero, estado)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id_producto`,
       [datos.nombre, datos.precio, ids.idCategoria, datos.genero, datos.activo]
+    )
+    const idProducto = producto.rows[0].id_producto
+    await db.query(
+      `UPDATE producto
+          SET codigo = 'PROD-' || LPAD(id_producto::text, 6, '0')
+        WHERE id_producto = $1`,
+      [idProducto]
     )
     const variante = await db.query(
       `INSERT INTO producto_variante (id_producto, id_talla, id_color, stock, imagen)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id_variante`,
-      [producto.rows[0].id_producto, ids.idTalla, ids.idColor, datos.stock, datos.imagen]
+      [idProducto, ids.idTalla, ids.idColor, datos.stock, datos.imagen]
     )
 
     await db.query('COMMIT')
@@ -284,6 +318,14 @@ router.put('/:id', requierePrivilegio('Productos', 'Actualizar'), async (req, re
     if (actual.rowCount === 0) {
       await db.query('ROLLBACK')
       return res.status(404).json({ error: 'Producto no encontrado' })
+    }
+
+    // Se excluye el mismo producto: guardar sin cambiar el nombre es válido.
+    if (
+      await existeNombreDuplicado(db, datos.nombre, actual.rows[0].id_producto)
+    ) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
     }
 
     const ids = await resolverIds(db, datos)

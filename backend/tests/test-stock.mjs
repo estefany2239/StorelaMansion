@@ -31,7 +31,17 @@ const pedir = async (metodo, ruta, { token, body } = {}) => {
   return { status: respuesta.status, data }
 }
 
-const baseItems = { metodo_pago: 'Transferencia', banco: 'Nequi', direccion: 'Calle 1 # 2-3' }
+const baseItems = {
+  metodo_pago: 'Transferencia',
+  banco: 'Nequi',
+  nombre_entrega: 'Stock Prueba',
+  telefono_entrega: '3001234567',
+  departamento_codigo: '05',
+  municipio_codigo: '05001',
+  metodo_envio: 'Domicilio',
+  barrio: 'Centro',
+  direccion: 'Calle 1 # 2-3',
+}
 
 const pedidoCon = (idVariante, cantidad, extra = {}) =>
   pedir('POST', '/pedidos', {
@@ -78,6 +88,7 @@ const limpiar = async () => {
       await pool.query('DELETE FROM pago WHERE id_pedido = ANY($1::int[])', [idsPedido])
       await pool.query('DELETE FROM detalle_pedido WHERE id_pedido = ANY($1::int[])', [idsPedido])
       await pool.query('DELETE FROM domicilio WHERE id_pedido = ANY($1::int[])', [idsPedido])
+      await pool.query('DELETE FROM venta WHERE id_pedido = ANY($1::int[])', [idsPedido])
       await pool.query('DELETE FROM pedido WHERE id_pedido = ANY($1::int[])', [idsPedido])
     }
     if (creados.variantes.length) {

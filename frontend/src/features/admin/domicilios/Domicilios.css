@@ -518,7 +518,7 @@
 .domicilio-modal-header h3 {
   margin: 0;
 
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
 
   font-size: 22px;
 

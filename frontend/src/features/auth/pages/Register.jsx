@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight, IdCard, Calendar, Phone } from 'lucide-react';
+import { User, Mail, Lock, ArrowLeft, Shield, ArrowRight, IdCard, Calendar, Phone, Eye, EyeOff } from 'lucide-react';
 import { registrarUsuario } from '../../../shared/services/api';
 import TurnstileWidget from '../../../shared/components/TurnstileWidget';
 import { useNotify } from '../../../shared/components/notifications/useNotify.js';
@@ -46,6 +46,10 @@ export default function Register({ onBackToLogin }) {
   // Evita que un doble clic (o un doble Enter) envíe dos registros.
   const [enviando, setEnviando] = useState(false);
   const enviandoRef = useRef(false);
+
+  // Cada contraseña controla su propia visibilidad.
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState(false);
 
   const {
     errores,
@@ -337,10 +341,10 @@ export default function Register({ onBackToLogin }) {
 
               <div className="auth-field">
                 <label htmlFor="campo-password">Contraseña</label>
-                <div className="auth-input-wrap">
+                <div className="auth-input-wrap auth-input-wrap--pw">
                   <Lock size={16} className="auth-input-icon" />
                   <input
-                    type="password"
+                    type={mostrarPassword ? 'text' : 'password'}
                     name="password"
                     id="campo-password"
                     placeholder="Mínimo 8 caracteres"
@@ -349,6 +353,14 @@ export default function Register({ onBackToLogin }) {
                     onChange={handleChange}
                     onBlur={() => manejarBlur('password', formData.password, formData)}
                   />
+                  <button
+                    type="button"
+                    className="auth-toggle-pw"
+                    aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    onClick={() => setMostrarPassword((visible) => !visible)}
+                  >
+                    {mostrarPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
                 {errores.password && (
                   <div className="auth-field__error">{errores.password}</div>
@@ -357,10 +369,10 @@ export default function Register({ onBackToLogin }) {
 
               <div className="auth-field">
                 <label htmlFor="campo-confirmPassword">Confirmar contraseña</label>
-                <div className="auth-input-wrap">
+                <div className="auth-input-wrap auth-input-wrap--pw">
                   <Lock size={16} className="auth-input-icon" />
                   <input
-                    type="password"
+                    type={mostrarConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     id="campo-confirmPassword"
                     placeholder="Repite tu contraseña"
@@ -370,6 +382,14 @@ export default function Register({ onBackToLogin }) {
                       manejarBlur('confirmPassword', formData.confirmPassword, formData)
                     }
                   />
+                  <button
+                    type="button"
+                    className="auth-toggle-pw"
+                    aria-label={mostrarConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    onClick={() => setMostrarConfirmPassword((visible) => !visible)}
+                  >
+                    {mostrarConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
                 {errores.confirmPassword && (
                   <div className="auth-field__error">{errores.confirmPassword}</div>

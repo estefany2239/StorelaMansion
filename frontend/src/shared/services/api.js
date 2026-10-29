@@ -436,6 +436,16 @@ export async function rechazarPagoPedido(id) {
   })
 }
 
+// ===== CONFIGURACIÓN DEL NEGOCIO =====
+
+// Datos opcionales que aparecen en el comprobante de venta. Si la tabla aún
+// no existe, la llamada falla y el PDF usa solo el nombre por defecto.
+export async function obtenerConfiguracionNegocio() {
+  return peticionAdmin('/api/configuracion/negocio', {
+    mensajeError: 'No se pudo cargar la configuración del negocio'
+  })
+}
+
 // ===== VENTAS (módulo Ventas del panel) =====
 
 export async function obtenerVentas() {
@@ -467,11 +477,37 @@ export async function anularVenta(id) {
   })
 }
 
-// Variantes activas con stock > 0 para el formulario de venta.
-export async function obtenerVariantesVenta() {
-  return peticionAdmin('/api/ventas/variantes', {
-    mensajeError: 'No se pudieron cargar las variantes'
+// Búsqueda de productos activos con stock para el selector por pasos.
+export async function buscarProductosVenta(texto) {
+  const params = new URLSearchParams({ q: texto })
+  return peticionAdmin(`/api/ventas/productos?${params}`, {
+    mensajeError: 'No se pudieron buscar los productos'
   })
+}
+
+// Tallas del producto con su stock total (incluye las agotadas).
+export async function obtenerTallasVenta(idProducto) {
+  return peticionAdmin(`/api/ventas/productos/${idProducto}/tallas`, {
+    mensajeError: 'No se pudieron cargar las tallas'
+  })
+}
+
+// Colores con stock > 0 para un producto y talla.
+export async function obtenerColoresVenta(idProducto, idTalla) {
+  const params = new URLSearchParams({ talla: idTalla })
+  return peticionAdmin(
+    `/api/ventas/productos/${idProducto}/colores?${params}`,
+    { mensajeError: 'No se pudieron cargar los colores' }
+  )
+}
+
+// Variante exacta (producto + talla + color) con stock y precio actuales.
+export async function obtenerVarianteVenta(idProducto, idTalla, idColor) {
+  const params = new URLSearchParams({ talla: idTalla, color: idColor })
+  return peticionAdmin(
+    `/api/ventas/productos/${idProducto}/variante?${params}`,
+    { mensajeError: 'No se pudo cargar la variante' }
+  )
 }
 
 // Clientes activos para el formulario de venta.

@@ -262,7 +262,7 @@ router.get('/perfil', verificarToken, bloquearCambioPendiente, async (req, res) 
   try {
     const { rows } = await pool.query(
       `SELECT u.id_usuario, u.nombres, u.apellidos, u.correo, u.telefono,
-              u.tipo_documento, u.documento, r.nombre AS rol
+              u.direccion, u.tipo_documento, u.documento, r.nombre AS rol
          FROM usuario u
          LEFT JOIN rol r ON r.id_rol = u.id_rol
         WHERE u.id_usuario = $1`,
@@ -275,6 +275,7 @@ router.get('/perfil', verificarToken, bloquearCambioPendiente, async (req, res) 
     res.json({
       ...datosPublicos(rows[0]),
       telefono: rows[0].telefono,
+      direccion: rows[0].direccion,
       tipoDocumento: rows[0].tipo_documento,
       documento: rows[0].documento,
       permisos,

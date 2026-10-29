@@ -3,7 +3,6 @@ import { Minus, Plus } from "lucide-react";
 import {
   esAgotado,
   mensajeAgotado,
-  mensajeMaximo,
   mensajeStock,
   parsearCantidad,
   soloDigitos,
@@ -35,7 +34,9 @@ export default function CantidadControl({
   const enTope = cantidadValida >= tope;
 
   const [texto, setTexto] = useState(String(cantidadValida));
-  const [aviso, setAviso] = useState("");
+  // Solo se enciende cuando el usuario intenta pedir más que el stock.
+  // Estar justo en el tope (cantidad === stock) NO muestra alerta.
+  const [avisoExceso, setAvisoExceso] = useState(false);
 
   // Ajuste durante el render (patrón "adjusting state when props change"):
   // si la cantidad real cambia por fuera (botones, otra vista o un tope
@@ -44,19 +45,17 @@ export default function CantidadControl({
   if (cantidadPrevia !== cantidadValida) {
     setCantidadPrevia(cantidadValida);
     setTexto(String(cantidadValida));
-    setAviso("");
+    // El recorte por exceso deja la cantidad justo en el tope: conserva el
+    // aviso. Cualquier otro cambio externo limpia el aviso anterior.
+    if (cantidadValida !== tope) setAvisoExceso(false);
   }
 
-  const mensaje = () => mensajeStock(tope);
-
-  // Mensaje que se muestra bajo el control: el aviso puntual del campo
-  // escrito a mano manda; si no, el estado actual (agotado o tope).
-  const mensajeDerivado = agotado
+  // Mensaje que se muestra bajo el control: agotado o intento de exceso.
+  const mensajeVisible = agotado
     ? mensajeAgotado()
-    : enTope
-      ? mensajeMaximo(tope)
+    : avisoExceso
+      ? mensajeStock(tope)
       : "";
-  const mensajeVisible = aviso || mensajeDerivado;
 
   // Confirma lo escrito al perder el foco o al pulsar Enter.
   const confirmar = (valor) => {
@@ -65,19 +64,20 @@ export default function CantidadControl({
     // Vacío, 0 o inválido: vuelve a la última cantidad válida (sin errores).
     if (numero === null) {
       setTexto(String(cantidadValida));
-      setAviso("");
+      setAvisoExceso(false);
       return;
     }
 
     // Más que el stock: ajusta al máximo y avisa bajo el control.
     if (numero > tope) {
       setTexto(String(tope));
-      setAviso(agotado ? mensajeAgotado() : mensaje());
+      setAvisoExceso(!agotado);
       if (tope !== cantidadValida && onChange) onChange(tope);
       return;
     }
 
-    setAviso("");
+    // Igual o menor que el stock es válido y no genera alerta.
+    setAvisoExceso(false);
     setTexto(String(numero));
     if (numero !== cantidadValida && onChange) onChange(numero);
   };
@@ -85,7 +85,7 @@ export default function CantidadControl({
   const bajar = () => {
     if (disabled) return;
     const siguiente = Math.max(1, cantidadValida - 1);
-    setAviso("");
+    setAvisoExceso(false);
     setTexto(String(siguiente));
     if (siguiente !== cantidadValida && onChange) onChange(siguiente);
   };
@@ -96,19 +96,19 @@ export default function CantidadControl({
     // Variante sin unidades: no puede crecer.
     if (agotado) {
       setTexto(String(cantidadValida));
-      setAviso(mensajeAgotado());
+      setAvisoExceso(false);
       return;
     }
 
     // + no supera el stock.
     if (cantidadValida >= tope) {
       setTexto(String(cantidadValida));
-      setAviso(mensajeStock(tope));
+      setAvisoExceso(true);
       return;
     }
 
     const siguiente = cantidadValida + 1;
-    setAviso("");
+    setAvisoExceso(false);
     setTexto(String(siguiente));
     if (onChange) onChange(siguiente);
   };
@@ -135,7 +135,7 @@ export default function CantidadControl({
           aria-label="Cantidad"
           onChange={(evento) => {
             setTexto(soloDigitos(evento.target.value));
-            if (aviso) setAviso("");
+            if (avisoExceso) setAvisoExceso(false);
           }}
           onBlur={(evento) => confirmar(evento.target.value)}
           onKeyDown={(evento) => {
@@ -157,7 +157,7 @@ export default function CantidadControl({
       </div>
 
       {mensajeVisible && (
-        <p className="cantidad-control-aviso" role="status">
+        <p className="cantidad-control-aviso" role="alert">
           {mensajeVisible}
         </p>
       )}

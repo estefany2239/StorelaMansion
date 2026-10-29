@@ -47,7 +47,7 @@
 
   /* Layout y tipografía */
   --max-width: 1280px;
-  --font-display: "Playfair Display", Georgia, serif;
+  --font-display: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
 
   /* Alias heredados (vistas de cliente / StoreDashboard) */

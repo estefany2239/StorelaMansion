@@ -510,7 +510,7 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
       if (!variante.activo) {
         throw new ErrorHttp(409, `El producto "${variante.nombre}" no está disponible`)
       }
-      if (variante.stock < cantidad) {
+      if (cantidad > variante.stock) {
         throw new ErrorHttp(409, `Stock insuficiente para "${variante.nombre}" (disponible: ${variante.stock})`)
       }
     }

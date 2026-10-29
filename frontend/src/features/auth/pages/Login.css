@@ -99,7 +99,7 @@
 
 .auth__logo {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 4px;
@@ -146,7 +146,7 @@
 
 .auth__header h2 {
   margin: 0 0 6px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
@@ -252,6 +252,10 @@
   color: #ffffff;
   outline: none;
   transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-input-wrap--pw input {
+  padding-right: 44px;
 }
 
 .auth-input-wrap input::placeholder {

@@ -640,15 +640,6 @@
 }
 
 
-.pedido-actions button.pedido-delete-button:hover {
-  color:
-    #e53935;
-
-  background:
-    rgba(229, 57, 53, 0.08);
-}
-
-
 .pedido-actions button.disabled:hover {
   color:
     #70798a;
@@ -770,7 +761,7 @@
 .pedido-modal-header h3 {
   margin: 0;
 
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
 
   font-size: 22px;
 
@@ -2294,6 +2285,10 @@
 }
 
 .pedido-comprobante-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+
   padding: 12px 14px;
 
   border-bottom: 1px solid #e5e5e5;
@@ -2304,6 +2299,9 @@
 }
 
 .pedido-comprobante-item-info {
+  flex: 1;
+  min-width: 0;
+
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -2331,6 +2329,214 @@
   font-size: 12.5px;
   line-height: 1.45;
   color: #c62828;
+}
+
+/* Miniatura perezosa del comprobante */
+
+.pedido-comprobante-miniatura {
+  position: relative;
+  flex: 0 0 120px;
+
+  width: 120px;
+  height: 120px;
+
+  overflow: hidden;
+
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+
+  background: #f8f9fb;
+
+  transition: box-shadow 0.2s ease;
+}
+
+.pedido-comprobante-miniatura:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.pedido-comprobante-miniatura-boton {
+  position: relative;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: none;
+  border-radius: 0;
+
+  background: transparent;
+
+  cursor: zoom-in;
+}
+
+.pedido-comprobante-miniatura-boton img {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 0.25s ease;
+}
+
+.pedido-comprobante-miniatura-boton:hover img {
+  transform: scale(1.07);
+}
+
+.pedido-comprobante-miniatura-lupa {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.38);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.2s ease;
+}
+
+.pedido-comprobante-miniatura-boton:hover .pedido-comprobante-miniatura-lupa {
+  opacity: 1;
+}
+
+.pedido-comprobante-miniatura-cargando,
+.pedido-comprobante-miniatura-error,
+.pedido-comprobante-miniatura-documento {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 8px;
+  box-sizing: border-box;
+
+  text-align: center;
+
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.pedido-comprobante-miniatura-cargando {
+  color: #738096;
+}
+
+.pedido-comprobante-miniatura-error {
+  color: #e53935;
+}
+
+.pedido-comprobante-miniatura-documento {
+  color: #667085;
+}
+
+.pedido-comprobante-miniatura-abrir {
+  padding: 4px 10px;
+
+  border: 1px solid currentColor;
+  border-radius: 6px;
+
+  color: var(--admin-gold);
+
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pedido-comprobante-miniatura-abrir:hover {
+  background: rgba(201, 162, 39, 0.1);
+}
+
+.pedido-comprobante-spinner {
+  animation: pedido-comprobante-girar 0.9s linear infinite;
+}
+
+@keyframes pedido-comprobante-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Lightbox del comprobante */
+
+.pedido-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+  box-sizing: border-box;
+
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.pedido-lightbox {
+  position: relative;
+
+  max-width: min(1100px, 96vw);
+  max-height: 92vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pedido-lightbox img {
+  display: block;
+
+  max-width: 100%;
+  max-height: 92vh;
+
+  object-fit: contain;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+.pedido-lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.92);
+  color: #222222;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.pedido-lightbox-close:hover {
+  background: #ffffff;
 }
 
 .admin-container.admin-dark .pedido-comprobante-preview {
@@ -2394,6 +2600,23 @@
 
 .admin-container.admin-dark .pedido-comprobante-motivo {
   color: #e2857a;
+}
+
+.admin-container.admin-dark .pedido-comprobante-miniatura {
+  background: #181818;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-container.admin-dark .pedido-comprobante-miniatura-cargando {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .pedido-comprobante-miniatura-error {
+  color: #ff8a80;
+}
+
+.admin-container.admin-dark .pedido-comprobante-miniatura-documento {
+  color: #b0b0b0;
 }
 
 @media (max-width: 600px) {

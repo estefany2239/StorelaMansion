@@ -231,7 +231,7 @@
   font-weight: 600;
   color: #c9a227;
   margin-bottom: 2px;
-  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-family: var(--font-display, "Inter", sans-serif);
 }
 
 .cart-summary-row {

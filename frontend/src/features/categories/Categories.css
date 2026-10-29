@@ -22,7 +22,7 @@
 
 .categories__title {
   text-align: center;
-  font-family: var(--font-display, "Playfair Display", serif);
+  font-family: var(--font-display, "Inter", sans-serif);
   font-size: 2.2rem;
   color: var(--ink, #1a1a1a);
   margin-bottom: 40px;
@@ -179,7 +179,7 @@
 
 .categories__item-name {
   color: #ffffff;
-  font-family: var(--font-display, "Playfair Display", serif);
+  font-family: var(--font-display, "Inter", sans-serif);
   font-size: 1.35rem;
   font-weight: 500;
   line-height: 1.15;

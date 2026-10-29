@@ -42,7 +42,7 @@
 }
 
 .splash-title {
-  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-family: var(--font-display, "Inter", sans-serif);
   font-size: 2rem;
   font-weight: 600;
   letter-spacing: 0.18em;

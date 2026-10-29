@@ -41,6 +41,16 @@ const esTallaNumerica = (valor) => /^\d+(\.\d+)?$/.test(String(valor || "").trim
 const esTallaDeLetra = (valor) =>
   TALLAS_LETRA.includes(String(valor || "").trim().toUpperCase());
 
+// Clave de comparación de nombres: sin espacios sobrantes, mayúsculas ni
+// tildes, igual que la validación del backend (productosAdmin.js).
+const normalizarNombreProducto = (valor) =>
+  String(valor || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
 export default function Productos({ user }) {
   // =====================================================
   // PERMISOS (los botones sin permiso se ocultan)
@@ -200,17 +210,33 @@ export default function Productos({ user }) {
 
   // Carga inicial: productos y catálogos para los selects del formulario.
   // opciones.tallas es [{ nombre, tipo }]; el tipo lo deduce el servidor.
+  // También se recarga al abrir el módulo después de una venta o anulación:
+  // Ventas emite "inventario:actualizado" y el stock se vuelve a pedir.
   useEffect(() => {
-    Promise.all([obtenerProductosAdmin(), obtenerCatalogosAdmin()])
-      .then(([filas, opciones]) => {
-        setProductos(filas);
-        setCategorias(opciones.categorias);
-        setTallas(opciones.tallas || []);
-        setColores(opciones.colores);
-      })
-      .catch((error) => {
-        mostrarToast(error.message, "error");
-      });
+    let activo = true;
+
+    const cargarDatos = () => {
+      Promise.all([obtenerProductosAdmin(), obtenerCatalogosAdmin()])
+        .then(([filas, opciones]) => {
+          if (!activo) return;
+          setProductos(filas);
+          setCategorias(opciones.categorias);
+          setTallas(opciones.tallas || []);
+          setColores(opciones.colores);
+        })
+        .catch((error) => {
+          if (!activo) return;
+          mostrarToast(error.message, "error");
+        });
+    };
+
+    cargarDatos();
+    window.addEventListener("inventario:actualizado", cargarDatos);
+
+    return () => {
+      activo = false;
+      window.removeEventListener("inventario:actualizado", cargarDatos);
+    };
   }, []);
 
   // =====================================================
@@ -361,11 +387,34 @@ export default function Productos({ user }) {
   // GUARDAR PRODUCTO
   // =====================================================
 
+  // true si otro producto de la lista ya usa el mismo nombre normalizado.
+  // En edición se excluye el producto actual (mismo id_producto).
+  const existeProductoConNombre = (nombre, idProductoExcluir = null) => {
+    const clave = normalizarNombreProducto(nombre);
+    if (!clave) return false;
+
+    return productos.some(
+      (producto) =>
+        producto.id_producto !== idProductoExcluir &&
+        normalizarNombreProducto(producto.nombre) === clave
+    );
+  };
+
   const guardarProducto = async () => {
     // Valida todo el formulario (mismas reglas que el backend: nombre,
     // categoría, talla, color, precio y stock) y, si hay errores,
     // enfoca el primer campo inválido.
     if (!validarTodo(formulario)) {
+      return;
+    }
+
+    const idProductoActual = modoEdicion
+      ? productos.find((producto) => producto.id === formulario.id)
+          ?.id_producto ?? null
+      : null;
+
+    if (existeProductoConNombre(formulario.nombre, idProductoActual)) {
+      mostrarToast("Ese producto ya existe", "error");
       return;
     }
 
@@ -392,7 +441,10 @@ export default function Productos({ user }) {
       mostrarToast("Producto creado con éxito");
       cerrarModal();
     } catch (error) {
-      mostrarToast(error.message, "error");
+      mostrarToast(
+        error.status === 409 ? "Ese producto ya existe" : error.message,
+        "error"
+      );
     }
   };
 
@@ -421,7 +473,10 @@ export default function Productos({ user }) {
       mostrarToast("Producto actualizado con éxito");
     } catch (error) {
       setConfirmarEdicion(false);
-      mostrarToast(error.message, "error");
+      mostrarToast(
+        error.status === 409 ? "Ese producto ya existe" : error.message,
+        "error"
+      );
     }
   };
 

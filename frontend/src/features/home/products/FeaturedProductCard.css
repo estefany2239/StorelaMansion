@@ -57,7 +57,7 @@
 }
 
 .fcard__name {
-  font-family: var(--font-display, "Playfair Display", serif);
+  font-family: var(--font-display, "Inter", sans-serif);
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-main, #1a1a1a);

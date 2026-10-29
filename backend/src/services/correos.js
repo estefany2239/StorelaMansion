@@ -100,7 +100,7 @@ export const plantillaInvitacion = ({
                 deberás establecer una contraseña propia.
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CONTRASEÑA TEMPORAL</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:20px;letter-spacing:3px;color:#c9a227;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:20px;letter-spacing:3px;color:#c9a227;">
                 ${claveEscapada}
               </p>
               ${vencimientoTexto ? `<p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,0.5);">Vence: ${vencimientoTexto}</p>` : ''}
@@ -187,11 +187,11 @@ export const plantillaInvitacionCliente = ({
                 para iniciar sesión; al entrar deberás crear tu propia contraseña.
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CORREO DE ACCESO</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:16px;color:#ffffff;word-break:break-all;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#ffffff;word-break:break-all;">
                 ${correoEscapado}
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CONTRASEÑA TEMPORAL</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:20px;letter-spacing:3px;color:#c9a227;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:20px;letter-spacing:3px;color:#c9a227;">
                 ${claveEscapada}
               </p>
               <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,0.5);">
@@ -343,7 +343,7 @@ export const plantillaRecuperacion = ({ nombre, codigo, minutos }) => {
                 código que aparece más abajo en la pantalla de recuperación.
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CÓDIGO DE VERIFICACIÓN</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:26px;letter-spacing:6px;color:#c9a227;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:26px;letter-spacing:6px;color:#c9a227;">
                 ${codigoEscapado}
               </p>
               <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,0.5);">

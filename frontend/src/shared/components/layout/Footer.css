@@ -19,7 +19,7 @@
 
 /* Marca / Logo */
 .footer-logo {
-  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-family: var(--font-display, "Inter", sans-serif);
   font-size: 1.6rem;
   color: var(--ink, #1a1a1a);
   margin: 0;
@@ -50,7 +50,7 @@
   font-size: 1.05rem;
   margin-bottom: 20px;
   font-weight: 600;
-  font-family: var(--font-display, serif);
+  font-family: var(--font-display, "Inter", sans-serif);
 }
 
 .footer-links ul,

@@ -38,15 +38,19 @@ export const topeDe = (stock) => {
 // Un producto agotado no se puede agregar al carrito ni comprar.
 export const esAgotado = (stock) => hayStock(stock) && Number(stock) <= 0;
 
+// ¿La cantidad pedida supera el stock disponible? Igual al stock es
+// válido: la alerta es exclusiva del exceso, nunca de la cantidad máxima.
+// Con stock 0 se usa el aviso de agotado, no el de exceso.
+export const excedeStock = (cantidad, stock) =>
+  hayStock(stock) &&
+  Number(stock) > 0 &&
+  Number(cantidad) > Number(stock);
+
 // Aviso mostrado bajo el control al superar el stock disponible.
 export const mensajeStock = (tope) =>
   `Solo hay ${tope} unidad${tope === 1 ? "" : "es"} disponible${
     tope === 1 ? "" : "s"
   } de esta variante`;
-
-// Aviso persistente bajo el control cuando la cantidad llegó al tope.
-export const mensajeMaximo = (tope) =>
-  `Alcanzaste el máximo disponible: ${tope} unidad${tope === 1 ? "" : "es"}`;
 
 // Aviso persistente bajo el control cuando la variante está agotada.
 export const mensajeAgotado = () =>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Plus,
@@ -7,6 +7,8 @@ import {
   X,
   Trash2,
   FileText,
+  ShoppingBag,
+  Calendar,
   ShoppingCart,
   CheckCircle2,
   Clock,
@@ -14,9 +16,8 @@ import {
   DollarSign
 } from "lucide-react";
 
-import { jsPDF } from "jspdf";
-
 import "./Ventas.css";
+import { construirComprobantePdf } from "./comprobanteVentaPdf";
 
 import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
@@ -25,19 +26,37 @@ import useToast from "../hooks/useToast";
 
 import { tienePermiso } from "../utils/permisos";
 
+import { urlImagen } from "../../../shared/utils/imagenes";
+
 import {
   obtenerVentas,
   obtenerResumenVentas,
   obtenerVenta,
   anularVenta as anularVentaApi,
-  obtenerVariantesVenta,
+  buscarProductosVenta,
+  obtenerTallasVenta,
+  obtenerColoresVenta,
+  obtenerVarianteVenta,
   obtenerClientesVenta,
+  obtenerConfiguracionNegocio,
   crearVenta
 } from "../../../shared/services/api";
 
 const REGISTROS_POR_PAGINA = 6;
 
-const METODOS_PAGO = ["Efectivo", "Transferencia", "Crédito"];
+const METODOS_PAGO = ["Efectivo", "Transferencia"];
+
+const PASOS_SELECTOR = [
+  { numero: 1, titulo: "Producto" },
+  { numero: 2, titulo: "Talla" },
+  { numero: 3, titulo: "Color" },
+  { numero: 4, titulo: "Cantidad" }
+];
+
+// Avisa a los demás módulos del panel (Productos) que el stock cambió.
+const notificarInventarioActualizado = () => {
+  window.dispatchEvent(new Event("inventario:actualizado"));
+};
 
 const fechaHoy = () => {
   const hoy = new Date();
@@ -67,6 +86,7 @@ const formatearFecha = (fecha) => {
 const mapearVentaBackend = (venta) => {
   const productos = (venta.productos || []).map((producto) => ({
     nombre: producto.nombre || "—",
+    codigo: producto.codigo || "—",
     talla: producto.talla || "-",
     color: producto.color || "-",
     cantidad: Number(producto.cantidad) || 0,
@@ -74,15 +94,40 @@ const mapearVentaBackend = (venta) => {
     subtotal: Number(producto.subtotal) || 0
   }));
 
+  const subtotalProductos = productos.reduce(
+    (total, producto) => total + producto.subtotal,
+    0
+  );
+  const total = Number(venta.total) || 0;
+  const abonado = Number(venta.monto_abonado) || 0;
+  const abonos = Array.isArray(venta.abonos) ? venta.abonos : [];
+
   return {
     id: venta.codigo || String(venta.id),
     idVenta: venta.id,
     idPedido: venta.id_pedido ?? null,
     numeroPedido: venta.numero_pedido ?? venta.id_pedido ?? null,
     cliente: venta.cliente || "—",
+    clienteNombre: venta.cliente_nombre || venta.cliente || "—",
+    clienteCorreo: venta.cliente_correo || "",
+    clienteTelefono: venta.cliente_telefono || "",
+    clienteDireccion: venta.cliente_direccion || "",
     fecha: venta.fecha,
     fechaPago: venta.fecha_pago || null,
-    total: Number(venta.total) || 0,
+    subtotal:
+      venta.subtotal !== null && venta.subtotal !== undefined
+        ? Number(venta.subtotal) || 0
+        : subtotalProductos,
+    descuento: Number(venta.descuento) || 0,
+    iva: Number(venta.iva) || 0,
+    costoEnvio: Number(venta.costo_envio) || 0,
+    total,
+    abonado,
+    saldoPendiente:
+      venta.saldo_pendiente !== null && venta.saldo_pendiente !== undefined
+        ? Number(venta.saldo_pendiente) || 0
+        : Math.max(total - abonado, 0),
+    abonos,
     metodoPago: venta.metodo_pago || "—",
     estado: venta.estado || "",
     estadoPago: venta.estado_pago || "Pendiente",
@@ -140,136 +185,6 @@ const mensajeErrorComprobante = (error) => {
   return error?.message || "No se pudo descargar el comprobante.";
 };
 
-const construirComprobantePdf = (venta) => {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const anchoPagina = doc.internal.pageSize.getWidth();
-  const altoPagina = doc.internal.pageSize.getHeight();
-  const margen = 15;
-
-  const colProducto = margen + 2;
-  const colTalla = margen + 72;
-  const colColor = margen + 96;
-  const colCantidad = margen + 116;
-  const colPrecio = margen + 146;
-  const colSubtotal = anchoPagina - margen;
-
-  let y = 20;
-
-  const dibujarCabeceraTabla = () => {
-    doc.setFillColor(247, 243, 227);
-    doc.rect(margen, y - 5, anchoPagina - margen * 2, 8, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("PRODUCTO", colProducto, y);
-    doc.text("TALLA", colTalla, y, { align: "right" });
-    doc.text("COLOR", colColor, y, { align: "right" });
-    doc.text("CANT.", colCantidad, y, { align: "right" });
-    doc.text("P. UNITARIO", colPrecio, y, { align: "right" });
-    doc.text("SUBTOTAL", colSubtotal, y, { align: "right" });
-
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-  };
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("STORE LA MANSIÓN", anchoPagina / 2, y, { align: "center" });
-
-  y += 7;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(12);
-  doc.text("Comprobante de venta", anchoPagina / 2, y, { align: "center" });
-
-  y += 6;
-
-  doc.setDrawColor(201, 162, 39);
-  doc.setLineWidth(0.8);
-  doc.line(margen, y, anchoPagina - margen, y);
-
-  y += 11;
-
-  const dato = (etiqueta, valor) => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(etiqueta, margen, y);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(String(valor), margen + 46, y);
-
-    y += 6;
-  };
-
-  dato("Venta N.°:", venta.id);
-  dato("Pedido relacionado:", venta.idPedido ? `#${venta.idPedido}` : "—");
-  dato("Fecha de registro:", formatearFecha(venta.fecha));
-  dato("Cliente:", venta.cliente);
-  dato("Método de pago:", venta.metodoPago);
-  dato("Estado de pago:", venta.estadoPago);
-  dato("Origen:", venta.origen);
-
-  y += 4;
-  dibujarCabeceraTabla();
-
-  venta.productos.forEach((producto) => {
-    const nombreLineas = doc.splitTextToSize(String(producto.nombre), 62);
-    const altoFila = Math.max(7, nombreLineas.length * 5 + 2);
-
-    if (y + altoFila > altoPagina - 30) {
-      doc.addPage();
-      y = 20;
-      dibujarCabeceraTabla();
-    }
-
-    const subtotal =
-      Number(producto.subtotal) ||
-      Number(producto.precio) * Number(producto.cantidad);
-
-    doc.text(nombreLineas, colProducto, y);
-    doc.text(producto.talla || "-", colTalla, y, { align: "right" });
-    doc.text(producto.color || "-", colColor, y, { align: "right" });
-    doc.text(String(producto.cantidad), colCantidad, y, { align: "right" });
-    doc.text(formatearPrecio(producto.precio), colPrecio, y, {
-      align: "right"
-    });
-    doc.text(formatearPrecio(subtotal), colSubtotal, y, { align: "right" });
-
-    y += altoFila;
-  });
-
-  if (y > altoPagina - 45) {
-    doc.addPage();
-    y = 20;
-  }
-
-  y += 3;
-
-  doc.setDrawColor(201, 162, 39);
-  doc.setLineWidth(0.5);
-  doc.line(colPrecio - 38, y, anchoPagina - margen, y);
-
-  y += 8;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("TOTAL:", anchoPagina - margen - 38, y, { align: "right" });
-  doc.text(formatearPrecio(venta.total), anchoPagina - margen, y, {
-    align: "right"
-  });
-
-  y += 16;
-
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(10);
-  doc.setTextColor(105, 105, 105);
-  doc.text("Gracias por su compra", anchoPagina / 2, y, { align: "center" });
-  doc.setTextColor(0, 0, 0);
-
-  return doc;
-};
-
 export default function Ventas({ user }) {
   const puedeCrear = tienePermiso(user, "Ventas", "Crear");
   const puedeConsultar = tienePermiso(user, "Ventas", "Consultar");
@@ -297,20 +212,34 @@ export default function Ventas({ user }) {
     idCliente: "",
     nombreCliente: "",
     fecha: fechaHoy(),
-    metodoPago: "Transferencia",
+    metodoPago: "Efectivo",
     items: []
   });
   const [errores, setErrores] = useState({});
   const [creandoVenta, setCreandoVenta] = useState(false);
+  const enviandoVentaRef = useRef(false);
+  const anulandoVentaRef = useRef(false);
 
-  const [variantes, setVariantes] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [cargandoCatalogos, setCargandoCatalogos] = useState(false);
   const [errorCatalogos, setErrorCatalogos] = useState("");
 
   const [mostrarSelector, setMostrarSelector] = useState(false);
-  const [varianteSel, setVarianteSel] = useState("");
+  const [pasoSelector, setPasoSelector] = useState(1);
+  const [textoProducto, setTextoProducto] = useState("");
+  const [resultadosProductos, setResultadosProductos] = useState([]);
+  const [buscandoProductos, setBuscandoProductos] = useState(false);
+  const [productoSel, setProductoSel] = useState(null);
+  const [tallas, setTallas] = useState([]);
+  const [cargandoTallas, setCargandoTallas] = useState(false);
+  const [tallaSel, setTallaSel] = useState(null);
+  const [colores, setColores] = useState([]);
+  const [cargandoColores, setCargandoColores] = useState(false);
+  const [colorSel, setColorSel] = useState(null);
+  const [varianteDetalle, setVarianteDetalle] = useState(null);
+  const [cargandoVariante, setCargandoVariante] = useState(false);
   const [cantidadSel, setCantidadSel] = useState("1");
+  const solicitudSelectorRef = useRef(0);
 
   const { toast, mostrarToast } = useToast();
 
@@ -443,41 +372,71 @@ export default function Ventas({ user }) {
     inicio + REGISTROS_POR_PAGINA
   );
 
+  const reiniciarSelector = () => {
+    solicitudSelectorRef.current += 1;
+    setPasoSelector(1);
+    setTextoProducto("");
+    setResultadosProductos([]);
+    setBuscandoProductos(false);
+    setProductoSel(null);
+    setTallas([]);
+    setCargandoTallas(false);
+    setTallaSel(null);
+    setColores([]);
+    setCargandoColores(false);
+    setColorSel(null);
+    setVarianteDetalle(null);
+    setCargandoVariante(false);
+    setCantidadSel("1");
+  };
+
+  const cargarCatalogosVenta = async () => {
+    try {
+      const listaClientes = await obtenerClientesVenta();
+      setClientes(Array.isArray(listaClientes) ? listaClientes : []);
+      setErrorCatalogos("");
+    } catch (error) {
+      setErrorCatalogos(
+        mensajeErrorVenta(
+          error,
+          "No se pudieron cargar las opciones del formulario"
+        )
+      );
+    }
+  };
+
   const abrirModal = () => {
     setFormulario({
       idCliente: "",
       nombreCliente: "",
       fecha: fechaHoy(),
-      metodoPago: "Transferencia",
+      metodoPago: "Efectivo",
       items: []
     });
     setErrores({});
     setMostrarSelector(false);
-    setVarianteSel("");
-    setCantidadSel("1");
+    reiniciarSelector();
     setMostrarModal(true);
     setCargandoCatalogos(true);
     setErrorCatalogos("");
 
-    Promise.all([obtenerVariantesVenta(), obtenerClientesVenta()])
-      .then(([listaVariantes, listaClientes]) => {
-        setVariantes(Array.isArray(listaVariantes) ? listaVariantes : []);
-        setClientes(Array.isArray(listaClientes) ? listaClientes : []);
-      })
-      .catch((error) => {
-        setErrorCatalogos(
-          mensajeErrorVenta(
-            error,
-            "No se pudieron cargar las opciones del formulario"
-          )
-        );
-      })
-      .finally(() => {
-        setCargandoCatalogos(false);
-      });
+    cargarCatalogosVenta().finally(() => {
+      setCargandoCatalogos(false);
+    });
   };
 
-  const cerrarModal = () => setMostrarModal(false);
+  const cerrarModal = () => {
+    setMostrarModal(false);
+    reiniciarSelector();
+  };
+
+  const alternarSelector = () => {
+    const abrir = !mostrarSelector;
+
+    reiniciarSelector();
+    limpiarErrorSelector();
+    setMostrarSelector(abrir);
+  };
 
   const cambiarCampo = (campo, valor) => {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
@@ -503,41 +462,228 @@ export default function Ventas({ user }) {
     });
   };
 
-  const agregarItem = () => {
-    const variante = variantes.find(
-      (item) => String(item.id_variante) === String(varianteSel)
-    );
+  const mostrarErrorSelector = (mensaje) => {
+    setErrores((actuales) => ({ ...actuales, selector: mensaje }));
+  };
 
-    if (!variante) {
-      setErrores((actuales) => ({
-        ...actuales,
-        selector: "Selecciona un producto."
-      }));
+  const cambiarTextoProducto = (valor) => {
+    setTextoProducto(valor);
+
+    if (valor.trim().length < 2) {
+      setResultadosProductos([]);
+      setBuscandoProductos(false);
+      limpiarErrorSelector();
+      return;
+    }
+
+    setBuscandoProductos(true);
+  };
+
+  useEffect(() => {
+    const texto = textoProducto.trim();
+
+    if (!mostrarModal || !mostrarSelector || pasoSelector !== 1) return;
+
+    if (texto.length < 2) return;
+
+    let activo = true;
+
+    const temporizador = setTimeout(async () => {
+      setBuscandoProductos(true);
+
+      try {
+        const respuesta = await buscarProductosVenta(texto);
+
+        if (!activo) return;
+
+        setResultadosProductos(
+          Array.isArray(respuesta) ? respuesta.slice(0, 10) : []
+        );
+        limpiarErrorSelector();
+      } catch (error) {
+        if (!activo) return;
+
+        setResultadosProductos([]);
+        mostrarErrorSelector(
+          mensajeErrorVenta(error, "No se pudieron buscar los productos")
+        );
+      } finally {
+        if (activo) setBuscandoProductos(false);
+      }
+    }, 300);
+
+    return () => {
+      activo = false;
+      clearTimeout(temporizador);
+    };
+  }, [textoProducto, mostrarModal, mostrarSelector, pasoSelector]);
+
+  const seleccionarProducto = async (producto) => {
+    const solicitud = ++solicitudSelectorRef.current;
+
+    setProductoSel(producto);
+    setTallaSel(null);
+    setTallas([]);
+    setColorSel(null);
+    setColores([]);
+    setVarianteDetalle(null);
+    setPasoSelector(2);
+    setCargandoTallas(true);
+    limpiarErrorSelector();
+
+    try {
+      const respuesta = await obtenerTallasVenta(
+        producto.id_producto ?? producto.id
+      );
+
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setTallas(Array.isArray(respuesta) ? respuesta : []);
+    } catch (error) {
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setTallas([]);
+      mostrarErrorSelector(
+        mensajeErrorVenta(error, "No se pudieron cargar las tallas")
+      );
+    } finally {
+      if (solicitud === solicitudSelectorRef.current) {
+        setCargandoTallas(false);
+      }
+    }
+  };
+
+  const seleccionarTalla = async (talla) => {
+    if (!talla.disponible || !productoSel) return;
+
+    const solicitud = ++solicitudSelectorRef.current;
+
+    setTallaSel(talla);
+    setColorSel(null);
+    setColores([]);
+    setVarianteDetalle(null);
+    setPasoSelector(3);
+    setCargandoColores(true);
+    limpiarErrorSelector();
+
+    try {
+      const respuesta = await obtenerColoresVenta(
+        productoSel.id_producto ?? productoSel.id,
+        talla.id_talla ?? talla.id
+      );
+
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setColores(Array.isArray(respuesta) ? respuesta : []);
+    } catch (error) {
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setColores([]);
+      mostrarErrorSelector(
+        mensajeErrorVenta(error, "No se pudieron cargar los colores")
+      );
+    } finally {
+      if (solicitud === solicitudSelectorRef.current) {
+        setCargandoColores(false);
+      }
+    }
+  };
+
+  const seleccionarColor = async (color) => {
+    if (!productoSel || !tallaSel) return;
+
+    const solicitud = ++solicitudSelectorRef.current;
+
+    setColorSel(color);
+    setVarianteDetalle(null);
+    setPasoSelector(4);
+    setCargandoVariante(true);
+    setCantidadSel("1");
+    limpiarErrorSelector();
+
+    try {
+      const respuesta = await obtenerVarianteVenta(
+        productoSel.id_producto ?? productoSel.id,
+        tallaSel.id_talla ?? tallaSel.id,
+        color.id_color ?? color.id
+      );
+
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setVarianteDetalle(respuesta);
+    } catch (error) {
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setVarianteDetalle(null);
+      mostrarErrorSelector(
+        mensajeErrorVenta(error, "No se pudo cargar la variante")
+      );
+    } finally {
+      if (solicitud === solicitudSelectorRef.current) {
+        setCargandoVariante(false);
+      }
+    }
+  };
+
+  const irAPasoSelector = (paso) => {
+    if (paso >= pasoSelector) return;
+
+    solicitudSelectorRef.current += 1;
+
+    if (paso === 1) {
+      setTallaSel(null);
+      setTallas([]);
+      setColorSel(null);
+      setColores([]);
+      setVarianteDetalle(null);
+
+      if (textoProducto.trim().length >= 2) {
+        setBuscandoProductos(true);
+      }
+    } else if (paso === 2) {
+      setColorSel(null);
+      setColores([]);
+      setVarianteDetalle(null);
+    } else if (paso === 3) {
+      setVarianteDetalle(null);
+    }
+
+    setPasoSelector(paso);
+    setCantidadSel("1");
+    limpiarErrorSelector();
+  };
+
+  const agregarItem = () => {
+    if (!productoSel || !tallaSel || !colorSel || !varianteDetalle) {
+      mostrarErrorSelector("Completa la selección del producto.");
       return;
     }
 
     const cantidad = Number(cantidadSel);
-    const stock = Number(variante.stock);
+    const stock = Number(varianteDetalle.stock);
 
     if (!Number.isInteger(cantidad) || cantidad < 1) {
-      setErrores((actuales) => ({
-        ...actuales,
-        selector: "La cantidad debe ser un número entero mayor a cero."
-      }));
+      mostrarErrorSelector(
+        "La cantidad debe ser un número entero mayor a cero."
+      );
       return;
     }
 
     const enLista = formulario.items.find(
-      (item) => item.id_variante === variante.id_variante
+      (item) =>
+        String(item.id_variante) ===
+        String(varianteDetalle.id_variante)
     );
 
-    const disponible = stock - (enLista ? enLista.cantidad : 0);
+    const disponible = Math.max(
+      stock - (enLista ? enLista.cantidad : 0),
+      0
+    );
 
     if (cantidad > disponible) {
-      setErrores((actuales) => ({
-        ...actuales,
-        selector: `Solo hay ${disponible} unidades disponibles de ${variante.nombre}.`
-      }));
+      mostrarErrorSelector(
+        `Solo hay ${disponible} unidades disponibles de ${productoSel.nombre}.`
+      );
       return;
     }
 
@@ -545,26 +691,33 @@ export default function Ventas({ user }) {
       ...actual,
       items: enLista
         ? actual.items.map((item) =>
-            item.id_variante === variante.id_variante
-              ? { ...item, cantidad: item.cantidad + cantidad }
+            String(item.id_variante) ===
+            String(varianteDetalle.id_variante)
+              ? {
+                  ...item,
+                  imagen: varianteDetalle.imagen || "",
+                  precio: Number(varianteDetalle.precio),
+                  stock,
+                  cantidad: item.cantidad + cantidad
+                }
               : item
           )
         : [
             ...actual.items,
             {
-              id_variante: variante.id_variante,
-              nombre: variante.nombre,
-              talla: variante.talla || "-",
-              color: variante.color || "-",
-              precio: Number(variante.precio),
+              id_variante: varianteDetalle.id_variante,
+              nombre: productoSel.nombre,
+              talla: tallaSel.nombre || "-",
+              color: colorSel.nombre || "-",
+              imagen: varianteDetalle.imagen || "",
+              precio: Number(varianteDetalle.precio),
               stock,
               cantidad
             }
           ]
     }));
 
-    setVarianteSel("");
-    setCantidadSel("1");
+    reiniciarSelector();
     limpiarErrorSelector();
   };
 
@@ -594,6 +747,8 @@ export default function Ventas({ user }) {
   };
 
   const registrarVenta = async () => {
+    if (enviandoVentaRef.current) return;
+
     const nuevosErrores = {};
     const nombreEscrito = formulario.nombreCliente.trim();
 
@@ -637,19 +792,22 @@ export default function Ventas({ user }) {
 
     if (clienteSeleccionado) datos.id_cliente = clienteSeleccionado.id;
 
+    enviandoVentaRef.current = true;
     setCreandoVenta(true);
 
     try {
       await crearVenta(datos);
       mostrarToast("Venta registrada con éxito");
       cerrarModal();
-      await recargarDatos();
+      notificarInventarioActualizado();
+      await Promise.all([recargarDatos(), cargarCatalogosVenta()]);
     } catch (error) {
       mostrarToast(
         mensajeErrorVenta(error, "No se pudo registrar la venta"),
         "error"
       );
     } finally {
+      enviandoVentaRef.current = false;
       setCreandoVenta(false);
     }
   };
@@ -664,20 +822,24 @@ export default function Ventas({ user }) {
   };
 
   const confirmarAnularVenta = async () => {
-    if (!ventaACancelar) return;
+    if (!ventaACancelar || anulandoVentaRef.current) return;
 
     const venta = ventaACancelar;
+    anulandoVentaRef.current = true;
     setVentaACancelar(null);
 
     try {
       await anularVentaApi(venta.idVenta);
       mostrarToast("Venta anulada correctamente");
-      await recargarDatos();
+      notificarInventarioActualizado();
+      await Promise.all([recargarDatos(), cargarCatalogosVenta()]);
     } catch (error) {
       mostrarToast(
         mensajeErrorVenta(error, "No se pudo anular la venta"),
         "error"
       );
+    } finally {
+      anulandoVentaRef.current = false;
     }
   };
 
@@ -707,9 +869,16 @@ export default function Ventas({ user }) {
     setComprobanteEnProceso(venta.idVenta);
 
     let detalle;
+    let configuracion;
 
     try {
-      detalle = mapearVentaBackend(await obtenerVenta(venta.idVenta));
+      const [ventaCompleta, datosNegocio] = await Promise.all([
+        obtenerVenta(venta.idVenta),
+        obtenerConfiguracionNegocio().catch(() => null)
+      ]);
+
+      detalle = mapearVentaBackend(ventaCompleta);
+      configuracion = datosNegocio;
     } catch (error) {
       mostrarToast(mensajeErrorComprobante(error), "error");
       setComprobanteEnProceso(null);
@@ -717,7 +886,7 @@ export default function Ventas({ user }) {
     }
 
     try {
-      const doc = construirComprobantePdf(detalle);
+      const doc = construirComprobantePdf(detalle, configuracion);
 
       doc.save(`comprobante-${detalle.id}.pdf`);
       mostrarToast("Comprobante descargado con éxito");
@@ -730,6 +899,36 @@ export default function Ventas({ user }) {
       setComprobanteEnProceso(null);
     }
   };
+
+  const itemEnListaSelector = varianteDetalle
+    ? formulario.items.find(
+        (item) =>
+          String(item.id_variante) ===
+          String(varianteDetalle.id_variante)
+      )
+    : null;
+
+  const disponibleSelector = varianteDetalle
+    ? Math.max(
+        Number(varianteDetalle.stock) -
+          Number(itemEnListaSelector?.cantidad || 0),
+        0
+      )
+    : 0;
+
+  const clienteRegistrado = clientes.find(
+    (cliente) => String(cliente.id) === String(formulario.idCliente)
+  );
+
+  const totalUnidadesVenta = formulario.items.reduce(
+    (total, item) => total + item.cantidad,
+    0
+  );
+
+  const totalVenta = formulario.items.reduce(
+    (total, item) => total + item.precio * item.cantidad,
+    0
+  );
 
   const indicadores = [
     {
@@ -1011,23 +1210,29 @@ export default function Ventas({ user }) {
       )}
 
       {mostrarModal && (
-        <div className="venta-modal-overlay">
-          <div className="venta-modal">
-            <div className="venta-modal-header">
-              <h3>Registrar venta</h3>
+        <div className="venta-modal-overlay venta-registro-overlay">
+          <div className="venta-modal venta-modal-registro">
+            <div className="venta-modal-header venta-registro-header">
+              <div className="venta-registro-title">
+                <span className="venta-registro-title-icon">
+                  <ShoppingBag size={19} />
+                </span>
+
+                <h3>Registrar venta</h3>
+              </div>
 
               <button
                 type="button"
                 className="venta-modal-close"
                 onClick={cerrarModal}
               >
-                <X size={21} />
+                <X size={19} />
               </button>
             </div>
 
-            <div className="venta-modal-body">
-              <div className="venta-form-row">
-                <div className="venta-form-group">
+            <div className="venta-modal-body venta-registro-body">
+              <div className="venta-registro-franja">
+                <div className="venta-form-group venta-registro-field">
                   <label>CLIENTE</label>
 
                   <select
@@ -1049,31 +1254,40 @@ export default function Ventas({ user }) {
                   </select>
                 </div>
 
-                <div className="venta-form-group">
+                <div className="venta-form-group venta-registro-field">
                   <label>FECHA</label>
 
-                  <input
-                    type="date"
-                    value={formulario.fecha}
-                    className={`input ${errores.fecha ? "input-error" : ""}`}
-                    onChange={(e) => cambiarCampo("fecha", e.target.value)}
-                  />
+                  <div className="venta-registro-date">
+                    <Calendar size={16} />
+
+                    <input
+                      type="date"
+                      value={formulario.fecha}
+                      className={`input ${errores.fecha ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo("fecha", e.target.value)
+                      }
+                    />
+                  </div>
 
                   {errores.fecha && (
                     <span className="error-text">{errores.fecha}</span>
                   )}
                 </div>
-              </div>
 
-              {!formulario.idCliente && (
-                <div className="venta-form-group">
+                <div className="venta-form-group venta-registro-field">
                   <label>NOMBRE DEL CLIENTE</label>
 
                   <input
                     type="text"
                     placeholder="Nombre del comprador"
                     maxLength={100}
-                    value={formulario.nombreCliente}
+                    value={
+                      clienteRegistrado
+                        ? clienteRegistrado.nombre
+                        : formulario.nombreCliente
+                    }
+                    disabled={Boolean(clienteRegistrado)}
                     className={`input ${errores.nombreCliente ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo("nombreCliente", e.target.value)
@@ -1086,47 +1300,58 @@ export default function Ventas({ user }) {
                     </span>
                   )}
                 </div>
-              )}
 
-              <div className="venta-form-group">
-                <label>MÉTODO DE PAGO</label>
+                <div className="venta-form-group venta-registro-field">
+                  <label>MÉTODO DE PAGO</label>
 
-                <select
-                  value={formulario.metodoPago}
-                  onChange={(e) =>
-                    cambiarCampo("metodoPago", e.target.value)
-                  }
-                >
-                  {METODOS_PAGO.map((metodo) => (
-                    <option key={metodo} value={metodo}>
-                      {metodo}
-                    </option>
-                  ))}
-                </select>
+                  <select
+                    value={formulario.metodoPago}
+                    onChange={(e) =>
+                      cambiarCampo("metodoPago", e.target.value)
+                    }
+                  >
+                    {METODOS_PAGO.map((metodo) => (
+                      <option key={metodo} value={metodo}>
+                        {metodo}
+                      </option>
+                    ))}
+                  </select>
+
+                  <span className="venta-registro-nota">
+                    La venta se registra como pagada y su estado de pago no
+                    es editable.
+                  </span>
+                </div>
               </div>
 
-              <div className="venta-form-hint">
-                La venta se registra como pagada y su estado de pago no es
-                editable.
-              </div>
+              <div className="venta-registro-grid">
+                <section className="venta-registro-card venta-registro-productos">
+                  <div className="venta-registro-card-head">
+                    <div className="venta-registro-card-title">
+                      <ShoppingBag size={17} />
+                      <h4>PRODUCTOS DE LA VENTA</h4>
+                    </div>
 
-              <div className="venta-details-header">
-                <label>PRODUCTOS DE LA VENTA</label>
-
-                <button
-                  type="button"
-                  className="venta-add-product"
-                  onClick={() => setMostrarSelector((actual) => !actual)}
-                  disabled={cargandoCatalogos}
-                >
-                  <Plus size={16} />
-                  Agregar producto
-                </button>
-              </div>
+                    <button
+                      type="button"
+                      className="venta-add-product venta-registro-toggle"
+                      onClick={alternarSelector}
+                      disabled={cargandoCatalogos}
+                    >
+                      {mostrarSelector ? (
+                        <X size={15} />
+                      ) : (
+                        <Plus size={15} />
+                      )}
+                      {mostrarSelector
+                        ? "Cerrar selector"
+                        : "Agregar producto"}
+                    </button>
+                  </div>
 
               {cargandoCatalogos && (
                 <div className="venta-no-productos">
-                  Cargando productos disponibles...
+                  Cargando clientes disponibles...
                 </div>
               )}
 
@@ -1135,53 +1360,329 @@ export default function Ventas({ user }) {
               )}
 
               {mostrarSelector && !cargandoCatalogos && (
-                <div className="venta-form-row venta-selector-row">
-                  <div className="venta-form-group">
-                    <label>PRODUCTO</label>
+                <div className="venta-selector-panel">
+                  <div className="venta-selector-steps">
+                    {PASOS_SELECTOR.map((paso) => (
+                      <button
+                        type="button"
+                        key={paso.numero}
+                        className={`venta-selector-step${
+                          pasoSelector === paso.numero ? " active" : ""
+                        }${
+                          pasoSelector > paso.numero ? " completed" : ""
+                        }`}
+                        onClick={() => irAPasoSelector(paso.numero)}
+                        disabled={paso.numero >= pasoSelector}
+                      >
+                        <span className="venta-selector-step-numero">
+                          {paso.numero}
+                        </span>
+                        <span>{paso.titulo}</span>
+                      </button>
+                    ))}
+                  </div>
 
-                    <select
-                      value={varianteSel}
-                      onChange={(e) => {
-                        setVarianteSel(e.target.value);
-                        limpiarErrorSelector();
-                      }}
-                    >
-                      <option value="">Selecciona una variante</option>
+                  {pasoSelector === 1 && (
+                    <div className="venta-selector-content">
+                      <div className="venta-selector-cabecera">
+                        <div>
+                          <strong>Busca el producto</strong>
+                          <span>
+                            Escribe su nombre o código para ver las
+                            opciones disponibles.
+                          </span>
+                        </div>
+                      </div>
 
-                      {variantes.map((variante) => (
-                        <option
-                          key={variante.id_variante}
-                          value={variante.id_variante}
+                      <div className="venta-producto-buscador">
+                        <Search size={18} />
+
+                        <input
+                          type="text"
+                          autoFocus
+                          value={textoProducto}
+                          placeholder="Nombre o código (mínimo 2 caracteres)"
+                          onChange={(e) =>
+                            cambiarTextoProducto(e.target.value)
+                          }
+                        />
+                      </div>
+
+                      {buscandoProductos && (
+                        <div className="venta-selector-mensaje">
+                          Buscando productos...
+                        </div>
+                      )}
+
+                      {!buscandoProductos &&
+                        textoProducto.trim().length < 2 && (
+                          <div className="venta-selector-mensaje">
+                            Escribe al menos 2 caracteres para buscar.
+                          </div>
+                        )}
+
+                      {!buscandoProductos &&
+                        textoProducto.trim().length >= 2 &&
+                        resultadosProductos.length === 0 &&
+                        !errores.selector && (
+                          <div className="venta-selector-mensaje">
+                            No se encontraron productos activos con stock.
+                          </div>
+                        )}
+
+                      {!buscandoProductos &&
+                        resultadosProductos.length > 0 && (
+                          <div className="venta-producto-resultados">
+                            {resultadosProductos.map((producto) => (
+                              <button
+                                type="button"
+                                key={producto.id_producto ?? producto.id}
+                                className="venta-producto-resultado"
+                                onClick={() =>
+                                  seleccionarProducto(producto)
+                                }
+                              >
+                                <span className="venta-producto-resultado-info">
+                                  <strong>{producto.nombre}</strong>
+                                  <span>
+                                    {producto.codigo
+                                      ? `Código: ${producto.codigo}`
+                                      : "Sin código"}
+                                  </span>
+                                </span>
+
+                                <span className="venta-producto-resultado-stock">
+                                  <strong>{producto.stock_total}</strong>
+                                  <span>disponibles</span>
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                  )}
+
+                  {pasoSelector === 2 && (
+                    <div className="venta-selector-content">
+                      <div className="venta-selector-cabecera">
+                        <div>
+                          <strong>{productoSel?.nombre}</strong>
+                          <span>
+                            Selecciona la talla que deseas vender.
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="venta-selector-cambiar"
+                          onClick={() => irAPasoSelector(1)}
                         >
-                          {`${variante.nombre} · ${variante.talla || "-"} · ${variante.color || "-"} · ${formatearPrecio(variante.precio)} · Stock: ${variante.stock}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                          Cambiar
+                        </button>
+                      </div>
 
-                  <div className="venta-form-group">
-                    <label>CANTIDAD</label>
+                      {cargandoTallas ? (
+                        <div className="venta-selector-mensaje">
+                          Cargando tallas...
+                        </div>
+                      ) : tallas.length === 0 ? (
+                        <div className="venta-selector-mensaje">
+                          Este producto no tiene tallas disponibles.
+                        </div>
+                      ) : (
+                        <div className="venta-tallas-grid">
+                          {tallas.map((talla) => (
+                            <button
+                              type="button"
+                              key={talla.id_talla ?? talla.id}
+                              className={`venta-talla-chip${
+                                String(tallaSel?.id_talla ?? tallaSel?.id) ===
+                                String(talla.id_talla ?? talla.id)
+                                  ? " selected"
+                                  : ""
+                              }`}
+                              onClick={() => seleccionarTalla(talla)}
+                              disabled={!talla.disponible}
+                            >
+                              <strong>{talla.nombre}</strong>
+                              <span>
+                                {talla.disponible
+                                  ? `${talla.stock} disponibles`
+                                  : "Agotada"}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                    <input
-                      type="number"
-                      min="1"
-                      value={cantidadSel}
-                      onChange={(e) =>
-                        setCantidadSel(
-                          e.target.value.replace(/[^0-9]/g, "")
-                        )
-                      }
-                    />
-                  </div>
+                  {pasoSelector === 3 && (
+                    <div className="venta-selector-content">
+                      <div className="venta-selector-cabecera">
+                        <div>
+                          <strong>{productoSel?.nombre}</strong>
+                          <span>
+                            Talla {tallaSel?.nombre}. Elige el color.
+                          </span>
+                        </div>
 
-                  <button
-                    type="button"
-                    className="venta-add-product"
-                    onClick={agregarItem}
-                  >
-                    <Plus size={16} />
-                    Agregar a la venta
-                  </button>
+                        <button
+                          type="button"
+                          className="venta-selector-cambiar"
+                          onClick={() => irAPasoSelector(2)}
+                        >
+                          Cambiar
+                        </button>
+                      </div>
+
+                      {cargandoColores ? (
+                        <div className="venta-selector-mensaje">
+                          Cargando colores...
+                        </div>
+                      ) : colores.length === 0 ? (
+                        <div className="venta-selector-mensaje">
+                          No hay colores con stock para esta talla.
+                        </div>
+                      ) : (
+                        <div className="venta-colores-grid">
+                          {colores.map((color) => (
+                            <button
+                              type="button"
+                              key={color.id_color ?? color.id}
+                              className={`venta-color-chip${
+                                String(colorSel?.id_color ?? colorSel?.id) ===
+                                String(color.id_color ?? color.id)
+                                  ? " selected"
+                                  : ""
+                              }`}
+                              onClick={() => seleccionarColor(color)}
+                            >
+                              <span
+                                className="venta-color-dot"
+                                style={{
+                                  backgroundColor:
+                                    color.codigo_hex || "#d9d9d9"
+                                }}
+                              />
+
+                              <span className="venta-color-info">
+                                <strong>{color.nombre}</strong>
+                                <span>{color.stock} disponibles</span>
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {pasoSelector === 4 && (
+                    <div className="venta-selector-content">
+                      {cargandoVariante ? (
+                        <div className="venta-selector-mensaje">
+                          Cargando disponibilidad...
+                        </div>
+                      ) : !varianteDetalle ? (
+                        <div className="venta-selector-mensaje">
+                          No se pudo cargar esta variante. Vuelve al paso
+                          anterior e intenta de nuevo.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="venta-selector-resumen">
+                            <div>
+                              <span>Producto</span>
+                              <strong>{productoSel?.nombre}</strong>
+                            </div>
+
+                            <div>
+                              <span>Talla</span>
+                              <strong>{tallaSel?.nombre}</strong>
+                            </div>
+
+                            <div>
+                              <span>Color</span>
+                              <strong>{colorSel?.nombre}</strong>
+                            </div>
+
+                            <div>
+                              <span>Precio</span>
+                              <strong>
+                                {formatearPrecio(varianteDetalle.precio)}
+                              </strong>
+                            </div>
+                          </div>
+
+                          <div className="venta-selector-cantidad">
+                            <div className="venta-form-group">
+                              <label>CANTIDAD</label>
+
+                              <input
+                                type="number"
+                                min="1"
+                                max={disponibleSelector}
+                                value={cantidadSel}
+                                onChange={(e) =>
+                                  setCantidadSel(
+                                    e.target.value.replace(/[^0-9]/g, "")
+                                  )
+                                }
+                                disabled={disponibleSelector === 0}
+                              />
+
+                              <span className="venta-selector-disponible">
+                                {disponibleSelector === 0
+                                  ? "Ya agregaste todo el stock disponible."
+                                  : `${disponibleSelector} unidades disponibles${
+                                      itemEnListaSelector
+                                        ? ` (${itemEnListaSelector.cantidad} ya están en la venta)`
+                                        : ""
+                                    }.`}
+                              </span>
+                            </div>
+
+                            <div className="venta-selector-subtotal">
+                              <span>SUBTOTAL</span>
+                              <strong>
+                                {formatearPrecio(
+                                  Number(varianteDetalle.precio) *
+                                    (Number(cantidadSel) || 0)
+                                )}
+                              </strong>
+                            </div>
+
+                            <button
+                              type="button"
+                              className="venta-add-product venta-selector-agregar"
+                              onClick={agregarItem}
+                              disabled={
+                                disponibleSelector === 0 ||
+                                !Number.isInteger(Number(cantidadSel)) ||
+                                Number(cantidadSel) < 1 ||
+                                Number(cantidadSel) > disponibleSelector
+                              }
+                            >
+                              <Plus size={16} />
+                              Agregar a la venta
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {pasoSelector > 1 && (
+                    <div className="venta-selector-nav">
+                      <button
+                        type="button"
+                        className="venta-selector-volver"
+                        onClick={() => irAPasoSelector(pasoSelector - 1)}
+                      >
+                        Volver
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1194,17 +1695,31 @@ export default function Ventas({ user }) {
               )}
 
               {formulario.items.length === 0 ? (
-                <div className="venta-no-productos">
-                  Sin productos. Agrega uno.
+                <div className="venta-no-productos venta-registro-empty">
+                  <ShoppingBag size={24} />
+                  <span>Sin productos. Agrega uno.</span>
                 </div>
               ) : (
-                <div className="venta-products-list">
+                <div className="venta-products-list venta-registro-lista">
                   {formulario.items.map((item, index) => (
-                    <div
-                      className="venta-product-item"
+                    <article
+                      className="venta-product-item venta-registro-linea"
                       key={item.id_variante}
                     >
-                      <div className="venta-product-item-head">
+                      <div className="venta-product-thumb">
+                        {urlImagen(item.imagen) ? (
+                          <img
+                            src={urlImagen(item.imagen)}
+                            alt={item.nombre}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <ShoppingBag size={22} />
+                        )}
+                      </div>
+
+                      <div className="venta-product-item-content">
+                        <div className="venta-product-item-head">
                         <span className="venta-product-item-number">
                           {`${item.nombre} · ${item.talla} · ${item.color}`}
                         </span>
@@ -1290,27 +1805,53 @@ export default function Ventas({ user }) {
                           </strong>
                         </div>
                       </div>
-                    </div>
+                      </div>
+                    </article>
                   ))}
                 </div>
               )}
 
-              <div className="venta-total-box">
-                <span>MONTO TOTAL</span>
+                </section>
 
-                <strong>
-                  {formatearPrecio(
-                    formulario.items.reduce(
-                      (suma, item) =>
-                        suma + item.precio * item.cantidad,
-                      0
-                    )
-                  )}
-                </strong>
+                <aside className="venta-registro-card venta-registro-resumen">
+                  <div className="venta-registro-card-title venta-registro-resumen-title">
+                    <FileText size={17} />
+                    <h4>Resumen de venta</h4>
+                  </div>
+
+                  <div className="venta-registro-resumen-rows">
+                    <div>
+                      <span>Productos en la venta</span>
+                      <strong>{totalUnidadesVenta}</strong>
+                    </div>
+
+                    <div>
+                      <span>Subtotal</span>
+                      <strong>{formatearPrecio(totalVenta)}</strong>
+                    </div>
+
+                    <div className="venta-registro-resumen-divider" />
+
+                    <div>
+                      <span>Descuento</span>
+                      <strong>-</strong>
+                    </div>
+
+                    <div>
+                      <span>Impuestos</span>
+                      <strong>-</strong>
+                    </div>
+                  </div>
+
+                  <div className="venta-registro-total">
+                    <span>MONTO TOTAL</span>
+                    <strong>{formatearPrecio(totalVenta)}</strong>
+                  </div>
+                </aside>
               </div>
             </div>
 
-            <div className="venta-modal-footer">
+            <div className="venta-modal-footer venta-registro-footer">
               <button
                 type="button"
                 className="venta-cancel-button"
@@ -1323,7 +1864,7 @@ export default function Ventas({ user }) {
                 type="button"
                 className="venta-create-button"
                 onClick={registrarVenta}
-                disabled={creandoVenta}
+                disabled={creandoVenta || formulario.items.length === 0}
               >
                 {creandoVenta ? "Creando..." : "Crear venta"}
               </button>

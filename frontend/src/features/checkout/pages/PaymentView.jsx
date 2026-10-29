@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,15 +22,20 @@ import {
 } from "lucide-react";
 
 import { obtenerPrecio } from "../../store/data/pedidosCliente";
-import { esAgotado, hayStock } from "../../../shared/components/cart/cantidad";
+import {
+  esAgotado,
+  excedeStock,
+} from "../../../shared/components/cart/cantidad";
 import {
   crearPedido,
+  obtenerPerfil,
   subirComprobantePedido,
 } from "../../../shared/services/api";
 import { useNotify } from "../../../shared/components/notifications/useNotify.js";
 import { NOMBRE_COMPLETO_VALIDO } from "../../../shared/utils/validacionesRegistro";
 import { calcularCostoEnvio, esValleAburra } from "../../../shared/utils/envio";
 import DIVIPOLA from "../../../shared/data/divipola.json";
+import { combinarDatosEntrega } from "../perfilEntrega";
 import QR_PAGO from "../../../assets/img/QR.jpeg";
 
 import "./PaymentView.css";
@@ -105,6 +110,7 @@ const ID_CAMPO = {
 
 export default function PaymentView({
   cart,
+  user,
   onBack,
   onConfirmarPedido,
   onIrAMisPedidos,
@@ -132,6 +138,87 @@ export default function PaymentView({
 
   const [errores, setErrores] = useState({});
 
+  const entregaActual = useRef({});
+  const camposTocados = useRef({});
+
+  const marcarCampoTocado = (campo) => {
+    camposTocados.current[campo] = true;
+  };
+
+  useEffect(() => {
+    entregaActual.current = {
+      nombre: nombreEntrega,
+      telefono: telefonoEntrega,
+      departamentoCodigo,
+      municipioCodigo,
+      barrio: barrioEntrega,
+      direccion: direccionEntrega,
+    };
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let cancelado = false;
+
+    const aplicarPerfil = (perfil) => {
+      if (cancelado || !perfil) return;
+
+      const actual = entregaActual.current;
+      const tocados = camposTocados.current;
+      const siguiente = combinarDatosEntrega(
+        actual,
+        perfil,
+        DIVIPOLA.departamentos
+      );
+      const ubicacionTocada = Boolean(
+        tocados.departamento || tocados.municipio || tocados.barrio
+      );
+
+      if (!tocados.nombre && siguiente.nombre !== actual.nombre) {
+        setNombreEntrega(siguiente.nombre);
+      }
+      if (!tocados.telefono && siguiente.telefono !== actual.telefono) {
+        setTelefonoEntrega(siguiente.telefono);
+      }
+      if (!ubicacionTocada) {
+        if (siguiente.departamentoCodigo !== actual.departamentoCodigo) {
+          setDepartamentoCodigo(siguiente.departamentoCodigo);
+        }
+        if (siguiente.municipioCodigo !== actual.municipioCodigo) {
+          setMunicipioCodigo(siguiente.municipioCodigo);
+        }
+        if (!tocados.barrio && siguiente.barrio !== actual.barrio) {
+          setBarrioEntrega(siguiente.barrio);
+        }
+      }
+      if (!tocados.direccion && siguiente.direccion !== actual.direccion) {
+        setDireccionEntrega(siguiente.direccion);
+      }
+
+      if (
+        !ubicacionTocada &&
+        siguiente.municipioCodigo &&
+        siguiente.municipioCodigo !== actual.municipioCodigo &&
+        !esValleAburra(siguiente.municipioCodigo)
+      ) {
+        setMetodoEnvio("transportadora");
+      }
+    };
+
+    aplicarPerfil(user);
+
+    obtenerPerfil()
+      .then(aplicarPerfil)
+      .catch(() => {
+        // Sin conexión se conservan los datos de la sesión ya aplicados.
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [user]);
+
   const formatoPrecio = (valor) => {
     return `$${valor.toLocaleString("es-CO")} COP`;
   };
@@ -144,10 +231,9 @@ export default function PaymentView({
   const agotados = cart.filter((item) => esAgotado(item.stock));
 
   // Líneas cuya cantidad pide más de lo que hay (solo con stock informado).
-  const excedenStock = cart.filter(
-    (item) =>
-      hayStock(item.stock) &&
-      (Number(item.quantity) || 1) > Number(item.stock)
+  // La cantidad igual al stock es válida y no se marca aquí.
+  const excedenStock = cart.filter((item) =>
+    excedeStock(item.quantity, item.stock)
   );
 
   /* =========================================================
@@ -246,6 +332,7 @@ export default function PaymentView({
 
   // Cambiar el departamento invalida el municipio y el barrio elegidos.
   const cambiarDepartamento = (codigo) => {
+    marcarCampoTocado("departamento");
     setDepartamentoCodigo(codigo);
     setMunicipioCodigo("");
     setBarrioEntrega("");
@@ -257,6 +344,7 @@ export default function PaymentView({
   // Cambiar el municipio invalida el barrio elegido y recalcula el método de
   // envío según la zona DANE del municipio.
   const cambiarMunicipio = (codigo) => {
+    marcarCampoTocado("municipio");
     setMunicipioCodigo(codigo);
     limpiarError("municipio");
     limpiarError("barrio");
@@ -682,6 +770,7 @@ export default function PaymentView({
                     aria-invalid={Boolean(errores.nombre)}
                     aria-describedby={errores.nombre ? "error-nombre" : undefined}
                     onChange={(e) => {
+                      marcarCampoTocado("nombre");
                       setNombreEntrega(e.target.value);
                       limpiarError("nombre");
                     }}
@@ -730,6 +819,7 @@ export default function PaymentView({
                     aria-describedby={errores.telefono ? "error-telefono" : undefined}
                     onChange={(e) => {
                       // Solo dígitos, máx. 10: misma regla que el backend.
+                      marcarCampoTocado("telefono");
                       setTelefonoEntrega(e.target.value.replace(/\D/g, "").slice(0, LARGO_MAX_TELEFONO));
                       limpiarError("telefono");
                     }}
@@ -883,6 +973,7 @@ export default function PaymentView({
                     aria-invalid={Boolean(errores.barrio)}
                     aria-describedby={errores.barrio ? "error-barrio" : undefined}
                     onChange={(e) => {
+                      marcarCampoTocado("barrio");
                       setBarrioEntrega(e.target.value);
                       limpiarError("barrio");
                     }}
@@ -931,6 +1022,7 @@ export default function PaymentView({
                     aria-invalid={Boolean(errores.direccion)}
                     aria-describedby={errores.direccion ? "error-direccion" : undefined}
                     onChange={(e) => {
+                      marcarCampoTocado("direccion");
                       setDireccionEntrega(e.target.value);
                       limpiarError("direccion");
                     }}
@@ -1695,6 +1787,13 @@ export default function PaymentView({
             </p>
           )}
 
+          {excedenStock.length > 0 && (
+            <p className="payment-stock-alert" role="alert">
+              Hay productos con cantidad mayor al stock disponible: ajusta
+              la cantidad para continuar.
+            </p>
+          )}
+
           <button
             type="button"
             className="confirm-payment-btn"
@@ -1702,6 +1801,7 @@ export default function PaymentView({
             disabled={
               enviando ||
               agotados.length > 0 ||
+              excedenStock.length > 0 ||
               Object.keys(errores).length > 0
             }
           >

@@ -1,6 +1,6 @@
 import { X, Trash2 } from "lucide-react";
 import CantidadControl from "./CantidadControl";
-import { esAgotado } from "./cantidad";
+import { esAgotado, excedeStock, mensajeStock } from "./cantidad";
 import "./CartDrawer.css";
 
 export default function CartDrawer({
@@ -62,6 +62,13 @@ export default function CartDrawer({
 
   // Alguna línea sin unidades: no se puede avanzar al pago con ella.
   const hayAgotado = cart.some((item) => esAgotado(item.stock));
+
+  // Alguna línea pide más unidades de las disponibles. Estar justo en el
+  // stock no bloquea (la alerta es solo para el exceso).
+  const hayExcesoStock = cart.some((item) =>
+    excedeStock(item.quantity, item.stock)
+  );
+  const hayBloqueoStock = hayAgotado || hayExcesoStock;
 
   // =========================================================
   // FORMATO DE PESOS COLOMBIANOS
@@ -152,6 +159,12 @@ export default function CartDrawer({
                       </p>
                     )}
 
+                    {excedeStock(cantidad, item.stock) && (
+                      <p className="cart-item-agotado" role="alert">
+                        {mensajeStock(Number(item.stock))}
+                      </p>
+                    )}
+
                     <p className="cart-item-price">
                       {formatoPrecio(precio)}
 
@@ -230,9 +243,16 @@ export default function CartDrawer({
               </p>
             )}
 
+            {hayExcesoStock && (
+              <p className="cart-stock-alert" role="alert">
+                Hay productos con cantidad mayor al stock disponible:
+                ajusta la cantidad para continuar.
+              </p>
+            )}
+
             <button
               className="continue-btn"
-              disabled={hayAgotado}
+              disabled={hayBloqueoStock}
               onClick={() => {
                 if (onContinuarCompra) {
                   onContinuarCompra();
