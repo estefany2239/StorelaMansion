@@ -322,8 +322,9 @@ router.put('/:id', requierePrivilegio('Productos', 'Actualizar'), async (req, re
 
     // Se excluye el mismo producto: guardar sin cambiar el nombre es válido.
     if (
-      await existeNombreDuplicado(db, datos.nombre, actual.rows[0].id_producto)
-    ) {
+         (await nombreCambio(db, actual.rows[0].id_producto, datos.nombre)) &&
+         (await existeNombreDuplicado(db, datos.nombre, actual.rows[0].id_producto))
+       ) {
       await db.query('ROLLBACK')
       return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
     }
@@ -432,4 +433,341 @@ router.delete('/:id', requierePrivilegio('Productos', 'Eliminar'), async (req, r
   }
 })
 
+// ─── Producto con varias variantes ───────────────────────────────────────────
+// Body: { nombre, categoria, genero, precio, estado, imagen,
+//         colores: [ { color, tallas: [ { talla, stock, id_variante? } ] } ] }
+// En categorías con tipo_talla 'ninguna': colores: [ { color, stock, id_variante? } ]
+
+const MAX_VARIANTES = 60
+
+// true si el nombre normalizado es distinto al guardado
+const nombreCambio = async (db, idProducto, nombre) => {
+  const { rows } = await db.query(
+    `SELECT ${NOMBRE_CLAVE_SQL('nombre')} <> ${NOMBRE_CLAVE_SQL('$2')} AS cambio
+       FROM producto WHERE id_producto = $1`,
+    [idProducto, nombre]
+  )
+  return rows.length === 0 ? true : rows[0].cambio
+}
+
+const leerCuerpoCompleto = (body) => {
+  const datos = {
+    nombre: normalizarNombre(body.nombre),
+    categoria: String(body.categoria || '').trim(),
+    genero: String(body.genero || '').trim().toLowerCase() || null,
+    precio: Number(body.precio),
+    activo: body.estado !== 'Inactivo',
+    imagen: String(body.imagen || '').trim() || null,
+    colores: Array.isArray(body.colores) ? body.colores : [],
+  }
+  if (!datos.nombre) return { error: 'El nombre es obligatorio' }
+  if (datos.nombre.length > 150) return { error: 'El nombre no puede superar los 150 caracteres' }
+  if (!datos.categoria) return { error: 'Selecciona una categoría' }
+  if (!Number.isFinite(datos.precio) || datos.precio < 0) return { error: 'El precio no es válido' }
+  if (datos.genero && !GENEROS.includes(datos.genero)) return { error: 'El género no es válido' }
+  if (datos.colores.length === 0) return { error: 'Agrega al menos un color' }
+  return { datos }
+}
+
+// Convierte colores y tallas en una lista plana de variantes y la valida
+const armarVariantes = async (db, datos, tipoCategoria) => {
+  const variantes = []
+  const vistas = new Set()
+
+  for (const bloque of datos.colores) {
+    const color = String(bloque?.color || '').trim()
+    if (!color) return { error: 'Selecciona un color' }
+    const idColor = await idPorNombre(db, 'color', 'id_color', color)
+    if (!idColor) return { error: `El color "${color}" no existe` }
+
+    const filas =
+      tipoCategoria === 'ninguna'
+        ? [{ talla: '', stock: bloque.stock, id_variante: bloque.id_variante }]
+        : Array.isArray(bloque.tallas)
+          ? bloque.tallas
+          : []
+    if (filas.length === 0) return { error: `Agrega al menos una talla para el color ${color}` }
+
+    for (const fila of filas) {
+      const talla = String(fila?.talla || '').trim()
+      const errorTalla = validarTallaCategoria(tipoCategoria, talla)
+      if (errorTalla) return { error: errorTalla }
+
+      const stock = Number(fila?.stock)
+      if (!Number.isInteger(stock) || stock < 0) return { error: 'El stock no es válido' }
+
+      let idTalla = null
+      if (talla) {
+        idTalla = await idPorNombre(db, 'talla', 'id_talla', talla)
+        if (!idTalla) return { error: `La talla "${talla}" no existe` }
+      }
+
+      const clave = `${idTalla || 0}-${idColor}`
+      if (vistas.has(clave)) return { error: 'Hay combinaciones de talla y color repetidas' }
+      vistas.add(clave)
+
+      let idVariante = null
+      if (fila?.id_variante !== undefined && fila?.id_variante !== null && fila?.id_variante !== '') {
+        idVariante = Number(fila.id_variante)
+        if (!Number.isInteger(idVariante) || idVariante <= 0) return { error: 'Id de variante inválido' }
+      }
+      variantes.push({ idVariante, idTalla, idColor, stock })
+    }
+  }
+
+  if (variantes.length === 0) return { error: 'Agrega al menos una variante' }
+  if (variantes.length > MAX_VARIANTES) {
+    return { error: `Máximo ${MAX_VARIANTES} variantes por producto` }
+  }
+  return { variantes }
+}
+
+// POST /api/admin/productos/completo -> 1 producto con todas sus variantes
+router.post('/completo', requierePrivilegio('Productos', 'Crear'), async (req, res) => {
+  const { datos, error } = leerCuerpoCompleto(req.body)
+  if (error) return res.status(400).json({ error })
+
+  const db = await pool.connect()
+  try {
+    await db.query('BEGIN')
+
+    if (await existeNombreDuplicado(db, datos.nombre)) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+    }
+
+    const categoria = await categoriaPorNombre(db, datos.categoria)
+    if (!categoria) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: 'La categoría no existe' })
+    }
+
+    const errorGenero = await validarGeneroCategoria(db, categoria.id_categoria, datos.genero)
+    if (errorGenero) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: errorGenero })
+    }
+
+    const armado = await armarVariantes(db, datos, categoria.tipo_talla)
+    if (armado.error) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: armado.error })
+    }
+
+    const producto = await db.query(
+      `INSERT INTO producto (nombre, precio, id_categoria, genero, estado)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id_producto`,
+      [datos.nombre, datos.precio, categoria.id_categoria, datos.genero, datos.activo]
+    )
+    const idProducto = producto.rows[0].id_producto
+    await db.query(
+      `UPDATE producto
+          SET codigo = 'PROD-' || LPAD(id_producto::text, 6, '0')
+        WHERE id_producto = $1`,
+      [idProducto]
+    )
+
+    for (const v of armado.variantes) {
+      await db.query(
+        `INSERT INTO producto_variante (id_producto, id_talla, id_color, stock, imagen)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [idProducto, v.idTalla, v.idColor, v.stock, datos.imagen]
+      )
+    }
+
+    await db.query('COMMIT')
+
+    const filas = await pool.query(
+      `${SELECT_FILAS} WHERE v.id_producto = $1 ORDER BY v.id_variante`,
+      [idProducto]
+    )
+    res.status(201).json({ id_producto: idProducto, variantes: filas.rows })
+  } catch (err) {
+    await db.query('ROLLBACK').catch(() => {})
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Hay variantes repetidas en el producto' })
+    }
+    responderError(res, err, 'No se pudo crear el producto')
+  } finally {
+    db.release()
+  }
+})
+
+// GET /api/admin/productos/producto/:idProducto -> producto con todas sus variantes
+router.get('/producto/:idProducto', requierePrivilegio('Productos', 'Consultar'), async (req, res) => {
+  const idProducto = Number(req.params.idProducto)
+  if (!Number.isInteger(idProducto) || idProducto <= 0) {
+    return res.status(400).json({ error: 'Id inválido' })
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `${SELECT_FILAS} WHERE p.id_producto = $1 ORDER BY v.id_variante`,
+      [idProducto]
+    )
+    if (rows.length === 0) return res.status(404).json({ error: 'Producto no encontrado' })
+
+    const base = rows[0]
+    res.json({
+      id_producto: base.id_producto,
+      codigo: base.codigo,
+      nombre: base.nombre,
+      categoria: base.categoria,
+      genero: base.genero,
+      precio: base.precio,
+      estado: base.estado,
+      imagen: (rows.find((r) => r.imagen) || {}).imagen || null,
+      variantes: rows.map((r) => ({
+        id_variante: r.id,
+        talla: r.talla,
+        color: r.color,
+        stock: r.stock,
+        imagen: r.imagen,
+      })),
+    })
+  } catch (error) {
+    responderError(res, error, 'No se pudo cargar el producto')
+  }
+})
+
+// PUT /api/admin/productos/producto/:idProducto/completo -> actualiza el producto
+// y sus variantes: edita las existentes, agrega las nuevas y quita las que ya no vienen
+router.put('/producto/:idProducto/completo', requierePrivilegio('Productos', 'Actualizar'), async (req, res) => {
+  const idProducto = Number(req.params.idProducto)
+  if (!Number.isInteger(idProducto) || idProducto <= 0) {
+    return res.status(400).json({ error: 'Id inválido' })
+  }
+
+  const { datos, error } = leerCuerpoCompleto(req.body)
+  if (error) return res.status(400).json({ error })
+
+  const db = await pool.connect()
+  try {
+    await db.query('BEGIN')
+
+    const actual = await db.query(
+      'SELECT id_producto FROM producto WHERE id_producto = $1 FOR UPDATE',
+      [idProducto]
+    )
+    if (actual.rowCount === 0) {
+      await db.query('ROLLBACK')
+      return res.status(404).json({ error: 'Producto no encontrado' })
+    }
+
+    if (
+      (await nombreCambio(db, idProducto, datos.nombre)) &&
+      (await existeNombreDuplicado(db, datos.nombre, idProducto))
+    ) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+    }
+
+    const categoria = await categoriaPorNombre(db, datos.categoria)
+    if (!categoria) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: 'La categoría no existe' })
+    }
+
+    const errorGenero = await validarGeneroCategoria(db, categoria.id_categoria, datos.genero)
+    if (errorGenero) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: errorGenero })
+    }
+
+    const armado = await armarVariantes(db, datos, categoria.tipo_talla)
+    if (armado.error) {
+      await db.query('ROLLBACK')
+      return res.status(400).json({ error: armado.error })
+    }
+
+    await db.query(
+      `UPDATE producto
+          SET nombre = $1, precio = $2, id_categoria = $3, genero = $4, estado = $5
+        WHERE id_producto = $6`,
+      [datos.nombre, datos.precio, categoria.id_categoria, datos.genero, datos.activo, idProducto]
+    )
+
+    const existentes = await db.query(
+      'SELECT id_variante, id_talla, id_color FROM producto_variante WHERE id_producto = $1',
+      [idProducto]
+    )
+    const idsExistentes = new Set(existentes.rows.map((r) => r.id_variante))
+    const porCombinacion = new Map(
+      existentes.rows.map((r) => [`${r.id_talla || 0}-${r.id_color || 0}`, r.id_variante])
+    )
+    const reclamadas = new Set()
+
+    // Variantes que traen su id: deben pertenecer a este producto
+    for (const v of armado.variantes) {
+      if (!v.idVariante) continue
+      if (!idsExistentes.has(v.idVariante)) {
+        await db.query('ROLLBACK')
+        return res.status(400).json({ error: 'Una variante no pertenece a este producto' })
+      }
+      reclamadas.add(v.idVariante)
+    }
+    // Variantes sin id: si ya existe esa talla y color, se actualiza en vez de duplicar
+    for (const v of armado.variantes) {
+      if (v.idVariante) continue
+      const idExistente = porCombinacion.get(`${v.idTalla || 0}-${v.idColor}`)
+      if (idExistente && !reclamadas.has(idExistente)) {
+        v.idVariante = idExistente
+        reclamadas.add(idExistente)
+      }
+    }
+
+    // Las que ya no vienen se borran solo si no tienen pedidos ni ventas
+    const sobrantes = [...idsExistentes].filter((i) => !reclamadas.has(i))
+    if (sobrantes.length > 0) {
+      const usos = await db.query(
+        `SELECT 1 FROM detalle_pedido WHERE id_variante = ANY($1::int[])
+         UNION ALL
+         SELECT 1 FROM detalle_venta WHERE id_variante = ANY($1::int[])
+         LIMIT 1`,
+        [sobrantes]
+      )
+      if (usos.rowCount > 0) {
+        await db.query('ROLLBACK')
+        return res.status(409).json({
+          error: 'Esta variante tiene pedidos o ventas: déjala en stock 0 en lugar de eliminarla',
+        })
+      }
+      await db.query('DELETE FROM producto_variante WHERE id_variante = ANY($1::int[])', [sobrantes])
+    }
+
+    for (const v of armado.variantes) {
+      if (v.idVariante) {
+        await db.query(
+          `UPDATE producto_variante
+              SET id_talla = $1, id_color = $2, stock = $3, imagen = $4
+            WHERE id_variante = $5 AND id_producto = $6`,
+          [v.idTalla, v.idColor, v.stock, datos.imagen, v.idVariante, idProducto]
+        )
+      } else {
+        await db.query(
+          `INSERT INTO producto_variante (id_producto, id_talla, id_color, stock, imagen)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [idProducto, v.idTalla, v.idColor, v.stock, datos.imagen]
+        )
+      }
+    }
+
+    await db.query('COMMIT')
+
+    const filas = await pool.query(
+      `${SELECT_FILAS} WHERE v.id_producto = $1 ORDER BY v.id_variante`,
+      [idProducto]
+    )
+    res.json({ id_producto: idProducto, variantes: filas.rows })
+  } catch (err) {
+    await db.query('ROLLBACK').catch(() => {})
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Hay variantes repetidas en el producto' })
+    }
+    responderError(res, err, 'No se pudo actualizar el producto')
+  } finally {
+    db.release()
+  }
+})
 export default router
