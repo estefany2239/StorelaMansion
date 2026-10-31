@@ -27,6 +27,7 @@ import useToast from "../hooks/useToast";
 import { tienePermiso } from "../utils/permisos";
 
 import { urlImagen } from "../../../shared/utils/imagenes";
+import { tallaVisible } from "../../../shared/utils/catalogo";
 
 import {
   obtenerVentas,
@@ -87,7 +88,7 @@ const mapearVentaBackend = (venta) => {
   const productos = (venta.productos || []).map((producto) => ({
     nombre: producto.nombre || "—",
     codigo: producto.codigo || "—",
-    talla: producto.talla || "-",
+    talla: tallaVisible(producto.talla),
     color: producto.color || "-",
     cantidad: Number(producto.cantidad) || 0,
     precio: Number(producto.precio_unitario) || 0,
@@ -100,7 +101,9 @@ const mapearVentaBackend = (venta) => {
   );
   const total = Number(venta.total) || 0;
   const abonado = Number(venta.monto_abonado) || 0;
-  const abonos = Array.isArray(venta.abonos) ? venta.abonos : [];
+  const abonos = Array.isArray(venta.abonos)
+    ? [...venta.abonos].reverse()
+    : [];
 
   return {
     id: venta.codigo || String(venta.id),
@@ -518,44 +521,7 @@ export default function Ventas({ user }) {
     };
   }, [textoProducto, mostrarModal, mostrarSelector, pasoSelector]);
 
-  const seleccionarProducto = async (producto) => {
-    const solicitud = ++solicitudSelectorRef.current;
-
-    setProductoSel(producto);
-    setTallaSel(null);
-    setTallas([]);
-    setColorSel(null);
-    setColores([]);
-    setVarianteDetalle(null);
-    setPasoSelector(2);
-    setCargandoTallas(true);
-    limpiarErrorSelector();
-
-    try {
-      const respuesta = await obtenerTallasVenta(
-        producto.id_producto ?? producto.id
-      );
-
-      if (solicitud !== solicitudSelectorRef.current) return;
-
-      setTallas(Array.isArray(respuesta) ? respuesta : []);
-    } catch (error) {
-      if (solicitud !== solicitudSelectorRef.current) return;
-
-      setTallas([]);
-      mostrarErrorSelector(
-        mensajeErrorVenta(error, "No se pudieron cargar las tallas")
-      );
-    } finally {
-      if (solicitud === solicitudSelectorRef.current) {
-        setCargandoTallas(false);
-      }
-    }
-  };
-
-  const seleccionarTalla = async (talla) => {
-    if (!talla.disponible || !productoSel) return;
-
+  const cargarColores = async (producto, talla) => {
     const solicitud = ++solicitudSelectorRef.current;
 
     setTallaSel(talla);
@@ -568,7 +534,7 @@ export default function Ventas({ user }) {
 
     try {
       const respuesta = await obtenerColoresVenta(
-        productoSel.id_producto ?? productoSel.id,
+        producto.id_producto ?? producto.id,
         talla.id_talla ?? talla.id
       );
 
@@ -587,6 +553,62 @@ export default function Ventas({ user }) {
         setCargandoColores(false);
       }
     }
+  };
+
+  const seleccionarProducto = async (producto) => {
+    const solicitud = ++solicitudSelectorRef.current;
+
+    setProductoSel(producto);
+    setTallaSel(null);
+    setTallas([]);
+    setColorSel(null);
+    setColores([]);
+    setVarianteDetalle(null);
+    setCargandoTallas(true);
+    limpiarErrorSelector();
+
+    try {
+      const respuesta = await obtenerTallasVenta(
+        producto.id_producto ?? producto.id
+      );
+
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      const lista = (Array.isArray(respuesta) ? respuesta : []).map(
+        (talla) => ({
+          ...talla,
+          nombre: tallaVisible(talla.nombre)
+        })
+      );
+      setTallas(lista);
+
+      // Producto sin tallas reales (gorras, relojes, perfumes): no se
+      // muestra el paso "Talla" y se continúa directo a los colores.
+      const sinTalla = lista.length > 0 && lista.every((talla) => !talla.nombre);
+      if (sinTalla) {
+        setCargandoTallas(false);
+        await cargarColores(producto, lista[0]);
+      } else {
+        setPasoSelector(2);
+      }
+    } catch (error) {
+      if (solicitud !== solicitudSelectorRef.current) return;
+
+      setTallas([]);
+      mostrarErrorSelector(
+        mensajeErrorVenta(error, "No se pudieron cargar las tallas")
+      );
+    } finally {
+      if (solicitud === solicitudSelectorRef.current) {
+        setCargandoTallas(false);
+      }
+    }
+  };
+
+  const seleccionarTalla = (talla) => {
+    if (!talla.disponible || !productoSel) return;
+
+    cargarColores(productoSel, talla);
   };
 
   const seleccionarColor = async (color) => {
@@ -626,11 +648,17 @@ export default function Ventas({ user }) {
   };
 
   const irAPasoSelector = (paso) => {
-    if (paso >= pasoSelector) return;
+    // En productos sin talla el paso 2 no existe: "Cambiar" desde el
+    // color vuelve directo a la búsqueda del producto.
+    const sinTalla =
+      tallas.length > 0 && tallas.every((talla) => !talla.nombre);
+    const destino = paso === 2 && sinTalla ? 1 : paso;
+
+    if (destino >= pasoSelector) return;
 
     solicitudSelectorRef.current += 1;
 
-    if (paso === 1) {
+    if (destino === 1) {
       setTallaSel(null);
       setTallas([]);
       setColorSel(null);
@@ -640,15 +668,15 @@ export default function Ventas({ user }) {
       if (textoProducto.trim().length >= 2) {
         setBuscandoProductos(true);
       }
-    } else if (paso === 2) {
+    } else if (destino === 2) {
       setColorSel(null);
       setColores([]);
       setVarianteDetalle(null);
-    } else if (paso === 3) {
+    } else if (destino === 3) {
       setVarianteDetalle(null);
     }
 
-    setPasoSelector(paso);
+    setPasoSelector(destino);
     setCantidadSel("1");
     limpiarErrorSelector();
   };
@@ -707,7 +735,7 @@ export default function Ventas({ user }) {
             {
               id_variante: varianteDetalle.id_variante,
               nombre: productoSel.nombre,
-              talla: tallaSel.nombre || "-",
+              talla: tallaVisible(tallaSel.nombre),
               color: colorSel.nombre || "-",
               imagen: varianteDetalle.imagen || "",
               precio: Number(varianteDetalle.precio),
@@ -801,6 +829,8 @@ export default function Ventas({ user }) {
       cerrarModal();
       notificarInventarioActualizado();
       await Promise.all([recargarDatos(), cargarCatalogosVenta()]);
+      setBusqueda("");
+      setPaginaActual(1);
     } catch (error) {
       mostrarToast(
         mensajeErrorVenta(error, "No se pudo registrar la venta"),
@@ -1523,7 +1553,9 @@ export default function Ventas({ user }) {
                         <div>
                           <strong>{productoSel?.nombre}</strong>
                           <span>
-                            Talla {tallaSel?.nombre}. Elige el color.
+                            {tallaSel?.nombre
+                              ? `Talla ${tallaSel.nombre}. Elige el color.`
+                              : "Elige el color."}
                           </span>
                         </div>
 
@@ -1596,10 +1628,12 @@ export default function Ventas({ user }) {
                               <strong>{productoSel?.nombre}</strong>
                             </div>
 
-                            <div>
-                              <span>Talla</span>
-                              <strong>{tallaSel?.nombre}</strong>
-                            </div>
+                            {tallaSel?.nombre && (
+                              <div>
+                                <span>Talla</span>
+                                <strong>{tallaSel.nombre}</strong>
+                              </div>
+                            )}
 
                             <div>
                               <span>Color</span>
@@ -1721,7 +1755,9 @@ export default function Ventas({ user }) {
                       <div className="venta-product-item-content">
                         <div className="venta-product-item-head">
                         <span className="venta-product-item-number">
-                          {`${item.nombre} · ${item.talla} · ${item.color}`}
+                          {[item.nombre, item.talla, item.color]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </span>
 
                         <button
@@ -1758,15 +1794,17 @@ export default function Ventas({ user }) {
                           />
                         </div>
 
-                        <div className="venta-product-item-field">
-                          <label>TALLA</label>
-                          <input
-                            type="text"
-                            readOnly
-                            tabIndex={-1}
-                            value={item.talla}
-                          />
-                        </div>
+                        {item.talla && (
+                          <div className="venta-product-item-field">
+                            <label>TALLA</label>
+                            <input
+                              type="text"
+                              readOnly
+                              tabIndex={-1}
+                              value={item.talla}
+                            />
+                          </div>
+                        )}
 
                         <div className="venta-product-item-field">
                           <label>COLOR</label>
@@ -1975,7 +2013,14 @@ export default function Ventas({ user }) {
                         <div>
                           <strong>{producto.nombre}</strong>
                           <span>
-                            Talla: {producto.talla} · Color: {producto.color}
+                            {[
+                              producto.talla
+                                ? `Talla: ${producto.talla}`
+                                : "",
+                              `Color: ${producto.color}`
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </span>
                           <span>
                             Cantidad: {producto.cantidad} · Precio unitario:{" "}

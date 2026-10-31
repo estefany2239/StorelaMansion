@@ -345,16 +345,22 @@ router.get('/productos/:id/tallas', requierePrivilegio('Ventas', 'Crear'), async
 })
 
 // GET /productos/:id/colores?talla=ID -> solo colores con stock > 0 para la
-// combinación producto + talla.
+// combinación producto + talla. La talla puede omitirse (o venir vacía) para
+// productos sin tallas (categorías tipo_talla 'ninguna').
 router.get('/productos/:id/colores', requierePrivilegio('Ventas', 'Crear'), async (req, res) => {
   const idProducto = idPositivo(req.params.id)
-  const idTalla = idPositivo(req.query.talla)
+  const tallaTexto = String(req.query.talla ?? '').trim()
+  const sinTalla =
+    tallaTexto === '' ||
+    tallaTexto.toLowerCase() === 'null' ||
+    tallaTexto.toLowerCase() === 'undefined'
+  const idTalla = sinTalla ? null : idPositivo(tallaTexto)
 
   if (idProducto === null) {
     return res.status(400).json({ error: 'El id del producto no es válido' })
   }
-  if (idTalla === null) {
-    return res.status(400).json({ error: 'La talla es obligatoria y debe ser válida' })
+  if (!sinTalla && idTalla === null) {
+    return res.status(400).json({ error: 'La talla no es válida' })
   }
 
   try {
@@ -369,7 +375,7 @@ router.get('/productos/:id/colores', requierePrivilegio('Ventas', 'Crear'), asyn
            ON p.id_producto = pv.id_producto AND p.estado = TRUE
          JOIN color co ON co.id_color = pv.id_color
         WHERE pv.id_producto = $1
-          AND pv.id_talla = $2
+          AND pv.id_talla IS NOT DISTINCT FROM $2::int
           AND pv.stock > 0
         GROUP BY co.id_color, co.nombre, co.codigo_hex
         ORDER BY co.nombre`,
@@ -384,17 +390,25 @@ router.get('/productos/:id/colores', requierePrivilegio('Ventas', 'Crear'), asyn
 })
 
 // GET /productos/:id/variante?talla=ID&color=ID -> variante exacta con su
-// stock real, precio e imagen.
+// stock real, precio e imagen. La talla puede omitirse para productos sin talla.
 router.get('/productos/:id/variante', requierePrivilegio('Ventas', 'Crear'), async (req, res) => {
   const idProducto = idPositivo(req.params.id)
-  const idTalla = idPositivo(req.query.talla)
+  const tallaTexto = String(req.query.talla ?? '').trim()
+  const sinTalla =
+    tallaTexto === '' ||
+    tallaTexto.toLowerCase() === 'null' ||
+    tallaTexto.toLowerCase() === 'undefined'
+  const idTalla = sinTalla ? null : idPositivo(tallaTexto)
   const idColor = idPositivo(req.query.color)
 
   if (idProducto === null) {
     return res.status(400).json({ error: 'El id del producto no es válido' })
   }
-  if (idTalla === null || idColor === null) {
-    return res.status(400).json({ error: 'La talla y el color son obligatorios y deben ser válidos' })
+  if (!sinTalla && idTalla === null) {
+    return res.status(400).json({ error: 'La talla no es válida' })
+  }
+  if (idColor === null) {
+    return res.status(400).json({ error: 'El color es obligatorio y debe ser válido' })
   }
 
   try {
@@ -410,7 +424,7 @@ router.get('/productos/:id/variante', requierePrivilegio('Ventas', 'Crear'), asy
          JOIN producto p
            ON p.id_producto = pv.id_producto AND p.estado = TRUE
         WHERE pv.id_producto = $1
-          AND pv.id_talla = $2
+          AND pv.id_talla IS NOT DISTINCT FROM $2::int
           AND pv.id_color = $3
         ORDER BY pv.id_variante
         LIMIT 1`,
