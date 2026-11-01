@@ -154,6 +154,46 @@ export function requierePrivilegio(modulo, privilegio) {
   }
 }
 
+// Igual que requierePrivilegio, pero basta con UNO de los permisos de la
+// lista (por ejemplo, ver abonos sirve Abonos:Consultar o Pedidos:Consultar).
+export function requierePrivilegioAlguno(...nombres) {
+  if (nombres.length === 0) nombres = ['__imposible__']
+  return async (req, res, next) => {
+    let permitido = false
+    try {
+      const id = req.usuario?.id
+      if (!id) {
+        return res.status(401).json({ error: 'Token no proporcionado' })
+      }
+
+      const { rows } = await pool.query(
+        `SELECT 1
+           FROM usuario u
+           JOIN rol_permiso rp ON rp.id_rol = u.id_rol
+           JOIN permiso p      ON p.id_permiso = rp.id_permiso AND p.estado = TRUE
+          WHERE u.id_usuario = $1 AND p.nombre = ANY($2::text[]) AND u.estado = TRUE
+          LIMIT 1`,
+        [id, nombres]
+      )
+
+      permitido = rows.length > 0
+    } catch (error) {
+      console.error('Error al comprobar el permiso:', error.message)
+      return res.status(500).json({ error: 'No se pudieron verificar los permisos' })
+    }
+
+    if (!permitido) {
+      return res.status(403).json({
+        error: 'No tienes permisos para acceder a este recurso',
+        codigo: 'FORBIDDEN',
+        permisoRequerido: nombres.join('|'),
+      })
+    }
+
+    next()
+  }
+}
+
 // Devuelve los permisos ("Módulo:Privilegio") del rol de un usuario.
 export async function obtenerPermisos(idUsuario) {
   const { rows } = await pool.query(

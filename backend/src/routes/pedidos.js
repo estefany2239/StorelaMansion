@@ -1,6 +1,20 @@
 import { Router } from 'express'
 import { pool } from '../config/db.js'
-import { verificarToken, soloRoles, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
+import {
+  verificarToken,
+  soloRoles,
+  bloquearCambioPendiente,
+  requierePrivilegio,
+  requierePrivilegioAlguno,
+} from '../middlewares/auth.js'
+import {
+  esContraEntrega,
+  saldoPendiente,
+  montoMinimo,
+  recalcularVenta,
+  registrar,
+  abonoPorClave,
+} from '../services/abonos.js'
 import {
   validarNombreCompleto,
   validarTelefonoEntrega,
@@ -200,6 +214,36 @@ const autorizarConsultaComprobantes = async (req, res, next) => {
     return requierePrivilegio('Pedidos', 'Consultar')(req, res, next)
   } catch (error) {
     console.error('Error al autorizar comprobantes:', error.message)
+    res.status(500).json({ error: 'No se pudieron verificar los permisos' })
+  }
+}
+
+// Historial de abonos de un pedido: el Cliente solo ve los suyos; el personal
+// basta con Abonos:Consultar o Pedidos:Consultar.
+const autorizarAbonosPedido = async (req, res, next) => {
+  const id = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+
+  try {
+    if (req.usuario?.rol !== 'Cliente') {
+      return requierePrivilegioAlguno('Abonos:Consultar', 'Pedidos:Consultar')(req, res, next)
+    }
+
+    const { rows } = await pool.query(
+      'SELECT id_usuario FROM pedido WHERE id_pedido = $1',
+      [id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' })
+    }
+    if (rows[0].id_usuario !== req.usuario.id) {
+      return res.status(403).json({ error: 'No tienes permisos para acceder a este recurso' })
+    }
+    return next()
+  } catch (error) {
+    console.error('Error al autorizar abonos:', error.message)
     res.status(500).json({ error: 'No se pudieron verificar los permisos' })
   }
 }
@@ -689,15 +733,19 @@ router.post('/:id/pago/confirmar', requierePrivilegio('Pedidos', 'Cambiar estado
     }
 
     const total = Number(pedido.total)
-    const monto = String(pedido.metodo_pago).startsWith('Contra entrega')
+    const monto = esContraEntrega(pedido.metodo_pago)
       ? Math.round(total * 0.5)
       : total
 
-    await client.query(
-      `INSERT INTO pago (id_pedido, metodo, monto)
-       VALUES ($1, $2, $3)`,
-      [id, pedido.metodo_pago, monto]
-    )
+    // Toda escritura de abonos pasa por services/abonos.js: inserta el pago y
+    // recalcula venta.estado_pago en la misma transacción (pedido ya
+    // bloqueado con FOR UPDATE arriba).
+    await registrar(client, {
+      idPedido: id,
+      registradoPor: req.usuario?.id || null,
+      monto,
+      metodo: pedido.metodo_pago,
+    })
     await client.query(
       'UPDATE pedido SET estado_pago = $1 WHERE id_pedido = $2',
       [ESTADO_PAGO_CONFIRMADO, id]
@@ -896,7 +944,7 @@ router.post(
       await client.query('BEGIN')
 
       const { rows } = await client.query(
-        `SELECT id_pedido, estado, estado_pago, metodo_pago
+        `SELECT id_pedido, estado, total, estado_pago, metodo_pago
            FROM pedido
           WHERE id_pedido = $1
           FOR UPDATE`,
@@ -932,9 +980,24 @@ router.post(
         [ESTADO_PAGO_CONFIRMADO, ESTADO_INICIAL, ESTADO_EN_PREPARACION, id]
       )
 
-      // Contra entrega: el abono se verifica aquí, pero la venta solo queda
-      // Pagada cuando el pedido se marca Entregado.
-      if (!String(pedido.metodo_pago || '').startsWith('Contra entrega')) {
+      // Contra entrega: el PRIMER abono (50 % redondeado a pesos) se calcula
+      // SIEMPRE en el servidor, con id_comprobante; nunca con un valor que
+      // mande el cliente. Se registra solo si no hay pagos previos para no
+      // superar el saldo. La venta queda Pagada cuando el saldo llegue a 0
+      // (recalcularVenta, al registrarse el abono o al entregarse).
+      if (esContraEntrega(pedido.metodo_pago)) {
+        const saldoAlAprobar = await saldoPendiente(client, id)
+        if (saldoAlAprobar > 0) {
+          await registrar(client, {
+            idPedido: id,
+            registradoPor: req.usuario.id,
+            monto: Math.min(Math.round(Number(pedido.total) * 0.5), saldoAlAprobar),
+            metodo: pedido.metodo_pago,
+            observacion: 'Abono parcial',
+            idComprobante: idc,
+          })
+        }
+      } else {
         await client.query(
           `UPDATE venta
               SET estado_pago = 'Pagada',
@@ -1294,49 +1357,32 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
       )
     }
 
-    // Contra entrega: al entregar se cobra el saldo restante en la MISMA
-    // transacción, con el método "Contra entrega - Saldo" (sin banco). El
-    // saldo se calcula con una consulta hecha después del bloqueo FOR UPDATE
-    // de arriba. Otros métodos (Transferencia; históricamente Crédito) no
-    // registran nada aquí.
+    // Contra entrega: al entregar se cobra el saldo REAL pendiente (total
+    // menos lo abonado) en la MISMA transacción, con el método
+    // "Contra entrega - Saldo"; si ya es 0 no se crea nada. Luego
+    // recalcularVenta deja la venta Pagada/Pendiente según el saldo. Otros
+    // métodos (Transferencia; históricamente Crédito) no registran nada aquí.
     if (estado === ESTADO_ENTREGADO) {
       const { rows: pagosRows } = await client.query(
         'SELECT metodo FROM pago WHERE id_pedido = $1 ORDER BY id_pago LIMIT 1',
         [id]
       )
-      const esContraEntrega = String(
+      const esCE = esContraEntrega(
         pedido.metodo_pago || pagosRows[0]?.metodo || ''
-      ).startsWith('Contra entrega')
+      )
 
-      if (esContraEntrega) {
-        const { rows: saldoRows } = await client.query(
-          `SELECT (p.total - COALESCE(
-                     (SELECT SUM(monto) FROM pago WHERE id_pedido = p.id_pedido), 0
-                   ))::float8 AS saldo
-             FROM pedido p
-            WHERE p.id_pedido = $1`,
-          [id]
-        )
-        const saldo = Number(saldoRows[0]?.saldo || 0)
-
-        if (saldo > 0) {
-          await client.query(
-            'INSERT INTO pago (id_pedido, metodo, monto) VALUES ($1, $2, $3)',
-            [id, 'Contra entrega - Saldo', saldo]
-          )
+      if (esCE) {
+        const saldoAlEntregar = await saldoPendiente(client, id)
+        if (saldoAlEntregar > 0) {
+          await registrar(client, {
+            idPedido: id,
+            registradoPor: req.usuario.id,
+            monto: saldoAlEntregar,
+            metodo: 'Contra entrega - Saldo',
+            observacion: 'Saldo al entregar',
+          })
         }
-      }
-
-      // Contra entrega: la venta pasa a Pagada justo al entregarse.
-      if (esContraEntrega) {
-        await client.query(
-          `UPDATE venta
-              SET estado_pago = 'Pagada',
-                  fecha_pago = COALESCE(fecha_pago, CURRENT_DATE)
-            WHERE id_pedido = $1
-              AND estado_pago <> 'Pagada'`,
-          [id]
-        )
+        await recalcularVenta(client, id)
       }
     }
 
@@ -1354,6 +1400,238 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     res.status(500).json({ error: 'No se pudo cambiar el estado del pedido' })
   } finally {
     client.release()
+  }
+})
+
+// GET /:id/abonos -> historial inmutable de pagos (el más reciente primero)
+// y totales. Cliente: solo los suyos. Personal: Abonos:Consultar o
+// Pedidos:Consultar. No existen rutas para editar ni borrar pagos.
+router.get('/:id/abonos', autorizarAbonosPedido, async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+
+  try {
+    const { rows: abonos } = await pool.query(
+      `SELECT pa.id_pago AS id,
+              TO_CHAR(pa.fecha, 'YYYY-MM-DD') AS fecha,
+              TO_CHAR(pa.registrado_en, 'YYYY-MM-DD HH24:MI:SS') AS fecha_hora,
+              pa.registrado_en,
+              pa.metodo,
+              pa.monto::float8 AS monto,
+              pa.referencia,
+              pa.id_comprobante,
+              pa.observacion,
+              TRIM(ru.nombres || ' ' || ru.apellidos) AS usuario
+         FROM pago pa
+         LEFT JOIN usuario ru ON ru.id_usuario = pa.registrado_por
+        WHERE pa.id_pedido = $1
+        ORDER BY pa.registrado_en DESC, pa.id_pago DESC`,
+      [id]
+    )
+
+    const { rows: totalesRows } = await pool.query(
+      `SELECT total::float8 AS total,
+              total_abonado::float8 AS total_abonado,
+              saldo_pendiente::float8 AS saldo_pendiente,
+              porcentaje_pagado,
+              estado_monto,
+              cantidad_pagos
+         FROM pedido_abonos
+        WHERE id_pedido = $1`,
+      [id]
+    )
+    let totales = totalesRows[0]
+
+    if (!totales || !totales.total) {
+      const { rows: existe } = await pool.query(
+        'SELECT 1 FROM pedido WHERE id_pedido = $1',
+        [id]
+      )
+      if (existe.length === 0) {
+        return res.status(404).json({ error: 'Pedido no encontrado' })
+      }
+      const { rows: fallback } = await pool.query(
+        `SELECT total::float8 AS total,
+                COALESCE((SELECT SUM(monto) FROM pago WHERE id_pedido = p.id_pedido), 0)::float8
+                  AS total_abonado
+           FROM pedido p
+          WHERE p.id_pedido = $1`,
+        [id]
+      )
+      const saldo = Number(fallback[0].total) - Number(fallback[0].total_abonado)
+      totales = {
+        total: Number(fallback[0].total),
+        total_abonado: Number(fallback[0].total_abonado),
+        saldo_pendiente: saldo,
+        porcentaje_pagado:
+          Number(fallback[0].total) > 0
+            ? Math.round((Number(fallback[0].total_abonado) / Number(fallback[0].total)) * 100)
+            : 0,
+        estado_monto: saldo <= 0 ? 'Pagado' : 'Abono parcial',
+        cantidad_pagos: abonos.length,
+      }
+    }
+
+    res.json({ abonos, totales })
+  } catch (error) {
+    console.error('Error en GET /api/pedidos/:id/abonos:', error.message)
+    res.status(500).json({ error: 'No se pudo cargar el historial de abonos' })
+  }
+})
+
+// POST /:id/abonos -> registra un abono nuevo (Abonos:Crear). Solo pedidos de
+// contra entrega no cancelados. En UNA transacción: bloquea el pedido con
+// FOR UPDATE, valida monto (positivo, >= mínimo y <= saldo) y escribe a
+// través de services/abonos.js, que además recalcula venta.estado_pago.
+// El historial es inmutable: esta es la única forma de crear abonos.
+router.post('/:id/abonos', requierePrivilegio('Abonos', 'Crear'), async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+
+  try {
+    const crudo = Number(req.body?.monto)
+    if (!Number.isFinite(crudo) || crudo <= 0) {
+      return res.status(400).json({
+        error: 'El abono debe ser un monto positivo',
+        campo: 'monto',
+      })
+    }
+    if (crudo > 999999999) {
+      return res.status(400).json({
+        error: 'El abono excede el máximo permitido (999999999)',
+        campo: 'monto',
+      })
+    }
+    const monto = Math.round(crudo * 100) / 100
+
+    const metodo = String(req.body?.metodo || '').trim()
+    if (!['Efectivo', 'Transferencia'].includes(metodo)) {
+      return res.status(400).json({
+        error: 'El método del abono debe ser Efectivo o Transferencia',
+        campo: 'metodo',
+      })
+    }
+
+    const referencia = String(req.body?.referencia || '').trim().slice(0, 100) || null
+    const observacion = String(req.body?.observacion || '').trim().slice(0, 500) || null
+    const clave = String(req.body?.clave_idempotencia || '').trim().slice(0, 80) || null
+
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+
+      const { rows } = await client.query(
+        `SELECT id_pedido, estado, metodo_pago
+           FROM pedido
+          WHERE id_pedido = $1
+          FOR UPDATE`,
+        [id]
+      )
+      const pedido = rows[0]
+      if (!pedido) {
+        await client.query('ROLLBACK')
+        return res.status(404).json({ error: 'Pedido no encontrado' })
+      }
+      if (pedido.estado === ESTADO_CANCELADO) {
+        await client.query('ROLLBACK')
+        return res.status(409).json({ error: 'Un pedido cancelado no admite abonos' })
+      }
+      if (!esContraEntrega(pedido.metodo_pago)) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({
+          error: 'Los abonos solo aplican a pedidos de contra entrega; los de transferencia pagan el 100 %',
+        })
+      }
+
+      // Idempotencia: repetir la misma clave devuelve el mismo resultado sin
+      // duplicar (el pago es inmutable; solo se vuelve a leer y responder).
+      if (clave) {
+        const previo = await abonoPorClave(client, clave)
+        if (previo) {
+          if (previo.id_pedido !== id) {
+            await client.query('ROLLBACK')
+            return res.status(409).json({ error: 'La clave de idempotencia ya fue usada en otro pedido' })
+          }
+          const saldo = await saldoPendiente(client, id)
+          const { rows: ventaRows } = await client.query(
+            `SELECT estado_pago, TO_CHAR(fecha_pago, 'YYYY-MM-DD') AS fecha_pago
+               FROM venta WHERE id_pedido = $1`,
+            [id]
+          )
+          const { rows: estadoRows } = await client.query(
+            `SELECT total::float8 AS total, total_abonado::float8 AS total_abonado,
+                    saldo_pendiente::float8 AS saldo_pendiente,
+                    porcentaje_pagado, estado_monto
+               FROM pedido_abonos WHERE id_pedido = $1`,
+            [id]
+          )
+          await client.query('COMMIT')
+          return res.status(201).json({
+            abono: previo,
+            pedido: estadoRows[0] || null,
+            venta: ventaRows[0] || null,
+            saldo_pendiente: saldo,
+          })
+        }
+      }
+
+      const saldoActual = await saldoPendiente(client, id)
+      const minimo = await montoMinimo(client)
+      if (monto < minimo) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({
+          error: `El abono debe ser mayor o igual a $${minimo}`,
+          campo: 'monto',
+        })
+      }
+      if (monto > saldoActual) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({
+          error: 'El abono no puede superar el saldo pendiente del pedido',
+          campo: 'monto',
+        })
+      }
+
+      const registrado = await registrar(client, {
+        idPedido: id,
+        registradoPor: req.usuario.id,
+        monto,
+        metodo,
+        observacion,
+        referencia,
+        claveIdempotencia: clave,
+      })
+      await client.query('COMMIT')
+
+      const { rows: estadoRows } = await pool.query(
+        `SELECT total::float8 AS total, total_abonado::float8 AS total_abonado,
+                saldo_pendiente::float8 AS saldo_pendiente,
+                porcentaje_pagado, estado_monto
+           FROM pedido_abonos WHERE id_pedido = $1`,
+        [id]
+      )
+      return res.status(201).json({
+        abono: registrado.abono,
+        pedido: estadoRows[0] || null,
+        venta: registrado.venta,
+        saldo_pendiente: registrado.saldo,
+      })
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {})
+      throw error
+    } finally {
+      client.release()
+    }
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message })
+    }
+    console.error('Error en POST /api/pedidos/:id/abonos:', error.message)
+    res.status(500).json({ error: 'No se pudo registrar el abono' })
   }
 })
 
