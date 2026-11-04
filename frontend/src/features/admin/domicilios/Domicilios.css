@@ -170,7 +170,7 @@
 
 .domicilios-add-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 
@@ -201,25 +201,31 @@
 .domicilios-table {
   width: 100%;
 
-  min-width: 680px;
+  min-width: 1240px;
 
   border-collapse: collapse;
 
   table-layout: fixed;
 }
 
-/* DISTRIBUCIÓN: ID DOMICILIO | CLIENTE | CIUDAD | ESTADO | ACCIONES */
-.domicilios-table th:nth-child(1) { width: 11%; }
-.domicilios-table th:nth-child(2) { width: 30%; }
-.domicilios-table th:nth-child(3) { width: 27%; }
-.domicilios-table th:nth-child(4) { width: 18%; }
-.domicilios-table th:nth-child(5) { width: 14%; }
+/* DISTRIBUCIÓN: ID | PEDIDO | CLIENTE | DIRECCIÓN | TELÉFONO |
+   RESPONSABLE | COSTO | FECHA | ESTADO | ACCIONES */
+.domicilios-table th:nth-child(1) { width: 9%; }
+.domicilios-table th:nth-child(2) { width: 9%; }
+.domicilios-table th:nth-child(3) { width: 11%; }
+.domicilios-table th:nth-child(4) { width: 14%; }
+.domicilios-table th:nth-child(5) { width: 9%; }
+.domicilios-table th:nth-child(6) { width: 11%; }
+.domicilios-table th:nth-child(7) { width: 10%; }
+.domicilios-table th:nth-child(8) { width: 9%; }
+.domicilios-table th:nth-child(9) { width: 10%; }
+.domicilios-table th:nth-child(10) { width: 8%; }
 
-.domicilios-table th:nth-child(4),
-.domicilios-table td:nth-child(4) { text-align: center; }
+.domicilios-table th:nth-child(9),
+.domicilios-table td:nth-child(9) { text-align: center; }
 
-.domicilios-table th:nth-child(5),
-.domicilios-table td:nth-child(5) { text-align: center; }
+.domicilios-table th:nth-child(10),
+.domicilios-table td:nth-child(10) { text-align: center; }
 
 
 .domicilios-table th {
@@ -301,6 +307,48 @@
 }
 
 
+.domicilio-entrega {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.domicilio-telefono,
+.domicilio-responsable,
+.domicilio-costo {
+  color:
+    #333333;
+
+  font-size: 13px;
+}
+
+
+.domicilio-costo-pendiente {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 3px 9px;
+
+  border-radius: 20px;
+
+  background:
+    #fff2d2;
+
+  color:
+    #c68a00;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
 .domicilio-direccion,
 .domicilio-ciudad,
 .domicilio-fecha {
@@ -361,6 +409,243 @@
 
   color:
     #c68a00;
+}
+
+
+.domicilio-estado.cancelado {
+  background:
+    #fde5e5;
+
+  color:
+    #e53935;
+}
+
+
+/* =========================================================
+   AVANZAR ESTADO (flecha junto a la píldora)
+   ========================================================= */
+
+.domicilio-estado-cell {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 5px;
+}
+
+
+.domicilio-estado-toggle {
+  width: 24px;
+  height: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: transparent;
+
+  color:
+    #8a94a6;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.domicilio-estado-toggle:hover:not(:disabled) {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(201, 162, 39, 0.08);
+}
+
+
+.domicilio-estado-toggle:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SPINNER DE CARGA
+   ========================================================= */
+
+.domicilio-spinner {
+  animation:
+    domicilio-giro 1s linear infinite;
+}
+
+
+@keyframes domicilio-giro {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   CARGA DEL DETALLE
+   ========================================================= */
+
+.domicilio-detalle-cargando {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 30px 10px;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   AVISOS (costo de envío pendiente, errores)
+   ========================================================= */
+
+.domicilio-aviso-costo,
+.domicilio-aviso-cargando {
+  margin-top: 4px;
+
+  margin-bottom: 12px;
+
+  padding: 11px 13px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(198, 138, 0, 0.10);
+
+  border:
+    1px solid
+    rgba(198, 138, 0, 0.25);
+
+  color:
+    #a06e00;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+.domicilio-costo-bloque {
+  margin-bottom: 14px;
+}
+
+
+/* =========================================================
+   PRODUCTOS DEL DETALLE
+   ========================================================= */
+
+.domicilio-productos {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  background:
+    #f7f7f7;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+}
+
+
+.domicilio-producto-fila {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+
+.domicilio-producto-datos {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  min-width: 0;
+}
+
+
+.domicilio-producto-nombre {
+  color:
+    #222222;
+
+  font-size: 14px;
+
+  font-weight: 500;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+.domicilio-producto-meta {
+  color:
+    #738096;
+
+  font-size: 12px;
+}
+
+
+.domicilio-producto-precio {
+  color:
+    #222222;
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+.domicilio-info-value.multilinea {
+  min-height: 48px;
+
+  padding: 12px 14px;
+
+  line-height: 1.5;
+
+  align-items: flex-start;
 }
 
 
@@ -609,10 +894,9 @@
 
 
 .domicilio-form-group input,
-.domicilio-form-group select {
+.domicilio-form-group select,
+.domicilio-form-group textarea {
   width: 100%;
-
-  height: 42px;
 
   padding: 0 12px;
 
@@ -628,6 +912,8 @@
   background:
     #ffffff;
 
+  font-family: var(--font-body, "Inter", sans-serif);
+
   font-size: 14px;
 
   color:
@@ -635,8 +921,26 @@
 }
 
 
+.domicilio-form-group input,
+.domicilio-form-group select {
+  height: 42px;
+}
+
+
+.domicilio-form-group textarea {
+  min-height: 96px;
+
+  padding: 10px 12px;
+
+  resize: vertical;
+
+  line-height: 1.5;
+}
+
+
 .domicilio-form-group input:focus,
-.domicilio-form-group select:focus {
+.domicilio-form-group select:focus,
+.domicilio-form-group textarea:focus {
   border-color:
     var(--admin-gold);
 
@@ -647,12 +951,60 @@
 
 
 .domicilio-form-group input:disabled,
+.domicilio-form-group select:disabled,
 .domicilio-form-group input:read-only {
   background:
     #f5f5f5;
 
   color:
     #777777;
+}
+
+
+/* Estados de error (401/400 con campo) igual que el resto del panel */
+
+.input.input-error {
+  border-color:
+    #e53935;
+}
+
+
+.error-text {
+  color:
+    #e53935;
+
+  font-size: 12px;
+}
+
+
+.domicilio-create-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+}
+
+
+.domicilio-create-button:disabled {
+  opacity: 1;
+
+  cursor: not-allowed;
+
+  background:
+    var(--admin-btn-primary);
+
+  color:
+    #111111;
+}
+
+
+.domicilio-cancel-button:disabled {
+  opacity: 0.6;
+
+  cursor: wait;
 }
 
 
@@ -786,7 +1138,7 @@
 
 .domicilio-create-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 
@@ -842,6 +1194,9 @@
 .admin-container.admin-dark .domicilio-direccion,
 .admin-container.admin-dark .domicilio-ciudad,
 .admin-container.admin-dark .domicilio-fecha,
+.admin-container.admin-dark .domicilio-telefono,
+.admin-container.admin-dark .domicilio-responsable,
+.admin-container.admin-dark .domicilio-costo,
 .admin-container.admin-dark .domicilio-id-relacion {
   color:
     var(--admin-text-secondary);
@@ -874,7 +1229,8 @@
 
 
 .admin-container.admin-dark .domicilio-form-group input,
-.admin-container.admin-dark .domicilio-form-group select {
+.admin-container.admin-dark .domicilio-form-group select,
+.admin-container.admin-dark .domicilio-form-group textarea {
   background:
     #181818;
 
@@ -883,6 +1239,40 @@
 
   color:
     #ffffff;
+}
+
+
+.admin-container.admin-dark .domicilio-productos {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+}
+
+
+.admin-container.admin-dark .domicilio-producto-nombre,
+.admin-container.admin-dark .domicilio-producto-precio {
+  color:
+    #ffffff;
+}
+
+
+.admin-container.admin-dark .domicilio-producto-meta {
+  color:
+    #b0b0b0;
+}
+
+
+.admin-container.admin-dark .domicilio-aviso-costo {
+  background:
+    rgba(198, 138, 0, 0.15);
+
+  border-color:
+    rgba(198, 138, 0, 0.35);
+
+  color:
+    #e8b64c;
 }
 
 

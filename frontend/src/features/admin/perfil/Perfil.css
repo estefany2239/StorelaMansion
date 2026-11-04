@@ -743,7 +743,7 @@
 }
 
 .perfil-page .rol-create-button:hover {
-  background: #a98718;
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================

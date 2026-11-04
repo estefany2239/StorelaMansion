@@ -170,7 +170,7 @@
 
 .pedidos-add-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 
@@ -1538,7 +1538,7 @@
 
 .pedido-create-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 

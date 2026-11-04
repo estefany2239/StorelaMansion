@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 import {
   Plus,
   Search,
   Eye,
   Pencil,
-  Trash2,
+  ChevronRight,
+  Loader2,
   X
 } from "lucide-react";
 
@@ -17,8 +18,178 @@ import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
 import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
+import { tallaVisible } from "../../../shared/utils/catalogo";
+import {
+  obtenerDomicilios,
+  obtenerDomicilio,
+  actualizarDomicilio,
+  cambiarEstadoDomicilio,
+  crearDomicilio,
+  definirCostoEnvioDomicilio,
+  obtenerPedidos
+} from "../../../shared/services/api";
 
 const REGISTROS_POR_PAGINA = 6;
+
+// Avance en orden estricto (sin retrocesos ni saltos): la flecha junto a la
+// píldora aplica directamente el siguiente estado y el backend rechaza con
+// 409 cualquier otra transición (Pendiente -> En camino -> Entregado).
+const SIGUIENTE_ESTADO = {
+  "Pendiente": "En camino",
+  "En camino": "Entregado"
+};
+
+const ESTADO_CERRADO = (estado) =>
+  estado === "Entregado" || estado === "Cancelado";
+
+const claseEstado = (estado) => {
+
+  switch (estado) {
+
+    case "Entregado":
+      return "entregado";
+
+    case "En camino":
+      return "camino";
+
+    case "Cancelado":
+      return "cancelado";
+
+    default:
+      return "pendiente";
+
+  }
+
+};
+
+// El backend entrega el id numérico; con el prefijo se ve igual que el
+// código DOM-00001 que llega en la fila del domicilio.
+const formatoPedido = (id) => {
+  const digitos = String(id ?? "").replace(/\D/g, "");
+
+  if (!digitos) {
+    return "";
+  }
+
+  return `PED-${digitos.padStart(5, "0")}`;
+};
+
+// Convierte la fila del backend a la forma que usa esta pantalla.
+const mapearDomicilio = (domicilio) => ({
+  id: domicilio.id,
+  codigo:
+    domicilio.codigo ||
+    `DOM-${String(domicilio.id ?? "").padStart(5, "0")}`,
+  idPedido: domicilio.id_pedido,
+  pedido: formatoPedido(domicilio.id_pedido),
+  estadoPedido: domicilio.estado_pedido || "",
+  metodoEnvio: domicilio.metodo_envio || "",
+  cliente: domicilio.cliente || "",
+  destinatario: domicilio.destinatario || "",
+  telefono: domicilio.telefono || "",
+  direccion: domicilio.direccion || "",
+  barrio: domicilio.barrio || "",
+  municipio: domicilio.municipio || "",
+  departamento: domicilio.departamento || "",
+  responsable: domicilio.responsable || "",
+  costoEnvio:
+    domicilio.costo_envio === null ||
+    domicilio.costo_envio === undefined
+      ? null
+      : Number(domicilio.costo_envio) || 0,
+  costoEnvioPendiente: Boolean(domicilio.costo_envio_pendiente),
+  totalPedido: Number(domicilio.total_pedido) || 0,
+  fechaProgramada: domicilio.fecha_programada || "",
+  fechaEntrega: domicilio.fecha_entrega || "",
+  observaciones: domicilio.observaciones || "",
+  estado: domicilio.estado || "Pendiente",
+  fechaPedido: domicilio.fecha_pedido || "",
+  productos: (domicilio.items || []).map((item) => ({
+    nombre: item.nombre,
+    cantidad: Number(item.cantidad) || 0,
+    talla: tallaVisible(item.talla),
+    color: item.color || "",
+    precio: Number(item.precio_unitario) || 0
+  }))
+});
+
+// Reglas compartidas por ambos modos del modal. El modo viaja dentro del
+// formulario para que una sola definición estable sirva para
+// "registrar" (pedido, método y dirección) y "editar"
+// (responsable, fecha y observaciones).
+const REGLAS_DOMICILIO = {
+  idPedido: (valor, formulario) => {
+    if (formulario.modo !== "registrar") return "";
+    return String(valor || "").trim()
+      ? ""
+      : "Selecciona un pedido.";
+  },
+  metodoEnvio: (valor, formulario) => {
+    if (formulario.modo !== "registrar") return "";
+    return String(valor || "").trim()
+      ? ""
+      : "Selecciona el método de envío.";
+  },
+  direccion: (valor, formulario) => {
+    if (formulario.modo !== "registrar") return "";
+    if (formulario.metodoEnvio === "Recoger en tienda") return "";
+    return String(valor || "").trim()
+      ? ""
+      : "Este campo es obligatorio.";
+  },
+  responsable: (valor, formulario) => {
+    if (formulario.modo !== "editar") return "";
+    const responsable = String(valor || "").trim();
+    if (!responsable) return "Este campo es obligatorio.";
+    if (responsable.length > 20) {
+      return "El nombre del responsable no puede superar los 20 caracteres.";
+    }
+    return "";
+  },
+  fechaProgramada: (valor, formulario) => {
+    if (formulario.modo !== "editar") return "";
+    const fecha = String(valor || "").trim();
+    if (!fecha) return "Este campo es obligatorio.";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha))) {
+      return "La fecha programada no es válida.";
+    }
+    return "";
+  },
+  observaciones: (valor, formulario) => {
+    if (formulario.modo !== "editar") return "";
+    return String(valor || "").length > 500
+      ? "Las observaciones no pueden superar los 500 caracteres."
+      : "";
+  },
+  costoEnvio: (valor, formulario) => {
+    if (formulario.modo !== "editar") return "";
+    const crudo = String(valor ?? "").trim();
+    if (crudo === "") return "";
+    const costo = Number(crudo);
+    if (!Number.isFinite(costo) || costo < 0 || costo > 999999999) {
+      return "El costo de envío debe ser un monto entre 0 y 999999999.";
+    }
+    return "";
+  }
+};
+
+// Campos del backend (snake_case) equivalentes en el formulario para
+// mostrar el error 400 bajo el input correcto.
+const CAMPO_BACKEND = {
+  id_pedido: "idPedido",
+  metodo_envio: "metodoEnvio",
+  direccion: "direccion",
+  responsable: "responsable",
+  fecha_programada: "fechaProgramada",
+  observaciones: "observaciones",
+  costo: "costoEnvio"
+};
+
+const METODOS_ENVIO = [
+  "Domicilio",
+  "Recoger en tienda",
+  "Transportadora"
+];
 
 
 export default function Domicilios({ user }) {
@@ -29,113 +200,110 @@ export default function Domicilios({ user }) {
 
   const puedeCrear = tienePermiso(user, "Domicilios", "Crear");
   const puedeActualizar = tienePermiso(user, "Domicilios", "Actualizar");
-  const puedeEliminar = tienePermiso(user, "Domicilios", "Eliminar");
   const puedeCambiarEstado = tienePermiso(user, "Domicilios", "Cambiar estado");
   const puedeConsultar = tienePermiso(user, "Domicilios", "Consultar");
 
   // =====================================================
-  // DOMICILIOS
+  // LISTA DE DOMICILIOS (GET /api/domicilios)
   // =====================================================
 
-  const [domicilios, setDomicilios] = useState([
-    {
-      id: "DOM-001",
-      idPedido: "PED-001",
-      idCliente: "CLI-001",
-      cliente: "María García",
-      direccion: "Cll 72 #10-34",
-      ciudad: "Medellín",
-      valor: 15000,
-      responsable: "Carlos Rodríguez",
-      estado: "Entregado",
-      fecha: "2024-07-12"
-    },
+  const [domicilios, setDomicilios] = useState([]);
 
-    {
-      id: "DOM-002",
-      idPedido: "PED-002",
-      idCliente: "CLI-002",
-      cliente: "Valentina Torres",
-      direccion: "Cll 50 #45-20",
-      ciudad: "Cali",
-      valor: 18000,
-      responsable: "Andrés López",
-      estado: "En camino",
-      fecha: "2024-07-16"
-    },
+  const [cargando, setCargando] = useState(true);
 
-    {
-      id: "DOM-003",
-      idPedido: "PED-003",
-      idCliente: "CLI-003",
-      cliente: "Sofía Martínez",
-      direccion: "Cra 70 #15-30",
-      ciudad: "Bogotá",
-      valor: 20000,
-      responsable: "Carlos Rodríguez",
-      estado: "Pendiente",
-      fecha: "2024-07-21"
-    },
+  const [errorLista, setErrorLista] = useState("");
 
-    {
-      id: "DOM-004",
-      idPedido: "PED-004",
-      idCliente: "CLI-004",
-      cliente: "Camila Reyes",
-      direccion: "Av. 80 #33-15",
-      ciudad: "Medellín",
-      valor: 15000,
-      responsable: "Andrés López",
-      estado: "En camino",
-      fecha: "2024-07-26"
-    },
-
-    {
-      id: "DOM-005",
-      idPedido: "PED-005",
-      idCliente: "CLI-005",
-      cliente: "Santiago Gómez",
-      direccion: "Calle 10 #20-15",
-      ciudad: "Medellín",
-      valor: 16000,
-      responsable: "Carlos Rodríguez",
-      estado: "Pendiente",
-      fecha: "2024-08-02"
-    },
-
-    {
-      id: "DOM-006",
-      idPedido: "PED-006",
-      idCliente: "CLI-006",
-      cliente: "Marcela Ríos",
-      direccion: "Carrera 45 #22-40",
-      ciudad: "Cali",
-      valor: 18000,
-      responsable: "Andrés López",
-      estado: "En camino",
-      fecha: "2024-08-06"
-    },
-
-    {
-      id: "DOM-007",
-      idPedido: "PED-007",
-      idCliente: "CLI-007",
-      cliente: "Diego Muñoz",
-      direccion: "Av. 68 #55-10",
-      ciudad: "Bogotá",
-      valor: 20000,
-      responsable: "Carlos Rodríguez",
-      estado: "Entregado",
-      fecha: "2024-08-11"
-    },
-  ]);
-
-
-  // =====================================================
-  // ESTADOS
-  // =====================================================
+  const [totalPaginas, setTotalPaginas] = useState(1);
 
   const [busqueda, setBusqueda] = useState("");
+
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  const { toast, mostrarToast } = useToast();
+
+  const cargarDomicilios = useCallback(async (pagina, texto) => {
+
+    setCargando(true);
+    setErrorLista("");
+
+    try {
+
+      const respuesta = await obtenerDomicilios({
+        q: texto,
+        pagina,
+        porPagina: REGISTROS_POR_PAGINA
+      });
+
+      setDomicilios((respuesta?.domicilios || []).map(mapearDomicilio));
+      setTotalPaginas(respuesta?.totalPaginas || 1);
+
+    } catch (error) {
+
+      setErrorLista(
+        error?.message || "No se pudieron cargar los domicilios"
+      );
+
+    } finally {
+
+      setCargando(false);
+
+    }
+
+  }, []);
+
+  // Única fuente de carga: al montar (retardo 0) y con cada cambio del
+  // buscador con retardo de 300 ms para no pedir por cada tecla. Las
+  // páginas se cambian desde los controles, sin pasar por aquí.
+  const primerMontajeRef = useRef(true);
+
+  useEffect(() => {
+
+    const retardo = primerMontajeRef.current
+      ? 0
+      : 300;
+
+    primerMontajeRef.current = false;
+
+    const temporizador = setTimeout(() => {
+      setPaginaActual(1);
+      cargarDomicilios(1, busqueda.trim());
+    }, retardo);
+
+    return () => clearTimeout(temporizador);
+
+  }, [busqueda, cargarDomicilios]);
+
+  const cambiarPagina = (pagina) => {
+    setPaginaActual(pagina);
+    cargarDomicilios(pagina, busqueda.trim());
+  };
+
+  const refrescarLista = () => {
+    setBusqueda("");
+    setPaginaActual(1);
+    cargarDomicilios(1, "");
+  };
+
+  const actualizarDomicilioEnLista = (respuesta) => {
+    const mapeado = mapearDomicilio(
+      respuesta?.domicilio ? respuesta.domicilio : respuesta
+    );
+
+    setDomicilios((prev) =>
+      prev.map((item) =>
+        item.id === mapeado.id ? mapeado : item
+      )
+    );
+
+    // El detalle abierto debe reflejar los datos nuevos.
+    setDomicilioSeleccionado((prev) =>
+      prev && prev.id === mapeado.id ? mapeado : prev
+    );
+  };
+
+  // =====================================================
+  // ESTADOS DE LOS MODALES
+  // =====================================================
 
   const [mostrarModal, setMostrarModal] =
     useState(false);
@@ -149,74 +317,64 @@ export default function Domicilios({ user }) {
   const [domicilioSeleccionado, setDomicilioSeleccionado] =
     useState(null);
 
-  const [domicilioEliminar, setDomicilioEliminar] =
-    useState(null);
+  const [detalleEnProceso, setDetalleEnProceso] = useState(false);
 
-  const [aviso, setAviso] = useState(null);
+  const [detalleError, setDetalleError] = useState("");
 
   const [confirmarEdicion, setConfirmarEdicion] =
     useState(false);
 
-  const { toast, mostrarToast } = useToast();
+  const [guardando, setGuardando] = useState(false);
+
+  const [creando, setCreando] = useState(false);
+
+  const [estadoEnProcesoId, setEstadoEnProcesoId] = useState(null);
 
 
   // =====================================================
   // FORMULARIO
   // =====================================================
 
-  const [formulario, setFormulario] = useState({
-    id: "",
+  const formularioVacio = {
+    modo: "registrar",
+    id: null,
     idPedido: "",
-    idCliente: "",
-    cliente: "",
+    pedidoSeleccionado: null,
+    metodoEnvio: "Domicilio",
     direccion: "",
-    ciudad: "",
-    valor: 15000,
     responsable: "",
-    estado: "Pendiente",
-    fecha: "2026-09-07"
-  });
-
-  // Módulo mock (sin backend): se conservan las reglas locales
-  // del formulario, ahora validadas en tiempo real.
-  const REGLAS_DOMICILIO = {
-    idPedido: (valor) =>
-      String(valor || "").trim()
-        ? ""
-        : "Selecciona un pedido.",
-    idCliente: (valor) =>
-      String(valor || "").trim()
-        ? ""
-        : "Selecciona un pedido válido.",
-    cliente: (valor) =>
-      String(valor || "").trim()
-        ? ""
-        : "Este campo es obligatorio.",
-    direccion: (valor) =>
-      String(valor || "").trim()
-        ? ""
-        : "Este campo es obligatorio.",
-    ciudad: (valor) =>
-      String(valor || "").trim()
-        ? ""
-        : "Este campo es obligatorio.",
-    responsable: (valor) => {
-      const responsable = String(valor || "").trim();
-      if (!responsable) return "Este campo es obligatorio.";
-      if (responsable.length > 20) {
-        return "El nombre del responsable no puede superar los 20 caracteres.";
-      }
-      return "";
-    },
+    fechaProgramada: "",
+    observaciones: "",
+    costoEnvio: "",
+    costoEnvioPendiente: false,
+    totalPedido: 0
   };
+
+  const [formulario, setFormulario] = useState(formularioVacio);
 
   const {
     errores,
+    setErrores,
     manejarBlur,
     revisarCampo,
     validarTodo,
     limpiarValidacion,
   } = useValidacionFormulario(REGLAS_DOMICILIO);
+
+  const cambiarCampo = (campo, valor) => {
+
+    const siguiente = {
+      ...formulario,
+      [campo]: valor
+    };
+
+    setFormulario(siguiente);
+
+    // Si el campo ya fue tocado, su error se recalcula al instante.
+    revisarCampo(campo, valor, siguiente);
+    revisarCampo("direccion", siguiente.direccion, siguiente);
+
+  };
 
 
   // =====================================================
@@ -255,182 +413,83 @@ export default function Domicilios({ user }) {
 
   };
 
-
-  // =====================================================
-  // PEDIDOS DISPONIBLES
-  // =====================================================
-
-  const pedidosDisponibles = [
-    ...new Map(
-      domicilios.map((domicilio) => [
-        domicilio.idPedido,
-        {
-          id: domicilio.idPedido,
-          idCliente: domicilio.idCliente,
-          cliente: domicilio.cliente,
-          direccion: domicilio.direccion,
-          ciudad: domicilio.ciudad
-        }
-      ])
-    ).values()
-  ];
+  const mensajeErrorApi = (error, respaldo) =>
+    error?.message || respaldo;
 
 
   // =====================================================
-  // FILTRAR DOMICILIOS
+  // VER DETALLE (GET /api/domicilios/:id)
   // =====================================================
 
-  const domiciliosFiltrados = domicilios.filter(
-    (domicilio) => {
+  const verDetalle = async (domicilio) => {
 
-      const texto =
-        busqueda
-          .toLowerCase()
-          .trim();
+    setDomicilioSeleccionado(domicilio);
+    setDetalleError("");
+    setDetalleEnProceso(true);
+    setMostrarDetalle(true);
 
-      const coincideBusqueda =
-        domicilio.id
-          .toLowerCase()
-          .includes(texto) ||
+    try {
 
-        domicilio.idPedido
-          .toLowerCase()
-          .includes(texto) ||
+      const detalle = await obtenerDomicilio(domicilio.id);
 
-        domicilio.idCliente
-          .toLowerCase()
-          .includes(texto) ||
+      setDomicilioSeleccionado(mapearDomicilio(detalle));
 
-        domicilio.cliente
-          .toLowerCase()
-          .includes(texto);
+    } catch (error) {
 
-
-      return (
-        coincideBusqueda
+      setDetalleError(
+        mensajeErrorApi(error, "No se pudo cargar el detalle del domicilio")
       );
 
+    } finally {
+
+      setDetalleEnProceso(false);
+
     }
-  );
+
+  };
 
 
-  // =====================================================
-  // PAGINACIÓN DE LA TABLA
-  // =====================================================
+  const cerrarDetalle = () => {
 
-  const [paginaActual, setPaginaActual] = useState(1);
+    setMostrarDetalle(false);
 
-  const totalPaginas = Math.max(
-    1,
-    Math.ceil(domiciliosFiltrados.length / REGISTROS_POR_PAGINA)
-  );
+    setDomicilioSeleccionado(null);
 
-  const inicio =
-    (paginaActual - 1) * REGISTROS_POR_PAGINA;
-  const domiciliosPaginados = domiciliosFiltrados.slice(
-    inicio,
-    inicio + REGISTROS_POR_PAGINA
-  );
+    setDetalleError("");
 
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
-
-  useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
-    }
-  }, [paginaActual, totalPaginas]);
-
-
-  // =====================================================
-  // ABRIR AGREGAR
-  // =====================================================
-
-  const abrirAgregar = () => {
-
-    const numero =
-      String(
-        domicilios.length + 1
-      ).padStart(3, "0");
-
-
-    setFormulario({
-
-      id: `DOM-${numero}`,
-
-      idPedido: "",
-
-      idCliente: "",
-
-      cliente: "",
-
-      direccion: "",
-
-      ciudad: "",
-
-      valor: 15000,
-
-      responsable: "",
-
-      estado: "Pendiente",
-
-      fecha: "2026-09-07"
-
-    });
-
-
-    limpiarValidacion();
-
-    setModoEdicion(false);
-
-    setMostrarModal(true);
+    setDetalleEnProceso(false);
 
   };
 
 
   // =====================================================
-  // ABRIR EDITAR
+  // ABRIR EDITAR (responsable, fecha y observaciones)
   // =====================================================
 
   const abrirEditar = (domicilio) => {
 
-    if (domicilio.estado === "Entregado") {
-
+    if (ESTADO_CERRADO(domicilio.estado)) {
       mostrarToast(
-        "No se puede modificar un domicilio que ya fue entregado.",
+        `Un domicilio en estado "${domicilio.estado}" no se puede modificar.`,
         "error"
       );
-
       return;
-
     }
 
-
     setFormulario({
-
+      modo: "editar",
       id: domicilio.id,
-
-      idPedido: domicilio.idPedido,
-
-      idCliente: domicilio.idCliente,
-
+      codigo: domicilio.codigo,
+      pedido: domicilio.pedido,
       cliente: domicilio.cliente,
-
-      direccion: domicilio.direccion,
-
-      ciudad: domicilio.ciudad,
-
-      valor: domicilio.valor,
-
       responsable: domicilio.responsable,
-
-      estado: domicilio.estado,
-
-      fecha: domicilio.fecha
-
+      fechaProgramada: domicilio.fechaProgramada || "",
+      observaciones: domicilio.observaciones,
+      costoEnvio: "",
+      costoEnvioPendiente: domicilio.costoEnvioPendiente,
+      costoEnvioActual: domicilio.costoEnvio,
+      totalPedido: domicilio.totalPedido
     });
-
 
     limpiarValidacion();
 
@@ -442,13 +501,85 @@ export default function Domicilios({ user }) {
 
 
   // =====================================================
-  // CAMBIAR CAMPO
+  // REGISTRAR DOMICILIO (POST /api/domicilios)
   // =====================================================
 
-  const cambiarCampo = (
-    campo,
-    valor
-  ) => {
+  const [pedidosDisponibles, setPedidosDisponibles] = useState([]);
+
+  const [cargandoPedidos, setCargandoPedidos] = useState(false);
+
+  const [errorPedidos, setErrorPedidos] = useState("");
+
+  const abrirRegistrar = () => {
+
+    setFormulario(formularioVacio);
+
+    limpiarValidacion();
+
+    setModoEdicion(false);
+
+    setMostrarModal(true);
+
+    setPedidosDisponibles([]);
+    setErrorPedidos("");
+    setCargandoPedidos(true);
+
+    obtenerPedidos()
+      .then((respuesta) => {
+        // Solo pedidos que aún NO tienen domicilio: cuando existe una
+        // fila en domicilio, `metodo_envio` del listado viene cargado.
+        const disponibles = (respuesta || [])
+          .filter((pedido) => !pedido.metodo_envio)
+          .map((pedido) => ({
+            id: pedido.id,
+            pedido: formatoPedido(pedido.id),
+            cliente: pedido.cliente || "",
+            telefono: pedido.telefono || "",
+            estado: pedido.estado || "",
+            fecha: pedido.fecha || "",
+            total: Number(pedido.total) || 0
+          }));
+        setPedidosDisponibles(disponibles);
+        setErrorPedidos("");
+      })
+      .catch((error) => {
+        setErrorPedidos(
+          mensajeErrorApi(error, "No se pudieron cargar los pedidos")
+        );
+      })
+      .finally(() => {
+        setCargandoPedidos(false);
+      });
+
+  };
+
+  const seleccionarPedido = (idPedido) => {
+
+    const pedido =
+      pedidosDisponibles.find(
+        (item) => String(item.id) === String(idPedido)
+      );
+
+    const siguiente = {
+      ...formulario,
+      idPedido,
+      pedidoSeleccionado: pedido || null
+    };
+
+    setFormulario(siguiente);
+
+    ["idPedido"].forEach((campo) =>
+      revisarCampo(campo, siguiente[campo], siguiente)
+    );
+
+  };
+
+
+  // =====================================================
+  // CAMBIAR CAMPOS DEL MODAL DE REGISTRO
+  // =====================================================
+
+  const cambiarCampoRegistrar = (campo, valor) => {
 
     const siguiente = {
       ...formulario,
@@ -457,81 +588,14 @@ export default function Domicilios({ user }) {
 
     setFormulario(siguiente);
 
-    // Si el campo ya fue tocado, su error se recalcula al instante.
     revisarCampo(campo, valor, siguiente);
+    revisarCampo("direccion", siguiente.direccion, siguiente);
 
   };
 
 
   // =====================================================
-  // SELECCIONAR PEDIDO
-  // =====================================================
-
-  const seleccionarPedido = (idPedido) => {
-
-    const pedido =
-      pedidosDisponibles.find(
-        (item) =>
-          item.id === idPedido
-      );
-
-
-    if (!pedido) {
-
-      const siguiente = {
-        ...formulario,
-        idPedido: idPedido,
-        idCliente: "",
-        cliente: "",
-        direccion: "",
-        ciudad: ""
-      };
-
-      setFormulario(siguiente);
-
-      // Recalcula al instante los campos derivados ya tocados.
-      ["idPedido", "idCliente", "cliente", "direccion", "ciudad"].forEach(
-        (campo) => revisarCampo(campo, siguiente[campo], siguiente)
-      );
-
-      return;
-
-    }
-
-
-    const siguiente = {
-
-      ...formulario,
-
-      idPedido:
-        pedido.id,
-
-      idCliente:
-        pedido.idCliente,
-
-      cliente:
-        pedido.cliente,
-
-      direccion:
-        pedido.direccion,
-
-      ciudad:
-        pedido.ciudad
-
-    };
-
-    setFormulario(siguiente);
-
-    // Recalcula al instante los campos derivados ya tocados.
-    ["idPedido", "idCliente", "cliente", "direccion", "ciudad"].forEach(
-      (campo) => revisarCampo(campo, siguiente[campo], siguiente)
-    );
-
-  };
-
-
-  // =====================================================
-  // GUARDAR DOMICILIO
+  // GUARDAR
   // =====================================================
 
   const guardarDomicilio = () => {
@@ -542,218 +606,135 @@ export default function Domicilios({ user }) {
       return;
     }
 
-
     if (modoEdicion) {
-
       setConfirmarEdicion(true);
-
       return;
-
-    } else {
-
-      const nuevoDomicilio = {
-
-        id:
-          formulario.id,
-
-        idPedido:
-          formulario.idPedido,
-
-        idCliente:
-          formulario.idCliente,
-
-        cliente:
-          formulario.cliente,
-
-        direccion:
-          formulario.direccion,
-
-        ciudad:
-          formulario.ciudad,
-
-        valor:
-          Number(
-            formulario.valor
-          ),
-
-        responsable:
-          formulario.responsable,
-
-        estado:
-          formulario.estado,
-
-        fecha:
-          formulario.fecha
-
-      };
-
-
-      setDomicilios(
-        (actuales) => [
-          nuevoDomicilio,
-          ...actuales
-        ]
-      );
-
-      mostrarToast("Domicilio creado con éxito");
-
     }
 
-
-    cerrarModal();
+    registrarDomicilio();
 
   };
 
+  const registrarDomicilio = async () => {
+
+    setCreando(true);
+
+    const cuerpo = {
+      id_pedido: formulario.idPedido,
+      metodo_envio: formulario.metodoEnvio
+    };
+
+    if (formulario.metodoEnvio !== "Recoger en tienda") {
+      cuerpo.direccion = formulario.direccion.trim();
+    }
+
+    try {
+
+      const creado = await crearDomicilio(cuerpo);
+
+      setMostrarModal(false);
+
+      refrescarLista();
+
+      mostrarToast(
+        `Domicilio registrado para el pedido ${formatoPedido(creado?.id_pedido || formulario.idPedido)}`
+      );
+
+    } catch (error) {
+
+      // 400 con `campo`: se muestra bajo el input correspondiente.
+      const campo = CAMPO_BACKEND[error?.campo];
+
+      if (campo) {
+        setErrores({ [campo]: error.message });
+      }
+
+      mostrarToast(
+        mensajeErrorApi(error, "No se pudo registrar el domicilio"),
+        "error"
+      );
+
+    } finally {
+
+      setCreando(false);
+
+    }
+
+  };
 
   const confirmarEdicionDomicilio = () => {
-
-    setDomicilios(
-      (actuales) =>
-        actuales.map(
-          (domicilio) =>
-            domicilio.id === formulario.id
-              ? {
-                  ...domicilio,
-
-                  idPedido:
-                    formulario.idPedido,
-
-                  idCliente:
-                    formulario.idCliente,
-
-                  cliente:
-                    formulario.cliente,
-
-                  direccion:
-                    formulario.direccion,
-
-                  ciudad:
-                    formulario.ciudad,
-
-                  valor:
-                    Number(
-                      formulario.valor
-                    ),
-
-                  responsable:
-                    formulario.responsable,
-
-                  estado:
-                    formulario.estado,
-
-                  fecha:
-                    formulario.fecha
-                }
-              : domicilio
-        )
-    );
-
     setConfirmarEdicion(false);
-
-    cerrarModal();
-
+    ejecutarGuardarEdicion();
   };
 
+  const ejecutarGuardarEdicion = async () => {
 
-  // =====================================================
-  // ELIMINAR DOMICILIO
-  // =====================================================
+    setGuardando(true);
 
-  const eliminarDomicilio = (domicilio) => {
+    // Requiere el campo de costo solo si el usuario escribió algo.
+    if (formulario.costoEnvioPendiente && formulario.costoEnvio !== "") {
+      if (!validarTodo(formulario)) {
+        setGuardando(false);
+        return;
+      }
+    }
 
-    if (
-      domicilio.estado !== "Pendiente"
-    ) {
+    try {
 
-      setAviso(
-        "Solo se pueden eliminar domicilios pendientes."
+      let respuesta = await actualizarDomicilio(
+        formulario.id,
+        {
+          responsable: formulario.responsable.trim(),
+          fecha_programada: formulario.fechaProgramada,
+          observaciones: formulario.observaciones.trim()
+        }
       );
 
-      return;
+      // El costo de envío pendiente se define en una llamada aparte
+      // (PATCH /:id/costo-envio), que recalcula el total del pedido.
+      const defineCosto =
+        formulario.costoEnvioPendiente &&
+        String(formulario.costoEnvio).trim() !== "";
+
+      if (defineCosto) {
+        respuesta = await definirCostoEnvioDomicilio(
+          formulario.id,
+          Number(formulario.costoEnvio)
+        );
+      }
+
+      actualizarDomicilioEnLista(respuesta);
+
+      setMostrarModal(false);
+
+      mostrarToast(
+        defineCosto
+          ? `Domicilio actualizado y costo de envío definido. El total del pedido es ${formatearPrecio(respuesta?.pedido?.total ?? 0)}.`
+          : "Domicilio actualizado con éxito"
+      );
+
+    } catch (error) {
+
+      // 400 con `campo` y 409 ("ya definido", menor a lo abonado, etc.) caen
+      // en el toast; 401 y 500 reservan su mensaje genérico.
+      const campo = CAMPO_BACKEND[error?.campo];
+
+      if (campo) {
+        setErrores({ [campo]: error.message });
+      }
+
+      mostrarToast(
+        mensajeErrorApi(error, "No se pudo actualizar el domicilio"),
+        "error"
+      );
+
+    } finally {
+
+      setGuardando(false);
 
     }
 
-    setDomicilioEliminar(domicilio);
-
   };
-
-  const confirmarEliminarDomicilio = () => {
-
-    setDomicilios(
-      (actuales) =>
-        actuales.filter(
-          (item) =>
-            item.id !== domicilioEliminar.id
-        )
-    );
-
-    setDomicilioEliminar(null);
-
-  };
-
-
-  // =====================================================
-  // AVANZAR ESTADO
-  // =====================================================
-
-  const avanzarEstado = (id) => {
-
-    setDomicilios((actuales) =>
-
-      actuales.map((domicilio) => {
-
-        if (domicilio.id !== id) {
-
-          return domicilio;
-
-        }
-
-
-        if (domicilio.estado === "Pendiente") {
-
-          return {
-            ...domicilio,
-            estado: "En camino"
-          };
-
-        }
-
-
-        if (domicilio.estado === "En camino") {
-
-          return {
-            ...domicilio,
-            estado: "Entregado"
-          };
-
-        }
-
-
-        return domicilio;
-
-      })
-
-    );
-
-  };
-
-
-  // =====================================================
-  // VER DETALLE
-  // =====================================================
-
-  const verDetalle = (domicilio) => {
-
-    setDomicilioSeleccionado(domicilio);
-
-    setMostrarDetalle(true);
-
-  };
-
-
-  // =====================================================
-  // CERRAR MODAL
-  // =====================================================
 
   const cerrarModal = () => {
 
@@ -765,14 +746,57 @@ export default function Domicilios({ user }) {
 
 
   // =====================================================
-  // CERRAR DETALLE
+  // CAMBIAR ESTADO (PATCH /:id/estado)
+  // Un solo control: la flecha junto a la píldora aplica
+  // directamente el siguiente estado.
   // =====================================================
 
-  const cerrarDetalle = () => {
+  const avanzarEstado = async (domicilio) => {
 
-    setMostrarDetalle(false);
+    const destino = SIGUIENTE_ESTADO[domicilio.estado];
 
-    setDomicilioSeleccionado(null);
+    if (!destino) return;
+
+    // Pasar a "En camino" exige responsable (ya registrado o al enviarlo).
+    if (destino === "En camino" && !domicilio.responsable) {
+      mostrarToast(
+        "El domicilio necesita un responsable para pasar a En camino. Edítalo y asígnalo.",
+        "error"
+      );
+      return;
+    }
+
+    setEstadoEnProcesoId(domicilio.id);
+
+    try {
+
+      const actualizado = await cambiarEstadoDomicilio(
+        domicilio.id,
+        destino
+      );
+
+      actualizarDomicilioEnLista(actualizado);
+
+      mostrarToast(
+        destino === "Entregado"
+          ? "Domicilio entregado. El pedido quedó Entregado."
+          : "Domicilio en camino. El pedido quedó Despachado."
+      );
+
+    } catch (error) {
+
+      // 403 (sin permiso), 409 (salto/retroceso o sin responsable) y
+      // 400 llegan con el mensaje exacto del backend.
+      mostrarToast(
+        mensajeErrorApi(error, "No se pudo cambiar el estado del domicilio"),
+        "error"
+      );
+
+    } finally {
+
+      setEstadoEnProcesoId(null);
+
+    }
 
   };
 
@@ -817,7 +841,7 @@ export default function Domicilios({ user }) {
 
               <input
                 type="text"
-                placeholder="Buscar domicilios..."
+                placeholder="Buscar por código, pedido, cliente o dirección..."
                 value={busqueda}
                 onChange={(e) =>
                   setBusqueda(
@@ -830,13 +854,13 @@ export default function Domicilios({ user }) {
           )}
 
 
-          {/* AGREGAR */}
+          {/* REGISTRAR */}
 
           {puedeCrear && (
             <button
               type="button"
               className="domicilios-add-button"
-              onClick={abrirAgregar}
+              onClick={abrirRegistrar}
             >
 
               <Plus size={18} />
@@ -868,11 +892,31 @@ export default function Domicilios({ user }) {
               </th>
 
               <th>
+                PEDIDO
+              </th>
+
+              <th>
                 CLIENTE
               </th>
 
               <th>
-                CIUDAD
+                DIRECCIÓN
+              </th>
+
+              <th>
+                TELÉFONO
+              </th>
+
+              <th>
+                RESPONSABLE
+              </th>
+
+              <th>
+                COSTO DE ENVÍO
+              </th>
+
+              <th>
+                FECHA
               </th>
 
               <th>
@@ -890,164 +934,247 @@ export default function Domicilios({ user }) {
 
           <tbody>
 
-            {domiciliosPaginados.map(
-              (domicilio) => (
+            {domicilios.map(
+              (domicilio) => {
 
-                <tr
-                  key={domicilio.id}
-                >
+                const siguienteEstado =
+                  SIGUIENTE_ESTADO[domicilio.estado];
 
-                  <td>
+                const cerrado =
+                  ESTADO_CERRADO(domicilio.estado);
 
-                    <strong className="domicilio-id">
-                      {domicilio.id}
-                    </strong>
+                return (
 
-                  </td>
+                  <tr
+                    key={domicilio.id}
+                  >
 
+                    <td>
 
-                  <td>
+                      <strong className="domicilio-id">
+                        {domicilio.codigo}
+                      </strong>
 
-                    <span className="domicilio-cliente">
-                      {domicilio.cliente}
-                    </span>
-
-                  </td>
-
-
-                  <td>
-
-                    <span className="domicilio-ciudad">
-                      {domicilio.ciudad}
-                    </span>
-
-                  </td>
+                    </td>
 
 
-                  <td>
+                    <td>
 
-                    <span
-                      className={
-                        domicilio.estado ===
-                        "Entregado"
+                      <span className="domicilio-id-relacion">
+                        {domicilio.pedido}
+                      </span>
 
-                          ? "domicilio-estado entregado"
-
-                          : domicilio.estado ===
-                            "En camino"
-
-                          ? "domicilio-estado camino"
-
-                          : domicilio.estado ===
-                            "Cancelado"
-
-                          ? "domicilio-estado cancelado"
-
-                          : "domicilio-estado pendiente"
-                      }
-                      onClick={
-                        puedeCambiarEstado
-                          ? () =>
-                              avanzarEstado(
-                                domicilio.id
-                              )
-                          : undefined
-                      }
-                    >
-
-                      {domicilio.estado}
-
-                    </span>
-
-                  </td>
+                    </td>
 
 
-                  <td>
+                    <td>
 
-                    <div className="domicilio-actions">
+                      <span className="domicilio-cliente" title={domicilio.cliente}>
+                        {domicilio.cliente}
+                      </span>
+
+                    </td>
 
 
-                      {puedeConsultar && (
-                        <button
-                          type="button"
-                          title="Ver domicilio"
-                          onClick={() =>
-                            verDetalle(
-                              domicilio
-                            )
-                          }
+                    <td>
+
+                      <div className="domicilio-entrega">
+                        <span
+                          className="domicilio-direccion"
+                          title={domicilio.direccion}
                         >
+                          {domicilio.direccion || "—"}
+                        </span>
 
-                          <Eye size={18} />
-
-                        </button>
-                      )}
-
-
-                      {puedeActualizar && (
-                        <button
-                          type="button"
+                        <span
+                          className="domicilio-ciudad"
                           title={
-                            domicilio.estado ===
-                            "Entregado"
-                              ? "No se puede modificar"
-                              : "Actualizar domicilio"
-                          }
-                          className={
-                            domicilio.estado ===
-                            "Entregado"
-                              ? "disabled"
-                              : ""
-                          }
-                          onClick={() =>
-                            abrirEditar(
-                              domicilio
-                            )
+                            [domicilio.barrio, domicilio.municipio]
+                              .filter(Boolean)
+                              .join(" — ")
                           }
                         >
+                          {[
+                            domicilio.barrio,
+                            domicilio.municipio
+                          ].filter(Boolean).join(" — ") || "—"}
+                        </span>
+                      </div>
 
-                          <Pencil size={18} />
+                    </td>
 
-                        </button>
+
+                    <td>
+
+                      <span className="domicilio-telefono">
+                        {domicilio.telefono || "—"}
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <span className="domicilio-responsable">
+                        {domicilio.responsable || "Sin asignar"}
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      {domicilio.costoEnvioPendiente ? (
+
+                        <span className="domicilio-costo-pendiente">
+                          Por definir
+                        </span>
+
+                      ) : (
+
+                        <span className="domicilio-costo">
+                          {formatearPrecio(domicilio.costoEnvio)}
+                        </span>
+
                       )}
 
+                    </td>
 
-                      {puedeEliminar && (
-                        <button
-                          type="button"
-                          title="Eliminar domicilio"
-                          onClick={() =>
-                            eliminarDomicilio(
-                              domicilio
-                            )
-                          }
+
+                    <td>
+
+                      <span className="domicilio-fecha">
+                        {formatearFecha(domicilio.fechaProgramada) || "—"}
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <div className="domicilio-estado-cell">
+
+                        <span
+                          className={`domicilio-estado ${claseEstado(domicilio.estado)}`}
                         >
 
-                          <Trash2 size={18} />
+                          {domicilio.estado}
 
-                        </button>
-                      )}
+                        </span>
 
-                    </div>
+                        {puedeCambiarEstado && siguienteEstado && (
 
-                  </td>
+                          <button
+                            type="button"
+                            className="domicilio-estado-toggle"
+                            title={
+                              siguienteEstado === "En camino" &&
+                              !domicilio.responsable
+                                ? "Asigna un responsable con el lápiz primero"
+                                : `Cambiar a ${siguienteEstado}`
+                            }
+                            disabled={
+                              estadoEnProcesoId === domicilio.id ||
+                              (siguienteEstado === "En camino" &&
+                                !domicilio.responsable)
+                            }
+                            onClick={() =>
+                              avanzarEstado(domicilio)
+                            }
+                          >
 
-                </tr>
+                            {estadoEnProcesoId === domicilio.id ? (
+                              <Loader2
+                                size={14}
+                                className="domicilio-spinner"
+                              />
+                            ) : (
+                              <ChevronRight size={16} />
+                            )}
 
-              )
+                          </button>
+
+                        )}
+
+                      </div>
+
+                    </td>
+
+
+                    <td>
+
+                      <div className="domicilio-actions">
+
+
+                        {puedeConsultar && (
+                          <button
+                            type="button"
+                            title="Ver detalle"
+                            onClick={() =>
+                              verDetalle(
+                                domicilio
+                              )
+                            }
+                          >
+
+                            <Eye size={18} />
+
+                          </button>
+                        )}
+
+
+                        {puedeActualizar && (
+                          <button
+                            type="button"
+                            title={
+                              cerrado
+                                ? "No se puede modificar"
+                                : "Editar entrega"
+                            }
+                            className={
+                              cerrado
+                                ? "disabled"
+                                : ""
+                            }
+                            disabled={cerrado}
+                            onClick={() =>
+                              abrirEditar(
+                                domicilio
+                              )
+                            }
+                          >
+
+                            <Pencil size={18} />
+
+                          </button>
+                        )}
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                );
+
+              }
             )}
 
 
-            {domiciliosFiltrados.length === 0 && (
+            {domicilios.length === 0 && (
 
               <tr>
 
                 <td
-                  colSpan="5"
+                  colSpan="10"
                   className="domicilios-empty"
                 >
 
-                  Domicilio no encontrado en el sistema.
+                  {cargando
+                    ? "Cargando domicilios..."
+                    : errorLista
+                      ? errorLista
+                      : "Domicilio no encontrado en el sistema."}
 
                 </td>
 
@@ -1062,7 +1189,7 @@ export default function Domicilios({ user }) {
         <Pagination
           currentPage={paginaActual}
           totalPages={totalPaginas}
-          onPageChange={setPaginaActual}
+          onPageChange={cambiarPagina}
         />
 
       </div>
@@ -1084,7 +1211,7 @@ export default function Domicilios({ user }) {
               <h3>
 
                 {modoEdicion
-                  ? "Actualizar Domicilio"
+                  ? `Actualizar Domicilio ${formulario.codigo || ""}`
                   : "Registrar Domicilio"}
 
               </h3>
@@ -1106,334 +1233,435 @@ export default function Domicilios({ user }) {
             <div className="domicilio-modal-body">
 
 
-              {/* ESTADO */}
-
-              <div className="domicilio-form-row">
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    ESTADO
-                  </label>
-
-                  <select
-                    value={
-                      formulario.estado
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "estado",
-                        e.target.value
-                      )
-                    }
-                  >
-
-                    <option value="Pendiente">
-                      Pendiente
-                    </option>
-
-                    <option value="En camino">
-                      En camino
-                    </option>
-
-                    <option value="Entregado">
-                      Entregado
-                    </option>
-
-                    <option value="Cancelado">
-                      Cancelado
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
+              {modoEdicion ? (
 
 
-              {/* ID PEDIDO (selector; el id del cliente se deriva solo) */}
+                /* ================================================
+                    MODO EDICIÓN: responsable, fecha y
+                    observaciones (PATCH /api/domicilios/:id)
+                ================================================ */
 
-              <div className="domicilio-form-row">
+                <>
 
-                <div className="domicilio-form-group">
+                  {/* RESPONSABLE */}
 
-                  <label>
-                    ID PEDIDO
-                  </label>
+                  <div className="domicilio-form-group">
 
-                  <select
-                    id="campo-idPedido"
-                    value={
-                      formulario.idPedido
-                    }
-                    className={`input ${errores.idPedido ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      seleccionarPedido(
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      manejarBlur(
-                        "idPedido",
-                        formulario.idPedido,
-                        formulario
-                      )
-                    }
-                  >
+                    <label>
+                      RESPONSABLE DE LA ENTREGA
+                    </label>
 
-                    <option value="">
-                      Seleccionar pedido
-                    </option>
-
-                    {pedidosDisponibles.map(
-                      (pedido) => (
-
-                        <option
-                          key={pedido.id}
-                          value={pedido.id}
-                        >
-
-                          {pedido.id}
-
-                        </option>
-
-                      )
-                    )}
-
-                  </select>
-
-                  {errores.idPedido && (
-                    <span className="error-text">
-                      {errores.idPedido}
-                    </span>
-                  )}
-
-                  {errores.idCliente && (
-                    <span className="error-text">
-                      {errores.idCliente}
-                    </span>
-                  )}
-
-                </div>
-
-              </div>
-
-
-              {/* CLIENTE */}
-
-              <div className="domicilio-form-group">
-
-                <label>
-                  CLIENTE
-                </label>
-
-                <input
-                  type="text"
-                  value={
-                    formulario.cliente
-                  }
-                  readOnly
-                  placeholder="Cliente"
-                  className={`input ${errores.cliente ? "input-error" : ""}`}
-                />
-
-                {errores.cliente && (
-                  <span className="error-text">
-                    {errores.cliente}
-                  </span>
-                )}
-
-              </div>
-
-
-              {/* DIRECCIÓN + CIUDAD */}
-
-              <div className="domicilio-form-row">
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    DIRECCIÓN
-                  </label>
-
-                  <input
-                    type="text"
-                    id="campo-direccion"
-                    placeholder="Dirección de entrega"
-                    value={
-                      formulario.direccion
-                    }
-                    className={`input ${errores.direccion ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "direccion",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      manejarBlur(
-                        "direccion",
-                        formulario.direccion,
-                        formulario
-                      )
-                    }
-                  />
-
-                  {errores.direccion && (
-                    <span className="error-text">
-                      {errores.direccion}
-                    </span>
-                  )}
-
-                </div>
-
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    CIUDAD
-                  </label>
-
-                  <input
-                    type="text"
-                    id="campo-ciudad"
-                    placeholder="Ciudad"
-                    value={
-                      formulario.ciudad
-                    }
-                    className={`input ${errores.ciudad ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "ciudad",
-                        e.target.value.replace(
-                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                          ""
-                        )
-                      )
-                    }
-                    onBlur={() =>
-                      manejarBlur(
-                        "ciudad",
-                        formulario.ciudad,
-                        formulario
-                      )
-                    }
-                  />
-
-                  {errores.ciudad && (
-                    <span className="error-text">
-                      {errores.ciudad}
-                    </span>
-                  )}
-
-                </div>
-
-              </div>
-
-
-              {/* VALOR + RESPONSABLE */}
-
-              <div className="domicilio-form-row">
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    VALOR DEL DOMICILIO
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0"
-                    value={
-                      formulario.valor
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "valor",
-                        e.target.value
-                          .replace(
-                            /[^0-9.]/g,
+                    <input
+                      type="text"
+                      id="campo-responsable"
+                      placeholder="Nombre del responsable"
+                      maxLength={20}
+                      value={
+                        formulario.responsable
+                      }
+                      className={`input ${errores.responsable ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "responsable",
+                          e.target.value.replace(
+                            /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                             ""
                           )
-                          .replace(/(\..*)\./g, "$1")
-                      )
-                    }
-                  />
-
-                </div>
-
-
-                <div className="domicilio-form-group">
-
-                  <label>
-                    RESPONSABLE DE LA ENTREGA
-                  </label>
-
-                  <input
-                    type="text"
-                    id="campo-responsable"
-                    placeholder="Nombre del responsable"
-                    maxLength={20}
-                    value={
-                      formulario.responsable
-                    }
-                    className={`input ${errores.responsable ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "responsable",
-                        e.target.value.replace(
-                          /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                          ""
                         )
-                      )
-                    }
-                    onBlur={() =>
-                      manejarBlur(
-                        "responsable",
-                        formulario.responsable,
-                        formulario
-                      )
-                    }
-                  />
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "responsable",
+                          formulario.responsable,
+                          formulario
+                        )
+                      }
+                    />
 
-                  {errores.responsable && (
-                    <span className="error-text">
-                      {errores.responsable}
-                    </span>
+                    {errores.responsable && (
+                      <span className="error-text">
+                        {errores.responsable}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  {/* FECHA PROGRAMADA */}
+
+                  <div className="domicilio-form-group">
+
+                    <label>
+                      FECHA PROGRAMADA
+                    </label>
+
+                    <input
+                      type="date"
+                      id="campo-fechaProgramada"
+                      value={
+                        formulario.fechaProgramada
+                      }
+                      className={`input ${errores.fechaProgramada ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "fechaProgramada",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "fechaProgramada",
+                          formulario.fechaProgramada,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.fechaProgramada && (
+                      <span className="error-text">
+                        {errores.fechaProgramada}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  {/* COSTO DE ENVÍO PENDIENTE */}
+
+                  {formulario.costoEnvioPendiente && (
+
+                    <div className="domicilio-costo-bloque">
+
+                      <div className="domicilio-form-group">
+
+                        <label>
+                          COSTO DE ENVÍO (PENDIENTE)
+                        </label>
+
+                        <input
+                          type="number"
+                          id="campo-costoEnvio"
+                          min="0"
+                          step="0.01"
+                          placeholder="Ej: 15000"
+                          value={
+                            formulario.costoEnvio
+                          }
+                          className={`input ${errores.costoEnvio ? "input-error" : ""}`}
+                          onChange={(e) =>
+                            cambiarCampo(
+                              "costoEnvio",
+                              e.target.value.replace(
+                                /[^0-9.]/g,
+                                ""
+                              ).replace(/(\..*)\./g, "$1")
+                            )
+                          }
+                          onBlur={() =>
+                            manejarBlur(
+                              "costoEnvio",
+                              formulario.costoEnvio,
+                              formulario
+                            )
+                          }
+                        />
+
+                        {errores.costoEnvio && (
+                          <span className="error-text">
+                            {errores.costoEnvio}
+                          </span>
+                        )}
+
+                      </div>
+
+                      <div className="domicilio-aviso-costo">
+
+                        Este pedido todavía no tiene definido el costo de
+                        envío. Si lo defines aquí, el total del pedido
+                        cambiará de {formatearPrecio(formulario.totalPedido)}{" "}
+                        a{" "}
+                        {formatearPrecio(
+                          formulario.totalPedido +
+                            (Number(formulario.costoEnvio) || 0)
+                        )}
+                        . Deja el campo vacío para no definirlo ahora.
+
+                      </div>
+
+                    </div>
+
                   )}
 
-                </div>
 
-              </div>
+                  {/* OBSERVACIONES */}
+
+                  <div className="domicilio-form-group">
+
+                    <label>
+                      OBSERVACIONES
+                    </label>
+
+                    <textarea
+                      id="campo-observaciones"
+                      rows={4}
+                      maxLength={500}
+                      placeholder="Notas para la entrega (opcional)"
+                      value={
+                        formulario.observaciones
+                      }
+                      className={`input ${errores.observaciones ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        cambiarCampo(
+                          "observaciones",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "observaciones",
+                          formulario.observaciones,
+                          formulario
+                        )
+                      }
+                    />
+
+                    {errores.observaciones && (
+                      <span className="error-text">
+                        {errores.observaciones}
+                      </span>
+                    )}
+
+                  </div>
+
+                </>
 
 
-              {/* FECHA */}
+              ) : (
 
-              <div className="domicilio-form-row">
 
-                <div className="domicilio-form-group">
+                /* ================================================
+                    MODO REGISTRO: elegir un pedido que aún no
+                    tenga domicilio (POST /api/domicilios)
+                ================================================ */
 
-                  <label>
-                    FECHA
-                  </label>
+                <>
 
-                  <input
-                    type="date"
-                    value={
-                      formulario.fecha
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "fecha",
-                        e.target.value
-                      )
-                    }
-                  />
+                  {/* PEDIDO */}
 
-                </div>
+                  <div className="domicilio-form-group">
 
-              </div>
+                    <label>
+                      PEDIDO SIN DOMICILIO
+                    </label>
 
+                    <select
+                      id="campo-idPedido"
+                      value={
+                        formulario.idPedido
+                      }
+                      disabled={
+                        cargandoPedidos
+                      }
+                      className={`input ${errores.idPedido ? "input-error" : ""}`}
+                      onChange={(e) =>
+                        seleccionarPedido(
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        manejarBlur(
+                          "idPedido",
+                          formulario.idPedido,
+                          formulario
+                        )
+                      }
+                    >
+
+                      <option value="">
+                        {cargandoPedidos
+                          ? "Cargando pedidos..."
+                          : "Seleccionar pedido"}
+                      </option>
+
+                      {pedidosDisponibles.map(
+                        (pedido) => (
+
+                          <option
+                            key={pedido.id}
+                            value={pedido.id}
+                          >
+
+                            {`${pedido.pedido} — ${pedido.cliente}`}
+
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                    {errores.idPedido && (
+                      <span className="error-text">
+                        {errores.idPedido}
+                      </span>
+                    )}
+
+                    {errorPedidos && (
+                      <span className="error-text">
+                        {errorPedidos}
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  {/* DATOS DE ENTREGA DEL PEDIDO */}
+
+                  {formulario.pedidoSeleccionado && (
+
+                    <div className="domicilio-form-row">
+
+                      <div className="domicilio-info-group">
+
+                        <label>
+                          CLIENTE
+                        </label>
+
+                        <div className="domicilio-info-value">
+                          {formulario.pedidoSeleccionado.cliente}
+                        </div>
+
+                      </div>
+
+
+                      <div className="domicilio-info-group">
+
+                        <label>
+                          TELÉFONO
+                        </label>
+
+                        <div className="domicilio-info-value">
+                          {formulario.pedidoSeleccionado.telefono || "—"}
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+
+                  {/* MÉTODO + DIRECCIÓN */}
+
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-form-group">
+
+                      <label>
+                        MÉTODO DE ENVÍO
+                      </label>
+
+                      <select
+                        id="campo-metodoEnvio"
+                        value={
+                          formulario.metodoEnvio
+                        }
+                        className={`input ${errores.metodoEnvio ? "input-error" : ""}`}
+                        onChange={(e) =>
+                          cambiarCampoRegistrar(
+                            "metodoEnvio",
+                            e.target.value
+                          )
+                        }
+                        onBlur={() =>
+                          manejarBlur(
+                            "metodoEnvio",
+                            formulario.metodoEnvio,
+                            formulario
+                          )
+                        }
+                      >
+
+                        {METODOS_ENVIO.map(
+                          (metodo) => (
+
+                            <option
+                              key={metodo}
+                              value={metodo}
+                            >
+
+                              {metodo}
+
+                            </option>
+
+                          )
+                        )}
+
+                      </select>
+
+                      {errores.metodoEnvio && (
+                        <span className="error-text">
+                          {errores.metodoEnvio}
+                        </span>
+                      )}
+
+                    </div>
+
+
+                    {formulario.metodoEnvio !==
+                      "Recoger en tienda" && (
+
+                      <div className="domicilio-form-group">
+
+                        <label>
+                          DIRECCIÓN DE ENTREGA
+                        </label>
+
+                        <input
+                          type="text"
+                          id="campo-direccion"
+                          placeholder="Ej: Cll 72 #10-34"
+                          value={
+                            formulario.direccion
+                          }
+                          className={`input ${errores.direccion ? "input-error" : ""}`}
+                          onChange={(e) =>
+                            cambiarCampoRegistrar(
+                              "direccion",
+                              e.target.value
+                            )
+                          }
+                          onBlur={() =>
+                            manejarBlur(
+                              "direccion",
+                              formulario.direccion,
+                              formulario
+                            )
+                          }
+                        />
+
+                        {errores.direccion && (
+                          <span className="error-text">
+                            {errores.direccion}
+                          </span>
+                        )}
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+
+                  {errorPedidos && (
+                    <div className="domicilio-aviso-costo">
+                      {errorPedidos}
+                    </div>
+                  )}
+
+                </>
+
+              )}
 
             </div>
 
@@ -1446,6 +1674,7 @@ export default function Domicilios({ user }) {
                 type="button"
                 className="domicilio-cancel-button"
                 onClick={cerrarModal}
+                disabled={guardando || creando}
               >
 
                 Cancelar
@@ -1457,11 +1686,22 @@ export default function Domicilios({ user }) {
                 type="button"
                 className="domicilio-create-button"
                 onClick={guardarDomicilio}
+                disabled={guardando || creando}
               >
 
-                {modoEdicion
-                  ? "Guardar cambios"
-                  : "Crear domicilio"}
+                {(guardando || creando) ? (
+                  <>
+                    <Loader2
+                      size={17}
+                      className="domicilio-spinner"
+                    />
+                    Guardando...
+                  </>
+                ) : modoEdicion ? (
+                  "Guardar cambios"
+                ) : (
+                  "Crear domicilio"
+                )}
 
               </button>
 
@@ -1508,194 +1748,325 @@ export default function Domicilios({ user }) {
 
             <div className="domicilio-modal-body">
 
+              {detalleEnProceso && (
 
-              <div className="domicilio-form-row">
+                <div className="domicilio-detalle-cargando">
+                  <Loader2
+                    size={22}
+                    className="domicilio-spinner"
+                  />
+                  <span>
+                    Cargando detalle del domicilio...
+                  </span>
+                </div>
 
-                <div className="domicilio-info-group">
+              )}
 
-                  <label>
-                    ID DOMICILIO
-                  </label>
 
-                  <div className="domicilio-info-value">
-                    {domicilioSeleccionado.id}
+              {!detalleEnProceso && detalleError && (
+
+                <div className="domicilio-aviso-costo">
+                  {detalleError}
+                </div>
+
+              )}
+
+
+              {!detalleEnProceso && !detalleError && (
+
+
+                <>
+
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        ID DOMICILIO
+                      </label>
+
+                      <div className="domicilio-info-value">
+                        {domicilioSeleccionado.codigo}
+                      </div>
+
+                    </div>
+
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        ESTADO
+                      </label>
+
+                      <div className="domicilio-info-value">
+
+                        <span
+                          className={`domicilio-estado ${claseEstado(domicilioSeleccionado.estado)}`}
+                        >
+
+                          {domicilioSeleccionado.estado}
+
+                        </span>
+
+                      </div>
+
+                    </div>
+
                   </div>
 
-                </div>
+
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        PEDIDO
+                      </label>
+
+                      <div className="domicilio-info-value">
+                        {`${domicilioSeleccionado.pedido}${domicilioSeleccionado.estadoPedido ? ` (${domicilioSeleccionado.estadoPedido})` : ""}`}
+                      </div>
+
+                    </div>
 
 
-                <div className="domicilio-info-group">
+                    <div className="domicilio-info-group">
 
-                  <label>
-                    ESTADO
-                  </label>
+                      <label>
+                        CLIENTE
+                      </label>
 
-                  <div className="domicilio-info-value">
+                      <div className="domicilio-info-value">
+                        {domicilioSeleccionado.cliente || "—"}
+                      </div>
 
-                    <span
-                      className={
-                        domicilioSeleccionado.estado ===
-                        "Entregado"
-
-                          ? "domicilio-estado entregado"
-
-                          : domicilioSeleccionado.estado ===
-                            "En camino"
-
-                          ? "domicilio-estado camino"
-
-                          : domicilioSeleccionado.estado ===
-                            "Cancelado"
-
-                          ? "domicilio-estado cancelado"
-
-                          : "domicilio-estado pendiente"
-                      }
-                    >
-
-                      {domicilioSeleccionado.estado}
-
-                    </span>
+                    </div>
 
                   </div>
 
-                </div>
 
-              </div>
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        DIRECCIÓN COMPLETA
+                      </label>
+
+                      <div className="domicilio-info-value">
+                        {[
+                          domicilioSeleccionado.direccion,
+                          domicilioSeleccionado.barrio,
+                          domicilioSeleccionado.municipio,
+                          domicilioSeleccionado.departamento
+                        ]
+                          .filter(Boolean)
+                          .join(" — ") || "—"}
+                      </div>
+
+                    </div>
 
 
-              <div className="domicilio-form-row">
+                    <div className="domicilio-info-group">
 
-                <div className="domicilio-info-group">
+                      <label>
+                        TELÉFONO
+                      </label>
 
-                  <label>
-                    ID PEDIDO
-                  </label>
+                      <div className="domicilio-info-value">
+                        {domicilioSeleccionado.telefono || "—"}
+                      </div>
 
-                  <div className="domicilio-info-value">
-                    {domicilioSeleccionado.idPedido}
+                    </div>
+
                   </div>
 
-                </div>
+
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        COSTO DE ENVÍO
+                      </label>
+
+                      <div className="domicilio-info-value">
+                        {domicilioSeleccionado.costoEnvioPendiente
+                          ? "Por definir"
+                          : formatearPrecio(
+                              domicilioSeleccionado.costoEnvio
+                            )}
+                      </div>
+
+                    </div>
 
 
-                <div className="domicilio-info-group">
+                    <div className="domicilio-info-group">
 
-                  <label>
-                    ID CLIENTE
-                  </label>
+                      <label>
+                        TOTAL DEL PEDIDO
+                      </label>
 
-                  <div className="domicilio-info-value">
-                    {domicilioSeleccionado.idCliente}
+                      <div className="domicilio-info-value">
+                        {formatearPrecio(
+                          domicilioSeleccionado.totalPedido
+                        )}
+                      </div>
+
+                    </div>
+
                   </div>
 
-                </div>
 
-              </div>
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        RESPONSABLE DE LA ENTREGA
+                      </label>
+
+                      <div className="domicilio-info-value">
+                        {domicilioSeleccionado.responsable ||
+                          "Sin asignar"}
+                      </div>
+
+                    </div>
 
 
-              <div className="domicilio-info-group">
+                    <div className="domicilio-info-group">
 
-                <label>
-                  CLIENTE
-                </label>
+                      <label>
+                        FECHA PROGRAMADA
+                      </label>
 
-                <div className="domicilio-info-value">
-                  {domicilioSeleccionado.cliente}
-                </div>
+                      <div className="domicilio-info-value">
+                        {formatearFecha(
+                          domicilioSeleccionado.fechaProgramada
+                        ) || "—"}
+                      </div>
 
-              </div>
+                    </div>
 
-
-              <div className="domicilio-form-row">
-
-                <div className="domicilio-info-group">
-
-                  <label>
-                    DIRECCIÓN
-                  </label>
-
-                  <div className="domicilio-info-value">
-                    {domicilioSeleccionado.direccion}
                   </div>
 
-                </div>
+
+                  <div className="domicilio-form-row">
+
+                    <div className="domicilio-info-group">
+
+                      <label>
+                        MÉTODO DE ENVÍO
+                      </label>
+
+                      <div className="domicilio-info-value">
+                        {domicilioSeleccionado.metodoEnvio || "—"}
+                      </div>
+
+                    </div>
 
 
-                <div className="domicilio-info-group">
+                    <div className="domicilio-info-group">
 
-                  <label>
-                    CIUDAD
-                  </label>
+                      <label>
+                        FECHA DE ENTREGA
+                      </label>
 
-                  <div className="domicilio-info-value">
-                    {domicilioSeleccionado.ciudad}
+                      <div className="domicilio-info-value">
+                        {formatearFecha(
+                          domicilioSeleccionado.fechaEntrega
+                        ) || "—"}
+                      </div>
+
+                    </div>
+
                   </div>
 
-                </div>
 
-              </div>
+                  <div className="domicilio-info-group">
+
+                    <label>
+                      PRODUCTOS DEL PEDIDO
+                    </label>
+
+                    <div className="domicilio-productos">
+
+                      {domicilioSeleccionado.productos.map(
+                        (producto, indice) => (
+
+                          <div
+                            key={`${producto.nombre}-${indice}`}
+                            className="domicilio-producto-fila"
+                          >
+
+                            <div className="domicilio-producto-datos">
+
+                              <span className="domicilio-producto-nombre">
+                                {producto.cantidad} × {producto.nombre}
+                              </span>
+
+                              <span className="domicilio-producto-meta">
+                                {producto.talla ? `Talla ${producto.talla}` : "Sin talla"}
+                                {producto.color ? ` · ${producto.color}` : ""}
+                              </span>
+
+                            </div>
+
+                            <span className="domicilio-producto-precio">
+                              {formatearPrecio(
+                                producto.precio * producto.cantidad
+                              )}
+                            </span>
+
+                          </div>
+
+                        )
+                      )}
 
 
-              <div className="domicilio-form-row">
+                      {domicilioSeleccionado.productos.length === 0 && (
+                        <div className="domicilio-producto-fila">
+                          <span className="domicilio-producto-meta">
+                            El pedido no registra productos.
+                          </span>
+                        </div>
+                      )}
 
-                <div className="domicilio-info-group">
+                    </div>
 
-                  <label>
-                    VALOR DEL DOMICILIO
-                  </label>
-
-                  <div className="domicilio-info-value">
-                    {formatearPrecio(
-                      domicilioSeleccionado.valor
-                    )}
                   </div>
 
-                </div>
 
+                  <div className="domicilio-info-group">
 
-                <div className="domicilio-info-group">
+                    <label>
+                      OBSERVACIONES
+                    </label>
 
-                  <label>
-                    RESPONSABLE DE LA ENTREGA
-                  </label>
+                    <div className="domicilio-info-value multilinea">
+                      {domicilioSeleccionado.observaciones ||
+                        "Sin observaciones para esta entrega."}
+                    </div>
 
-                  <div className="domicilio-info-value">
-                    {domicilioSeleccionado.responsable}
                   </div>
 
-                </div>
 
-              </div>
+                  {/* REGLA DE NEGOCIO */}
 
+                  {domicilioSeleccionado.estado ===
+                    "Entregado" && (
 
-              <div className="domicilio-info-group">
+                    <div className="domicilio-delivered-info">
 
-                <label>
-                  FECHA
-                </label>
+                      Entrega confirmada. Este domicilio
+                      no puede ser modificado ni avanzar
+                      nuevamente.
 
-                <div className="domicilio-info-value">
-                  {formatearFecha(
-                    domicilioSeleccionado.fecha
+                    </div>
+
                   )}
-                </div>
 
-              </div>
-
-
-              {/* REGLA DE NEGOCIO */}
-
-              {domicilioSeleccionado.estado ===
-                "Entregado" && (
-
-                <div className="domicilio-delivered-info">
-
-                  Entrega confirmada. Este domicilio
-                  no puede ser modificado ni cerrado
-                  nuevamente.
-
-                </div>
+                </>
 
               )}
 
@@ -1722,42 +2093,21 @@ export default function Domicilios({ user }) {
 
       )}
 
-      {domicilioEliminar && (
-        <ConfirmDialog
-          abierto={domicilioEliminar !== null}
-          titulo="Eliminar domicilio"
-          mensaje={
-            <>¿Deseas eliminar el domicilio "
-              <strong>{domicilioEliminar.id}</strong>"? Esta
-              acción no se puede deshacer.</>
-          }
-          textoConfirmar="Eliminar"
-          textoCancelar="Cancelar"
-          variante="peligro"
-          onConfirmar={confirmarEliminarDomicilio}
-          onCancelar={() =>
-            setDomicilioEliminar(null)
-          }
-        />
-      )}
-
-      <ConfirmDialog
-        abierto={aviso !== null}
-        titulo="Aviso"
-        mensaje={aviso}
-        textoConfirmar="Entendido"
-        textoCancelar="Cancelar"
-        variante="info"
-        onConfirmar={() => setAviso(null)}
-        onCancelar={() => setAviso(null)}
-      />
-
       <ConfirmDialog
         abierto={confirmarEdicion}
         titulo="Confirmar cambios"
         mensaje={
           <>¿Deseas guardar los cambios realizados en el domicilio "
-            <strong>{formulario.cliente || formulario.id}</strong>"?</>
+            <strong>{formulario.codigo || ""}</strong>" del pedido{" "}
+            <strong>{formulario.pedido || ""}</strong>?
+            {formulario.costoEnvioPendiente &&
+              formulario.costoEnvio !== "" && (
+                <>
+                  {" "}Al definir el costo de envío también cambiará el
+                  total del pedido.
+                </>
+              )}
+          </>
         }
         textoConfirmar="Guardar cambios"
         textoCancelar="Cancelar"

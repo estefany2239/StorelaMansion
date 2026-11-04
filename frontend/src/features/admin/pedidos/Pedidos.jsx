@@ -10,6 +10,7 @@ import {
   Trash2,
   Receipt,
   FileText,
+  FileImage,
   ZoomIn,
   ImageOff,
   Loader2
@@ -21,9 +22,11 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import HistorialAbonos from "../abonos/HistorialAbonos";
 
 import { tienePermiso } from "../utils/permisos";
 import { formatoCliente } from "../utils/ids";
+import { tallaVisible } from "../../../shared/utils/catalogo";
 
 import {
   obtenerPedidos,
@@ -33,7 +36,8 @@ import {
   obtenerComprobantesPedido,
   obtenerArchivoComprobantePedido,
   aprobarComprobantePedido,
-  rechazarComprobantePedido
+  rechazarComprobantePedido,
+  obtenerAbonosPedido
 } from "../../../shared/services/api";
 
 
@@ -68,7 +72,7 @@ const mapearPedidoBackend = (pedido) => {
           ]
         : [];
 
-  const abonos = pagos.map((pago) => ({
+  const abonos = [...pagos].reverse().map((pago) => ({
     fecha: pago.fecha || pedido.fecha,
     valor: Number(pago.monto) || 0,
     metodoPago: pago.metodo || "",
@@ -115,7 +119,7 @@ const mapearPedidoBackend = (pedido) => {
     productos: (pedido.items || []).map((item) => ({
       nombre: item.nombre,
       cantidad: item.cantidad,
-      talla: item.talla || "",
+      talla: tallaVisible(item.talla),
       color: item.color || "-",
       precio: Number(item.precio_unitario) || 0
     })),
@@ -557,6 +561,17 @@ export default function Pedidos({ vendedorId, user }) {
 
   const [pedidoAbonos, setPedidoAbonos] =
     useState(null);
+
+  // Historial real de pagos del pedido en el detalle
+  // (GET /api/pedidos/:id/abonos, el más reciente primero).
+  const [pagosDetalle, setPagosDetalle] =
+    useState([]);
+
+  const [cargandoPagos, setCargandoPagos] =
+    useState(false);
+
+  const [errorPagos, setErrorPagos] =
+    useState("");
 
 
   // =====================================================
@@ -1189,6 +1204,8 @@ export default function Pedidos({ vendedorId, user }) {
           ...actuales
         ]
       );
+      setBusqueda("");
+      setPaginaActual(1);
 
       mostrarToast("Pedido creado con éxito");
 
@@ -1469,6 +1486,11 @@ export default function Pedidos({ vendedorId, user }) {
 
   const abrirComprobante = async (pedido) => {
 
+    if (lightboxComprobante?.url) {
+      URL.revokeObjectURL(lightboxComprobante.url);
+    }
+
+    setLightboxComprobante(null);
     setMostrarComprobante(true);
     setPedidoComprobante(pedido);
     setComprobantes([]);
@@ -1517,6 +1539,10 @@ export default function Pedidos({ vendedorId, user }) {
 
 
   const cerrarComprobante = () => {
+
+    if (lightboxComprobante?.url) {
+      URL.revokeObjectURL(lightboxComprobante.url);
+    }
 
     setMostrarComprobante(false);
     setPedidoComprobante(null);
@@ -1721,9 +1747,49 @@ export default function Pedidos({ vendedorId, user }) {
 
     setPedidoSeleccionado(pedido);
 
+    setPagosDetalle([]);
+    setErrorPagos("");
+    setCargandoPagos(true);
+
     setMostrarDetalle(true);
 
   };
+
+
+  /* =====================================================
+     CARGAR PAGOS DEL PEDIDO EN EL DETALLE
+     ===================================================== */
+
+  useEffect(() => {
+
+    if (!mostrarDetalle || !pedidoSeleccionado?.id) {
+      return undefined;
+    }
+
+    let activo = true;
+
+    obtenerAbonosPedido(pedidoSeleccionado.id)
+      .then((respuesta) => {
+        if (!activo) return;
+        setPagosDetalle(
+          Array.isArray(respuesta?.abonos) ? respuesta.abonos : []
+        );
+        setCargandoPagos(false);
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setPagosDetalle([]);
+        setErrorPagos(
+          error?.message || "No se pudo cargar el historial de pagos"
+        );
+        setCargandoPagos(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+
+  }, [mostrarDetalle, pedidoSeleccionado]);
 
 
   // =====================================================
@@ -2121,11 +2187,16 @@ export default function Pedidos({ vendedorId, user }) {
                             abrirComprobante(
                               pedido
                             );
+                          } else {
+                            mostrarToast(
+                              "Este pedido aún no tiene un comprobante adjunto",
+                              "error"
+                            );
                           }
                         }}
                       >
 
-                        <Receipt size={18} />
+                        <FileImage size={18} />
 
                       </button>
 
@@ -3314,65 +3385,30 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
-              {/* HISTORIAL DE PAGOS */}
+              {/* SECCIÓN DE PAGOS (misma tabla de movimientos del módulo Abonos) */}
 
               <div className="pedido-detail-products">
 
                 <label>
-                  HISTORIAL DE PAGOS
+                  PAGOS
                 </label>
 
 
-                {pedidoSeleccionado.abonos.length ===
-                0 ? (
+                {cargandoPagos ? (
 
                   <div className="pedido-no-products">
+                    Cargando pagos...
+                  </div>
 
-                    Sin pagos registrados.
+                ) : errorPagos ? (
 
+                  <div className="pedido-comprobante-error">
+                    {errorPagos}
                   </div>
 
                 ) : (
 
-                  <div className="pedido-abonos-list">
-
-                    {pedidoSeleccionado.abonos.map(
-                      (abono, index) => (
-
-                        <div
-                          className="pedido-abono-item"
-                          key={index}
-                        >
-
-                          <div className="pedido-abono-info">
-
-                            <strong>
-                              {formatearFecha(
-                                abono.fecha
-                              )}
-                            </strong>
-
-                            <span>
-                              {abono.metodoPago}
-                            </span>
-
-                          </div>
-
-
-                          <strong className="pedido-abono-valor">
-
-                            {formatearPrecio(
-                              abono.valor
-                            )}
-
-                          </strong>
-
-                        </div>
-
-                      )
-                    )}
-
-                  </div>
+                  <HistorialAbonos abonos={pagosDetalle} />
 
                 )}
 

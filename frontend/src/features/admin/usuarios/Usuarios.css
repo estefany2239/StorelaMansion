@@ -115,7 +115,7 @@
 
 
 .usuarios-add-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 
@@ -629,7 +629,7 @@
 
 
 .usuario-create-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 

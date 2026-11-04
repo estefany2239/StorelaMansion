@@ -116,7 +116,7 @@
 }
 
 .roles-add-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -821,7 +821,7 @@
 }
 
 .rol-create-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================

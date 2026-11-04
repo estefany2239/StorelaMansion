@@ -1903,6 +1903,11 @@ export default function Ventas({ user }) {
                 className="venta-create-button"
                 onClick={registrarVenta}
                 disabled={creandoVenta || formulario.items.length === 0}
+                title={
+                  formulario.items.length === 0
+                    ? "Agrega al menos un producto"
+                    : undefined
+                }
               >
                 {creandoVenta ? "Creando..." : "Crear venta"}
               </button>

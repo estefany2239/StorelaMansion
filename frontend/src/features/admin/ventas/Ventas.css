@@ -166,7 +166,7 @@
 
 .ventas-add-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 
   transform:
     translateY(-1px);
@@ -1870,9 +1870,15 @@
 
 
 .venta-selector-agregar:disabled {
-  opacity: 0.55;
+  opacity: 1;
 
   cursor: not-allowed;
+
+  background:
+    var(--admin-btn-primary);
+
+  color:
+    #111111;
 }
 
 
@@ -2478,7 +2484,7 @@
 
 .venta-create-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 
@@ -2641,7 +2647,7 @@
 
 .admin-container.admin-dark .venta-modal {
   background:
-    #1e1e1e;
+    var(--admin-card);
 }
 
 
@@ -3021,7 +3027,7 @@
 
 .admin-container.admin-dark .venta-product-item-subtotal strong {
   background:
-    rgba(194, 168, 120, 0.10);
+    #141414;
 
   color:
     #ffffff;
@@ -3555,7 +3561,7 @@
   border-radius: 14px;
 
   background:
-    #ffffff;
+    var(--admin-card);
 }
 
 .venta-registro-card-head {
@@ -3587,14 +3593,14 @@
   flex-shrink: 0;
 
   color:
-    var(--admin-gold-dark);
+    #6b7280;
 }
 
 .venta-registro-card-title h4 {
   margin: 0;
 
   color:
-    #596273;
+    #6b7280;
 
   font-size: 11px;
 
@@ -3625,7 +3631,7 @@
 
 .venta-registro-toggle:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 .venta-registro-productos .venta-selector-panel {
@@ -4055,29 +4061,35 @@
 
 .venta-registro-footer .venta-create-button:hover:not(:disabled) {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 .venta-registro-footer .venta-create-button:disabled {
-  opacity: 0.5;
+  opacity: 1;
 
   cursor: not-allowed;
+
+  background:
+    var(--admin-btn-primary);
+
+  color:
+    #1f1f1f;
 
   box-shadow: none;
 }
 
 .admin-container.admin-dark .venta-modal-registro {
   background:
-    #171717;
+    var(--admin-card);
 }
 
 .admin-container.admin-dark .venta-registro-header,
 .admin-container.admin-dark .venta-registro-footer {
   border-color:
-    rgba(255, 255, 255, 0.10);
+    var(--admin-border);
 
   background:
-    #171717;
+    var(--admin-card);
 }
 
 .admin-container.admin-dark .venta-registro-header h3,
@@ -4086,15 +4098,15 @@
 .admin-container.admin-dark .venta-registro-total strong,
 .admin-container.admin-dark .venta-registro-linea .venta-product-item-number {
   color:
-    #ffffff;
+    var(--admin-text);
 }
 
 .admin-container.admin-dark .venta-registro-title-icon {
   border-color:
-    rgba(194, 168, 120, 0.24);
+    var(--admin-border);
 
   background:
-    rgba(194, 168, 120, 0.12);
+    var(--admin-hover);
 
   color:
     var(--admin-gold-light);
@@ -4102,80 +4114,97 @@
 
 .admin-container.admin-dark .venta-registro-franja {
   border-color:
-    rgba(194, 168, 120, 0.18);
+    var(--admin-border);
 
   background:
-    #1c1a16;
+    var(--admin-card);
 }
 
 .admin-container.admin-dark .venta-registro-field label,
 .admin-container.admin-dark .venta-registro-card-title h4,
 .admin-container.admin-dark .venta-registro-resumen-rows > div {
   color:
-    #b0b0b0;
+    var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .venta-registro-card-title svg {
+  color:
+    var(--admin-text-secondary);
 }
 
 .admin-container.admin-dark .venta-registro-field input,
 .admin-container.admin-dark .venta-registro-field select {
   border-color:
-    rgba(255, 255, 255, 0.15);
+    var(--admin-border);
 
   background:
-    #141414;
+    var(--admin-bg);
 
   color:
-    #ffffff;
+    var(--admin-text);
 }
 
 .admin-container.admin-dark .venta-registro-field input:disabled {
   background:
-    #101010;
+    var(--admin-bg);
 
   color:
-    #8a8a8a;
+    var(--admin-text-muted);
 }
 
 .admin-container.admin-dark .venta-registro-nota {
   background:
-    rgba(194, 168, 120, 0.14);
+    var(--admin-hover);
 
   color:
-    #d4bc94;
+    var(--admin-gold-light);
 }
 
 .admin-container.admin-dark .venta-registro-card {
-  border-color:
-    rgba(255, 255, 255, 0.10);
-
   background:
-    #171717;
+    var(--admin-card);
+  border-color:
+    var(--admin-border);
 }
 
-.admin-container.admin-dark .venta-registro-productos .venta-selector-panel,
-.admin-container.admin-dark .venta-registro-empty {
+.admin-container.admin-dark .venta-registro-productos .venta-selector-panel {
   border-color:
-    rgba(255, 255, 255, 0.10);
+    var(--admin-border);
 
   background:
-    #141414;
+    var(--admin-bg);
+
+  color:
+    var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .venta-registro-empty {
+  border-color:
+    rgba(255, 255, 255, 0.12);
+
+  background:
+    #1f1f1f;
+
+  color:
+    var(--admin-text-secondary);
 }
 
 .admin-container.admin-dark .venta-registro-linea {
   border-color:
-    rgba(255, 255, 255, 0.10);
+    var(--admin-border);
 
   background:
-    #1b1b1b;
+    var(--admin-card);
 
   box-shadow: none;
 }
 
 .admin-container.admin-dark .venta-product-thumb {
   border-color:
-    rgba(255, 255, 255, 0.10);
+    var(--admin-border);
 
   background:
-    #1c1a16;
+    var(--admin-bg);
 
   color:
     var(--admin-gold-light);
@@ -4186,13 +4215,13 @@
 .venta-product-item-field
 input {
   border-color:
-    rgba(255, 255, 255, 0.14);
+    var(--admin-border);
 
   background:
-    #141414;
+    var(--admin-bg);
 
   color:
-    #ffffff;
+    var(--admin-text);
 }
 
 .admin-container.admin-dark
@@ -4200,10 +4229,10 @@ input {
 .venta-product-item-field
 input[readonly] {
   background:
-    #111111;
+    var(--admin-bg);
 
   color:
-    #b0b0b0;
+    var(--admin-text-secondary);
 }
 
 .admin-container.admin-dark
@@ -4211,39 +4240,86 @@ input[readonly] {
 .venta-product-item-subtotal
 strong {
   background:
-    rgba(194, 168, 120, 0.14);
+    var(--admin-hover);
 
   color:
-    #ffffff;
+    var(--admin-text);
 }
 
 .admin-container.admin-dark .venta-registro-resumen-divider {
   background:
-    rgba(255, 255, 255, 0.10);
+    var(--admin-border);
 }
 
 .admin-container.admin-dark .venta-registro-total {
   border-color:
-    rgba(194, 168, 120, 0.24);
+    var(--admin-border);
 
   background:
-    rgba(194, 168, 120, 0.13);
+    var(--admin-hover);
 }
 
 .admin-container.admin-dark .venta-registro-total span {
   color:
-    #d4bc94;
+    var(--admin-gold-light);
 }
 
 .admin-container.admin-dark .venta-registro-footer .venta-cancel-button {
   border-color:
-    rgba(255, 255, 255, 0.16);
+    var(--admin-border);
 
   background:
     transparent;
 
   color:
-    #d0d0d0;
+    var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .venta-registro-header .venta-modal-close {
+  color:
+    var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .venta-registro-header .venta-modal-close:hover {
+  background:
+    var(--admin-hover);
+
+  color:
+    var(--admin-text);
+}
+
+.admin-container.admin-dark .venta-registro-field input::placeholder {
+  color:
+    var(--admin-text-muted);
+}
+
+.admin-container.admin-dark .venta-registro-date svg {
+  color:
+    var(--admin-text-muted);
+}
+
+.admin-container.admin-dark .venta-registro-card-title {
+  color:
+    var(--admin-text);
+}
+
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-field label {
+  color:
+    var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .venta-registro-field select,
+.admin-container.admin-dark .venta-registro-date input {
+  color-scheme:
+    dark;
+}
+
+.admin-container.admin-dark .venta-registro-field select option {
+  background:
+    var(--admin-bg);
+
+  color:
+    var(--admin-text);
 }
 
 @media (max-width: 1060px) {

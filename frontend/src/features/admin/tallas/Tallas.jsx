@@ -128,29 +128,20 @@ export default function Tallas({ user }) {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginaSolicitada, setPaginaSolicitada] = useState(1);
 
   const totalPaginas = Math.max(
     1,
     Math.ceil(tallasFiltradas.length / REGISTROS_POR_PAGINA)
   );
 
+  const paginaActual = Math.min(paginaSolicitada, totalPaginas);
   const inicio =
     (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const tallasPaginadas = tallasFiltradas.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
   );
-
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
-
-  useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
-    }
-  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR MODAL DE NUEVA TALLA
@@ -208,7 +199,9 @@ export default function Tallas({ user }) {
 
     try {
       const fila = await crearTallaAdmin({ nombre: formulario.nombre.trim() });
-      setTallas((actuales) => [...actuales, fila]);
+      setTallas((actuales) => [fila, ...actuales]);
+      setBusqueda("");
+      setPaginaSolicitada(1);
       mostrarToast("Talla creada con éxito");
       cerrarModal();
     } catch (error) {
@@ -326,9 +319,10 @@ export default function Tallas({ user }) {
                 type="text"
                 placeholder="Buscar por nombre..."
                 value={busqueda}
-                onChange={(e) =>
-                  setBusqueda(e.target.value)
-                }
+                onChange={(e) => {
+                  setPaginaSolicitada(1);
+                  setBusqueda(e.target.value);
+                }}
               />
 
             </div>
@@ -500,7 +494,7 @@ export default function Tallas({ user }) {
         <Pagination
           currentPage={paginaActual}
           totalPages={totalPaginas}
-          onPageChange={setPaginaActual}
+          onPageChange={setPaginaSolicitada}
         />
 
       </div>

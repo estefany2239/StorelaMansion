@@ -114,7 +114,7 @@
 }
 
 .tallas-add-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================
@@ -532,7 +532,7 @@
 }
 
 .talla-create-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================

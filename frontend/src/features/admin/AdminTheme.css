@@ -13,6 +13,8 @@
   --admin-gold: #c2a878;
   --admin-gold-light: #d4bc94;
   --admin-gold-dark: #9c8358;
+  --admin-btn-primary: #d4af37;
+  --admin-btn-primary-hover: #e7c75c;
   --admin-border: rgba(194, 168, 120, 0.16);
   --admin-hover: rgba(194, 168, 120, 0.08);
 
@@ -198,7 +200,7 @@
 .admin-container.admin-dark .categorias-add-button,
 .admin-container.admin-dark .tallas-add-button,
 .admin-container.admin-dark .colores-add-button {
-  background: #c2a878 !important;
+  background: var(--admin-btn-primary) !important;
   color: #111111 !important;
 }
 
@@ -216,14 +218,10 @@
 .admin-container.admin-dark .perfil-edit-button:hover,
 .admin-container.admin-dark .categorias-add-button:hover,
 .admin-container.admin-dark .tallas-add-button:hover,
-.admin-container.admin-dark .colores-add-button:hover {
-  background: #d4bc94 !important;
-}
-
-/* Roles: el hover oscurece el dorado igual que en modo claro */
+.admin-container.admin-dark .colores-add-button:hover,
 .admin-container.admin-dark .roles-add-button:hover,
 .admin-container.admin-dark .rol-create-button:hover {
-  background: var(--admin-gold-dark) !important;
+  background: var(--admin-btn-primary-hover) !important;
 }
 
 /* ---------- TARJETAS / PANELES ---------- */
@@ -361,9 +359,9 @@
 .admin-container.admin-dark .cliente-modal,
 .admin-container.admin-dark .pedido-modal,
 .admin-container.admin-dark .domicilio-modal {
-  background: #171717 !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(194,168,120,.16) !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  border: 1px solid var(--admin-border) !important;
   box-shadow: 0 25px 80px rgba(0,0,0,.65) !important;
 }
 
@@ -533,6 +531,7 @@
 .admin-container.admin-dark .domicilio-cancel-button:hover {
   background: rgba(255,255,255,.06) !important;
   color: #ffffff !important;
+  border-color: var(--admin-btn-primary) !important;
 }
 
 /* ---------- BOTÓN CERRAR DE LOS DETALLES ---------- */
@@ -548,8 +547,8 @@
 
 .admin-container .detail-cerrar-button.detail-cerrar-button:hover,
 .admin-container.admin-dark .detail-cerrar-button.detail-cerrar-button:hover {
-  background: var(--admin-cta-gold-dark, #a98718) !important;
-  border-color: var(--admin-cta-gold-dark, #a98718) !important;
+  background: var(--admin-btn-primary-hover, #a98718) !important;
+  border-color: var(--admin-btn-primary-hover, #a98718) !important;
   color: #111111 !important;
 }
 
@@ -800,9 +799,9 @@
 .admin-container.admin-dark .cliente-modal,
 .admin-container.admin-dark .pedido-modal,
 .admin-container.admin-dark .domicilio-modal {
-  background: #1b1b1b !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(194,168,120,.18) !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  border: 1px solid var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .rol-modal h2,

@@ -114,7 +114,7 @@
 }
 
 .colores-add-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================
@@ -564,7 +564,7 @@
 }
 
 .color-create-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================

@@ -109,7 +109,7 @@
 
 .confirm-dialog-info .confirm-dialog-icon {
   background: rgba(212, 175, 55, 0.15);
-  color: var(--admin-cta-gold-dark, #a98718);
+  color: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================
@@ -212,7 +212,7 @@
 }
 
 .confirm-dialog-info .confirm-action-button:hover {
-  background: var(--admin-cta-gold-dark, #a98718);
+  background: var(--admin-btn-primary-hover);
   box-shadow: 0 8px 18px rgba(212, 175, 55, 0.30);
 }
 

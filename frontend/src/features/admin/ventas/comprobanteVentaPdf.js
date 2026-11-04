@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { tallaVisible } from "../../../shared/utils/catalogo";
 
 export const NOMBRE_NEGOCIO_POR_DEFECTO = "Store La Mansión";
 
@@ -303,7 +304,7 @@ export const construirComprobantePdf = (venta, configuracion = null) => {
 
       const codigo = limpiar(producto.codigo) || "—";
       const nombre = limpiar(producto.nombre) || "—";
-      const talla = limpiar(producto.talla) || "—";
+      const talla = tallaVisible(producto.talla);
       const color = limpiar(producto.color) || "—";
       const cantidad = Number(producto.cantidad) || 0;
       const precio = Number(producto.precio) || 0;
@@ -343,7 +344,7 @@ export const construirComprobantePdf = (venta, configuracion = null) => {
       doc.text(lineasNombre, 39, base);
 
       setFuente("normal", 7, COLORES.texto);
-      doc.text(talla, 92, base, { align: "center" });
+      if (talla) doc.text(talla, 92, base, { align: "center" });
       doc.text(lineasColor, 103, base);
       doc.text(String(cantidad), 137, base, { align: "right" });
 

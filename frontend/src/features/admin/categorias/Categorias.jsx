@@ -148,28 +148,19 @@ export default function Categorias({ user }) {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginaSolicitada, setPaginaSolicitada] = useState(1);
 
   const totalPaginas = Math.max(
     1,
     Math.ceil(categoriasFiltradas.length / REGISTROS_POR_PAGINA)
   );
 
+  const paginaActual = Math.min(paginaSolicitada, totalPaginas);
   const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const categoriasPaginadas = categoriasFiltradas.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
   );
-
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
-
-  useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
-    }
-  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR MODAL DE NUEVA CATEGORÍA
@@ -248,7 +239,9 @@ export default function Categorias({ user }) {
 
     try {
       const fila = await crearCategoriaAdmin(datos);
-      setCategorias((actuales) => [...actuales, fila]);
+      setCategorias((actuales) => [fila, ...actuales]);
+      setBusqueda("");
+      setPaginaSolicitada(1);
       mostrarToast("Categoría creada con éxito");
       cerrarModal();
     } catch (error) {
@@ -382,7 +375,10 @@ export default function Categorias({ user }) {
                 type="text"
                 placeholder="Buscar por nombre..."
                 value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+                onChange={(e) => {
+                  setPaginaSolicitada(1);
+                  setBusqueda(e.target.value);
+                }}
               />
             </div>
           )}
@@ -498,7 +494,7 @@ export default function Categorias({ user }) {
         <Pagination
           currentPage={paginaActual}
           totalPages={totalPaginas}
-          onPageChange={setPaginaActual}
+          onPageChange={setPaginaSolicitada}
         />
 
       </div>
