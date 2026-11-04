@@ -102,7 +102,7 @@ const obtenerRol = async (db, id) => {
 // GET /api/admin/roles -> lista de roles con sus permisos y cantidad de usuarios
 router.get('/', requierePrivilegio('Roles', 'Consultar'), async (req, res) => {
   try {
-    const { rows } = await pool.query(`${SELECT_ROL} ORDER BY r.nombre`)
+    const { rows } = await pool.query(`${SELECT_ROL} ORDER BY r.id_rol DESC`)
     res.json(rows)
   } catch (error) {
     responderError(res, error, 'No se pudieron cargar los roles')

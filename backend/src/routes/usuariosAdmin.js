@@ -124,7 +124,7 @@ router.get('/roles', requierePrivilegio('Usuarios', 'Consultar'), async (req, re
 // GET /api/admin/usuarios -> todos los usuarios (clientes, vendedores y administradores)
 router.get('/', requierePrivilegio('Usuarios', 'Consultar'), async (req, res) => {
   try {
-    const { rows } = await pool.query(`${SELECT_FILAS} ORDER BY u.id_usuario`)
+    const { rows } = await pool.query(`${SELECT_FILAS} ORDER BY u.id_usuario DESC`)
     res.json(rows)
   } catch (error) {
     responderError(res, error, 'No se pudieron cargar los usuarios')

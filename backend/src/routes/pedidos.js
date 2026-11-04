@@ -11,10 +11,18 @@ import {
   esContraEntrega,
   saldoPendiente,
   montoMinimo,
-  recalcularVenta,
   registrar,
   abonoPorClave,
 } from '../services/abonos.js'
+import {
+  ESTADOS,
+  ESTADO_INICIAL,
+  ESTADO_EN_PREPARACION,
+  ESTADO_CANCELADO,
+  ESTADO_ENTREGADO,
+  cambiarEstadoPedido,
+  ErrorHttp,
+} from '../services/estadosPedido.js'
 import {
   validarNombreCompleto,
   validarTelefonoEntrega,
@@ -50,21 +58,6 @@ const router = Router()
 // Todos los endpoints exigen token y que no haya un cambio de contraseña pendiente
 router.use(verificarToken, bloquearCambioPendiente)
 
-// Estados permitidos para los pedidos (coherentes con el panel admin).
-// `estado` en la tabla pedido es varchar sin CHECK, por eso se valida aquí.
-const ESTADOS = ['Registrado', 'En preparación', 'Despachado', 'Entregado', 'Cancelado']
-const ESTADO_INICIAL = 'Registrado'
-const ESTADO_EN_PREPARACION = 'En preparación'
-const ESTADO_DESPACHADO = 'Despachado'
-const ESTADO_CANCELADO = 'Cancelado'
-const ESTADO_ENTREGADO = 'Entregado'
-
-const SIGUIENTE_ESTADO = {
-  [ESTADO_INICIAL]: ESTADO_EN_PREPARACION,
-  [ESTADO_EN_PREPARACION]: ESTADO_DESPACHADO,
-  [ESTADO_DESPACHADO]: ESTADO_ENTREGADO,
-}
-
 // Efectivo ya no se acepta en pedidos nuevos (las ventas de mostrador no
 // cambian: su lista vive en routes/ventas.js y su CHECK de la tabla venta se
 // mantiene intacto). Crédito también se retiró del checkout: la lista de
@@ -77,17 +70,6 @@ const ESTADO_PAGO_PENDIENTE = 'Pendiente de verificación'
 const ESTADO_PAGO_CONFIRMADO = 'Pago confirmado'
 const ESTADO_PAGO_RECHAZADO = 'Pago rechazado'
 const ESTADO_PAGO_NO_APLICA = 'No aplica'
-
-// Error con código HTTP para responder desde los catch.
-// `campo` (opcional) permite que el frontend muestre el mensaje bajo el
-// input correcto, igual que hace auth.js con sus rechazos.
-class ErrorHttp extends Error {
-  constructor(status, message, campo) {
-    super(message)
-    this.status = status
-    this.campo = campo
-  }
-}
 
 // Envía el correo de la decisión DESPUÉS del COMMIT y deja constancia en
 // notificacion_correo. La fila se reserva antes del envío con el UNIQUE
@@ -1263,7 +1245,9 @@ router.get('/:id', soloRoles('Administrador', 'Vendedor', 'Cliente'), autorizarD
   }
 })
 
-// PATCH /:id/estado -> cambia el estado (requiere Pedidos:Cambiar estado)
+// PATCH /:id/estado -> cambia el estado (requiere Pedidos:Cambiar estado).
+// pago, comprobantes, stock, abonos y venta viven en
+// services/estadosPedido.js para reutilizarlos desde Domicilios.
 router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), async (req, res) => {
   const id = Number.parseInt(req.params.id, 10)
   if (Number.isNaN(id)) {
@@ -1277,129 +1261,17 @@ router.patch('/:id/estado', requierePrivilegio('Pedidos', 'Cambiar estado'), asy
     })
   }
 
-  const client = await pool.connect()
   try {
-    await client.query('BEGIN')
-
-    const { rows } = await client.query(
-      `SELECT p.id_pedido, p.estado, p.total, p.estado_pago,
-              COALESCE(
-                p.metodo_pago,
-                (SELECT metodo FROM pago WHERE id_pedido = p.id_pedido ORDER BY id_pago LIMIT 1)
-              ) AS metodo_pago
-         FROM pedido p
-        WHERE p.id_pedido = $1
-        FOR UPDATE`,
-      [id]
-    )
-    const pedido = rows[0]
-
-    if (!pedido) {
-      await client.query('ROLLBACK')
-      return res.status(404).json({ error: 'Pedido no encontrado' })
-    }
-    if (pedido.estado === ESTADO_ENTREGADO) {
-      await client.query('ROLLBACK')
-      return res.status(409).json({ error: 'Un pedido Entregado no se puede modificar' })
-    }
-    if (pedido.estado === ESTADO_CANCELADO) {
-      await client.query('ROLLBACK')
-      return res.status(409).json({ error: 'El pedido ya está cancelado' })
-    }
-
-    if (estado !== ESTADO_CANCELADO) {
-      const siguiente = SIGUIENTE_ESTADO[pedido.estado]
-      if (siguiente !== estado) {
-        await client.query('ROLLBACK')
-        return res.status(409).json({
-          error: siguiente
-            ? `Transición inválida de "${pedido.estado}" a "${estado}". El siguiente estado permitido es "${siguiente}".`
-            : `Transición inválida desde "${pedido.estado}".`,
-        })
-      }
-
-      if (estado === ESTADO_EN_PREPARACION) {
-        const estadoPago = pedido.estado_pago || ESTADO_PAGO_NO_APLICA
-        const metodo = String(pedido.metodo_pago || '')
-        const contraEntrega = metodo.startsWith('Contra entrega')
-        const pagoValidado =
-          estadoPago === ESTADO_PAGO_CONFIRMADO || estadoPago === ESTADO_PAGO_NO_APLICA
-
-        if (!contraEntrega && !pagoValidado) {
-          await client.query('ROLLBACK')
-          return res.status(409).json({
-            error: `No se puede pasar a "${ESTADO_EN_PREPARACION}": el pago debe estar confirmado.`,
-          })
-        }
-      }
-    }
-
-    // Al cancelar se devuelve el stock en la misma transacción.
-    if (estado === ESTADO_CANCELADO) {
-      const { rows: detalles } = await client.query(
-        'SELECT id_variante, cantidad FROM detalle_pedido WHERE id_pedido = $1',
-        [id]
-      )
-      for (const detalle of detalles) {
-        await client.query(
-          'UPDATE producto_variante SET stock = stock + $1 WHERE id_variante = $2',
-          [detalle.cantidad, detalle.id_variante]
-        )
-      }
-
-      // La venta asociada queda anulada sin volver a tocar el stock.
-      await client.query(
-        `UPDATE venta
-            SET estado = 'Anulada'
-          WHERE id_pedido = $1
-            AND estado <> 'Anulada'`,
-        [id]
-      )
-    }
-
-    // Contra entrega: al entregar se cobra el saldo REAL pendiente (total
-    // menos lo abonado) en la MISMA transacción, con el método
-    // "Contra entrega - Saldo"; si ya es 0 no se crea nada. Luego
-    // recalcularVenta deja la venta Pagada/Pendiente según el saldo. Otros
-    // métodos (Transferencia; históricamente Crédito) no registran nada aquí.
-    if (estado === ESTADO_ENTREGADO) {
-      const { rows: pagosRows } = await client.query(
-        'SELECT metodo FROM pago WHERE id_pedido = $1 ORDER BY id_pago LIMIT 1',
-        [id]
-      )
-      const esCE = esContraEntrega(
-        pedido.metodo_pago || pagosRows[0]?.metodo || ''
-      )
-
-      if (esCE) {
-        const saldoAlEntregar = await saldoPendiente(client, id)
-        if (saldoAlEntregar > 0) {
-          await registrar(client, {
-            idPedido: id,
-            registradoPor: req.usuario.id,
-            monto: saldoAlEntregar,
-            metodo: 'Contra entrega - Saldo',
-            observacion: 'Saldo al entregar',
-          })
-        }
-        await recalcularVenta(client, id)
-      }
-    }
-
-    await client.query('UPDATE pedido SET estado = $1 WHERE id_pedido = $2', [estado, id])
-    await client.query('COMMIT')
+    await cambiarEstadoPedido({ id, estado, registradoPor: req.usuario.id })
 
     const actualizado = await obtenerPedidoPorId(id)
     res.json(actualizado)
   } catch (error) {
-    await client.query('ROLLBACK').catch(() => {})
     if (error.status) {
       return res.status(error.status).json({ error: error.message })
     }
     console.error('Error en PATCH /api/pedidos/:id/estado:', error.message)
     res.status(500).json({ error: 'No se pudo cambiar el estado del pedido' })
-  } finally {
-    client.release()
   }
 })
 

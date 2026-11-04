@@ -118,7 +118,7 @@ const obtenerClientePorId = async (id) => {
 router.get('/', requierePrivilegio('Clientes', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `${SELECT_CLIENTE} WHERE r.nombre = 'Cliente' ORDER BY u.id_usuario`
+      `${SELECT_CLIENTE} WHERE r.nombre = 'Cliente' ORDER BY u.id_usuario DESC`
     )
 
     res.json(rows)

@@ -66,9 +66,15 @@ const limpiar = async () => {
       pedidosIds = r.rows.map((x) => x.id_pedido)
     }
 
-    const conteos = { pago: 0, detalle_pedido: 0, domicilio: 0, pedido: 0, usuario: 0 }
+    const conteos = { detalle_venta: 0, venta: 0, pago: 0, detalle_pedido: 0, domicilio: 0, pedido: 0, usuario: 0 }
 
     if (pedidosIds.length > 0) {
+      const ventas = await pool.query('SELECT id_venta FROM venta WHERE id_pedido = ANY($1::int[])', [pedidosIds])
+      const ventasIds = ventas.rows.map((x) => x.id_venta)
+      if (ventasIds.length > 0) {
+        conteos.detalle_venta = (await pool.query('DELETE FROM detalle_venta WHERE id_venta = ANY($1::int[])', [ventasIds])).rowCount
+        conteos.venta = (await pool.query('DELETE FROM venta WHERE id_venta = ANY($1::int[])', [ventasIds])).rowCount
+      }
       conteos.pago = (await pool.query('DELETE FROM pago WHERE id_pedido = ANY($1::int[])', [pedidosIds])).rowCount
       conteos.detalle_pedido = (await pool.query('DELETE FROM detalle_pedido WHERE id_pedido = ANY($1::int[])', [pedidosIds])).rowCount
       conteos.domicilio = (await pool.query('DELETE FROM domicilio WHERE id_pedido = ANY($1::int[])', [pedidosIds])).rowCount
@@ -81,7 +87,7 @@ const limpiar = async () => {
 
     console.log('\n=== LIMPIEZA (solo datos de prueba) ===')
     console.log(
-      `pago: ${conteos.pago} | detalle_pedido: ${conteos.detalle_pedido} | domicilio: ${conteos.domicilio} | pedido: ${conteos.pedido} | usuario: ${conteos.usuario}`
+      `detalle_venta: ${conteos.detalle_venta} | venta: ${conteos.venta} | pago: ${conteos.pago} | detalle_pedido: ${conteos.detalle_pedido} | domicilio: ${conteos.domicilio} | pedido: ${conteos.pedido} | usuario: ${conteos.usuario}`
     )
   } catch (error) {
     console.error('Error en la limpieza:', error.message)
@@ -410,7 +416,20 @@ const main = async () => {
   const listaVendedor = await pedir('GET', '/pedidos', { token: tokenVendedor })
   comprobar('GET / (vendedor) -> 200', listaVendedor.status === 200, `status=${listaVendedor.status}`)
 
-  // 7) Cambio de estado
+  // 7) Cambio de estado: el pedido debe pasar por En preparación.
+  const confirmarPago = await pedir('POST', `/pedidos/${pedido.id}/pago/confirmar`, {
+    token: tokenAdmin,
+  })
+  comprobar('confirmar pago para avanzar el pedido', confirmarPago.status === 200,
+    `status=${confirmarPago.status} estado=${confirmarPago.data?.estado_pago}`)
+
+  const aPreparacion = await pedir('PATCH', `/pedidos/${pedido.id}/estado`, {
+    token: tokenAdmin,
+    body: { estado: 'En preparación' },
+  })
+  comprobar('PATCH a En preparación -> 200', aPreparacion.status === 200 && aPreparacion.data?.estado === 'En preparación',
+    `status=${aPreparacion.status} estado=${aPreparacion.data?.estado}`)
+
   const aDespachado = await pedir('PATCH', `/pedidos/${pedido.id}/estado`, {
     token: tokenAdmin,
     body: { estado: 'Despachado' },
@@ -571,6 +590,13 @@ const main = async () => {
     body: { estado: 'En preparación' },
   })
   comprobar('vendedor PATCH estado -> 200', vendedorPasaEstado.status === 200 && vendedorPasaEstado.data?.estado === 'En preparación', `status=${vendedorPasaEstado.status} estado=${vendedorPasaEstado.data?.estado}`)
+
+  const aDespachadoB = await pedir('PATCH', `/pedidos/${pedidoB.id}/estado`, {
+    token: tokenAdmin,
+    body: { estado: 'Despachado' },
+  })
+  comprobar('PATCH del segundo pedido a Despachado -> 200', aDespachadoB.status === 200 && aDespachadoB.data?.estado === 'Despachado',
+    `status=${aDespachadoB.status} estado=${aDespachadoB.data?.estado}`)
 
   const aEntregado = await pedir('PATCH', `/pedidos/${pedidoB.id}/estado`, {
     token: tokenAdmin,

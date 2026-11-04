@@ -82,7 +82,7 @@ const limpiar = async () => {
 }
 
 const productoBase = (categoria, talla, extra = {}) => ({
-  nombre: `Prueba Bloque C ${SUFIJO}`,
+  nombre: `Prueba Bloque C ${SUFIJO} ${categoria} ${talla || 'sin talla'}`,
   categoria,
   genero: 'mujer',
   talla,
