@@ -37,6 +37,11 @@
   background-color: #f8f6f2;
 }
 
+.fcard__image-wrap .btn-favorito--chip {
+  top: 12px;
+  right: 12px;
+}
+
 .fcard__image {
   width: 100%;
   height: 100%;

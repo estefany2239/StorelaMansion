@@ -1,6 +1,13 @@
 import "./FeaturedProductCard.css";
+import BotonFavorito from "../../../shared/components/favoritos/BotonFavorito";
 
-export default function FeaturedProductCard({ product, descripcion, onViewProduct }) {
+export default function FeaturedProductCard({
+  product,
+  descripcion,
+  idProducto,
+  onIrALogin,
+  onViewProduct,
+}) {
   if (!product) return null;
 
   const { name, image } = product;
@@ -21,6 +28,11 @@ export default function FeaturedProductCard({ product, descripcion, onViewProduc
     >
       <div className="fcard__image-wrap">
         <img src={image} alt={name} className="fcard__image" loading="lazy" />
+        <BotonFavorito
+          idProducto={idProducto}
+          nombre={name}
+          onIniciarSesion={onIrALogin}
+        />
       </div>
 
       <div className="fcard__body">

@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   User,
-  Mail,
-  Phone,
   KeyRound,
   MapPin,
   Plus,
   Trash2,
   Star,
   Bell,
-  Moon,
-  Sun,
   LogOut,
   UserX,
   Eye,
@@ -28,7 +24,6 @@ import { REGLAS as REGLAS_REGISTRO } from "../../../shared/utils/validacionesReg
 import "./Configuracion.css";
 
 export default function Configuracion({
-  user,
   theme,
   onToggleTheme,
   onLogout,

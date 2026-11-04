@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, ShoppingBag, Truck, ShieldCheck } from "lucide-react";
-import { getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../shared/utils/catalogo';
+import { getVariantesPorColor, getTallasDisponibles, getVariantePorTalla, getVarianteBase, TALLAS_ESTANDAR } from '../../shared/utils/catalogo';
 import { esAgotado } from '../../shared/components/cart/cantidad';
 import CantidadControl from '../../shared/components/cart/CantidadControl';
+import BotonFavorito from '../../shared/components/favoritos/BotonFavorito';
 import "./ProductDetailPage.css";
 
 const normalizarTalla = (t) => String(t).trim().toUpperCase();
@@ -11,32 +12,18 @@ const NOMBRES_CATEGORIA = { busos: "Buzos" };
 const nombreCategoria = (catKey) =>
   NOMBRES_CATEGORIA[catKey] || (catKey ? catKey.charAt(0).toUpperCase() + catKey.slice(1) : "");
 
-// Fila real (id_variante) del grupo para la talla pedida, prefiriendo el
-// mismo color del producto abierto. El carrito y el stock salen de esa
-// variante, no de la etiqueta de la talla.
-const variantePorTalla = (producto, talla, catalogo) => {
-  if (!producto || talla == null) return null;
-  if (normalizarTalla(talla) === normalizarTalla(producto.size)) return producto;
-
-  const candidatas = (Array.isArray(catalogo) ? catalogo : []).filter(
-    (item) =>
-      item &&
-      producto.grupoId !== undefined &&
-      producto.grupoId !== null &&
-      String(item.grupoId) === String(producto.grupoId) &&
-      item.size &&
-      normalizarTalla(item.size) === normalizarTalla(talla)
-  );
-
-  if (candidatas.length === 0) return null;
-
-  return candidatas.find((item) => item.color === producto.color) || candidatas[0];
-};
-
-export default function ProductDetailPage({ product, onBack, addToCart, catalogoCompleto }) {
+export default function ProductDetailPage({ product, onBack, addToCart, catalogoCompleto, onIrALogin }) {
   const [cantidad, setCantidad] = useState(1);
   const [imagenPrincipal, setImagenPrincipal] = useState(product?.image);
-  const [tallaSel, setTallaSel] = useState(product?.size || null);
+  const [tallaSel, setTallaSel] = useState(() => {
+    const disponibles = getTallasDisponibles(product, catalogoCompleto || []);
+    const tallaPropia =
+      product?.size &&
+      disponibles.some(
+        (talla) => normalizarTalla(talla) === normalizarTalla(product.size)
+      );
+    return tallaPropia ? product.size : disponibles[0] || null;
+  });
 
   const variantes = getVariantesPorColor(product, catalogoCompleto || []);
   const tieneVariantes = variantes && variantes.length > 0;
@@ -55,7 +42,8 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
   // Variante real de la talla seleccionada: de aquí salen id, stock,
   // imagen y etiqueta que viajan al carrito.
   const varianteSel =
-    (tallaSel != null && variantePorTalla(product, tallaSel, catalogoCompleto)) ||
+    (tallaSel != null && getVariantePorTalla(product, tallaSel, catalogoCompleto)) ||
+    getVarianteBase(product, catalogoCompleto) ||
     product;
 
   // Variante sin unidades: no se puede comprar.
@@ -66,7 +54,8 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
   // vuelve a 1: cada stock se controla por separado.
   const seleccionarTalla = (talla) => {
     const variante =
-      (talla != null && variantePorTalla(product, talla, catalogoCompleto)) ||
+      (talla != null && getVariantePorTalla(product, talla, catalogoCompleto)) ||
+      getVarianteBase(product, catalogoCompleto) ||
       product;
 
     setTallaSel(talla);
@@ -76,16 +65,6 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
       if (variante.image) setImagenPrincipal(variante.image);
     }
   };
-
-  useEffect(() => {
-    setImagenPrincipal(product?.image);
-    setCantidad(1);
-    const disp = getTallasDisponibles(product, catalogoCompleto || []);
-    const propia =
-      product?.size &&
-      disp.some((t) => normalizarTalla(t) === normalizarTalla(product.size));
-    setTallaSel(propia ? product.size : disp[0] || null);
-  }, [product]);
 
   if (!product) return null;
 
@@ -98,14 +77,6 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
 
   const descripcion = product.description || product.descripcion || null;
   const mostrarRating = typeof product.rating !== "undefined" && product.rating !== null;
-
-  const handleCambiarColor = (colorProducto) => {
-    // colorProducto es uno de los productos variantes
-    if (colorProducto && onBack) {
-      // El onBack no aplica, mejor usar callback para cambiar producto
-      // Pero la API es limitada; pasar un callback para seleccionar producto desde arriba
-    }
-  };
 
   return (
     <div className="pdp-section">
@@ -140,7 +111,15 @@ export default function ProductDetailPage({ product, onBack, addToCart, catalogo
           </div>
 
           <div className="pdp-info">
-            <h1 className="pdp-name">{product.name}</h1>
+            <div className="pdp-title-row">
+              <h1 className="pdp-name">{product.name}</h1>
+              <BotonFavorito
+                idProducto={product.id_producto ?? product.grupoId}
+                nombre={product.name}
+                variante="contorno"
+                onIniciarSesion={onIrALogin}
+              />
+            </div>
             <div className="pdp-price">{product.priceFormatted || product.price}</div>
 
             {mostrarRating && (

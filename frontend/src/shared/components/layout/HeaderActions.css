@@ -35,7 +35,7 @@ button.theme-toggle {
 
 /* 2. Botón Iniciar Sesión (Cápsula Dorada) */
 .header-actions__login,
-.header-actions button:not(.header-actions__theme-toggle):not(.profile-trigger-btn) {
+.header-actions button:not(.header-actions__theme-toggle):not(.profile-trigger-btn):not(.header-actions__favoritos) {
   background-color: var(--gold, #c9a227) !important;
   color: #000000 !important; /* Texto negro para contraste */
   border: none !important;
@@ -54,6 +54,56 @@ button.theme-toggle {
 .header-actions__login:hover {
   filter: brightness(0.9) !important;
   transform: translateY(-1px) !important;
+}
+
+/* 3. Botón MIS FAVORITOS (corazón + contador, mismo estilo del toggle) */
+.header-actions__favoritos {
+  position: relative;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  flex-shrink: 0;
+  color: #ffffff !important;
+  transition: background 0.2s ease !important;
+}
+
+.header-actions__favoritos:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--gold) !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions__favoritos {
+  color: #1a1a1a !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions__favoritos:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.header-actions__favoritos-count {
+  position: absolute;
+  top: -1px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background-color: var(--gold);
+  color: #000000;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
 }
 
 /* 2b. Botón de PERFIL (sesión iniciada) - icono redondo, sin píldora */

@@ -399,6 +399,39 @@ export async function obtenerMisPedidos() {
   return procesarRespuesta(respuesta, 'No se pudieron cargar tus pedidos')
 }
 
+// ===== FAVORITOS (Mis favoritos del cliente) =====
+
+// Lista completa de favoritos: id_producto, nombre, precio, imagen,
+// categoría y si tiene stock disponible (más reciente primero).
+export async function obtenerFavoritos() {
+  return peticionAdmin('/api/favoritos', {
+    mensajeError: 'No se pudieron cargar tus favoritos'
+  })
+}
+
+// Solo los id_producto favoritos (para pintar los corazones rápido).
+export async function obtenerIdsFavoritos() {
+  return peticionAdmin('/api/favoritos/ids', {
+    mensajeError: 'No se pudieron cargar tus favoritos'
+  })
+}
+
+// Agrega un producto a favoritos; si ya estaba no se duplica (200 igual).
+export async function agregarFavorito(idProducto) {
+  return peticionAdmin(`/api/favoritos/${idProducto}`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo agregar el producto a tus favoritos'
+  })
+}
+
+// Quita un producto de favoritos; si no estaba responde igual (200 igual).
+export async function quitarFavorito(idProducto) {
+  return peticionAdmin(`/api/favoritos/${idProducto}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo quitar el producto de tus favoritos'
+  })
+}
+
 export async function obtenerPedidos() {
   const respuesta = await fetch(`${API_URL}/api/pedidos`, {
     headers: authHeaders()
@@ -433,6 +466,68 @@ export async function rechazarPagoPedido(id) {
   return peticionAdmin(`/api/pedidos/${id}/pago/rechazar`, {
     metodo: 'POST',
     mensajeError: 'No se pudo rechazar el pago'
+  })
+}
+
+// ===== ABONOS (pedidos de contra entrega con pagos parciales) =====
+
+// Lista desde la vista pedido_abonos: filas paginadas, resumen de cifras y
+// paginación. pestana "saldo" devuelve solo los que deben dinero; "todos" el
+// resto de contra entregas no canceladas.
+export async function obtenerAbonos({
+  pestana = 'saldo',
+  q = '',
+  pagina = 1,
+  limite = 20
+} = {}) {
+  const params = new URLSearchParams({
+    pestana,
+    q,
+    pagina: String(pagina),
+    limite: String(limite)
+  })
+  return peticionAdmin(`/api/abonos?${params}`, {
+    mensajeError: 'No se pudieron cargar los abonos'
+  })
+}
+
+// Monto mínimo vigente para registrar un abono (se muestra en el formulario).
+export async function obtenerConfiguracionAbonos() {
+  return peticionAdmin('/api/abonos/configuracion', {
+    mensajeError: 'No se pudo cargar la configuración de abonos'
+  })
+}
+
+// Cambia el monto mínimo del abono (Abonos:Actualizar).
+export async function actualizarConfiguracionAbonos(montoMinimo) {
+  return peticionAdmin('/api/abonos/configuracion', {
+    metodo: 'PUT',
+    cuerpo: { monto_minimo: montoMinimo },
+    mensajeError: 'No se pudo guardar la configuración de abonos'
+  })
+}
+
+// Historial de abonos de UN pedido (el más reciente primero) y sus totales.
+export async function obtenerAbonosPedido(id) {
+  return peticionAdmin(`/api/pedidos/${id}/abonos`, {
+    mensajeError: 'No se pudo cargar el historial de abonos'
+  })
+}
+
+// Registra un abono nuevo. El backend valida el monto contra el mínimo y el
+// saldo; 400 y 409 devuelven el mensaje para el toast. `claveIdempotencia`
+// evita duplicar el pago si la misma petición se repite.
+export async function registrarAbonoPedido(id, { monto, metodo, referencia, observacion, claveIdempotencia }) {
+  return peticionAdmin(`/api/pedidos/${id}/abonos`, {
+    metodo: 'POST',
+    cuerpo: {
+      monto,
+      metodo,
+      referencia,
+      observacion,
+      clave_idempotencia: claveIdempotencia
+    },
+    mensajeError: 'No se pudo registrar el abono'
   })
 }
 
@@ -548,6 +643,28 @@ export async function crearProductoAdmin(datos) {
 
 export async function actualizarProductoAdmin(id, datos) {
   return peticionAdmin(`/api/admin/productos/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el producto'
+  })
+}
+
+export async function obtenerProductoAdmin(idProducto) {
+  return peticionAdmin(`/api/admin/productos/producto/${idProducto}`, {
+    mensajeError: 'No se pudo cargar el producto'
+  })
+}
+
+export async function crearProductoCompletoAdmin(datos) {
+  return peticionAdmin('/api/admin/productos/completo', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el producto'
+  })
+}
+
+export async function actualizarProductoCompletoAdmin(idProducto, datos) {
+  return peticionAdmin(`/api/admin/productos/producto/${idProducto}/completo`, {
     metodo: 'PUT',
     cuerpo: datos,
     mensajeError: 'No se pudo actualizar el producto'
@@ -776,5 +893,89 @@ export async function eliminarColorAdmin(id) {
   return peticionAdmin(`/api/admin/colores/${id}`, {
     metodo: 'DELETE',
     mensajeError: 'No se pudo eliminar el color'
+  })
+}
+
+// ===== DOMICILIOS (módulo Domicilios del panel) =====
+
+// Lista paginada de domicilios (lo nuevo primero). `q` busca por código,
+// pedido, cliente, dirección, municipio o teléfono; el backend responde con
+// { domicilios, total, pagina, porPagina, totalPaginas }.
+export async function obtenerDomicilios({ q = '', pagina = 1, porPagina = 6 } = {}) {
+  const params = new URLSearchParams({
+    pagina: String(pagina),
+    porPagina: String(porPagina)
+  })
+  if (q) params.set('q', q)
+  return peticionAdmin(`/api/domicilios?${params}`, {
+    mensajeError: 'No se pudieron cargar los domicilios'
+  })
+}
+
+// Detalle completo de un domicilio, con los productos del pedido.
+export async function obtenerDomicilio(id) {
+  return peticionAdmin(`/api/domicilios/${id}`, {
+    mensajeError: 'No se pudo cargar el domicilio'
+  })
+}
+
+// Actualiza responsable, fecha programada y observaciones
+// (Domicilios:Actualizar). El backend rechaza con 409 un domicilio
+// Entregado o Cancelado.
+export async function actualizarDomicilio(id, datos) {
+  return peticionAdmin(`/api/domicilios/${id}`, {
+    metodo: 'PATCH',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el domicilio'
+  })
+}
+
+// Avanza el estado: Pendiente -> En camino (exige responsable) y
+// En camino -> Entregado. Sin retrocesos ni saltos: 409 si se intenta
+// (Domicilios:Cambiar estado).
+export async function cambiarEstadoDomicilio(id, estado, responsable) {
+  return peticionAdmin(`/api/domicilios/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: {
+      estado,
+      ...(responsable !== undefined ? { responsable } : {})
+    },
+    mensajeError: 'No se pudo cambiar el estado del domicilio'
+  })
+}
+
+// Registra un domicilio SOLO para un pedido que aún no tenga uno
+// (Domicilios:Crear). datos: { id_pedido, metodo_envio?, direccion? }.
+export async function crearDomicilio(datos) {
+  return peticionAdmin('/api/domicilios', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo registrar el domicilio'
+  })
+}
+
+// Define el costo de envío del pedido SOLO mientras esté pendiente
+// (Domicilios:Actualizar); cambia el total del pedido y la venta.
+export async function definirCostoEnvioDomicilio(id, costo) {
+  return peticionAdmin(`/api/domicilios/${id}/costo-envio`, {
+    metodo: 'PATCH',
+    cuerpo: { costo },
+    mensajeError: 'No se pudo definir el costo de envío'
+  })
+}
+
+// ===== DASHBOARD (módulo Dashboard del panel) =====
+
+// Resumen general del panel entre dos fechas (YYYY-MM-DD). El backend
+// responde con ingresos, ventas por día, pedidos por estado, saldo
+// pendiente de abonos, domicilios, top de productos, inventario,
+// métodos de pago y clientes activos (Dashboard:Consultar).
+export async function obtenerDashboard(desde, hasta) {
+  const params = new URLSearchParams()
+  if (desde) params.set('desde', desde)
+  if (hasta) params.set('hasta', hasta)
+  const query = params.toString()
+  return peticionAdmin(`/api/admin/dashboard${query ? `?${query}` : ''}`, {
+    mensajeError: 'No se pudo cargar el dashboard'
   })
 }

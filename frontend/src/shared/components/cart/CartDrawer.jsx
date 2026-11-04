@@ -1,6 +1,7 @@
 import { X, Trash2 } from "lucide-react";
 import CantidadControl from "./CantidadControl";
 import { esAgotado, excedeStock, mensajeStock } from "./cantidad";
+import { tallaVisible } from "../../utils/catalogo";
 import "./CartDrawer.css";
 
 export default function CartDrawer({
@@ -125,9 +126,11 @@ export default function CartDrawer({
               const cantidad =
                 Number(item.quantity) || 1;
 
+              const talla = tallaVisible(item.size);
+
               return (
                 <div
-                  key={`${item.id}-${item.size || ""}-${item.color || ""}`}
+                  key={`${item.id}-${talla}-${item.color || ""}`}
                   className="cart-item"
                 >
 
@@ -145,11 +148,11 @@ export default function CartDrawer({
                       {item.name}
                     </h4>
 
-                    {(item.color || item.size) && (
+                    {(item.color || talla) && (
                       <p className="cart-item-specs">
                         {item.color ? `Color: ${item.color}` : ""}
-                        {item.color && item.size ? " | " : ""}
-                        {item.size ? `Talla: ${item.size}` : ""}
+                        {item.color && talla ? " | " : ""}
+                        {talla ? `Talla: ${talla}` : ""}
                       </p>
                     )}
 

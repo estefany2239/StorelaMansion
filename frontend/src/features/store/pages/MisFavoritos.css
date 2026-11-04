@@ -1,0 +1,404 @@
+/* =========================================================
+   MIS FAVORITOS - STORE LA MANSIÓN
+   (misma paleta beige/dorado que MisPedidos)
+   ========================================================= */
+
+.mis-favoritos-section {
+  width: 100%;
+  min-height: calc(100vh - 84px);
+  padding: 40px 30px 80px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.mis-favoritos-wrap {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.mf-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: var(--gold);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mf-back-btn:hover {
+  color: var(--gold-light);
+  transform: translateX(-3px);
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.mis-favoritos-header {
+  margin-bottom: 26px;
+}
+
+.mf-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.mf-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.mf-contador {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.6em;
+  vertical-align: middle;
+}
+
+.mf-subtitle {
+  margin: 0;
+  max-width: 560px;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   ERROR DEL SERVIDOR
+   ========================================================= */
+
+.mf-api-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 14px 18px;
+  border: 1px solid rgba(232, 93, 93, 0.4);
+  border-radius: 12px;
+  background-color: rgba(232, 93, 93, 0.08);
+  color: var(--text-primary);
+}
+
+.mf-api-error p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.mf-api-error p svg {
+  color: #e85d5d;
+  flex-shrink: 0;
+}
+
+.mf-btn-reintentar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mf-btn-reintentar:hover:not(:disabled) {
+  border-color: var(--gold);
+  background-color: rgba(212, 175, 55, 0.12);
+}
+
+.mf-btn-reintentar:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* =========================================================
+   CUADRÍCULA DE FAVORITOS
+   ========================================================= */
+
+.mf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px;
+}
+
+.fav-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--card-bg);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease,
+    background-color 0.3s ease;
+}
+
+.fav-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--gold) 60%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--gold) 28%, transparent);
+}
+
+.fav-card__img-wrap {
+  position: relative;
+  aspect-ratio: 4 / 4.2;
+  overflow: hidden;
+  background-color: #f8f6f2;
+}
+
+[data-theme="dark"] .fav-card__img-wrap {
+  background-color: #1e1e1e;
+}
+
+.fav-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fav-badge-agotado {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.fav-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  padding: 16px;
+}
+
+.fav-card__categoria {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.fav-card__nombre {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+}
+
+.fav-card__precio {
+  color: var(--gold-dark);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .fav-card__precio {
+  color: var(--gold);
+}
+
+.fav-card__ver {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--gold);
+  color: #000000;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.fav-card__ver:hover:not(:disabled) {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+}
+
+.fav-card__ver:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   ESQUELETO DE CARGA
+   ========================================================= */
+
+.mf-skeleton {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--gold) 10%, transparent) 30%,
+    color-mix(in srgb, var(--gold) 22%, transparent) 50%,
+    color-mix(in srgb, var(--gold) 10%, transparent) 70%
+  );
+  background-size: 220% 100%;
+  animation: mf-brillo 1.3s ease-in-out infinite;
+}
+
+.mf-skeleton--img {
+  width: 100%;
+  height: 100%;
+  min-height: 230px;
+  border-radius: 0;
+}
+
+.mf-skeleton--line {
+  height: 14px;
+  width: 85%;
+}
+
+.mf-skeleton--corta {
+  width: 55%;
+}
+
+.mf-skeleton--boton {
+  height: 38px;
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 999px;
+}
+
+@keyframes mf-brillo {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+/* =========================================================
+   ESTADO VACÍO
+   ========================================================= */
+
+.mf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background-color: var(--card-bg);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.mf-empty svg {
+  color: var(--gold);
+  opacity: 0.75;
+}
+
+.mf-empty h3 {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mf-empty p {
+  margin: 0 0 14px;
+  max-width: 420px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.mf-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--gold);
+  color: #000000;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mf-empty-btn:hover {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .mis-favoritos-section {
+    padding: 24px 16px 60px;
+  }
+
+  .mf-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .fav-card__body {
+    padding: 12px;
+  }
+
+  .fav-card__ver {
+    padding: 9px 12px;
+    font-size: 12.5px;
+  }
+}

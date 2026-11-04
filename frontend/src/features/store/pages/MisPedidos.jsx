@@ -31,6 +31,7 @@ import {
   subirComprobantePedido
 } from "../../../shared/services/api";
 import { useCatalogo } from "../../../shared/hooks/useCatalogo";
+import { buscarVariantePorId, tallaVisible } from "../../../shared/utils/catalogo";
 import "./MisPedidos.css";
 
 // Estados del backend -> estados visuales del cliente.
@@ -62,15 +63,13 @@ const mapearPedido = (pedido, catalogo) => {
   const estado = MAPA_ESTADO[pedido.estado] || "En proceso";
 
   const productos = (pedido.items || []).map((item) => {
-    const variante = (catalogo || []).find(
-      (p) => Number(p.id) === Number(item.id_variante)
-    );
+    const variante = buscarVariantePorId(catalogo, item.id_variante);
 
     return {
       nombre: item.nombre,
       imagen: variante?.image || IMAGEN_FALLBACK,
       cantidad: item.cantidad,
-      talla: item.talla || "",
+      talla: tallaVisible(item.talla),
       color: item.color || "-",
       precio: Number(item.precio_unitario) || 0
     };

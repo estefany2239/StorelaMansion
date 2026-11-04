@@ -1,5 +1,6 @@
-import { Sun, Moon } from "lucide-react";
+import { Heart, Sun, Moon } from "lucide-react";
 import ProfileMenu from "./ProfileMenu";
+import { useFavoritos } from "../../hooks/useFavoritos";
 import "./HeaderActions.css";
 
 export default function HeaderActions({
@@ -10,7 +11,9 @@ export default function HeaderActions({
   theme,
   onToggleTheme,
 }) {
+  const { ids } = useFavoritos();
   const esClienteLogueado = user && user.rol === "Cliente";
+  const conteoFavoritos = ids.length;
 
   return (
     <div className="header-actions">
@@ -22,6 +25,27 @@ export default function HeaderActions({
       >
         {theme === "dark" ? <Sun size={19} strokeWidth={1.75} /> : <Moon size={19} strokeWidth={1.75} />}
       </button>
+
+      {esClienteLogueado && (
+        <button
+          type="button"
+          className="header-actions__favoritos"
+          onClick={() => onNavigate?.("favoritos")}
+          aria-label={
+            conteoFavoritos > 0
+              ? `Mis favoritos: ${conteoFavoritos} producto(s)`
+              : "Mis favoritos: sin productos"
+          }
+          title="Mis favoritos"
+        >
+          <Heart size={19} strokeWidth={1.75} />
+          {conteoFavoritos > 0 && (
+            <span className="header-actions__favoritos-count">
+              {conteoFavoritos > 99 ? "99+" : conteoFavoritos}
+            </span>
+          )}
+        </button>
+      )}
 
       {esClienteLogueado ? (
         <ProfileMenu

@@ -27,10 +27,14 @@ import { useNotify } from "./shared/components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
 import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./shared/hooks/useCatalogo";
+import { buscarVariantePorId, getVarianteBase, tallaVisible } from "./shared/utils/catalogo";
+import { resolverDestacado } from "./shared/utils/destacados";
 import { obtenerPerfil } from "./shared/services/api";
+import FavoritosProvider from "./shared/hooks/FavoritosProvider";
 
 // VISTAS DEL CLIENTE LOGUEADO
 import MisPedidos from "./features/store/pages/MisPedidos";
+import MisFavoritos from "./features/store/pages/MisFavoritos";
 import Configuracion from "./features/store/pages/Configuracion";
 import CompraExitosa from "./features/store/pages/CompraExitosa";
 import {
@@ -50,49 +54,15 @@ import AdminLayout from "./features/admin/AdminLayout";
 const obtenerPrecio = (precio) => {
   if (typeof precio === "number") return precio;
   if (!precio) return 0;
-  const numero = Number(String(precio).replace(/[\$COP.,\s]/gi, "").trim());
+  const numero = Number(String(precio).replace(/[$COP.,\s]/gi, "").trim());
   return Number.isNaN(numero) ? 0 : numero;
 };
 
 const formatoPrecio = (valor) => `$${valor.toLocaleString("es-CO")} COP`;
 
 // Resuelve un "destacado" del home a un producto real del catálogo (base de
-// datos). Criterio determinista: se toma el nombre del destacado y se busca
-// (sin tildes, en singular y plural) un producto activo cuyo nombre o
-// categoría lo contenga; si hay varios, se elige el de menor id_producto
-// (grupoId) y, dentro de ese grupo, la variante de menor id_variante.
-// Si no existe coincidencia, se devuelve null y el detalle queda sin compra.
-const sinTildes = (texto) =>
-  String(texto || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-
-const resolverDestacado = (def, catalogo) => {
-  if (!def || !Array.isArray(catalogo) || catalogo.length === 0) return null;
-
-  const clave = sinTildes(def.name);
-  if (!clave) return null;
-
-  const claves = [clave];
-  if (clave.endsWith("s")) claves.push(clave.slice(0, -1));
-
-  const coincidencias = catalogo.filter((p) => {
-    const nombre = sinTildes(p.name);
-    const categoria = sinTildes(p.categoryId);
-    return claves.some((c) => c && (nombre.includes(c) || categoria.includes(c)));
-  });
-
-  if (coincidencias.length === 0) return null;
-
-  return coincidencias
-    .slice()
-    .sort(
-      (a, b) =>
-        Number(a.grupoId) - Number(b.grupoId) || Number(a.id) - Number(b.id)
-    )[0];
-};
+// datos): la lógica vive en shared/utils/destacados.js y también la usa
+// la tarjeta de destacados para saber su id_producto (favoritos).
 
 // Recupera la sesión guardada en localStorage (si existe y es válida).
 // El login guarda el usuario bajo la clave "usuario" (con sus permisos
@@ -297,43 +267,119 @@ export default function App() {
   // tras un 409 del servidor); con ese aviso se recorta la cantidad al
   // máximo disponible y se explica el cambio con toast (nunca alert()).
   useEffect(() => {
-    const alCambiarStock = (filas) => {
-      if (!Array.isArray(filas) || filas.length === 0) return;
+    const alCambiarStock = (productos) => {
+      if (!Array.isArray(productos) || productos.length === 0) return;
       if (cart.length === 0) return;
 
       const cambios = [];
+      const eliminados = [];
+      const siguientes = new Map();
 
-      const siguiente = cart.map((item) => {
-        const fila = filas.find(
-          (producto) => String(producto.id) === String(item.id)
-        );
+      cart.forEach((item) => {
+        const idVariante = item.id_variante ?? item.id;
+        const variante = buscarVariantePorId(productos, idVariante);
 
-        // Sin fila o sin stock informado no se toca la línea.
-        if (!fila || !hayStock(fila.stock)) return item;
-
-        const stock = Number(fila.stock);
-        const quantity = cantidadParaCarrito(item.quantity, stock);
-
-        if (fila.stock === item.stock && quantity === item.quantity) {
-          return item;
+        // La variante ya no existe en el catálogo (producto o talla
+        // eliminada): se quita del carrito para no dejar líneas rotas.
+        if (!variante) {
+          eliminados.push(item);
+          return;
         }
 
-        const anterior = Number(item.quantity) || 1;
-        cambios.push({
-          item,
+        const clave = String(variante.id_variante ?? variante.id);
+        const previa = siguientes.get(clave);
+        const cantidadAcumulada =
+          (Number(previa?.quantity) || 0) + (Number(item.quantity) || 1);
+        const stock = hayStock(variante.stock)
+          ? Number(variante.stock)
+          : hayStock(item.stock)
+            ? Number(item.stock)
+            : null;
+        const quantity = cantidadParaCarrito(cantidadAcumulada, stock);
+        const talla = tallaVisible(variante.size ?? item.size);
+
+        const actualizado = {
+          ...(previa || item),
+          id: variante.id ?? idVariante,
+          id_variante: variante.id_variante ?? variante.id ?? idVariante,
+          name: variante.name || item.name,
+          color: variante.color || item.color || "",
+          image: variante.image || item.image,
+          price: variante.price || item.price,
           stock,
           quantity,
-          // Solo interesa avisar cuando el cliente pierde unidades o la
-          // variante se queda sin stock (el resto es un dato silencioso).
-          afecta: stock <= 0 || quantity < anterior,
-        });
+        };
 
-        return { ...item, stock, quantity };
+        if (talla) actualizado.size = talla;
+        else delete actualizado.size;
+
+        siguientes.set(clave, actualizado);
       });
 
-      if (cambios.length === 0) return;
+      const siguiente = Array.from(siguientes.values());
+      const huboCambios =
+        eliminados.length > 0 ||
+        siguiente.length !== cart.length ||
+        siguiente.some((linea, indice) => {
+          const original = cart[indice];
+          if (!original) return true;
+
+          return (
+            String(linea.id_variante) !==
+              String(original.id_variante ?? original.id) ||
+            linea.id !== original.id ||
+            linea.quantity !== original.quantity ||
+            linea.stock !== original.stock ||
+            (linea.size || "") !== (original.size || "") ||
+            (linea.color || "") !== (original.color || "") ||
+            linea.name !== original.name ||
+            linea.image !== original.image ||
+            linea.price !== original.price
+          );
+        });
+
+      if (!huboCambios) return;
 
       setCart(siguiente);
+
+      if (eliminados.length > 0) {
+        const nombres = Array.from(
+          new Set(eliminados.map((item) => item.name).filter(Boolean))
+        );
+
+        notify(
+          nombres.length > 0
+            ? `Quitamos del carrito productos que ya no están disponibles: ${nombres.join(", ")}.`
+            : "Quitamos del carrito productos que ya no están disponibles.",
+          "info"
+        );
+      }
+
+      cart.forEach((item) => {
+        const id = String(item.id_variante ?? item.id);
+        const nueva = siguiente.find(
+          (linea) => String(linea.id_variante) === id
+        );
+
+        if (!nueva) return;
+
+        const anterior = Number(item.quantity) || 1;
+        const stockAnterior = hayStock(item.stock) ? Number(item.stock) : null;
+        const stockNuevo = hayStock(nueva.stock) ? Number(nueva.stock) : null;
+
+        if (stockAnterior === stockNuevo && anterior === nueva.quantity) return;
+
+        cambios.push({
+          item,
+          stock: stockNuevo,
+          quantity: nueva.quantity,
+          // Solo interesa avisar cuando el cliente pierde unidades o la
+          // variante se queda sin stock (el resto es un dato silencioso).
+          afecta:
+            stockNuevo !== null &&
+            (stockNuevo <= 0 || nueva.quantity < anterior),
+        });
+      });
 
       cambios
         .filter((cambio) => cambio.afecta)
@@ -422,19 +468,39 @@ export default function App() {
       return false;
     }
 
+    // Si por error llega un producto agrupado, se guarda una variante real:
+    // nunca el arreglo `variantes` dentro de localStorage.
+    const base =
+      product && Array.isArray(product.variantes)
+        ? getVarianteBase(product)
+        : product;
+
+    const idVariante = base.id_variante ?? base.id;
+    const talla = tallaVisible(base.size);
+    const linea = {
+      ...base,
+      id: base.id ?? idVariante,
+      id_variante: idVariante,
+      color: base.color || "",
+    };
+
+    if (talla) linea.size = talla;
+    else delete linea.size;
+
     // Cantidad pedida desde el detalle de producto (por defecto 1),
     // recortada al stock real de la variante.
-    const pedidas = cantidadParaCarrito(product.quantity, product.stock);
+    const pedidas = cantidadParaCarrito(linea.quantity, linea.stock);
 
     const existente = cart.find(
-      (item) => item.id === product.id
+      (item) =>
+        String(item.id_variante ?? item.id) === String(idVariante)
     );
 
     if (!existente) {
       setCart([
         ...cart,
         {
-          ...product,
+          ...linea,
           quantity: pedidas
         }
       ]);
@@ -443,8 +509,8 @@ export default function App() {
 
     // El stock más reciente manda: el del producto si lo trae,
     // si no el que ya tenía la línea del carrito.
-    const stock = hayStock(product.stock)
-      ? Number(product.stock)
+    const stock = hayStock(linea.stock)
+      ? Number(linea.stock)
       : existente.stock;
 
     const anterior = Number(existente.quantity) || 1;
@@ -453,15 +519,30 @@ export default function App() {
 
     setCart(
       cart.map((item) => {
-        if (item.id !== product.id) return item;
+        if (
+          String(item.id_variante ?? item.id) !== String(idVariante)
+        ) {
+          return item;
+        }
 
-        return {
+        const actualizado = {
           ...item,
-          stock: hayStock(product.stock)
-            ? Number(product.stock)
+          id: linea.id ?? item.id,
+          id_variante: idVariante,
+          name: linea.name || item.name,
+          color: linea.color || item.color || "",
+          image: linea.image || item.image,
+          price: linea.price || item.price,
+          stock: hayStock(linea.stock)
+            ? Number(linea.stock)
             : item.stock,
           quantity
         };
+
+        if (talla) actualizado.size = talla;
+        else delete actualizado.size;
+
+        return actualizado;
       })
     );
 
@@ -488,7 +569,8 @@ export default function App() {
 
     setCart((prevCart) =>
       prevCart.filter(
-        (item) => item.id !== productId
+        (item) =>
+          String(item.id_variante ?? item.id) !== String(productId)
       )
     );
 
@@ -503,7 +585,11 @@ export default function App() {
 
     setCart((prevCart) =>
       prevCart.map((item) => {
-        if (item.id !== productId) return item;
+        if (
+          String(item.id_variante ?? item.id) !== String(productId)
+        ) {
+          return item;
+        }
 
         // Siempre un entero positivo: nunca baja de 1 ni supera el
         // stock de la variante.
@@ -775,7 +861,9 @@ export default function App() {
 
   return (
 
-    <div className="app-container">
+    <FavoritosProvider user={user}>
+
+      <div className="app-container">
 
 
       {/* ======================================
@@ -864,6 +952,10 @@ export default function App() {
            />
 
           <FeaturedProducts
+            onIrALogin={() => {
+              setFlujoCheckout(false);
+              setCurrentView("login");
+            }}
             onViewProduct={(product) => {
               const real = resolverDestacado(product, catalogo);
               setProductoDestacado(real || { ...product, sinVariante: true });
@@ -885,14 +977,19 @@ export default function App() {
        {currentView === "home" && productoDestacado && (
 
          <ProductDetailPage
+           key={productoDestacado.id}
            product={productoDestacado}
            catalogoCompleto={catalogo}
            onBack={() => {
-             setProductoDestacado(null);
-             window.scrollTo({ top: 0, behavior: "smooth" });
-           }}
-           addToCart={handleAddToCart}
-         />
+              setProductoDestacado(null);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            addToCart={handleAddToCart}
+            onIrALogin={() => {
+              setFlujoCheckout(false);
+              setCurrentView("login");
+            }}
+          />
 
        )}
 
@@ -910,21 +1007,45 @@ export default function App() {
                ? selectedCategory.genders[0]
                : null
            }
-           onBack={() => {
-             setSelectedCategory(null);
-             setCurrentView("home");
-           }}
-           addToCart={handleAddToCart}
-           likedProducts={[]}
-           toggleLike={() => {}}
-         />
+            onBack={() => {
+              setSelectedCategory(null);
+              setCurrentView("home");
+            }}
+            addToCart={handleAddToCart}
+            onIrALogin={() => {
+              setFlujoCheckout(false);
+              setCurrentView("login");
+            }}
+          />
 
        )}
 
 
-       {/* ======================================
-           PAGO / CHECKOUT
-       ====================================== */}
+      {/* ======================================
+          MIS FAVORITOS
+      ====================================== */}
+
+      {currentView === "favoritos" && user?.rol === "Cliente" && (
+
+        <MisFavoritos
+
+          onBack={handleSeguirComprando}
+
+          onVerProductos={() => irASeccion("productos")}
+
+          addToCart={handleAddToCart}
+          onIrALogin={() => {
+            setFlujoCheckout(false);
+            setCurrentView("login");
+          }}
+        />
+
+      )}
+
+
+      {/* ======================================
+          PAGO / CHECKOUT
+      ====================================== */}
 
       {currentView === "pago" && user && (
 
@@ -1090,10 +1211,11 @@ export default function App() {
                   {cart.map((item) => {
 
                     const cantidad = Number(item.quantity) || 1;
+                    const talla = tallaVisible(item.size);
 
                     return (
                       <div
-                        key={`${item.id}-${item.size || "sin-talla"}`}
+                        key={`${item.id}-${talla || "sin-talla"}`}
                         className="checkout-login-item"
                       >
 
@@ -1108,11 +1230,11 @@ export default function App() {
                             {item.name}
                           </span>
 
-                          {(item.color || item.size) && (
+                          {(item.color || talla) && (
                             <span className="checkout-login-item-specs">
                               {item.color ? `Color: ${item.color}` : ""}
-                              {item.color && item.size ? " | " : ""}
-                              {item.size ? `Talla: ${item.size}` : ""}
+                              {item.color && talla ? " | " : ""}
+                              {talla ? `Talla: ${talla}` : ""}
                             </span>
                           )}
 
@@ -1366,7 +1488,9 @@ export default function App() {
         <Footer />
       )}
 
-    </div>
+      </div>
+
+    </FavoritosProvider>
 
   );
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { User, LogOut, Settings, Package } from "lucide-react";
+import { User, LogOut, Settings, Package, Heart } from "lucide-react";
 import "./ProfileMenu.css";
 
 export default function ProfileMenu({
@@ -71,6 +71,14 @@ export default function ProfileMenu({
           <div className="profile-divider"></div>
 
           <ul className="profile-options-list">
+            <li
+              className={currentView === "favoritos" ? "profile-option-active" : ""}
+              onClick={() => navegar("favoritos")}
+            >
+              <Heart size={16} />
+              <span>Mis favoritos</span>
+            </li>
+
             <li
               className={currentView === "mis-pedidos" ? "profile-option-active" : ""}
               onClick={() => navegar("mis-pedidos")}

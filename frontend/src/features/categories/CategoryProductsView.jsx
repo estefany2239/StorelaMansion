@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, SlidersHorizontal, ShoppingBag, Heart, Eye, ChevronDown, X } from "lucide-react";
-import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, TALLAS_ESTANDAR } from '../../shared/utils/catalogo';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, SlidersHorizontal, ShoppingBag, Eye, ChevronDown, X } from "lucide-react";
+import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, getVariantePorTalla, tallaVisible, TALLAS_ESTANDAR } from '../../shared/utils/catalogo';
 import { esAgotado } from '../../shared/components/cart/cantidad';
 import { useCatalogo } from '../../shared/hooks/useCatalogo';
 import ProductDetailPage from '../product/ProductDetailPage';
+import BotonFavorito from '../../shared/components/favoritos/BotonFavorito';
 import "./CategoryProductsView.css";
 
 // Hex de apoyo para los swatches. El filtro del cliente se arma con los
@@ -17,10 +18,20 @@ const PALETA_COLORES = [
   { nombre: 'Beige', hex: '#dcc8a2' },
   { nombre: 'Gris', hex: '#808080' },
   { nombre: 'Azul', hex: '#2b5fa8' },
-  { nombre: 'Rojo', hex: '#e74c3c' }
+  { nombre: 'Rojo', hex: '#e74c3c' },
+  { nombre: 'Dorado', hex: '#c9a227' },
+  { nombre: 'Plateado', hex: '#c0c0c0' },
+  { nombre: 'Transparente', hex: '#ffffff', borde: true },
+  { nombre: 'Rosado', hex: '#e8a0b4' },
+  { nombre: 'Rosa palo', hex: '#d9a9a3' },
+  { nombre: 'Azul claro', hex: '#8ab4e8' },
+  { nombre: 'Azul marino', hex: '#1f2a44' },
+  { nombre: 'Azul rey', hex: '#1f3fbf' },
+  { nombre: 'Gris oscuro', hex: '#4a4c50' },
+  { nombre: 'Gris jaspeado', hex: '#b5b5b5' }
 ];
 
-const ORDEN_COLORES = ['negro', 'blanco', 'café', 'beige', 'gris', 'azul', 'rojo', 'dorado'];
+const ORDEN_COLORES = ['negro', 'blanco', 'gris', 'gris oscuro', 'gris jaspeado', 'azul', 'azul claro', 'azul marino', 'azul rey', 'rojo', 'dorado', 'plateado', 'transparente', 'cafe', 'beige', 'rosado', 'rosa palo'];
 
 const MAX_MARCAS_VISIBLES = 5;
 
@@ -29,10 +40,16 @@ const tallasVisiblesPara = (tallas) => [
   ...TALLAS_ESTANDAR,
   ...tallas.filter((t) => !TALLAS_ESTANDAR.includes(normalizarTalla(t)))
 ];
+const normalizarColorNombre = (nombre) =>
+  String(nombre || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 const getColorHex = (nombre) => {
-  const conocido = PALETA_COLORES.find((c) => c.nombre === nombre);
+  const clave = normalizarColorNombre(nombre);
+  const conocido = PALETA_COLORES.find((c) => normalizarColorNombre(c.nombre) === clave);
   if (conocido) return conocido.hex;
-  if (nombre === 'Dorado') return '#c9a227';
   return '#9aa0a6';
 };
 
@@ -55,30 +72,7 @@ const getColorStyle = (nombre) => {
   return { backgroundColor: getColorHex(nombre) };
 };
 
-// Fila real (id_variante) del grupo para la talla pedida, prefiriendo el
-// mismo color de la tarjeta. Así el carrito y el backend usan la variante
-// correcta y su stock real, no solo la etiqueta de la talla.
-const variantePorTalla = (producto, talla, catalogo) => {
-  if (!producto) return null;
-
-  const candidatas = (Array.isArray(catalogo) ? catalogo : []).filter(
-    (item) =>
-      item &&
-      producto.grupoId !== undefined &&
-      producto.grupoId !== null &&
-      String(item.grupoId) === String(producto.grupoId) &&
-      item.size &&
-      normalizarTalla(item.size) === normalizarTalla(talla)
-  );
-
-  if (candidatas.length === 0) return null;
-
-  return (
-    candidatas.find((item) => item.color === producto.color) || candidatas[0]
-  );
-};
-
-export default function CategoryProductsView({ category, onBack, addToCart, likedProducts = [], toggleLike, initialGender = null }) {
+export default function CategoryProductsView({ category, onBack, addToCart, onIrALogin, initialGender = null }) {
   // Productos que vienen de Neon a través de la API
   const { catalogo: allProducts, cargando } = useCatalogo();
   const getFilteredProducts = (cat, gen, marcas, tallas, colores) =>
@@ -104,6 +98,20 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   const [overlayComprar, setOverlayComprar] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Al cambiar de categoría o de género no deben quedar tallas seleccionadas
+  // que oculten productos.
+  const prevFiltroKeyRef = useRef(null);
+  useEffect(() => {
+    const key = `${category?.id || ''}|${category?.title || ''}|${selectedGender || ''}`;
+    const cambio = prevFiltroKeyRef.current !== null && prevFiltroKeyRef.current !== key;
+    prevFiltroKeyRef.current = key;
+    if (cambio) {
+      const id = window.setTimeout(() => setSelectedSizes([]), 0);
+      return () => window.clearTimeout(id);
+    }
+    return undefined;
+  }, [category?.id, category?.title, selectedGender]);
+
   // Detector automático del tema oscuro
   useEffect(() => {
     const checkTheme = () => {
@@ -125,10 +133,6 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
 
   // Si cambia la categoría (o llega un género no permitido), redirige al
   // género válido sin dejar la pantalla en blanco.
-  useEffect(() => {
-    setSelectedGender(generoInicial);
-  }, [category?.id, generoInicial]);
-
   // Colores disponibles para el grupoId del producto (usando getVariantesPorColor)
   const getColoresDisponibles = (prod) => {
     const vars = getVariantesPorColor(prod, allProducts);
@@ -140,18 +144,13 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
     return { colores, total: colores.length };
   };
 
-  // ==========================================
-  // (El carrito y los favoritos se manejan arriba:
-  //  StoreDashboard pasa addToCart / toggleLike
-  //  que actualizan el estado y el localStorage)
-  // ==========================================
-
   // DETECCIÓN INDEPENDIENTE PARA CADA CATEGORÍA
-  const isTenis = category?.title?.toLowerCase().includes('tenis') || category?.id === 'tenis';
-  const isGorras = category?.title?.toLowerCase().includes('gorra') || category?.id === 'gorras';
+const isTenis = category?.title?.toLowerCase().includes('tenis') || category?.id === 'tenis';
+const isGorras = category?.title?.toLowerCase().includes('gorra') || category?.id === 'gorras';
+const isRelojes = category?.title?.toLowerCase().includes('reloj') || category?.id === 'relojes';
+const isPerfumes = category?.title?.toLowerCase().includes('perfume') || category?.id === 'perfumes';
 
   const isBusos = category?.title?.toLowerCase().includes('buso') || category?.id === 'busos';
-  const isSudaderas = category?.title?.toLowerCase().includes('sudadera') || category?.id === 'sudaderas';
   const isPantalones = category?.title?.toLowerCase().includes('pantalon') || 
                        category?.title?.toLowerCase().includes('pantalón');
   const isCamisas = category?.title?.toLowerCase().includes('camiseta') || 
@@ -205,16 +204,19 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
     const vistos = new Set();
     const lista = [];
     for (const p of productosCategoriaGenero) {
-      const nombre = p && p.color ? String(p.color).trim() : "";
-      const clave = nombre.toLowerCase();
-      if (clave && !vistos.has(clave)) {
-        vistos.add(clave);
-        lista.push(nombre);
+      const variantes = getVariantesPorColor(p, allProducts);
+      for (const variante of variantes) {
+        const nombre = variante && variante.color ? String(variante.color).trim() : "";
+        const clave = nombre.toLowerCase();
+        if (clave && !vistos.has(clave)) {
+          vistos.add(clave);
+          lista.push(nombre);
+        }
       }
     }
     return lista.sort((a, b) => {
-      const ia = ORDEN_COLORES.indexOf(a.toLowerCase());
-      const ib = ORDEN_COLORES.indexOf(b.toLowerCase());
+      const ia = ORDEN_COLORES.indexOf(normalizarColorNombre(a));
+      const ib = ORDEN_COLORES.indexOf(normalizarColorNombre(b));
       if (ia === -1 && ib === -1) return a.localeCompare(b);
       if (ia === -1) return 1;
       if (ib === -1) return -1;
@@ -231,6 +233,14 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
       selectedSizes,
       [nombre]
     ).length > 0
+  );
+
+  // El panel de filtros solo se dibuja si tiene al menos un grupo visible.
+  // Los perfumes no tienen ningún grupo (ni tallas, ni colores, ni marcas).
+  const mostrarPanelFiltros = !isPerfumes && (
+    coloresReales.length > 0 ||
+    marcasFiltrables.length > 0 ||
+    !(isRelojes || isGorras)
   );
 
   const toggleSize = (size) => {
@@ -259,10 +269,12 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
   if (productoSeleccionado) {
     return (
       <ProductDetailPage
+        key={productoSeleccionado.id}
         product={productoSeleccionado}
         catalogoCompleto={allProducts}
         onBack={() => setProductoSeleccionado(null)}
         addToCart={addToCart}
+        onIrALogin={onIrALogin}
       />
     );
   }
@@ -301,7 +313,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                 <div
                   className="gender-card"
                   style={{ backgroundImage: `url('${new URL("../../assets/img/el.jpeg", import.meta.url).href}')` }}
-                  onClick={() => setSelectedGender('hombre')}
+                  onClick={() => { setSelectedGender('hombre'); setSelectedSizes([]); }}
                 >
                   <div className="gender-card-content">
                     <span className="gender-card-title">MODA MASCULINA</span>
@@ -315,7 +327,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                 <div
                   className="gender-card"
                   style={{ backgroundImage: `url('${new URL("../../assets/img/ell.jpeg", import.meta.url).href}')` }}
-                  onClick={() => setSelectedGender('mujer')}
+                  onClick={() => { setSelectedGender('mujer'); setSelectedSizes([]); }}
                 >
                   <div className="gender-card-content">
                     <span className="gender-card-title">MODA FEMENINA</span>
@@ -328,9 +340,10 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
             </div>
           </div>
         ) : (
-          <div className="catalog__layout">
+          <div className="catalog__layout" style={mostrarPanelFiltros ? undefined : { gridTemplateColumns: '1fr' }}>
             
             {/* BARRA LATERAL CON CADA FILTRO SEPARADO */}
+            {mostrarPanelFiltros && (
             <aside className="catalog__sidebar">
               <div
                 className="sidebar__title"
@@ -375,7 +388,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                       )}
                     </div>
                     ) : null
-                  ) : isBusos ? (
+                  ) : isRelojes ? null : isBusos ? (
                 /* 3. SI ES BUSOS (INDEPENDIENTE) */
                 <div className="filter__group">
                   <h4>Tallas de Buzos</h4>
@@ -420,11 +433,11 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                 (() => {
                   const tallasTenis = Array.from(
                     new Set(
-                      productosCategoriaGenero
-                        .map((prod) =>
-                          prod && prod.size ? String(prod.size).trim() : ""
-                        )
-                        .filter(Boolean)
+                      productosCategoriaGenero.flatMap((prod) =>
+                        getTallasDisponibles(prod, allProducts)
+                          .map((talla) => tallaVisible(talla))
+                          .filter(Boolean)
+                      )
                     )
                   ).sort((a, b) => Number(a) - Number(b));
 
@@ -554,15 +567,15 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                     </div>
                   )}
                 </>
-              )}
-            </aside>
+               )}
+             </aside>
+            )}
+
 
             {/* GRILLA DE PRODUCTOS */}
             <main className="catalog__products-grid">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(product => {
-                  const isLiked = (likedProducts || []).some(item => String(item.id) === String(product.id));
-
                   // Tallas reales del grupoId: si hay más de una se muestra el selector
                   const tallas = getTallasDisponibles(product, allProducts);
                   const tallaUnica = tallas.length <= 1;
@@ -577,7 +590,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                     // Se agrega la fila real de esa talla/color (id_variante
                     // y stock verdaderos), no solo la etiqueta de la talla.
                     const variante =
-                      variantePorTalla(product, size, allProducts) || product;
+                      getVariantePorTalla(product, size, allProducts) || product;
                     addToCart({ ...variante, size: variante.size || size });
                   };
 
@@ -601,15 +614,11 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                           <span className="product__brand-tag">{product.brand}</span>
                         ) : null}
                         
-                        {/* BOTÓN FAVORITOS */}
-                        <button 
-                          type="button"
-                          className={`product__like-btn ${isLiked ? 'active' : ''}`}
-                          onClick={() => toggleLike(product)}
-                          title={isLiked ? "Quitar de favoritos" : "Añadir a favoritos"}
-                        >
-                          <Heart size={16} fill={isLiked ? "#d8b438" : "none"} />
-                        </button>
+                        <BotonFavorito
+                          idProducto={product.id_producto ?? product.grupoId}
+                          nombre={product.name}
+                          onIniciarSesion={onIrALogin}
+                        />
 
                         {/* SELECCIÓN DE TALLA (solo si el grupo tiene más de una talla real) */}
                         {tallaUnica ? null : (
@@ -627,7 +636,7 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                               {tallasVisiblesPara(tallas).map((s) => {
                                 const disponible = tallasNorm.has(normalizarTalla(s));
                                 const varianteTalla = disponible
-                                  ? variantePorTalla(product, s, allProducts)
+                                  ? getVariantePorTalla(product, s, allProducts)
                                   : null;
                                 // Talla real cuya variante no tiene unidades.
                                 const sinStock = disponible && esAgotado(varianteTalla?.stock);
@@ -667,9 +676,13 @@ export default function CategoryProductsView({ category, onBack, addToCart, like
                               Marca: {product.brand}
                             </p>
                           ) : null
-                        ) : product.size ? (
+                        ) : tallas.length > 1 ? (
                           <p className="product__details">
-                            Talla: {product.size}
+                            Tallas: {tallas.join(" · ")}
+                          </p>
+                        ) : tallas.length === 1 ? (
+                          <p className="product__details">
+                            Talla: {tallas[0]}
                           </p>
                         ) : null}
                         {/* PUNTOS DE COLOR DE LOS DISPONIBLES EN EL GRUPO */}
