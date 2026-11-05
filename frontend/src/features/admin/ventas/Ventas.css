@@ -4521,3 +4521,350 @@ strong {
   }
 
 }
+
+/* =========================================================
+   DARK MODE REFINEMENT - REGISTRAR VENTA (premium)
+   ========================================================= */
+
+.admin-container.admin-dark .venta-modal.venta-modal-registro {
+  background: #171717;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+}
+
+.admin-container.admin-dark .venta-registro-header,
+.admin-container.admin-dark .venta-registro-footer {
+  background: #171717;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-container.admin-dark .venta-registro-header h3 {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-header .venta-modal-close {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-header .venta-modal-close:hover {
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-franja {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-container.admin-dark .venta-registro-field label {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-field input,
+.admin-container.admin-dark .venta-registro-field select,
+.admin-container.admin-dark .venta-registro-date input {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-field input:disabled {
+  background: #1a1a1a;
+  color: #8a8a8a;
+}
+
+.admin-container.admin-dark .venta-registro-field input::placeholder {
+  color: #7a7a7a;
+}
+
+.admin-container.admin-dark .venta-registro-date svg {
+  color: #8a8a8a;
+}
+
+.admin-container.admin-dark .venta-registro-field select option {
+  background: #121212;
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-nota {
+  background: #1a1a1a;
+  color: #d4bc94;
+}
+
+.admin-container.admin-dark .venta-registro-card {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-container.admin-dark .venta-registro-card-title {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-card-title svg {
+  color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-registro-card-title h4 {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-toggle {
+  background: #d4af37;
+  color: #111111;
+}
+
+.admin-container.admin-dark .venta-registro-toggle:hover {
+  background: #a98718;
+}
+
+.admin-container.admin-dark .venta-selector-panel,
+.admin-container.admin-dark .venta-registro-productos .venta-selector-panel {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.admin-container.admin-dark .venta-producto-buscador {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-producto-buscador input {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-selector-mensaje {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-producto-resultado {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.admin-container.admin-dark .venta-producto-resultado:hover {
+  background: #1a1a1a;
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.admin-container.admin-dark .venta-producto-resultado-info strong {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-producto-resultado-info span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-producto-resultado-stock strong {
+  color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-producto-resultado-stock span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-step {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-step.active {
+  background: rgba(212, 175, 55, 0.12);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-selector-step.completed {
+  color: #d4bc94;
+}
+
+.admin-container.admin-dark .venta-selector-step-numero {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-step.active .venta-selector-step-numero {
+  background: #d4af37;
+  border-color: #d4af37;
+  color: #111111;
+}
+
+.admin-container.admin-dark .venta-selector-step.completed .venta-selector-step-numero {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #d4bc94;
+}
+
+.admin-container.admin-dark .venta-talla-chip,
+.admin-container.admin-dark .venta-color-chip {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-talla-chip:hover:not(:disabled),
+.admin-container.admin-dark .venta-color-chip:hover {
+  background: #1a1a1a;
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.admin-container.admin-dark .venta-talla-chip.selected,
+.admin-container.admin-dark .venta-color-chip.selected {
+  background: rgba(212, 175, 55, 0.14);
+  border-color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-talla-chip span,
+.admin-container.admin-dark .venta-color-info span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-color-dot {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.admin-container.admin-dark .venta-selector-resumen {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.admin-container.admin-dark .venta-selector-resumen span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-resumen strong {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-selector-subtotal span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-subtotal strong {
+  background: rgba(212, 175, 55, 0.10);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-selector-disponible {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-cabecera strong {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-selector-cabecera span {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-selector-cambiar {
+  color: #d4bc94;
+}
+
+.admin-container.admin-dark .venta-registro-empty {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-empty svg {
+  color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-registro-linea {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-container.admin-dark .venta-product-thumb {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-number {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-field label,
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-subtotal label {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-field input {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-field input[readonly] {
+  background: #1a1a1a;
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-linea .venta-product-item-subtotal strong {
+  background: #121212;
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-resumen-title h4 {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-resumen-rows > div {
+  color: #b0b0b0;
+}
+
+.admin-container.admin-dark .venta-registro-resumen-rows strong {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-resumen-divider {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.admin-container.admin-dark .venta-registro-total {
+  background: #121212;
+  border-color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-registro-total span {
+  color: #d4af37;
+}
+
+.admin-container.admin-dark .venta-registro-total strong {
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-footer .venta-cancel-button {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-footer .venta-cancel-button:hover {
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+.admin-container.admin-dark .venta-registro-footer .venta-create-button,
+.admin-container.admin-dark .venta-registro-footer .venta-create-button:disabled {
+  background: #d4af37;
+  color: #111111;
+}
+
+.admin-container.admin-dark .venta-registro-footer .venta-create-button:hover:not(:disabled) {
+  background: #a98718;
+}
+
+.admin-container.admin-dark .venta-registro-toggle svg {
+  color: #111111;
+}
+
+.admin-container.admin-dark .error-text {
+  color: #ff8a8a;
+}
+
+.admin-container.admin-dark .venta-add-product {
+  background: #d4af37;
+  color: #111111;
+}

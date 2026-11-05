@@ -26,7 +26,7 @@
   font-size: 11.5px; /* Ligeramente más pequeño */
   font-weight: 600;
   letter-spacing: 0.14em;
-  color: var(--gold-dark);
+  color: #B8860B;
   margin-bottom: 8px;
   text-transform: uppercase;
 }
@@ -35,7 +35,7 @@
   font-family: var(--font-display);
   font-size: clamp(24px, 3vw, 32px); /* Un poco más estilizado y ajustado */
   font-weight: 500;
-  color: #f0f0f0;
+  color: #000000;
   margin: 0;
 }
 
@@ -153,4 +153,13 @@
 [data-theme="dark"] .product-card__button {
   background-color: var(--gold) !important;
   color: #000000 !important;
+}
+
+/* Modo oscuro: mantener legibilidad sobre fondo oscuro */
+[data-theme="dark"] .featured__eyebrow {
+  color: var(--gold-dark, #e5c158);
+}
+
+[data-theme="dark"] .featured__title {
+  color: #f0f0f0;
 }
