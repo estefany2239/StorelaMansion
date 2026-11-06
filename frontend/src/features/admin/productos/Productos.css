@@ -114,7 +114,7 @@
 }
 
 .productos-add-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================
@@ -536,7 +536,7 @@
 
 .producto-modal-header h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 22px;
   font-weight: 500;
   color: #1a1a1a;
@@ -766,7 +766,7 @@
 }
 
 .producto-create-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 /* =========================================================
@@ -984,4 +984,754 @@
 
 .admin-container:not(.admin-dark) .producto-modal-close {
   color: #697386 !important;
+}
+
+/* =========================================================
+   MODAL DE PRODUCTO REDISEÑADO
+   ========================================================= */
+
+.producto-modal-form {
+  max-width: 600px;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.producto-modal-form .producto-modal-header {
+  flex-shrink: 0;
+  min-height: 62px;
+  padding: 0 26px;
+}
+
+.producto-modal-form .producto-modal-header h3 {
+  color: #20364f;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.producto-modal-form .producto-modal-body {
+  padding: 22px 26px 24px;
+  overflow-y: auto;
+}
+
+.producto-modal-form .producto-modal-footer {
+  flex-shrink: 0;
+  min-height: 74px;
+  padding: 0 26px;
+  background: transparent;
+}
+
+.producto-modal-form .producto-form-row {
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.producto-modal-form .producto-form-row .producto-form-group {
+  margin-bottom: 0;
+}
+
+.producto-modal-form .producto-form-group {
+  gap: 6px;
+}
+
+.producto-modal-form
+  .producto-modal-body
+  > .producto-form-group {
+  margin-bottom: 14px;
+}
+
+.producto-modal-form .producto-form-group label,
+.producto-modal-form .producto-info-group label {
+  color: #6b7890;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+}
+
+.producto-modal-form .producto-form-group input,
+.producto-modal-form .producto-form-group select {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d7dfe9;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #263449;
+  font-size: 13px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.producto-modal-form .producto-form-group input:focus,
+.producto-modal-form .producto-form-group select:focus {
+  border-color: #c9a227;
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.12);
+}
+
+.producto-modal-form .producto-form-group input:disabled,
+.producto-modal-form .producto-form-group select:disabled {
+  background: #f7f8fa;
+  color: #8a94a3;
+  cursor: not-allowed;
+}
+
+.producto-estado-group {
+  width: 238px;
+  max-width: 100%;
+}
+
+.producto-estado-select-wrap {
+  position: relative;
+}
+
+.producto-modal-form
+  .producto-estado-select-wrap
+  select {
+  padding-left: 38px;
+}
+
+.producto-estado-dot {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.producto-estado-dot.activo {
+  background: #22b35d;
+}
+
+.producto-estado-dot.inactivo {
+  background: #c55b6a;
+}
+
+.producto-imagen-dropzone {
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1.5px dashed #cfd9e6;
+  border-radius: 10px;
+  background: #fbfcff;
+  color: #8693a6;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.producto-imagen-dropzone:focus-within {
+  border-color: #d0a52a;
+  background: #ffffff;
+}
+
+.producto-imagen-titulo {
+  color: #3d4a5c;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.producto-imagen-ayuda {
+  color: #8794a7;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.producto-imagen-preview {
+  width: 42px;
+  height: 42px;
+  display: block;
+  margin-top: 10px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e4e9f1;
+  background: #fbfcff;
+}
+
+.producto-imagen-error {
+  display: block;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(197, 91, 106, 0.35);
+  border-radius: 8px;
+  background: #fdf2f3;
+  color: #b4232c;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.producto-modal-form
+  .producto-imagen-dropzone
+  .producto-imagen-input {
+  width: 100%;
+  height: 24px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0;
+  outline: none;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #6f7e93 !important;
+  font-size: 12px !important;
+  text-align: center;
+}
+
+.producto-imagen-input::placeholder {
+  color: #8794a7;
+  opacity: 1;
+}
+
+.producto-stock-general {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  margin-top: 2px;
+  padding: 14px;
+  border: 1px solid #e7cf9e;
+  border-radius: 12px;
+  background: #fff9ee;
+}
+
+.producto-stock-group {
+  width: 200px;
+  max-width: 100%;
+  margin-bottom: 0 !important;
+}
+
+.producto-modal-form .producto-stock-group input {
+  width: 200px;
+  min-width: 180px;
+  max-width: 100%;
+}
+
+.producto-stock-total {
+  padding-bottom: 13px;
+  color: #7b6c52;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.producto-stock-total strong {
+  color: #3e321b;
+}
+
+.producto-tallas-card {
+  margin-top: 2px;
+  border: 1px solid #e2bd73;
+  border-radius: 12px;
+  background: #fff9ee;
+  overflow: hidden;
+}
+
+.producto-tallas-toggle {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border: none;
+  background: #fff9ee;
+  text-align: left;
+  cursor: pointer;
+}
+
+.producto-tallas-toggle:hover {
+  background: #fff4df;
+}
+
+.producto-tallas-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e9b42f;
+  color: #ffffff;
+  box-shadow:
+    0 2px 6px
+    rgba(160, 119, 18, 0.16);
+}
+
+.producto-tallas-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.producto-tallas-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.producto-tallas-heading strong {
+  color: #3f3219;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.producto-tallas-heading span {
+  color: #8a7a61;
+  font-size: 11px;
+}
+
+.producto-tallas-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a6d32;
+}
+
+.producto-tallas-content {
+  padding: 0 14px 12px;
+  border-top:
+    1px solid
+    rgba(201, 162, 39, 0.16);
+}
+
+.producto-talla-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.producto-talla-control {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.producto-modal-form .producto-talla-control input,
+.producto-modal-form .producto-talla-control select,
+.producto-modal-form .producto-stock-group input {
+  height: 48px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border: 1px solid #d7d7d7;
+  border-radius: 14px;
+  outline: none;
+  background-color: #ffffff;
+  color: #222222;
+  font-size: 13px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.producto-modal-form .producto-talla-control input::placeholder,
+.producto-modal-form .producto-stock-group input::placeholder {
+  color: #a5acb8;
+  opacity: 1;
+}
+
+.producto-modal-form .producto-talla-control input:focus,
+.producto-modal-form .producto-talla-control select:focus,
+.producto-modal-form .producto-stock-group input:focus {
+  border-color: #c9a227;
+  outline: none;
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.12);
+}
+
+.producto-modal-form .producto-talla-control input:disabled,
+.producto-modal-form .producto-talla-control select:disabled,
+.producto-modal-form .producto-stock-group input:disabled {
+  background-color: #f7f8fa;
+  color: #8a94a3;
+  cursor: not-allowed;
+}
+
+.producto-modal-form
+  .producto-talla-control
+  .error-text {
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.producto-talla-select-control {
+  flex: 0 0 160px;
+}
+
+.producto-talla-select-control select {
+  width: 100%;
+  max-width: 100%;
+  padding-right: 38px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888888' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+
+.producto-talla-stock-control {
+  flex: 0 1 200px;
+  min-width: 180px;
+}
+
+.producto-talla-stock-control input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.producto-talla-stock-control input::-webkit-outer-spin-button,
+.producto-talla-stock-control input::-webkit-inner-spin-button,
+.producto-stock-group input::-webkit-outer-spin-button,
+.producto-stock-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.producto-talla-stock-control input[type="number"],
+.producto-stock-group input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.producto-talla-delete {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 14px;
+  background: #fde8ec;
+  color: #e0445f;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.producto-talla-delete:hover {
+  background: #fbd6de;
+  color: #bd2947;
+}
+
+.producto-talla-delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.producto-tallas-empty {
+  margin: 12px 0 0;
+  color: #9a7d4e;
+  font-size: 12px;
+}
+
+.producto-tallas-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.producto-add-talla {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border:
+    1px solid #e5c37d;
+  border-radius: 8px;
+  background: #f9eed7;
+  color: #8a6417;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.producto-add-talla:hover {
+  background: #f4e5c6;
+}
+
+.producto-add-talla:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.producto-tallas-total {
+  color: #7b6c52;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.producto-tallas-total strong {
+  color: #3e321b;
+}
+
+.producto-tallas-hint {
+  margin-top: 2px;
+  padding: 14px;
+  border:
+    1px dashed #dfd6c4;
+  border-radius: 12px;
+  background: #faf8f4;
+  color: #8a8273;
+  font-size: 12px;
+}
+
+.producto-modal-form .producto-modal-footer
+  .producto-cancel-button,
+.producto-modal-form .producto-modal-footer
+  .producto-create-button {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.producto-modal-form .producto-modal-footer
+  .producto-create-button:disabled,
+.producto-modal-form .producto-modal-footer
+  .producto-cancel-button:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.admin-container.admin-dark
+  .producto-tallas-card {
+  border-color:
+    rgba(216, 180, 109, 0.35);
+  background: #241f16;
+}
+
+.admin-container.admin-dark
+  .producto-tallas-toggle {
+  background: #241f16;
+}
+
+.admin-container.admin-dark
+  .producto-tallas-toggle:hover {
+  background: #2c261b;
+}
+
+.admin-container.admin-dark
+  .producto-tallas-heading strong,
+.admin-container.admin-dark
+  .producto-stock-total strong,
+.admin-container.admin-dark
+  .producto-tallas-total strong {
+  color: #f0e5cf;
+}
+
+.admin-container.admin-dark
+  .producto-tallas-heading span,
+.admin-container.admin-dark
+  .producto-stock-total,
+.admin-container.admin-dark
+  .producto-tallas-total {
+  color: #b9ae98;
+}
+
+.admin-container.admin-dark
+  .producto-stock-general {
+  border-color:
+    rgba(216, 180, 109, 0.3);
+  background: #241f16;
+}
+
+.admin-container.admin-dark
+  .producto-tallas-hint {
+  border-color:
+    rgba(255, 255, 255, 0.14);
+  background: #1b1b1b;
+  color: #a7a7a7;
+}
+
+.admin-container.admin-dark
+  .producto-imagen-dropzone {
+  border-color:
+    rgba(255, 255, 255, 0.18);
+  background: #181818;
+  color: #8f9bad;
+}
+
+.admin-container.admin-dark
+  .producto-imagen-dropzone:focus-within {
+  border-color: #d0a52a;
+  background: #1b1b1b;
+}
+
+.admin-container.admin-dark
+  .producto-modal-form
+  .producto-imagen-dropzone
+  .producto-imagen-input {
+  color: #c8d0dc !important;
+}
+
+.admin-container.admin-dark
+  .producto-imagen-titulo {
+  color: #e4e9f2;
+}
+
+.admin-container.admin-dark
+  .producto-imagen-preview {
+  border-color:
+    rgba(255, 255, 255, 0.14);
+  background: #181818;
+}
+
+.admin-container.admin-dark
+  .producto-imagen-error {
+  border-color:
+    rgba(255, 255, 255, 0.14);
+  background: #2b1a1d;
+  color: #ff9aa7;
+}
+
+.admin-container:not(.admin-dark)
+  .producto-modal-form
+  .producto-modal-header
+  h3 {
+  color: #142b4a !important;
+}
+
+.admin-container:not(.admin-dark)
+  .producto-modal-form
+  .producto-form-group
+  input:focus,
+.admin-container:not(.admin-dark)
+  .producto-modal-form
+  .producto-form-group
+  select:focus {
+  border-color: #c9a227 !important;
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.12);
+}
+
+.admin-container:not(.admin-dark)
+  .producto-modal-form
+  .producto-imagen-dropzone
+  .producto-imagen-input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #6f7e93 !important;
+}
+
+@media (max-width: 640px) {
+  .producto-modal-overlay {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .producto-modal-form {
+    max-height: calc(100vh - 24px);
+    border-radius: 20px;
+  }
+
+  .producto-modal-form .producto-modal-header {
+    min-height: 62px;
+    padding: 0 18px;
+  }
+
+  .producto-modal-form .producto-modal-header h3 {
+    font-size: 20px;
+  }
+
+  .producto-modal-form .producto-modal-body {
+    padding: 18px;
+  }
+
+  .producto-modal-form .producto-modal-footer {
+    min-height: 68px;
+    padding: 0 18px;
+  }
+
+  .producto-modal-form .producto-form-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .producto-estado-group,
+  .producto-stock-group {
+    width: 100%;
+  }
+
+  .producto-modal-form .producto-stock-group input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .producto-talla-row {
+    gap: 8px;
+  }
+
+  .producto-talla-select-control {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .producto-talla-stock-control {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .producto-talla-select-control select,
+  .producto-talla-stock-control input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .producto-talla-delete {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    align-self: center;
+  }
+
+  .producto-tallas-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .producto-tallas-total {
+    text-align: right;
+  }
+
+  .producto-stock-general {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .producto-stock-total {
+    padding-bottom: 0;
+    text-align: right;
+  }
 }

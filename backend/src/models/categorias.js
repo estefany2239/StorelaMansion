@@ -1,4 +1,4 @@
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 
 // Categorías base. El `codigo` es el id de texto estable que ya usan hoy los
 // productos de la tienda (el que arma useCatalogo en el frontend); el `nombre`

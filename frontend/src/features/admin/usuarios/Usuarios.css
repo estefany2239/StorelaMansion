@@ -115,7 +115,7 @@
 
 
 .usuarios-add-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 
@@ -476,7 +476,7 @@
 
 .usuario-modal-header h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 22px;
   font-weight: 500;
   color: #111111;
@@ -629,7 +629,7 @@
 
 
 .usuario-create-button:hover {
-  background: var(--admin-cta-gold-dark);
+  background: var(--admin-btn-primary-hover);
 }
 
 
@@ -756,7 +756,7 @@
 
 .usuario-detail-modal-header h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 25px;
   font-weight: 500;
   color: #1a1a1a;

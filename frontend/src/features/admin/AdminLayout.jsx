@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Tags,
   Ruler,
-  Palette
+  Palette,
+  Wallet
 } from "lucide-react";
 
 import Dashboard from "./dashboard/Dashboard";
@@ -29,6 +30,7 @@ import Ventas from "./ventas/Ventas";
 import Clientes from "./clientes/Clientes";
 import Pedidos from "./pedidos/Pedidos";
 import Domicilios from "./domicilios/Domicilios";
+import Abonos from "./abonos/Abonos";
 import Perfil from "./perfil/Perfil";
 
 import { tienePermiso } from "./utils/permisos";
@@ -115,6 +117,11 @@ export default function AdminLayout({ user, onLogout }) {
       nombre: "Domicilios",
       vista: "domicilios",
       icono: Truck
+    },
+    {
+      nombre: "Abonos",
+      vista: "abonos",
+      icono: Wallet
     }
   ].filter((item) =>
     tienePermiso(user, item.nombre, "Consultar")
@@ -236,6 +243,9 @@ export default function AdminLayout({ user, onLogout }) {
 
       case "domicilios":
         return <Domicilios user={user} />;
+
+      case "abonos":
+        return <Abonos user={user} />;
 
       case "perfil":
         return (

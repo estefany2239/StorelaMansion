@@ -14,7 +14,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
-import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
+import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 
 import {
@@ -23,7 +23,7 @@ import {
   actualizarColorAdmin,
   cambiarEstadoColorAdmin,
   eliminarColorAdmin
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
 const REGISTROS_POR_PAGINA = 6;
 
@@ -141,29 +141,20 @@ export default function Colores({ user }) {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginaSolicitada, setPaginaSolicitada] = useState(1);
 
   const totalPaginas = Math.max(
     1,
     Math.ceil(coloresFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
+  const paginaActual = Math.min(paginaSolicitada, totalPaginas);
   const inicio =
     (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const coloresPaginados = coloresFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
   );
-
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
-
-  useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
-    }
-  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR MODAL DE NUEVO COLOR
@@ -227,7 +218,9 @@ export default function Colores({ user }) {
 
     try {
       const fila = await crearColorAdmin(datos);
-      setColores((actuales) => [...actuales, fila]);
+      setColores((actuales) => [fila, ...actuales]);
+      setBusqueda("");
+      setPaginaSolicitada(1);
       mostrarToast("Color creado con éxito");
       cerrarModal();
     } catch (error) {
@@ -348,9 +341,10 @@ export default function Colores({ user }) {
                 type="text"
                 placeholder="Buscar por nombre..."
                 value={busqueda}
-                onChange={(e) =>
-                  setBusqueda(e.target.value)
-                }
+                onChange={(e) => {
+                  setPaginaSolicitada(1);
+                  setBusqueda(e.target.value);
+                }}
               />
 
             </div>
@@ -529,7 +523,7 @@ export default function Colores({ user }) {
         <Pagination
           currentPage={paginaActual}
           totalPages={totalPaginas}
-          onPageChange={setPaginaActual}
+          onPageChange={setPaginaSolicitada}
         />
 
       </div>

@@ -1,5 +1,8 @@
+import { useMemo } from "react";
+import { useCatalogo } from "../../../shared/hooks/useCatalogo";
+import { resolverDestacado } from "../../../shared/utils/destacados";
 import FeaturedProductCard from "./FeaturedProductCard";
-import {featuredProducts} from "../../../data/products";
+import { featuredProducts } from "../data/products";
 import "./FeaturedProducts.css";
 
 // TODO: descripciones de respaldo provisionales. Cuando el catálogo incluya
@@ -28,7 +31,19 @@ const obtenerDescripcion = (product) => {
   return DESCRIPCIONES_POR_CATEGORIA[clave] || DESCRIPCION_GENERAL;
 };
 
-export default function FeaturedProducts({ onViewProduct }) {
+export default function FeaturedProducts({ onViewProduct, onIrALogin }) {
+  // Catálogo real: de aquí sale el id_producto del destacado para el corazón.
+  const { catalogo } = useCatalogo();
+
+  const idsReales = useMemo(() => {
+    const mapa = new Map();
+    featuredProducts.forEach((def) => {
+      const real = resolverDestacado(def, catalogo);
+      mapa.set(def.id, real ? real.id_producto ?? real.grupoId : null);
+    });
+    return mapa;
+  }, [catalogo]);
+
   return (
     <section className="featured section-glow section-glow--bottom" id="productos">
       <div className="featured__inner">
@@ -43,6 +58,8 @@ export default function FeaturedProducts({ onViewProduct }) {
               key={product.id}
               product={product}
               descripcion={obtenerDescripcion(product)}
+              idProducto={idsReales.get(product.id) ?? null}
+              onIrALogin={onIrALogin}
               onViewProduct={onViewProduct}
             />
           ))}

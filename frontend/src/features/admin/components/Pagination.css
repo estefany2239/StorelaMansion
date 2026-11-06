@@ -22,7 +22,7 @@
   --text-muted: var(--admin-text-muted);
   --border-color: var(--admin-border);
   --gold: var(--admin-cta-gold);
-  --gold-deep: var(--admin-cta-gold-dark);
+  --gold-deep: var(--admin-btn-primary-hover);
   /* Texto del número activo: siempre oscuro sobre dorado,
      igual en Light y Dark (valor fijo e independiente del tema). */
   --gold-ink: #1a1a1a;

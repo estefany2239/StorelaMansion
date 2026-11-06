@@ -19,6 +19,8 @@
   --admin-cta-gold: #d4af37;
   --admin-cta-gold-light: #e7c75c;
   --admin-cta-gold-dark: #a98718;
+  --admin-btn-primary: #d4af37;
+  --admin-btn-primary-hover: #a98718;
   --admin-border: #e5e5e5;
   --admin-hover: #f2ece0;
 }
@@ -53,6 +55,8 @@
   --admin-cta-gold: #d4af37;
   --admin-cta-gold-light: #e7c75c;
   --admin-cta-gold-dark: #a98718;
+  --admin-btn-primary: #d4af37;
+  --admin-btn-primary-hover: #e7c75c;
   --admin-border: rgba(255, 255, 255, 0.10);
   --admin-hover: rgba(194, 168, 120, 0.09);
   background: #0b0b0b;
@@ -111,7 +115,7 @@
 
 .admin-logo h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
   font-size: 18px;
   line-height: 1;
   font-weight: 700;

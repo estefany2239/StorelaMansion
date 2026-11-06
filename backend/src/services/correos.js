@@ -100,7 +100,7 @@ export const plantillaInvitacion = ({
                 deberás establecer una contraseña propia.
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CONTRASEÑA TEMPORAL</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:20px;letter-spacing:3px;color:#c9a227;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:20px;letter-spacing:3px;color:#c9a227;">
                 ${claveEscapada}
               </p>
               ${vencimientoTexto ? `<p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,0.5);">Vence: ${vencimientoTexto}</p>` : ''}
@@ -187,11 +187,11 @@ export const plantillaInvitacionCliente = ({
                 para iniciar sesión; al entrar deberás crear tu propia contraseña.
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CORREO DE ACCESO</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:16px;color:#ffffff;word-break:break-all;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#ffffff;word-break:break-all;">
                 ${correoEscapado}
               </p>
               <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CONTRASEÑA TEMPORAL</p>
-              <p style="margin:0 0 18px;font-family:Consolas,Menlo,monospace;font-size:20px;letter-spacing:3px;color:#c9a227;">
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:20px;letter-spacing:3px;color:#c9a227;">
                 ${claveEscapada}
               </p>
               <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,0.5);">
@@ -235,6 +235,304 @@ export const plantillaInvitacionCliente = ({
   ]
     .filter(Boolean)
     .join('\n')
+
+  return { asunto, html, texto }
+}
+
+// Bienvenida del registro PÚBLICO (POST /api/auth/register): la cuenta ya
+// existe y el usuario conoce su propia contraseña, así que este correo NO
+// lleva contraseñas ni datos sensibles, solo la confirmación y un botón a
+// la tienda. Misma identidad visual que las invitaciones. Todo lo que se
+// inserta en el HTML (nombre y enlace) pasa por escaparHtml.
+export const plantillaBienvenida = ({ nombre, enlaceTienda }) => {
+  const nombreEscapado = escaparHtml(nombre || 'cliente')
+  const enlaceEscapado = escaparHtml(enlaceTienda)
+
+  const asunto = '¡Bienvenido a Store La Mansión!'
+
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:Arial,Helvetica,sans-serif;color:#e8e8e8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:520px;background:#141414;border:1px solid rgba(201,162,39,0.25);border-radius:16px;padding:32px;">
+          <tr>
+            <td style="text-align:center;padding-bottom:24px;">
+              <h1 style="margin:0;font-size:22px;letter-spacing:4px;color:#ffffff;">LA MANSI<span style="color:#c9a227;">ÓN</span></h1>
+              <p style="margin:6px 0 0;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,0.45);">STORE</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 8px 20px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#ffffff;">Hola, ${nombreEscapado}</h2>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.75);">
+                ¡Bienvenido a Store La Mansión! Tu cuenta fue creada correctamente
+                y ya puedes iniciar sesión con tu correo y tu contraseña.
+              </p>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.75);">
+                Conoce nuestra colección y realiza tus compras cuando quieras.
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="background:#c9a227;border-radius:10px;">
+                    <a href="${enlaceEscapado}" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:bold;color:#111111;text-decoration:none;">
+                      Ir a la tienda
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:20px 0 0;font-size:12px;color:rgba(255,255,255,0.5);word-break:break-all;">
+                Si el botón no funciona, copia este enlace en tu navegador:<br>${enlaceEscapado}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim()
+
+  const texto = [
+    '¡Bienvenido a Store La Mansión!',
+    '',
+    `Hola ${nombre || 'cliente'},`,
+    '',
+    'Tu cuenta fue creada correctamente y ya puedes iniciar sesión con tu',
+    'correo y tu contraseña.',
+    '',
+    'Conoce nuestra colección y realiza tus compras cuando quieras.',
+    '',
+    `Entra a la tienda aquí: ${enlaceTienda}`,
+  ].join('\n')
+
+  return { asunto, html, texto }
+}
+
+// Código de recuperación de contraseña (flujo público "Olvidé mi
+// contraseña"). El correo lleva el código de 6 dígitos y su vigencia; no
+// incluye enlaces con token ni contraseñas. Todo lo que se inserta en el
+// HTML (nombre y código) pasa por escaparHtml.
+export const plantillaRecuperacion = ({ nombre, codigo, minutos }) => {
+  const nombreEscapado = escaparHtml(nombre || 'cliente')
+  const codigoEscapado = escaparHtml(codigo)
+
+  const asunto = 'Código de recuperación de contraseña'
+
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:Arial,Helvetica,sans-serif;color:#e8e8e8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:520px;background:#141414;border:1px solid rgba(201,162,39,0.25);border-radius:16px;padding:32px;">
+          <tr>
+            <td style="text-align:center;padding-bottom:24px;">
+              <h1 style="margin:0;font-size:22px;letter-spacing:4px;color:#ffffff;">LA MANSI<span style="color:#c9a227;">ÓN</span></h1>
+              <p style="margin:6px 0 0;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,0.45);">STORE</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 8px 20px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#ffffff;">Hola, ${nombreEscapado}</h2>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.75);">
+                Recibimos una solicitud para recuperar tu contraseña. Usa el
+                código que aparece más abajo en la pantalla de recuperación.
+              </p>
+              <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.5);">CÓDIGO DE VERIFICACIÓN</p>
+              <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:26px;letter-spacing:6px;color:#c9a227;">
+                ${codigoEscapado}
+              </p>
+              <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,0.5);">
+                Vence en ${minutos} minutos y solo puede usarse una vez.
+              </p>
+              <p style="margin:0 0 0;font-size:12px;color:rgba(255,255,255,0.5);">
+                Si tú no pediste este código, ignora este correo: tu contraseña no cambiará.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim()
+
+  const texto = [
+    'Código de recuperación de contraseña',
+    '',
+    `Hola ${nombre || 'cliente'},`,
+    '',
+    'Recibimos una solicitud para recuperar tu contraseña. Usa este código',
+    'en la pantalla de recuperación:',
+    '',
+    `Código: ${codigo}`,
+    `Vence en ${minutos} minutos y solo puede usarse una vez.`,
+    '',
+    'Si tú no pediste este código, ignora este correo: tu contraseña no cambiará.',
+  ].join('\n')
+
+  return { asunto, html, texto }
+}
+
+// Identidad visual de Store La Mansión para las decisiones sobre el
+// comprobante de pago: beige de fondo, café para el texto y dorado para los
+// acentos. Nombre, número de pedido y motivo se escapan antes de entrar al HTML.
+const ESTILO_TARJETA_PAGO =
+  'max-width:560px;background:#fffdf8;border:1px solid #d9c9a3;border-radius:16px;padding:32px;'
+
+export const plantillaPagoAprobado = ({ nombre, numeroPedido }) => {
+  const nombreEscapado = escaparHtml(nombre || 'cliente')
+  const numeroEscapado = escaparHtml(numeroPedido)
+
+  const asunto = 'Tu pago ha sido confirmado – Store La Mansión'
+
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f5f0e6;font-family:Arial,Helvetica,sans-serif;color:#4a3428;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e6;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="${ESTILO_TARJETA_PAGO}">
+          <tr>
+            <td style="text-align:center;padding-bottom:20px;">
+              <h1 style="margin:0;font-size:22px;letter-spacing:4px;color:#4a3428;">STORE LA MANSI<span style="color:#c9a227;">ÓN</span></h1>
+              <p style="margin:6px 0 0;font-size:11px;letter-spacing:5px;color:#8a7462;">FASHION PREMIUM</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="height:3px;background:#c9a227;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:24px 8px 8px;">
+              <h2 style="margin:0 0 14px;font-size:18px;color:#4a3428;">Hola, ${nombreEscapado}.</h2>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.7;color:#5a4436;">
+                ¡Buenas noticias! Te informamos que el comprobante de pago
+                correspondiente a tu pedido #${numeroEscapado} ha sido revisado y
+                aprobado correctamente.
+              </p>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.7;color:#5a4436;">
+                Tu pago ha sido confirmado y tu pedido ahora se encuentra en
+                estado <strong style="color:#4a3428;">"En preparación"</strong>.
+              </p>
+              <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#5a4436;">
+                Gracias por confiar en Store La Mansión.
+              </p>
+              <p style="margin:0;font-size:13px;color:#8a7462;">Store La Mansión – Fashion Premium</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim()
+
+  const texto = [
+    `Hola, ${nombre || 'cliente'}.`,
+    '',
+    `¡Buenas noticias! Te informamos que el comprobante de pago correspondiente a tu pedido #${numeroPedido} ha sido revisado y aprobado correctamente.`,
+    '',
+    'Tu pago ha sido confirmado y tu pedido ahora se encuentra en estado "En preparación".',
+    '',
+    'Gracias por confiar en Store La Mansión.',
+    '',
+    'Store La Mansión – Fashion Premium',
+  ].join('\n')
+
+  return { asunto, html, texto }
+}
+
+export const plantillaPagoRechazado = ({ nombre, numeroPedido, motivo }) => {
+  const nombreEscapado = escaparHtml(nombre || 'cliente')
+  const numeroEscapado = escaparHtml(numeroPedido)
+  const motivoEscapado = escaparHtml(motivo || '')
+
+  const asunto =
+    'Tu comprobante de pago necesita una nueva revisión – Store La Mansión'
+
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f5f0e6;font-family:Arial,Helvetica,sans-serif;color:#4a3428;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e6;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="${ESTILO_TARJETA_PAGO}">
+          <tr>
+            <td style="text-align:center;padding-bottom:20px;">
+              <h1 style="margin:0;font-size:22px;letter-spacing:4px;color:#4a3428;">STORE LA MANSI<span style="color:#c9a227;">ÓN</span></h1>
+              <p style="margin:6px 0 0;font-size:11px;letter-spacing:5px;color:#8a7462;">FASHION PREMIUM</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="height:3px;background:#c9a227;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:24px 8px 8px;">
+              <h2 style="margin:0 0 14px;font-size:18px;color:#4a3428;">Hola, ${nombreEscapado}.</h2>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.7;color:#5a4436;">
+                Te informamos que el comprobante de pago que adjuntaste para tu
+                pedido #${numeroEscapado} no pudo ser aprobado después de nuestra
+                revisión.
+              </p>
+              <p style="margin:0 0 18px;padding:12px 16px;background:#f5f0e6;border-left:3px solid #c9a227;border-radius:6px;font-size:14px;line-height:1.7;color:#4a3428;">
+                <strong>Motivo del rechazo:</strong> ${motivoEscapado}
+              </p>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.7;color:#5a4436;">
+                No te preocupes, puedes realizar nuevamente el pago y adjuntar un
+                nuevo comprobante desde tu cuenta en Store La Mansión.
+              </p>
+              <p style="margin:0 0 8px;font-size:14px;color:#4a3428;">Para hacerlo:</p>
+              <ol style="margin:0 0 16px 20px;padding:0;font-size:14px;line-height:1.8;color:#5a4436;">
+                <li>Ingresa a tu cuenta.</li>
+                <li>Dirígete a la sección "Mis pedidos".</li>
+                <li>Selecciona el pedido correspondiente.</li>
+                <li>Realiza el proceso de pago si es necesario.</li>
+                <li>Adjunta un nuevo comprobante.</li>
+              </ol>
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.7;color:#5a4436;">
+                Tu pedido continúa registrado y pendiente de pago.
+              </p>
+              <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#5a4436;">
+                Gracias por tu comprensión.
+              </p>
+              <p style="margin:0;font-size:13px;color:#8a7462;">Store La Mansión – Fashion Premium</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim()
+
+  const texto = [
+    `Hola, ${nombre || 'cliente'}.`,
+    '',
+    `Te informamos que el comprobante de pago que adjuntaste para tu pedido #${numeroPedido} no pudo ser aprobado después de nuestra revisión.`,
+    '',
+    `Motivo del rechazo: ${motivo}`,
+    '',
+    'No te preocupes, puedes realizar nuevamente el pago y adjuntar un nuevo comprobante desde tu cuenta en Store La Mansión.',
+    '',
+    'Para hacerlo:',
+    '1. Ingresa a tu cuenta.',
+    '2. Dirígete a la sección "Mis pedidos".',
+    '3. Selecciona el pedido correspondiente.',
+    '4. Realiza el proceso de pago si es necesario.',
+    '5. Adjunta un nuevo comprobante.',
+    '',
+    'Tu pedido continúa registrado y pendiente de pago.',
+    '',
+    'Gracias por tu comprensión.',
+    '',
+    'Store La Mansión – Fashion Premium',
+  ].join('\n')
 
   return { asunto, html, texto }
 }

@@ -610,6 +610,21 @@ body.dark .product__img-wrap--camisas,
   transform: translateY(-1px);
 }
 
+/* Variante sin unidades: el botón de compra queda deshabilitado */
+.product__add-btn.is-agotado,
+.product__add-btn:disabled {
+  background: rgba(224, 82, 82, 0.12);
+  color: #e05252;
+  border: 2px solid rgba(224, 82, 82, 0.55);
+  cursor: not-allowed;
+}
+
+.product__add-btn.is-agotado:hover,
+.product__add-btn:disabled:hover {
+  background: rgba(224, 82, 82, 0.12);
+  transform: none;
+}
+
 .catalog__no-products {
   grid-column: 1 / -1;
   text-align: center;

@@ -1,0 +1,56 @@
+/* =========================================================
+   CONTROL DE CANTIDAD EDITABLE (compartido)
+   ---------------------------------------------------------
+   El contenedor recibe la clase de estilo de cada vista
+   (.cart-qty, .checkout-login-qty, .pdp-qty), por lo que los
+   botones − y + conservan su diseño original y solo se agrega
+   el input entre ellos, integrado con el mismo look premium.
+   ========================================================= */
+
+.cantidad-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* El gap lo define la clase de cada vista (.cart-qty, .checkout-login-qty,
+   .pdp-qty), igual que los botones − y +. */
+.cantidad-control-box {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Input numérico: mismo color/tipografía que el resto del control */
+.cantidad-control-box input {
+  width: 40px;
+  min-width: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.cantidad-control-box input:focus {
+  outline: none;
+}
+
+.cantidad-control-box input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Aviso de stock disponible (ej.: "Solo hay 3 unidades…") */
+.cantidad-control-aviso {
+  margin: 0;
+  font-family: var(--font-body, inherit);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: #e05252;
+  max-width: 200px;
+}

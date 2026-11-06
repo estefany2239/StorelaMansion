@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import {
   Plus,
@@ -8,7 +8,12 @@ import {
   Pencil,
   X,
   Trash2,
-  Receipt
+  Receipt,
+  FileText,
+  FileImage,
+  ZoomIn,
+  ImageOff,
+  Loader2
 } from "lucide-react";
 
 import "./Pedidos.css";
@@ -17,22 +22,30 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
+import HistorialAbonos from "../abonos/HistorialAbonos";
 
 import { tienePermiso } from "../utils/permisos";
 import { formatoCliente } from "../utils/ids";
+import { tallaVisible } from "../../../shared/utils/catalogo";
 
 import {
   obtenerPedidos,
-  cambiarEstadoPedido as cambiarEstadoPedidoApi
-} from "../../../services/api";
+  cambiarEstadoPedido as cambiarEstadoPedidoApi,
+  confirmarPagoPedido,
+  rechazarPagoPedido,
+  obtenerComprobantesPedido,
+  obtenerArchivoComprobantePedido,
+  aprobarComprobantePedido,
+  rechazarComprobantePedido,
+  obtenerAbonosPedido
+} from "../../../shared/services/api";
 
 
-const ESTADOS_PEDIDO = [
-  "Registrado",
-  "En preparación",
-  "Despachado",
-  "Entregado"
-];
+const SIGUIENTE_ESTADO = {
+  "Registrado": "En preparación",
+  "En preparación": "Despachado",
+  "Despachado": "Entregado"
+};
 
 // El backend solo persiste el campo `estado` (PATCH /api/pedidos/:id/estado).
 // Mientras esté en false, el modal de edición deja editable SOLO el estado y
@@ -59,7 +72,7 @@ const mapearPedidoBackend = (pedido) => {
           ]
         : [];
 
-  const abonos = pagos.map((pago) => ({
+  const abonos = [...pagos].reverse().map((pago) => ({
     fecha: pago.fecha || pedido.fecha,
     valor: Number(pago.monto) || 0,
     metodoPago: pago.metodo || "",
@@ -84,14 +97,29 @@ const mapearPedidoBackend = (pedido) => {
     fecha: pedido.fecha,
     total,
     estado: pedido.estado,
+    estadoPago: pedido.estado_pago || "No aplica",
     metodoPago: pedido.metodo_pago || "—",
-    banco: pagos[0]?.banco || "",
+    banco:
+      pagos[0]?.banco ||
+      (String(pedido.metodo_pago || "").includes("QR") ? "QR" : ""),
     metodoEnvio: pedido.metodo_envio || "Domicilio",
+    costoEnvio:
+      pedido.costo_envio === null || pedido.costo_envio === undefined
+        ? null
+        : Number(pedido.costo_envio) || 0,
+    costoEnvioPendiente: Boolean(pedido.costo_envio_pendiente),
     direccion: pedido.direccion || "",
+    // Pedidos nuevos: ubicación estructurada. Los históricos quedan
+    // vacíos y su dirección vieja se ve tal cual en `direccion`.
+    departamento: pedido.departamento || "",
+    municipio: pedido.municipio || "",
+    barrio: pedido.barrio || "",
+    nombreDestinatario: pedido.nombre_destinatario || "",
+    telefonoDestinatario: pedido.telefono_destinatario || "",
     productos: (pedido.items || []).map((item) => ({
       nombre: item.nombre,
       cantidad: item.cantidad,
-      talla: item.talla || "",
+      talla: tallaVisible(item.talla),
       color: item.color || "-",
       precio: Number(item.precio_unitario) || 0
     })),
@@ -99,6 +127,30 @@ const mapearPedidoBackend = (pedido) => {
     totalPagado,
     saldo: Math.max(0, total - totalPagado)
   };
+};
+
+
+const claseEstadoPago = (estadoPago) => {
+  const valor = String(estadoPago || "No aplica").toLowerCase();
+  if (valor.includes("confirmado")) return "confirmado";
+  if (valor.includes("rechazado")) return "rechazado";
+  if (valor.includes("pendiente")) return "pendiente";
+  return "no-aplica";
+};
+
+const claseEstadoComprobante = (estado) => {
+  const valor = String(estado || "").toLowerCase();
+  if (valor === "aprobado") return "aprobado";
+  if (valor === "rechazado") return "rechazado";
+  return "pendiente";
+};
+
+const montoPagoEsperado = (pedido) => {
+  if (!pedido) return 0;
+
+  return String(pedido.metodoPago || "").startsWith("Contra entrega")
+    ? Math.round((Number(pedido.total) || 0) * 0.5)
+    : Number(pedido.total) || 0;
 };
 
 
@@ -128,6 +180,219 @@ const claseEstado = (estado) => {
 const REGISTROS_POR_PAGINA = 6;
 
 
+const esTipoImagen = (tipo) =>
+  String(tipo || "")
+    .toLowerCase()
+    .startsWith("image/");
+
+
+// Miniatura perezosa de un comprobante. Descarga el archivo con el token
+// cuando entra en pantalla y libera el object URL al desmontarse (al cerrar
+// el modal).
+function ComprobanteMiniatura({ pedidoId, comprobante, onAbrir }) {
+
+  const contenedorRef = useRef(null);
+  const urlRef = useRef("");
+
+  const [estado, setEstado] =
+    useState("cargando");
+
+  const [archivo, setArchivo] =
+    useState(null);
+
+  useEffect(() => {
+
+    const nodo = contenedorRef.current;
+
+    if (!nodo) return undefined;
+
+    let activo = true;
+    let observador = null;
+
+    const cargar = async () => {
+
+      if (!activo) return;
+
+      setEstado("cargando");
+
+      try {
+
+        const blob =
+          await obtenerArchivoComprobantePedido(
+            pedidoId,
+            comprobante.id
+          );
+
+        if (!activo) return;
+
+        const url = URL.createObjectURL(blob);
+
+        if (urlRef.current) {
+          URL.revokeObjectURL(urlRef.current);
+        }
+
+        urlRef.current = url;
+
+        setArchivo({
+          url,
+          tipo:
+            comprobante.tipo_mime ||
+            blob.type ||
+            ""
+        });
+
+        setEstado("listo");
+
+      } catch {
+
+        if (activo) {
+          setEstado("error");
+        }
+
+      }
+
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+
+      cargar();
+
+    } else {
+
+      observador = new IntersectionObserver(
+        (entradas) => {
+          if (
+            entradas.some(
+              (entrada) => entrada.isIntersecting
+            )
+          ) {
+            observador.disconnect();
+            observador = null;
+            cargar();
+          }
+        },
+        { rootMargin: "120px" }
+      );
+
+      observador.observe(nodo);
+
+    }
+
+    return () => {
+
+      activo = false;
+
+      if (observador) {
+        observador.disconnect();
+      }
+
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+        urlRef.current = "";
+      }
+
+    };
+
+  }, [pedidoId, comprobante.id, comprobante.tipo_mime]);
+
+  const esImagen =
+    estado === "listo" &&
+    esTipoImagen(archivo?.tipo);
+
+  return (
+
+    <div
+      className="pedido-comprobante-miniatura"
+      ref={contenedorRef}
+    >
+
+      {estado === "cargando" && (
+
+        <div className="pedido-comprobante-miniatura-cargando">
+
+          <Loader2
+            size={22}
+            className="pedido-comprobante-spinner"
+          />
+
+          <span>Cargando...</span>
+
+        </div>
+
+      )}
+
+      {estado === "error" && (
+
+        <div
+          className="pedido-comprobante-miniatura-error"
+          title="No se pudo cargar el archivo"
+        >
+
+          <ImageOff size={26} />
+
+          <span>Error</span>
+
+        </div>
+
+      )}
+
+      {esImagen && (
+
+        <button
+          type="button"
+          className="pedido-comprobante-miniatura-boton"
+          title="Ampliar comprobante"
+          onClick={() =>
+            onAbrir({
+              url: archivo.url,
+              tipo: archivo.tipo,
+              intento: comprobante.intento
+            })
+          }
+        >
+
+          <img
+            src={archivo.url}
+            alt={`Comprobante del intento ${comprobante.intento}`}
+            loading="lazy"
+          />
+
+          <span className="pedido-comprobante-miniatura-lupa">
+
+            <ZoomIn size={22} />
+
+          </span>
+
+        </button>
+
+      )}
+
+      {estado === "listo" && !esImagen && (
+
+        <div className="pedido-comprobante-miniatura-documento">
+
+          <FileText size={30} />
+
+          <a
+            href={archivo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pedido-comprobante-miniatura-abrir"
+          >
+            Abrir
+          </a>
+
+        </div>
+
+      )}
+
+    </div>
+
+  );
+
+}
+
+
 export default function Pedidos({ vendedorId, user }) {
 
   // =====================================================
@@ -136,7 +401,6 @@ export default function Pedidos({ vendedorId, user }) {
 
   const puedeCrear = tienePermiso(user, "Pedidos", "Crear");
   const puedeActualizar = tienePermiso(user, "Pedidos", "Actualizar");
-  const puedeEliminar = tienePermiso(user, "Pedidos", "Eliminar");
   const puedeCambiarEstado = tienePermiso(user, "Pedidos", "Cambiar estado");
   const puedeConsultar = tienePermiso(user, "Pedidos", "Consultar");
 
@@ -172,14 +436,17 @@ export default function Pedidos({ vendedorId, user }) {
   const [pedidoSeleccionado, setPedidoSeleccionado] =
     useState(null);
 
-  const [pedidoEliminar, setPedidoEliminar] =
-    useState(null);
-
   const [confirmarEdicion, setConfirmarEdicion] =
     useState(false);
 
   const [pedidoACancelar, setPedidoACancelar] =
     useState(null);
+
+  const [pedidoPagoAccion, setPedidoPagoAccion] =
+    useState(null);
+
+  const [pagoEnProceso, setPagoEnProceso] =
+    useState(false);
 
   const { toast, mostrarToast } = useToast();
 
@@ -188,8 +455,66 @@ export default function Pedidos({ vendedorId, user }) {
 
 
   // =====================================================
+  // COMPROBANTES DE PAGO
+  // =====================================================
+
+  const [mostrarComprobante, setMostrarComprobante] =
+    useState(false);
+
+  const [pedidoComprobante, setPedidoComprobante] =
+    useState(null);
+
+  const [comprobantes, setComprobantes] =
+    useState([]);
+
+  const [cargandoComprobantes, setCargandoComprobantes] =
+    useState(false);
+
+  const [errorComprobantes, setErrorComprobantes] =
+    useState("");
+
+  const [lightboxComprobante, setLightboxComprobante] =
+    useState(null);
+
+  // Existencias por pedido para habilitar/deshabilitar el icono de la tabla.
+  // undefined = sin consultar, null = error, array = historial real.
+  const [comprobantesPorPedido, setComprobantesPorPedido] =
+    useState({});
+
+  const [confirmarAprobarComprobante, setConfirmarAprobarComprobante] =
+    useState(false);
+
+  const [mostrarRechazoComprobante, setMostrarRechazoComprobante] =
+    useState(false);
+
+  const [motivoRechazo, setMotivoRechazo] =
+    useState("");
+
+  const [errorMotivoRechazo, setErrorMotivoRechazo] =
+    useState("");
+
+  const [comprobanteEnProceso, setComprobanteEnProceso] =
+    useState(false);
+
+  const comprobantesSolicitadosRef = useRef(
+    new Set()
+  );
+
+
+  // =====================================================
   // CARGA DE PEDIDOS DESDE EL BACKEND
   // =====================================================
+
+  const refrescarPedidos = async () => {
+
+    const respuesta = await obtenerPedidos();
+
+    setPedidos((respuesta || []).map(mapearPedidoBackend));
+
+    setErrorPedidos("");
+
+  };
+
 
   useEffect(() => {
     let activo = true;
@@ -236,6 +561,17 @@ export default function Pedidos({ vendedorId, user }) {
 
   const [pedidoAbonos, setPedidoAbonos] =
     useState(null);
+
+  // Historial real de pagos del pedido en el detalle
+  // (GET /api/pedidos/:id/abonos, el más reciente primero).
+  const [pagosDetalle, setPagosDetalle] =
+    useState([]);
+
+  const [cargandoPagos, setCargandoPagos] =
+    useState(false);
+
+  const [errorPagos, setErrorPagos] =
+    useState("");
 
 
   // =====================================================
@@ -289,6 +625,28 @@ export default function Pedidos({ vendedorId, user }) {
     }
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+  };
+
+
+  // =====================================================
+  // FORMATEAR FECHA Y HORA
+  // =====================================================
+
+  const formatearFechaHora = (fecha) => {
+
+    if (!fecha) return "—";
+
+    const valor = new Date(fecha);
+
+    if (Number.isNaN(valor.getTime())) {
+      return String(fecha);
+    }
+
+    return valor.toLocaleString("es-CO", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
 
   };
 
@@ -384,22 +742,104 @@ export default function Pedidos({ vendedorId, user }) {
     Math.ceil(pedidosFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
+  const paginaActualVisible = Math.min(
+    paginaActual,
+    totalPaginas
+  );
+
   const inicio =
-    (paginaActual - 1) * REGISTROS_POR_PAGINA;
+    (paginaActualVisible - 1) * REGISTROS_POR_PAGINA;
   const pedidosPaginados = pedidosFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
   );
 
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
 
+  // =========================================================
+  // PRECARGA DE COMPROBANTES DE LOS PEDIDOS VISIBLES
+  // =========================================================
+
+  // GET /api/pedidos no incluye si hay comprobante, así que se consulta el
+  // historial de las filas de la página para habilitar el icono correctamente.
   useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
+
+    const pendientes = pedidosPaginados
+      .map((pedido) => pedido.id)
+      .filter(
+        (id) =>
+          comprobantesPorPedido[id] === undefined &&
+          !comprobantesSolicitadosRef.current.has(id)
+      );
+
+    if (pendientes.length === 0) return undefined;
+
+    let activo = true;
+
+    for (const id of pendientes) {
+      comprobantesSolicitadosRef.current.add(id);
     }
-  }, [paginaActual, totalPaginas]);
+
+    Promise.all(
+      pendientes.map(async (id) => {
+        try {
+          const historial =
+            await obtenerComprobantesPedido(id);
+
+          return [
+            id,
+            Array.isArray(historial) ? historial : []
+          ];
+        } catch {
+          return [id, null];
+        }
+      })
+    ).then((resultados) => {
+
+      if (!activo) return;
+
+      setComprobantesPorPedido((actual) => {
+
+        const siguiente = { ...actual };
+
+        for (const [id, historial] of resultados) {
+          if (siguiente[id] === undefined) {
+            siguiente[id] = historial;
+          }
+        }
+
+        return siguiente;
+
+      });
+
+    });
+
+    return () => {
+      activo = false;
+    };
+
+  }, [pedidosPaginados, comprobantesPorPedido]);
+
+
+  // Cierra el lightbox del comprobante con Esc.
+  useEffect(() => {
+
+    if (!lightboxComprobante) return undefined;
+
+    const cerrarConEsc = (evento) => {
+
+      if (evento.key === "Escape") {
+        setLightboxComprobante(null);
+      }
+
+    };
+
+    document.addEventListener("keydown", cerrarConEsc);
+
+    return () => {
+      document.removeEventListener("keydown", cerrarConEsc);
+    };
+
+  }, [lightboxComprobante]);
 
 
   // =========================================================
@@ -764,6 +1204,8 @@ export default function Pedidos({ vendedorId, user }) {
           ...actuales
         ]
       );
+      setBusqueda("");
+      setPaginaActual(1);
 
       mostrarToast("Pedido creado con éxito");
 
@@ -843,30 +1285,6 @@ export default function Pedidos({ vendedorId, user }) {
 
 
   // =====================================================
-  // ELIMINAR PEDIDO
-  // =====================================================
-
-  const eliminarPedido = (pedido) => {
-
-    setPedidoEliminar(pedido);
-
-  };
-
-  const confirmarEliminarPedido = () => {
-
-    setPedidos(
-      (prev) =>
-        prev.filter(
-          (item) => item.id !== pedidoEliminar.id
-        )
-    );
-
-    setPedidoEliminar(null);
-
-  };
-
-
-  // =====================================================
   // AVANZAR ESTADO
   // =====================================================
 
@@ -906,22 +1324,54 @@ export default function Pedidos({ vendedorId, user }) {
   };
 
 
-  const avanzarEstado = async (id) => {
+  const actualizarPedidoEnPantalla = (actualizado) => {
+    const mapeado = mapearPedidoBackend(actualizado);
 
-    const pedido = pedidos.find((item) => item.id === id);
+    setPedidos((prev) =>
+      prev.map((item) =>
+        item.id === mapeado.id ? mapeado : item
+      )
+    );
 
-    if (!pedido) return;
+    setPedidoSeleccionado((prev) =>
+      prev && prev.id === mapeado.id ? mapeado : prev
+    );
 
-    const siguiente = {
-      "Registrado": "En preparación",
-      "En preparación": "Despachado",
-      "Despachado": "Entregado"
-    }[pedido.estado];
+    setPedidoAbonos((prev) =>
+      prev && prev.id === mapeado.id ? mapeado : prev
+    );
+  };
 
-    if (!siguiente) return;
 
-    await aplicarEstadoBackend(pedido, siguiente);
+  const ejecutarAccionPago = async () => {
+    if (!pedidoPagoAccion) return;
 
+    const { pedido, accion } = pedidoPagoAccion;
+
+    setPedidoPagoAccion(null);
+    setPagoEnProceso(true);
+
+    try {
+      const actualizado =
+        accion === "confirmar"
+          ? await confirmarPagoPedido(pedido.id)
+          : await rechazarPagoPedido(pedido.id);
+
+      actualizarPedidoEnPantalla(actualizado);
+
+      mostrarToast(
+        accion === "confirmar"
+          ? "Pago confirmado con éxito"
+          : "Pago rechazado"
+      );
+    } catch (error) {
+      mostrarToast(
+        error?.message || "No se pudo actualizar el pago",
+        "error"
+      );
+    } finally {
+      setPagoEnProceso(false);
+    }
   };
 
 
@@ -930,6 +1380,7 @@ export default function Pedidos({ vendedorId, user }) {
   // =========================================================
 
   const cancelarPedido = (pedido) => {
+
     if (pedido.estado === "Entregado" || pedido.estado === "Cancelado") {
       mostrarToast(
         pedido.estado === "Cancelado"
@@ -1015,6 +1466,279 @@ export default function Pedidos({ vendedorId, user }) {
   };
 
 
+  // =========================================================
+  // COMPROBANTES DE PAGO
+  // =========================================================
+
+  const pedidoTieneComprobante = (id) => {
+    const historial = comprobantesPorPedido[id];
+
+    return (
+      Array.isArray(historial) &&
+      historial.length > 0
+    );
+  };
+
+
+  const comprobanteConsultado = (id) =>
+    comprobantesPorPedido[id] !== undefined;
+
+
+  const abrirComprobante = async (pedido) => {
+
+    if (lightboxComprobante?.url) {
+      URL.revokeObjectURL(lightboxComprobante.url);
+    }
+
+    setLightboxComprobante(null);
+    setMostrarComprobante(true);
+    setPedidoComprobante(pedido);
+    setComprobantes([]);
+    setErrorComprobantes("");
+    setConfirmarAprobarComprobante(false);
+    setMostrarRechazoComprobante(false);
+    setMotivoRechazo("");
+    setErrorMotivoRechazo("");
+    setCargandoComprobantes(true);
+
+    try {
+
+      const historial =
+        await obtenerComprobantesPedido(pedido.id);
+
+      const lista = Array.isArray(historial)
+        ? historial
+        : [];
+
+      setComprobantes(lista);
+
+      setComprobantesPorPedido((actual) => ({
+        ...actual,
+        [pedido.id]: lista
+      }));
+
+    } catch (error) {
+
+      setErrorComprobantes(
+        error?.message ||
+          "No se pudo cargar el historial de comprobantes"
+      );
+
+      setComprobantesPorPedido((actual) => ({
+        ...actual,
+        [pedido.id]: null
+      }));
+
+    } finally {
+
+      setCargandoComprobantes(false);
+
+    }
+
+  };
+
+
+  const cerrarComprobante = () => {
+
+    if (lightboxComprobante?.url) {
+      URL.revokeObjectURL(lightboxComprobante.url);
+    }
+
+    setMostrarComprobante(false);
+    setPedidoComprobante(null);
+    setComprobantes([]);
+    setErrorComprobantes("");
+    setConfirmarAprobarComprobante(false);
+    setMostrarRechazoComprobante(false);
+    setMotivoRechazo("");
+    setErrorMotivoRechazo("");
+    setLightboxComprobante(null);
+
+  };
+
+
+  const mensajeErrorComprobante = (error) => {
+
+    if (error?.status === 403) {
+      return "No tienes permisos para revisar comprobantes.";
+    }
+
+    if (error?.status === 409) {
+      return (
+        error?.message ||
+        "El comprobante ya fue revisado por otro usuario."
+      );
+    }
+
+    return (
+      error?.message ||
+      "No se pudo procesar el comprobante."
+    );
+
+  };
+
+
+  const quitarComprobantesDelPedido = (pedidoId) => {
+
+    comprobantesSolicitadosRef.current.delete(pedidoId);
+
+    setComprobantesPorPedido((actual) => {
+
+      const siguiente = { ...actual };
+
+      delete siguiente[pedidoId];
+
+      return siguiente;
+
+    });
+
+  };
+
+
+  const ejecutarAprobarComprobante = async () => {
+
+    if (!pedidoComprobante) return;
+
+    const comprobante = comprobantes[0];
+
+    if (!comprobante || comprobante.estado !== "Pendiente") {
+      return;
+    }
+
+    const pedidoId = pedidoComprobante.id;
+
+    setConfirmarAprobarComprobante(false);
+    setComprobanteEnProceso(true);
+
+    try {
+
+      const respuesta =
+        await aprobarComprobantePedido(
+          pedidoId,
+          comprobante.id
+        );
+
+      try {
+        await refrescarPedidos();
+      } catch {
+        // La decisión ya quedó guardada; el fallo de recarga no la revierte.
+      }
+
+      quitarComprobantesDelPedido(pedidoId);
+
+      cerrarComprobante();
+
+      if (respuesta?.correo_enviado === false) {
+        mostrarToast(
+          "Comprobante aprobado. La acción se guardó, pero el correo al cliente no salió.",
+          "error"
+        );
+      } else {
+        mostrarToast("Comprobante aprobado con éxito");
+      }
+
+    } catch (error) {
+
+      mostrarToast(
+        mensajeErrorComprobante(error),
+        "error"
+      );
+
+    } finally {
+
+      setComprobanteEnProceso(false);
+
+    }
+
+  };
+
+
+  const abrirRechazoComprobante = () => {
+
+    setMostrarRechazoComprobante(true);
+    setMotivoRechazo("");
+    setErrorMotivoRechazo("");
+
+  };
+
+
+  const ejecutarRechazarComprobante = async () => {
+
+    if (!pedidoComprobante) return;
+
+    const comprobante = comprobantes[0];
+
+    if (!comprobante || comprobante.estado !== "Pendiente") {
+      return;
+    }
+
+    const motivo = motivoRechazo.trim();
+
+    if (motivo.length < 5 || motivo.length > 300) {
+
+      setErrorMotivoRechazo(
+        "El motivo debe tener entre 5 y 300 caracteres."
+      );
+
+      return;
+
+    }
+
+    const pedidoId = pedidoComprobante.id;
+
+    setComprobanteEnProceso(true);
+
+    try {
+
+      const respuesta =
+        await rechazarComprobantePedido(
+          pedidoId,
+          comprobante.id,
+          motivo
+        );
+
+      try {
+        await refrescarPedidos();
+      } catch {
+        // La decisión ya quedó guardada; el fallo de recarga no la revierte.
+      }
+
+      quitarComprobantesDelPedido(pedidoId);
+
+      cerrarComprobante();
+
+      if (respuesta?.correo_enviado === false) {
+        mostrarToast(
+          "Comprobante rechazado. La acción se guardó, pero el correo al cliente no salió.",
+          "error"
+        );
+      } else {
+        mostrarToast("Comprobante rechazado");
+      }
+
+    } catch (error) {
+
+      if (error?.campo === "motivo") {
+        setErrorMotivoRechazo(
+          error?.message ||
+            "El motivo del rechazo no es válido."
+        );
+      } else {
+        mostrarToast(
+          mensajeErrorComprobante(error),
+          "error"
+        );
+      }
+
+    } finally {
+
+      setComprobanteEnProceso(false);
+
+    }
+
+  };
+
+
   // =====================================================
   // VER DETALLE
   // =====================================================
@@ -1023,9 +1747,49 @@ export default function Pedidos({ vendedorId, user }) {
 
     setPedidoSeleccionado(pedido);
 
+    setPagosDetalle([]);
+    setErrorPagos("");
+    setCargandoPagos(true);
+
     setMostrarDetalle(true);
 
   };
+
+
+  /* =====================================================
+     CARGAR PAGOS DEL PEDIDO EN EL DETALLE
+     ===================================================== */
+
+  useEffect(() => {
+
+    if (!mostrarDetalle || !pedidoSeleccionado?.id) {
+      return undefined;
+    }
+
+    let activo = true;
+
+    obtenerAbonosPedido(pedidoSeleccionado.id)
+      .then((respuesta) => {
+        if (!activo) return;
+        setPagosDetalle(
+          Array.isArray(respuesta?.abonos) ? respuesta.abonos : []
+        );
+        setCargandoPagos(false);
+      })
+      .catch((error) => {
+        if (!activo) return;
+        setPagosDetalle([]);
+        setErrorPagos(
+          error?.message || "No se pudo cargar el historial de pagos"
+        );
+        setCargandoPagos(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+
+  }, [mostrarDetalle, pedidoSeleccionado]);
 
 
   // =====================================================
@@ -1084,6 +1848,12 @@ export default function Pedidos({ vendedorId, user }) {
   // RENDER
   // =====================================================
 
+  const ultimoComprobante = comprobantes[0] || null;
+
+  const comprobantePendiente =
+    ultimoComprobante?.estado === "Pendiente";
+
+
   return (
 
     <div className="pedidos-page">
@@ -1123,11 +1893,10 @@ export default function Pedidos({ vendedorId, user }) {
               type="text"
               placeholder="Buscar pedidos..."
               value={busqueda}
-              onChange={(e) =>
-                setBusqueda(
-                  e.target.value
-                )
-              }
+              onChange={(e) => {
+                setBusqueda(e.target.value);
+                setPaginaActual(1);
+              }}
             />
 
           </div>
@@ -1217,13 +1986,27 @@ export default function Pedidos({ vendedorId, user }) {
 
                   <td>
 
-                    <strong className="pedido-total">
+                    <div className="pedido-total-cell">
 
-                      {formatearPrecio(
-                        pedido.total
+                      <strong className="pedido-total">
+
+                        {formatearPrecio(
+                          pedido.total
+                        )}
+
+                      </strong>
+
+                      {pedido.estadoPago !== "No aplica" && (
+                        <span
+                          className={`pedido-pago-badge ${claseEstadoPago(
+                            pedido.estadoPago
+                          )}`}
+                        >
+                          {pedido.estadoPago}
+                        </span>
                       )}
 
-                    </strong>
+                    </div>
 
                   </td>
 
@@ -1258,14 +2041,6 @@ export default function Pedidos({ vendedorId, user }) {
 
                             : "pedido-estado registrado"
                         }
-                        onClick={
-                          puedeCambiarEstado
-                            ? () =>
-                                avanzarEstado(
-                                  pedido.id
-                                )
-                            : undefined
-                        }
                       >
 
                         {pedido.estado}
@@ -1274,8 +2049,7 @@ export default function Pedidos({ vendedorId, user }) {
 
 
                       {puedeCambiarEstado &&
-                        pedido.estado !== "Entregado" &&
-                        pedido.estado !== "Cancelado" && (
+                        SIGUIENTE_ESTADO[pedido.estado] && (
 
                         <button
                           type="button"
@@ -1286,7 +2060,7 @@ export default function Pedidos({ vendedorId, user }) {
                               ? " abierto"
                               : "")
                           }
-                          title="Cambiar estado"
+                          title="Siguiente estado"
                           onClick={(evento) =>
                             abrirCambiarEstado(
                               pedido,
@@ -1303,8 +2077,7 @@ export default function Pedidos({ vendedorId, user }) {
 
 
                       {(puedeCambiarEstado &&
-                        pedido.estado !== "Entregado" &&
-                        pedido.estado !== "Cancelado") &&
+                        SIGUIENTE_ESTADO[pedido.estado]) &&
                         estadoAbiertoId ===
                         pedido.id && (
 
@@ -1316,7 +2089,10 @@ export default function Pedidos({ vendedorId, user }) {
                           }}
                         >
 
-                          {ESTADOS_PEDIDO.map(
+                          {[
+                            pedido.estado,
+                            SIGUIENTE_ESTADO[pedido.estado]
+                          ].map(
                             (estado) => (
                               <button
                                 key={estado}
@@ -1372,6 +2148,55 @@ export default function Pedidos({ vendedorId, user }) {
                       >
 
                         <Eye size={18} />
+
+                      </button>
+
+                      )}
+
+
+                      {/* COMPROBANTE */}
+
+                      {puedeConsultar && (
+
+                      <button
+                        type="button"
+                        title={
+                          !comprobanteConsultado(
+                            pedido.id
+                          )
+                            ? "Comprobando comprobante..."
+                            : pedidoTieneComprobante(
+                                pedido.id
+                              )
+                              ? "Ver comprobante"
+                              : "Sin comprobante"
+                        }
+                        className={
+                          pedidoTieneComprobante(
+                            pedido.id
+                          )
+                            ? ""
+                            : "disabled"
+                        }
+                        onClick={() => {
+                          if (
+                            pedidoTieneComprobante(
+                              pedido.id
+                            )
+                          ) {
+                            abrirComprobante(
+                              pedido
+                            );
+                          } else {
+                            mostrarToast(
+                              "Este pedido aún no tiene un comprobante adjunto",
+                              "error"
+                            );
+                          }
+                        }}
+                      >
+
+                        <FileImage size={18} />
 
                       </button>
 
@@ -1468,28 +2293,6 @@ export default function Pedidos({ vendedorId, user }) {
                         )}
 
 
-                      {/* ELIMINAR */}
-
-                        {puedeEliminar && (
-
-                        <button
-                          type="button"
-                          className="pedido-delete-button"
-                          title="Eliminar pedido"
-                          onClick={() =>
-                            eliminarPedido(
-                              pedido
-                            )
-                          }
-                        >
-
-                          <Trash2 size={18} />
-
-                        </button>
-
-                        )}
-
-
                     </div>
 
                   </td>
@@ -1526,7 +2329,7 @@ export default function Pedidos({ vendedorId, user }) {
         </table>
 
         <Pagination
-          currentPage={paginaActual}
+          currentPage={paginaActualVisible}
           totalPages={totalPaginas}
           onPageChange={setPaginaActual}
         />
@@ -1787,9 +2590,14 @@ export default function Pedidos({ vendedorId, user }) {
                       Transferencia
                     </option>
 
-                    <option value="Crédito">
-                      Crédito
-                    </option>
+                    {/* Crédito se retiró del checkout: esta opción solo
+                        aparece para seguir mostrando (en lectura) los
+                        pedidos históricos creados con ese método. */}
+                    {formulario.metodoPago === "Crédito" && (
+                      <option value="Crédito">
+                        Crédito
+                      </option>
+                    )}
 
                     <option value="Contra entrega">
                       Contra entrega
@@ -2356,6 +3164,89 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
+              {/* Pedidos nuevos (columnas de domicilio): los históricos
+                  no tienen estos valores y no se muestran. */}
+
+              {(pedidoSeleccionado.nombreDestinatario ||
+                pedidoSeleccionado.telefonoDestinatario) && (
+                <div className="pedido-form-row">
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      DESTINATARIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.nombreDestinatario || "—"}
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      TELÉFONO DESTINATARIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.telefonoDestinatario || "—"}
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+
+              {(pedidoSeleccionado.departamento ||
+                pedidoSeleccionado.municipio ||
+                pedidoSeleccionado.barrio) && (
+                <div className="pedido-form-row">
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      DEPARTAMENTO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.departamento || "—"}
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      CIUDAD O MUNICIPIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.municipio || "—"}
+                    </div>
+
+                  </div>
+
+
+                  <div className="pedido-info-group">
+
+                    <label>
+                      BARRIO
+                    </label>
+
+                    <div className="pedido-info-value">
+                      {pedidoSeleccionado.barrio || "—"}
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+
               <div className="pedido-form-row">
 
                 <div className="pedido-info-group">
@@ -2494,65 +3385,30 @@ export default function Pedidos({ vendedorId, user }) {
               </div>
 
 
-              {/* HISTORIAL DE PAGOS */}
+              {/* SECCIÓN DE PAGOS (misma tabla de movimientos del módulo Abonos) */}
 
               <div className="pedido-detail-products">
 
                 <label>
-                  HISTORIAL DE PAGOS
+                  PAGOS
                 </label>
 
 
-                {pedidoSeleccionado.abonos.length ===
-                0 ? (
+                {cargandoPagos ? (
 
                   <div className="pedido-no-products">
+                    Cargando pagos...
+                  </div>
 
-                    Sin pagos registrados.
+                ) : errorPagos ? (
 
+                  <div className="pedido-comprobante-error">
+                    {errorPagos}
                   </div>
 
                 ) : (
 
-                  <div className="pedido-abonos-list">
-
-                    {pedidoSeleccionado.abonos.map(
-                      (abono, index) => (
-
-                        <div
-                          className="pedido-abono-item"
-                          key={index}
-                        >
-
-                          <div className="pedido-abono-info">
-
-                            <strong>
-                              {formatearFecha(
-                                abono.fecha
-                              )}
-                            </strong>
-
-                            <span>
-                              {abono.metodoPago}
-                            </span>
-
-                          </div>
-
-
-                          <strong className="pedido-abono-valor">
-
-                            {formatearPrecio(
-                              abono.valor
-                            )}
-
-                          </strong>
-
-                        </div>
-
-                      )
-                    )}
-
-                  </div>
+                  <HistorialAbonos abonos={pagosDetalle} />
 
                 )}
 
@@ -2628,6 +3484,95 @@ export default function Pedidos({ vendedorId, user }) {
                   </div>
 
                 </div>
+
+              </div>
+
+
+              {/* VERIFICACIÓN DEL PAGO */}
+
+              <div className="pedido-payment-verification">
+
+                <div className="pedido-payment-status">
+
+                  <span>
+                    ESTADO DEL PAGO
+                  </span>
+
+                  <span
+                    className={`pedido-pago-badge ${claseEstadoPago(
+                      pedidoSeleccionado.estadoPago
+                    )}`}
+                  >
+                    {pedidoSeleccionado.estadoPago || "No aplica"}
+                  </span>
+
+                </div>
+
+                {(pedidoSeleccionado.estadoPago ===
+                  "Pendiente de verificación" ||
+                  pedidoSeleccionado.estadoPago ===
+                    "Pago rechazado") && (
+
+                  <>
+
+                    <p className="pedido-payment-amount">
+
+                      Monto a registrar:{" "}
+
+                      <strong>
+                        {formatearPrecio(
+                          montoPagoEsperado(
+                            pedidoSeleccionado
+                          )
+                        )}
+                      </strong>
+
+                    </p>
+
+                    {puedeCambiarEstado && (
+
+                      <div className="pedido-payment-actions">
+
+                        <button
+                          type="button"
+                          className="pedido-payment-confirm"
+                          disabled={pagoEnProceso}
+                          onClick={() =>
+                            setPedidoPagoAccion({
+                              pedido: pedidoSeleccionado,
+                              accion: "confirmar"
+                            })
+                          }
+                        >
+                          Confirmar pago recibido
+                        </button>
+
+                        {pedidoSeleccionado.estadoPago ===
+                          "Pendiente de verificación" && (
+
+                          <button
+                            type="button"
+                            className="pedido-payment-reject"
+                            disabled={pagoEnProceso}
+                            onClick={() =>
+                              setPedidoPagoAccion({
+                                pedido: pedidoSeleccionado,
+                                accion: "rechazar"
+                              })
+                            }
+                          >
+                            Rechazar pago
+                          </button>
+
+                        )}
+
+                      </div>
+
+                    )}
+
+                  </>
+
+                )}
 
               </div>
 
@@ -2744,7 +3689,28 @@ export default function Pedidos({ vendedorId, user }) {
                 <div className="pedido-abonos-resumen-item">
 
                   <span>
-                    Total del pedido
+                    Costo de envío
+                  </span>
+
+                  <strong>
+                    {pedidoAbonos.costoEnvioPendiente
+                      ? "Por confirmar"
+                      : pedidoAbonos.costoEnvio === null
+                        ? "No registrado"
+                        : pedidoAbonos.costoEnvio === 0
+                          ? "Sin costo"
+                          : formatearPrecio(pedidoAbonos.costoEnvio)}
+                  </strong>
+
+                </div>
+
+
+                <div className="pedido-abonos-resumen-item">
+
+                  <span>
+                    {pedidoAbonos.costoEnvioPendiente
+                      ? "Total productos"
+                      : "Total del pedido"}
                   </span>
 
                   <strong>
@@ -2911,24 +3877,408 @@ export default function Pedidos({ vendedorId, user }) {
 
       )}
 
-      {pedidoEliminar && (
-        <ConfirmDialog
-          abierto={pedidoEliminar !== null}
-          titulo="Eliminar pedido"
-          mensaje={
-            <>¿Deseas eliminar el pedido "
-              <strong>{pedidoEliminar.id}</strong>"? Esta
-              acción no se puede deshacer.</>
-          }
-          textoConfirmar="Eliminar"
-          textoCancelar="Cancelar"
-          variante="peligro"
-          onConfirmar={confirmarEliminarPedido}
-          onCancelar={() =>
-            setPedidoEliminar(null)
-          }
-        />
+
+      {/* =================================================
+          MODAL COMPROBANTE DE PAGO
+      ================================================= */}
+
+      {mostrarComprobante &&
+        pedidoComprobante && (
+
+        <div className="pedido-modal-overlay">
+
+          <div className="pedido-modal pedido-comprobante-modal">
+
+            <div className="pedido-modal-header">
+
+              <h3>
+                Comprobante de pago
+              </h3>
+
+
+              <button
+                type="button"
+                className="pedido-modal-close"
+                onClick={cerrarComprobante}
+              >
+
+                <X size={21} />
+
+              </button>
+
+            </div>
+
+
+            <div className="pedido-modal-body">
+
+
+              {/* INFO DEL PEDIDO */}
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    CLIENTE
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoComprobante.cliente}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    NÚMERO DE PEDIDO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoComprobante.id}
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    VALOR A PAGAR
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {formatearPrecio(
+                      montoPagoEsperado(
+                        pedidoComprobante
+                      )
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    MÉTODO DE PAGO
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {pedidoComprobante.metodoPago}
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div className="pedido-form-row">
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    FECHA DE CARGA
+                  </label>
+
+                  <div className="pedido-info-value">
+                    {ultimoComprobante
+                      ? formatearFechaHora(
+                          ultimoComprobante.fecha_carga
+                        )
+                      : "—"}
+                  </div>
+
+                </div>
+
+
+                <div className="pedido-info-group">
+
+                  <label>
+                    ESTADO DEL COMPROBANTE
+                  </label>
+
+                  <div className="pedido-info-value">
+
+                    {ultimoComprobante ? (
+
+                      <span
+                        className={`pedido-comprobante-badge ${claseEstadoComprobante(
+                          ultimoComprobante.estado
+                        )}`}
+                      >
+                        {ultimoComprobante.estado}
+                      </span>
+
+                    ) : (
+                      "—"
+                    )}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* ACCIONES */}
+
+              {puedeActualizar &&
+                comprobantePendiente && (
+
+                <div className="pedido-comprobante-actions">
+
+                  <button
+                    type="button"
+                    className="pedido-payment-confirm"
+                    disabled={comprobanteEnProceso}
+                    onClick={() =>
+                      setConfirmarAprobarComprobante(
+                        true
+                      )
+                    }
+                  >
+                    Aprobar comprobante
+                  </button>
+
+                  <button
+                    type="button"
+                    className="pedido-payment-reject"
+                    disabled={comprobanteEnProceso}
+                    onClick={abrirRechazoComprobante}
+                  >
+                    Rechazar comprobante
+                  </button>
+
+                </div>
+
+              )}
+
+
+              {mostrarRechazoComprobante && (
+
+                <div className="pedido-comprobante-rechazo">
+
+                  <label htmlFor="motivo-rechazo-comprobante">
+                    MOTIVO DEL RECHAZO
+                  </label>
+
+                  <textarea
+                    id="motivo-rechazo-comprobante"
+                    value={motivoRechazo}
+                    maxLength={300}
+                    placeholder="Explica al cliente por qué se rechaza el comprobante (5 a 300 caracteres)."
+                    onChange={(evento) => {
+                      setMotivoRechazo(
+                        evento.target.value
+                      );
+
+                      if (errorMotivoRechazo) {
+                        setErrorMotivoRechazo("");
+                      }
+                    }}
+                  />
+
+                  <div className="pedido-comprobante-rechazo-footer">
+
+                    <span className="pedido-comprobante-contador">
+                      {motivoRechazo.trim().length}/300
+                    </span>
+
+                    {errorMotivoRechazo && (
+                      <span className="error-text">
+                        {errorMotivoRechazo}
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      className="pedido-cancel-button"
+                      disabled={comprobanteEnProceso}
+                      onClick={() => {
+                        setMostrarRechazoComprobante(
+                          false
+                        );
+                        setErrorMotivoRechazo("");
+                      }}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="button"
+                      className="pedido-payment-reject"
+                      disabled={comprobanteEnProceso}
+                      onClick={
+                        ejecutarRechazarComprobante
+                      }
+                    >
+                      Confirmar rechazo
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+
+              {/* HISTORIAL */}
+
+              <div className="pedido-detail-products">
+
+                <label>
+                  HISTORIAL DE COMPROBANTES
+                </label>
+
+
+                {cargandoComprobantes ? (
+
+                  <div className="pedido-no-products">
+                    Cargando historial...
+                  </div>
+
+                ) : errorComprobantes ? (
+
+                  <div className="pedido-comprobante-error">
+                    {errorComprobantes}
+                  </div>
+
+                ) : comprobantes.length === 0 ? (
+
+                  <div className="pedido-no-products">
+                    Sin comprobantes registrados.
+                  </div>
+
+                ) : (
+
+                  <div className="pedido-comprobantes-list">
+
+                    {comprobantes.map(
+                      (comprobante) => (
+
+                        <div
+                          className="pedido-comprobante-item"
+                          key={comprobante.id}
+                        >
+
+                          <ComprobanteMiniatura
+                            pedidoId={pedidoComprobante.id}
+                            comprobante={comprobante}
+                            onAbrir={setLightboxComprobante}
+                          />
+
+                          <div className="pedido-comprobante-item-info">
+
+                            <div className="pedido-comprobante-item-head">
+
+                              <span
+                                className={`pedido-comprobante-badge ${claseEstadoComprobante(
+                                  comprobante.estado
+                                )}`}
+                              >
+                                {comprobante.estado}
+                              </span>
+
+                              <strong>
+                                Intento {comprobante.intento}
+                              </strong>
+
+                            </div>
+
+                            <span>
+                              {formatearFechaHora(
+                                comprobante.fecha_carga
+                              )}
+                            </span>
+
+                            {comprobante.motivo_rechazo && (
+                              <p className="pedido-comprobante-motivo">
+                                Motivo:{" "}
+                                {comprobante.motivo_rechazo}
+                              </p>
+                            )}
+
+                          </div>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            </div>
+
+
+            <div className="pedido-modal-footer">
+
+              <button
+                type="button"
+                className="pedido-cancel-button detail-cerrar-button"
+                onClick={cerrarComprobante}
+              >
+
+                Cerrar
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
       )}
+
+
+      {/* =================================================
+          LIGHTBOX DEL COMPROBANTE
+      ================================================= */}
+
+      {lightboxComprobante && (
+
+        <div
+          className="pedido-lightbox-overlay"
+          onClick={() => setLightboxComprobante(null)}
+        >
+
+          <div
+            className="pedido-lightbox"
+            onClick={(evento) => evento.stopPropagation()}
+          >
+
+            <button
+              type="button"
+              className="pedido-lightbox-close"
+              title="Cerrar"
+              onClick={() => setLightboxComprobante(null)}
+            >
+
+              <X size={22} />
+
+            </button>
+
+            <img
+              src={lightboxComprobante.url}
+              alt={`Comprobante del intento ${lightboxComprobante.intento}`}
+            />
+
+          </div>
+
+        </div>
+
+      )}
+
 
       <ConfirmDialog
         abierto={confirmarEdicion}
@@ -2957,6 +4307,66 @@ export default function Pedidos({ vendedorId, user }) {
         variante="peligro"
         onConfirmar={confirmarCancelarPedido}
         onCancelar={() => setPedidoACancelar(null)}
+      />
+
+      <ConfirmDialog
+        abierto={!!pedidoPagoAccion}
+        titulo={
+          pedidoPagoAccion?.accion === "confirmar"
+            ? "Confirmar pago"
+            : "Rechazar pago"
+        }
+        mensaje={
+          pedidoPagoAccion?.accion === "confirmar" ? (
+            <>¿Confirmas que recibiste el pago del pedido{" "}
+              <strong>{pedidoPagoAccion?.pedido.id}</strong> por{" "}
+              <strong>
+                {formatearPrecio(
+                  montoPagoEsperado(pedidoPagoAccion?.pedido)
+                )}
+              </strong>? Se registrará en el historial del pedido.</>
+          ) : (
+            <>¿Deseas rechazar el pago del pedido{" "}
+              <strong>{pedidoPagoAccion?.pedido.id}</strong>? No se
+              registrará ningún pago.</>
+          )
+        }
+        textoConfirmar={
+          pedidoPagoAccion?.accion === "confirmar"
+            ? "Sí, confirmar pago"
+            : "Sí, rechazar pago"
+        }
+        textoCancelar="Volver"
+        variante={
+          pedidoPagoAccion?.accion === "confirmar"
+            ? "info"
+            : "peligro"
+        }
+        onConfirmar={ejecutarAccionPago}
+        onCancelar={() => setPedidoPagoAccion(null)}
+      />
+
+      <ConfirmDialog
+        abierto={confirmarAprobarComprobante}
+        titulo="Aprobar comprobante"
+        mensaje={
+          <>¿Confirmas que el comprobante del pedido{" "}
+            <strong>{pedidoComprobante?.id}</strong> es válido
+            por{" "}
+            <strong>
+              {formatearPrecio(
+                montoPagoEsperado(pedidoComprobante)
+              )}
+            </strong>
+            ? Se registrará el pago y se avisará al cliente.</>
+        }
+        textoConfirmar="Sí, aprobar"
+        textoCancelar="Volver"
+        variante="info"
+        onConfirmar={ejecutarAprobarComprobante}
+        onCancelar={() =>
+          setConfirmarAprobarComprobante(false)
+        }
       />
 
       <Toast toast={toast} />

@@ -176,7 +176,7 @@
 
 .clientes-add-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 
@@ -723,7 +723,7 @@
 .cliente-modal-header h3 {
   margin: 0;
 
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-body, "Inter", sans-serif);
 
   font-size: 25px;
 
@@ -1174,7 +1174,7 @@
 
 .cliente-create-button:hover {
   background:
-    var(--admin-cta-gold-dark);
+    var(--admin-btn-primary-hover);
 }
 
 

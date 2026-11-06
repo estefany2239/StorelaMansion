@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
-import { useCategorias } from "../../hooks/useCategorias";
+import { useCategorias } from "../../shared/hooks/useCategorias";
 import "./Categories.css";
 
 export default function Categories({ onSelectCategory }) {

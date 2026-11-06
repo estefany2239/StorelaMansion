@@ -13,11 +13,12 @@
 //   de contraseña solo aparece después de entrar con la temporal.
 
 import bcrypt from 'bcryptjs'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import {
   enviarCorreo,
   generarContrasenaTemporal,
   modoSimulacion,
+  plantillaBienvenida,
   plantillaInvitacion,
   plantillaInvitacionCliente,
 } from './correos.js'
@@ -25,6 +26,19 @@ import {
 // Enlace profundo al login.
 export const enlaceLogin = () =>
   process.env.APP_LOGIN_URL || 'http://localhost:5173/?vista=login'
+
+// Enlace a la tienda (raíz del frontend). Se deriva de APP_LOGIN_URL
+// quitando la consulta (?vista=login), así no hace falta otra variable.
+export const enlaceTienda = () => {
+  try {
+    const url = new URL(enlaceLogin())
+    url.search = ''
+    url.hash = ''
+    return url.toString()
+  } catch {
+    return 'http://localhost:5173/'
+  }
+}
 
 // Horas de vigencia de la contraseña temporal (por defecto 48).
 export const horasVigenciaTemporal = () => {
@@ -107,6 +121,26 @@ export const enviarInvitacion = async ({
   } catch (err) {
     // Solo el motivo del fallo: nunca la contraseña temporal ni el correo.
     console.error(`[${tipo}] No se pudo enviar la invitación:`, err.message)
+    return { ok: false, modo: modoSimulacion() ? 'simulado' : 'brevo' }
+  }
+}
+
+// Correo de bienvenida del registro PÚBLICO. Se dispara DESPUÉS de crear
+// la cuenta y nunca lanza: un fallo de Brevo no revierte ni bloquea el
+// registro; el motivo queda solo en el log del servidor.
+export const enviarBienvenidaRegistro = async ({ nombre, para }) => {
+  try {
+    const plantilla = plantillaBienvenida({ nombre, enlaceTienda: enlaceTienda() })
+    const resultado = await enviarCorreo({
+      para,
+      asunto: plantilla.asunto,
+      html: plantilla.html,
+      texto: plantilla.texto,
+    })
+    return resultado
+  } catch (err) {
+    // Solo el motivo del fallo: nunca datos del usuario.
+    console.error('[registro] No se pudo enviar el correo de bienvenida:', err.message)
     return { ok: false, modo: modoSimulacion() ? 'simulado' : 'brevo' }
   }
 }

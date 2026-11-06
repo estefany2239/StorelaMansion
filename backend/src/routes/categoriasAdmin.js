@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()
@@ -92,7 +92,7 @@ const filaPorCodigo = async (db, codigo) => {
 // GET /api/admin/categorias -> todas (activas e inactivas)
 router.get('/', requierePrivilegio('Categorías', 'Consultar'), async (req, res) => {
   try {
-    const { rows } = await pool.query(`${SELECT_FILA} ORDER BY c.orden, c.nombre`)
+    const { rows } = await pool.query(`${SELECT_FILA} ORDER BY c.id_categoria DESC`)
     res.json(rows)
   } catch (error) {
     responderError(res, error, 'No se pudieron cargar las categorías')

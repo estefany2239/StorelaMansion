@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { pool } from '../db.js'
+import { pool } from '../config/db.js'
 import { verificarToken, bloquearCambioPendiente, requierePrivilegio } from '../middlewares/auth.js'
 
 const router = Router()
@@ -58,7 +58,7 @@ const filaPorId = async (db, id) => {
 // GET /api/admin/colores -> todos (activos e inactivos)
 router.get('/', requierePrivilegio('Colores', 'Consultar'), async (req, res) => {
   try {
-    const { rows } = await pool.query(`${SELECT_FILA} ORDER BY c.id_color`)
+    const { rows } = await pool.query(`${SELECT_FILA} ORDER BY c.id_color DESC`)
     res.json(rows)
   } catch (error) {
     responderError(res, error, 'No se pudieron cargar los colores')

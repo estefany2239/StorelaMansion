@@ -21,13 +21,13 @@ import {
   actualizarRolAdmin,
   cambiarEstadoRolAdmin,
   eliminarRolAdmin,
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
 import "./Roles.css";
 
 import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
-import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
+import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 
 /* =====================================================
    NIVEL 3 DE SEGURIDAD
@@ -349,6 +349,7 @@ export default function Roles({ user }) {
   const rolesFiltrados = filtrarRoles(roles, busqueda);
 
   const manejarBusqueda = (valor) => {
+    setPaginaSolicitada(1);
     setBusqueda(valor);
 
     if (
@@ -363,29 +364,20 @@ export default function Roles({ user }) {
      PAGINACIÓN DE LA TABLA
      ===================================================== */
 
-  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginaSolicitada, setPaginaSolicitada] = useState(1);
 
   const totalPaginas = Math.max(
     1,
     Math.ceil(rolesFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
+  const paginaActual = Math.min(paginaSolicitada, totalPaginas);
   const inicio =
     (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const rolesPaginados = rolesFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
   );
-
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
-
-  useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
-    }
-  }, [paginaActual, totalPaginas]);
 
   /* =====================================================
      ABRIR CREAR
@@ -639,6 +631,8 @@ export default function Roles({ user }) {
         });
 
         setRoles((prev) => [desdeApi(rolCreado), ...prev]);
+        setBusqueda("");
+        setPaginaSolicitada(1);
 
         mostrarToast("Rol creado con éxito");
 
@@ -1045,7 +1039,7 @@ export default function Roles({ user }) {
         <Pagination
           currentPage={paginaActual}
           totalPages={totalPaginas}
-          onPageChange={setPaginaActual}
+          onPageChange={setPaginaSolicitada}
         />
 
       </div>

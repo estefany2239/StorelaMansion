@@ -17,7 +17,7 @@ import Pagination from "../components/Pagination";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import Toast from "../components/Toast";
 import useToast from "../hooks/useToast";
-import useValidacionFormulario from "../../../hooks/useValidacionFormulario";
+import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 import { tienePermiso } from "../utils/permisos";
 import {
   obtenerUsuariosAdmin,
@@ -27,7 +27,7 @@ import {
   cambiarEstadoUsuarioAdmin,
   reenviarInvitacionUsuarioAdmin,
   eliminarUsuarioAdmin
-} from "../../../services/api";
+} from "../../../shared/services/api";
 
 const REGISTROS_POR_PAGINA = 6;
 
@@ -218,29 +218,20 @@ export default function Usuarios({ user }) {
   // PAGINACIÓN DE LA TABLA
   // =====================================================
 
-  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginaSolicitada, setPaginaSolicitada] = useState(1);
 
   const totalPaginas = Math.max(
     1,
     Math.ceil(usuariosFiltrados.length / REGISTROS_POR_PAGINA)
   );
 
+  const paginaActual = Math.min(paginaSolicitada, totalPaginas);
   const inicio =
     (paginaActual - 1) * REGISTROS_POR_PAGINA;
   const usuariosPaginados = usuariosFiltrados.slice(
     inicio,
     inicio + REGISTROS_POR_PAGINA
   );
-
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda]);
-
-  useEffect(() => {
-    if (paginaActual > totalPaginas) {
-      setPaginaActual(totalPaginas);
-    }
-  }, [paginaActual, totalPaginas]);
 
   // =====================================================
   // ABRIR AGREGAR
@@ -417,6 +408,8 @@ export default function Usuarios({ user }) {
           { ...usuarioFila, permisos },
           ...actuales
         ]);
+        setBusqueda("");
+        setPaginaSolicitada(1);
 
         if (!fila.invitacionEnviada) {
           mostrarToast(
@@ -692,11 +685,10 @@ export default function Usuarios({ user }) {
                 type="text"
                 placeholder="Buscar usuarios..."
                 value={busqueda}
-                onChange={(e) =>
-                  setBusqueda(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => {
+                  setPaginaSolicitada(1);
+                  setBusqueda(e.target.value);
+                }}
               />
 
             </div>
@@ -982,7 +974,7 @@ export default function Usuarios({ user }) {
         <Pagination
           currentPage={paginaActual}
           totalPages={totalPaginas}
-          onPageChange={setPaginaActual}
+          onPageChange={setPaginaSolicitada}
         />
 
       </div>
