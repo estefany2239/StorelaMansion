@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import {
   LayoutDashboard,
@@ -10,8 +10,10 @@ import {
   Truck,
   LogOut,
   Menu,
+  Search,
   Store,
   Moon,
+  Sun,
   ChevronDown,
   Tags,
   Ruler,
@@ -37,8 +39,9 @@ import { tienePermiso } from "./utils/permisos";
 
 import "./AdminLayout.css";
 import "./AdminTheme.css";
+import "./AdminDesign.css";
 
-export default function AdminLayout({ user, onLogout }) {
+export default function AdminLayout({ user, onLogout, onUserUpdated }) {
 
   /* =====================================================
      MENÚ PRINCIPAL (solo permisos "Módulo:Consultar")
@@ -127,6 +130,16 @@ export default function AdminLayout({ user, onLogout }) {
     tienePermiso(user, item.nombre, "Consultar")
   );
 
+  const modulosDisponibles = [
+    ...menu.map((item) => ({ nombre: item.nombre, vista: item.vista })),
+    ...menuProductos.map((item) => ({ nombre: item.nombre, vista: item.vista })),
+    ...menuVentas.map((item) => ({ nombre: item.nombre, vista: item.vista })),
+    { nombre: "Perfil", vista: "perfil" }
+  ].filter(
+    (item, index, lista) =>
+      lista.findIndex((otro) => otro.vista === item.vista) === index
+  );
+
   /* Vista inicial: el primer módulo permitido (o el perfil). */
   const vistaInicial =
     menu[0]?.vista ||
@@ -145,6 +158,21 @@ export default function AdminLayout({ user, onLogout }) {
     const guardado = localStorage.getItem("sla-admin-sidebar");
     return guardado === "colapsado";
   });
+
+  const [sidebarMobileAbierto, setSidebarMobileAbierto] = useState(false);
+  const [busquedaModulos, setBusquedaModulos] = useState("");
+  const [menuPerfilAbierto, setMenuPerfilAbierto] = useState(false);
+  const perfilMenuRef = useRef(null);
+
+  const [fotoPerfil, setFotoPerfil] = useState(
+    user?.foto || user?.fotoPerfil || null
+  );
+
+  const resultadosBusqueda = busquedaModulos.trim()
+    ? modulosDisponibles.filter((modulo) =>
+        modulo.nombre.toLowerCase().includes(busquedaModulos.toLowerCase().trim())
+      )
+    : [];
 
   const [gestionProductosAbierto, setGestionProductosAbierto] =
     useState(false);
@@ -180,12 +208,24 @@ export default function AdminLayout({ user, onLogout }) {
 
   };
 
+  const actualizarFotoPerfil = (nuevaFoto) => {
+    setFotoPerfil(nuevaFoto);
+    if (onUserUpdated) {
+      onUserUpdated({ foto: nuevaFoto });
+    }
+  };
+
 
   /* =====================================================
      ALTERNAR SIDEBAR COLAPSADO
      ===================================================== */
 
   const alternarSidebar = () => {
+
+    if (window.innerWidth <= 650) {
+      setSidebarMobileAbierto((actual) => !actual);
+      return;
+    }
 
     setSidebarColapsado((actual) => {
       const nuevo = !actual;
@@ -195,13 +235,16 @@ export default function AdminLayout({ user, onLogout }) {
 
   };
 
+  useEffect(() => {
+    const manejarClic = (evento) => {
+      if (perfilMenuRef.current && !perfilMenuRef.current.contains(evento.target)) {
+        setMenuPerfilAbierto(false);
+      }
+    };
+    document.addEventListener("mousedown", manejarClic);
+    return () => document.removeEventListener("mousedown", manejarClic);
+  }, []);
 
-  /* =====================================================
-     DATOS DEL USUARIO
-     ===================================================== */
-
-  const nombreUsuario =
-    user?.nombre || "Carlos Rodríguez";
 
   /* =====================================================
      CONTENIDO
@@ -253,6 +296,8 @@ export default function AdminLayout({ user, onLogout }) {
             user={user}
             onLogout={cerrarSesion}
             onToggleTheme={cambiarTema}
+            foto={fotoPerfil}
+            onFotoActualizada={actualizarFotoPerfil}
           />
         );
 
@@ -272,6 +317,13 @@ export default function AdminLayout({ user, onLogout }) {
       }
     >
 
+      {sidebarMobileAbierto && (
+        <div
+          className="admin-sidebar-overlay"
+          onClick={() => setSidebarMobileAbierto(false)}
+        />
+      )}
+
       {/* =====================================================
           SIDEBAR
           ===================================================== */}
@@ -279,51 +331,28 @@ export default function AdminLayout({ user, onLogout }) {
       <aside
         className={
           sidebarColapsado
-            ? "admin-sidebar admin-sidebar--collapsed"
-            : "admin-sidebar"
+            ? "admin-sidebar admin-sidebar--collapsed" +
+              (sidebarMobileAbierto ? " admin-sidebar--mobile-open" : "")
+            : "admin-sidebar" +
+              (sidebarMobileAbierto ? " admin-sidebar--mobile-open" : "")
         }
       >
 
-
         {/* =================================================
-            LOGO
+            CABECERA DEL SIDEBAR
             ================================================= */}
-
         <div className="admin-logo">
 
-          <button
-            type="button"
-            className="admin-sidebar-toggle"
-            title={
-              sidebarColapsado
-                ? "Expandir menú"
-                : "Colapsar menú"
-            }
-            onClick={alternarSidebar}
-          >
+          <div className="admin-logo-icon">
+            <Store size={18} />
+          </div>
 
-            <Menu size={20} />
-
-          </button>
-
-          {!sidebarColapsado && (
-            <div className="admin-logo-icon">
-
-              <Store size={25} />
-
-            </div>
-          )}
-
-          <h2>
-            Store La Mansión
-          </h2>
-
-          <span>
-            Panel Administrativo
-          </span>
+          <div className="admin-logo-text">
+            <h2>Store La Mansión</h2>
+            <span>PANEL ADMINISTRATIVO</span>
+          </div>
 
         </div>
-
 
         {/* =================================================
             MENÚ
@@ -365,7 +394,7 @@ export default function AdminLayout({ user, onLogout }) {
                 }
               >
 
-                <Icon size={19} />
+                <Icon size={17} />
 
                 <span>
                   {item.nombre}
@@ -405,14 +434,15 @@ export default function AdminLayout({ user, onLogout }) {
               }
             >
 
-              <Package size={19} />
+              <Package size={17} />
 
               <span>
                 Gestión de Productos
               </span>
 
               <ChevronDown
-                size={17}
+                 size={15}
+
                 className="admin-accordion-arrow"
               />
 
@@ -449,7 +479,7 @@ export default function AdminLayout({ user, onLogout }) {
                       }
                     >
 
-                      <Icon size={16} />
+                      <Icon size={14} />
 
                       <span>
                         {item.nombre}
@@ -497,14 +527,15 @@ export default function AdminLayout({ user, onLogout }) {
               }
             >
 
-              <ShoppingCart size={19} />
+              <ShoppingCart size={17} />
 
               <span>
                 Gestión de Ventas
               </span>
 
               <ChevronDown
-                size={17}
+                 size={15}
+
                 className="admin-accordion-arrow"
               />
 
@@ -541,7 +572,7 @@ export default function AdminLayout({ user, onLogout }) {
                       }
                     >
 
-                      <Icon size={16} />
+                      <Icon size={14} />
 
                       <span>
                         {item.nombre}
@@ -564,107 +595,6 @@ export default function AdminLayout({ user, onLogout }) {
         </nav>
 
 
-        {/* =================================================
-            PARTE INFERIOR
-            ================================================= */}
-
-        <div className="admin-sidebar-bottom">
-
-
-          {/* PERFIL */}
-
-          <button
-            type="button"
-            className="admin-profile-link"
-            title={
-              sidebarColapsado
-                ? "Perfil"
-                : undefined
-            }
-            onClick={() =>
-              setAdminView("perfil")
-            }
-          >
-
-            <UserRound size={19} />
-
-            <span>
-              Perfil
-            </span>
-
-          </button>
-
-
-          {/* SEPARADOR */}
-
-          <div className="admin-profile-divider"></div>
-
-
-          {/* USUARIO */}
-
-          <div className="admin-user-info">
-
-            <div className="admin-user-avatar">
-
-              <UserRound size={19} />
-
-            </div>
-
-
-            <div className="admin-user-data">
-
-              <strong>
-                {nombreUsuario}
-              </strong>
-
-              <span>
-                {user?.rol}
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {/* BOTONES */}
-
-          <div className="admin-bottom-actions">
-
-
-            {/* MODO OSCURO */}
-
-            <button
-              type="button"
-              className="admin-bottom-button"
-              title={
-                darkMode
-                  ? "Cambiar a modo claro"
-                  : "Cambiar a modo oscuro"
-              }
-              onClick={cambiarTema}
-            >
-
-              <Moon size={19} />
-
-            </button>
-
-
-            {/* CERRAR SESIÓN */}
-
-            <button
-              type="button"
-              className="admin-bottom-button logout-icon-button"
-              title="Cerrar sesión"
-              onClick={cerrarSesion}
-            >
-
-              <LogOut size={19} />
-
-            </button>
-
-          </div>
-
-        </div>
 
       </aside>
 
@@ -674,6 +604,122 @@ export default function AdminLayout({ user, onLogout }) {
           ===================================================== */}
 
       <main className="admin-main">
+
+        <header className="admin-navbar">
+
+          <div className="admin-navbar-left">
+
+            <button
+              type="button"
+              className="admin-navbar-hamburger"
+              title="Menú"
+              onClick={alternarSidebar}
+            >
+              <Menu size={18} />
+            </button>
+
+            <div className="admin-navbar-breadcrumbs">
+              <span>Panel</span>
+              <span className="admin-navbar-breadcrumb-separator">/</span>
+              <span>{modulosDisponibles.find((modulo) => modulo.vista === adminView)?.nombre || "Panel"}</span>
+            </div>
+
+          </div>
+
+          <div className="admin-navbar-search">
+
+            <Search size={16} />
+
+            <input
+              type="text"
+              placeholder="Buscar módulos…"
+              value={busquedaModulos}
+              onChange={(e) => setBusquedaModulos(e.target.value)}
+            />
+
+            {resultadosBusqueda.length > 0 && (
+              <div className="admin-navbar-search-results">
+                {resultadosBusqueda.map((modulo) => (
+                  <button
+                    key={modulo.vista}
+                    type="button"
+                    className="admin-navbar-search-result"
+                    onClick={() => {
+                      setAdminView(modulo.vista);
+                      setBusquedaModulos("");
+                    }}
+                  >
+                    {modulo.nombre}
+                  </button>
+                ))}
+              </div>
+            )}
+
+          </div>
+
+          <div className="admin-navbar-profile" ref={perfilMenuRef}>
+
+            <button
+              type="button"
+              className="admin-navbar-avatar-button"
+              onClick={() => setMenuPerfilAbierto((actual) => !actual)}
+            >
+              <span className="admin-navbar-avatar">
+                {fotoPerfil ? (
+                  <img
+                    src={fotoPerfil}
+                    alt="Perfil"
+                    className="admin-navbar-avatar-img"
+                  />
+                ) : (
+                  <UserRound size={18} />
+                )}
+              </span>
+              <ChevronDown size={14} className="admin-navbar-profile-arrow" />
+            </button>
+
+            {menuPerfilAbierto && (
+              <div className="admin-navbar-profile-menu">
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdminView("perfil");
+                    setMenuPerfilAbierto(false);
+                  }}
+                >
+                  <UserRound size={16} />
+                  Mi perfil
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    cambiarTema();
+                    setMenuPerfilAbierto(false);
+                  }}
+                >
+                  {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                  {darkMode ? "Modo claro" : "Modo oscuro"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    cerrarSesion();
+                    setMenuPerfilAbierto(false);
+                  }}
+                >
+                  <LogOut size={16} />
+                  Cerrar sesión
+                </button>
+
+              </div>
+            )}
+
+          </div>
+
+        </header>
 
         <section className="admin-content">
 

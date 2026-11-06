@@ -80,7 +80,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -105,7 +105,7 @@
   border-radius: 10px;
 
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 
   color: var(--admin-gold);
 }
@@ -185,7 +185,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -478,7 +478,7 @@
   border-radius: 7px;
 
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 
   color: var(--admin-gold-dark);
 
@@ -719,7 +719,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.25);
+    rgba(153, 101, 21, 0.25);
 
   border-radius: 12px;
 
@@ -741,7 +741,7 @@
 }
 
 .dashboard-filter-button:hover {
-  background: rgba(201, 162, 39, 0.08);
+  background: rgba(153, 101, 21, 0.08);
 }
 
 .dashboard-filter-button-active {
@@ -792,7 +792,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.25);
+    rgba(153, 101, 21, 0.25);
 
   border-radius: 10px;
 
@@ -860,7 +860,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -1028,7 +1028,7 @@
   background: var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 .admin-container.admin-dark .dashboard-indicator-info strong,
@@ -1088,13 +1088,13 @@
   background: var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.25);
+    rgba(212, 175, 55, 0.25);
 
   color: var(--admin-text);
 }
 
 .admin-container.admin-dark .dashboard-filter-button:hover {
-  background: rgba(194, 168, 120, 0.15);
+  background: rgba(212, 175, 55, 0.15);
 }
 
 .admin-container.admin-dark .dashboard-filter-date span {
@@ -1114,7 +1114,7 @@
   background: var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 .admin-container.admin-dark .dashboard-error {

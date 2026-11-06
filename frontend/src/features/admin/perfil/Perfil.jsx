@@ -1,21 +1,25 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import {
   UserRound,
   Moon,
   LogOut,
   Pencil,
-  X
+  X,
+  Camera
 } from "lucide-react";
 
 import ConfirmDialog from "../shared/ConfirmDialog";
+import { actualizarFotoPerfil } from "../../../shared/services/api";
 
 import "./Perfil.css";
 
 export default function Perfil({
   user,
   onLogout,
-  onToggleTheme
+  onToggleTheme,
+  foto,
+  onFotoActualizada
 }) {
 
   const [perfil, setPerfil] = useState({
@@ -39,6 +43,39 @@ export default function Perfil({
 
   const [confirmarEdicion, setConfirmarEdicion] =
     useState(false);
+
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const inputFotoRef = useRef(null);
+
+  const manejarCambioFoto = async (e) => {
+    const archivo = e.target.files?.[0];
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      return;
+    }
+
+    if (archivo.size > 2 * 1024 * 1024) {
+      return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = async () => {
+      const dataUrl = String(lector.result || "");
+      setSubiendoFoto(true);
+      try {
+        await actualizarFotoPerfil(dataUrl);
+        if (onFotoActualizada) onFotoActualizada(dataUrl);
+      } catch {
+        // ignore
+      } finally {
+        setSubiendoFoto(false);
+      }
+    };
+    lector.readAsDataURL(archivo);
+
+    e.target.value = "";
+  };
 
   /* =====================================================
      ABRIR MODAL EDITAR
@@ -152,9 +189,35 @@ export default function Perfil({
 
           <div className="perfil-avatar">
 
-            <UserRound size={52} />
+            {foto ? (
+              <img
+                src={foto}
+                alt="Foto de perfil"
+                className="perfil-avatar-img"
+              />
+            ) : (
+              <UserRound size={52} />
+            )}
 
           </div>
+
+          <input
+            ref={inputFotoRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={manejarCambioFoto}
+          />
+
+          <button
+            type="button"
+            className="perfil-foto-button"
+            onClick={() => inputFotoRef.current?.click()}
+            disabled={subiendoFoto}
+          >
+            <Camera size={16} />
+            {subiendoFoto ? "Subiendo..." : "Cambiar foto"}
+          </button>
 
 
           <h2>

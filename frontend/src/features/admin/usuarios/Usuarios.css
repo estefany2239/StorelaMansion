@@ -89,7 +89,7 @@
 
 .usuarios-search:focus-within {
   border-color: var(--admin-gold);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.10);
 }
 
 
@@ -106,7 +106,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -127,7 +127,7 @@
   width: 100%;
   overflow-x: auto;
   background: #ffffff;
-  border: 1px solid rgba(201, 162, 39, 0.14);
+  border: 1px solid rgba(153, 101, 21, 0.14);
   border-radius: 15px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
@@ -182,7 +182,7 @@
 
 
 .usuarios-table tbody tr:hover {
-  background: rgba(201, 162, 39, 0.025);
+  background: rgba(153, 101, 21, 0.025);
 }
 
 
@@ -388,7 +388,7 @@
 
 
 .usuarios-table .usuario-actions button:hover {
-  background: rgba(201, 162, 39, 0.1);
+  background: rgba(153, 101, 21, 0.1);
   border-color: var(--admin-gold);
   color: var(--admin-gold-dark, #b89120);
 }
@@ -573,7 +573,7 @@
 .usuario-form-group input:focus,
 .usuario-form-group select:focus {
   border-color: var(--admin-gold);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.12);
 }
 
 

@@ -4,90 +4,101 @@
    ========================================================= */
 
 .admin-container.admin-dark {
-  --admin-bg: #0b0b0b;
-  --admin-card: #171717;
-  --admin-sidebar: #090909;
-  --admin-text: #ffffff;
-  --admin-text-secondary: #bdbdbd;
-  --admin-text-muted: #858585;
-  --admin-gold: #c2a878;
-  --admin-gold-light: #d4bc94;
-  --admin-gold-dark: #9c8358;
+  --admin-bg: #1c1c1c;
+  --admin-card: #262626;
+  --admin-sidebar: #202020;
+  --admin-text: #f2f2f2;
+  --admin-text-secondary: #c9c9c9;
+  --admin-text-muted: #9a9a9a;
+  --admin-gold: #d4af37;
+  --admin-gold-light: #e7c75c;
+  --admin-gold-dark: #a98718;
   --admin-btn-primary: #d4af37;
   --admin-btn-primary-hover: #e7c75c;
-  --admin-border: rgba(194, 168, 120, 0.16);
-  --admin-hover: rgba(194, 168, 120, 0.08);
+  --admin-border: rgba(212, 175, 55, 0.16);
+  --admin-hover: #303030;
+  --admin-grad: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-cta-gold-light));
+  --admin-on-gold: #1c1c1c;
+  --admin-surface-2: #2e2e2e;
+  --admin-overlay: rgba(0, 0, 0, 0.62);
+  --admin-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  --admin-sidebar-bg: #1f1f1f;
+  --admin-sidebar-border: #333333;
+  --admin-sidebar-hover: rgba(212, 175, 55, 0.08);
+  --admin-sidebar-active: rgba(212, 175, 55, 0.12);
+  --admin-sidebar-active-border: var(--admin-gold);
+  --admin-sidebar-active-text: var(--admin-gold-light);
+  --admin-sidebar-active-icon: var(--admin-gold);
+  --admin-sidebar-submenu-line: var(--admin-border);
+  --admin-sidebar-label: var(--admin-gold-light);
 
-  background: #0b0b0b !important;
-  color: #ffffff !important;
-}
 
 /* ---------- ESTRUCTURA ---------- */
 
 .admin-container.admin-dark .admin-sidebar,
 .admin-container.admin-dark .admin-sidebar-bottom {
-  background: #090909 !important;
-  border-color: rgba(255,255,255,.09) !important;
+  background: var(--admin-sidebar) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .admin-main,
 .admin-container.admin-dark .admin-content {
-  background: #0b0b0b !important;
-  color: #ffffff !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .admin-logo {
-  border-color: rgba(255,255,255,.09) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .admin-logo h2,
 .admin-container.admin-dark .admin-user-data strong {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .admin-logo span,
 .admin-container.admin-dark .admin-link.active,
 .admin-container.admin-dark .admin-profile-link:hover {
-  color: #c2a878 !important;
+  color: #d4af37 !important;
 }
 
 .admin-container.admin-dark .admin-link,
 .admin-container.admin-dark .admin-profile-link {
-  color: #bdbdbd !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 .admin-container.admin-dark .admin-link:hover,
 .admin-container.admin-dark .admin-profile-link:hover {
-  background: rgba(194,168,120,.08) !important;
+  background: rgba(212,175,55,.08) !important;
 }
 
 .admin-container.admin-dark .admin-link.active {
-  background: rgba(194,168,120,.12) !important;
-  border-left-color: #c2a878 !important;
+  background: rgba(212,175,55,.12) !important;
+  border-left-color: #d4af37 !important;
 }
 
 .admin-container.admin-dark .admin-user-data span,
 .admin-container.admin-dark .menu-title {
-  color: #858585 !important;
+  color: var(--admin-text-muted) !important;
 }
 
 .admin-container.admin-dark .admin-user-avatar,
 .admin-container.admin-dark .admin-logo-icon {
-  background: rgba(194,168,120,.10) !important;
-  border-color: rgba(194,168,120,.25) !important;
-  color: #c2a878 !important;
+  background: rgba(212,175,55,.10) !important;
+  border-color: rgba(212,175,55,.25) !important;
+  color: #d4af37 !important;
 }
 
 .admin-container.admin-dark .admin-bottom-button {
-  background: #151515 !important;
-  color: #bdbdbd !important;
-  border-color: rgba(255,255,255,.10) !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text-secondary) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .admin-bottom-button:hover {
-  background: rgba(194,168,120,.10) !important;
-  color: #c2a878 !important;
-  border-color: rgba(194,168,120,.35) !important;
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
+  border-color: rgba(212,175,55,.35) !important;
 }
 
 /* ---------- PÁGINAS ---------- */
@@ -102,7 +113,7 @@
 .admin-container.admin-dark .domicilios-page,
 .admin-container.admin-dark .perfil-page {
   background: transparent !important;
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 /* ---------- TÍTULOS ---------- */
@@ -116,7 +127,7 @@
 .admin-container.admin-dark .pedidos-title h2,
 .admin-container.admin-dark .domicilios-title h2,
 .admin-container.admin-dark .perfil-header h1 {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .dashboard-title p,
@@ -128,7 +139,7 @@
 .admin-container.admin-dark .pedidos-title p,
 .admin-container.admin-dark .domicilios-title p,
 .admin-container.admin-dark .perfil-header p {
-  color: #a9a9a9 !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 /* ---------- BUSCADORES ---------- */
@@ -162,13 +173,13 @@
 .admin-container.admin-dark .pedidos-page select,
 .admin-container.admin-dark .domicilios-page input,
 .admin-container.admin-dark .domicilios-page select {
-  background: #171717 !important;
-  color: #ffffff !important;
-  border-color: rgba(255,255,255,.13) !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark input::placeholder {
-  color: #777777 !important;
+  color: var(--admin-text-muted) !important;
 }
 
 .admin-container.admin-dark .roles-search svg,
@@ -178,7 +189,7 @@
 .admin-container.admin-dark .clientes-search svg,
 .admin-container.admin-dark .pedidos-search svg,
 .admin-container.admin-dark .domicilios-search svg {
-  color: #bdbdbd !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 /* ---------- BOTONES PRINCIPALES ---------- */
@@ -201,7 +212,7 @@
 .admin-container.admin-dark .tallas-add-button,
 .admin-container.admin-dark .colores-add-button {
   background: var(--admin-btn-primary) !important;
-  color: #111111 !important;
+  color: var(--admin-surface-2) !important;
 }
 
 .admin-container.admin-dark .usuarios-add-button:hover,
@@ -246,9 +257,9 @@
 .admin-container.admin-dark .domicilios-filters-panel,
 .admin-container.admin-dark .perfil-user-card,
 .admin-container.admin-dark .perfil-account-card {
-  background: #171717 !important;
-  color: #ffffff !important;
-  border-color: rgba(194,168,120,.14) !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  border-color: rgba(212,175,55,.14) !important;
   box-shadow: 0 8px 28px rgba(0,0,0,.30) !important;
 }
 
@@ -257,19 +268,19 @@
 .admin-container.admin-dark .dashboard-indicator-info span,
 .admin-container.admin-dark .dashboard-indicator-info small,
 .admin-container.admin-dark .dashboard-panel-header span {
-  color: #9b9b9b !important;
+  color: var(--admin-text-muted) !important;
 }
 
 .admin-container.admin-dark .dashboard-indicator-info strong,
 .admin-container.admin-dark .dashboard-panel-header h3,
 .admin-container.admin-dark .dashboard-product-info strong {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .dashboard-indicator-icon,
 .admin-container.admin-dark .dashboard-panel-icon {
-  background: rgba(194,168,120,.10) !important;
-  color: #c2a878 !important;
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
 }
 
 /* ---------- TABLAS ---------- */
@@ -286,19 +297,19 @@
 }
 
 .admin-container.admin-dark th {
-  background: #202020 !important;
-  color: #c2a878 !important;
-  border-color: rgba(255,255,255,.09) !important;
+  background: var(--admin-surface-2) !important;
+  color: #d4af37 !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark td {
-  background: #171717 !important;
+  background: var(--admin-card) !important;
   color: #eeeeee !important;
-  border-color: rgba(255,255,255,.08) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark tbody tr:hover td {
-  background: #222222 !important;
+  background: var(--admin-hover) !important;
 }
 
 /* Textos específicos de las tablas */
@@ -334,7 +345,7 @@
 .admin-container.admin-dark .producto-price,
 .admin-container.admin-dark .venta-total,
 .admin-container.admin-dark .pedido-total {
-  color: #c2a878 !important;
+  color: #d4af37 !important;
 }
 
 /* ---------- FILTROS ---------- */
@@ -348,7 +359,7 @@
 }
 
 .admin-container.admin-dark label {
-  color: #b7b7b7 !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 /* ---------- MODALES ---------- */
@@ -377,7 +388,7 @@
 .admin-container.admin-dark .cliente-modal-footer,
 .admin-container.admin-dark .pedido-modal-footer,
 .admin-container.admin-dark .domicilio-modal-footer {
-  border-color: rgba(255,255,255,.10) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .rol-modal-header h3,
@@ -386,7 +397,7 @@
 .admin-container.admin-dark .cliente-modal-header h3,
 .admin-container.admin-dark .pedido-modal-header h3,
 .admin-container.admin-dark .domicilio-modal-header h3 {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .rol-modal-close,
@@ -395,7 +406,7 @@
 .admin-container.admin-dark .cliente-modal-close,
 .admin-container.admin-dark .pedido-modal-close,
 .admin-container.admin-dark .domicilio-modal-close {
-  color: #aaaaaa !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 .admin-container.admin-dark .rol-modal-close:hover,
@@ -404,8 +415,8 @@
 .admin-container.admin-dark .cliente-modal-close:hover,
 .admin-container.admin-dark .pedido-modal-close:hover,
 .admin-container.admin-dark .domicilio-modal-close:hover {
-  background: rgba(194,168,120,.10) !important;
-  color: #c2a878 !important;
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
 }
 
 /* ---------- CAMPOS DENTRO DE MODALES ---------- */
@@ -433,9 +444,9 @@
 .admin-container.admin-dark .domicilio-form-group input,
 .admin-container.admin-dark .domicilio-form-group select,
 .admin-container.admin-dark .domicilio-form-group textarea {
-  background: #111111 !important;
-  color: #ffffff !important;
-  border-color: rgba(255,255,255,.13) !important;
+  background: var(--admin-surface-2) !important;
+  color: var(--admin-text) !important;
+  border-color: var(--admin-border) !important;
 }
 
 /* ---------- PERFIL ---------- */
@@ -447,13 +458,13 @@
 
 .admin-container.admin-dark .perfil-user-card,
 .admin-container.admin-dark .perfil-account-card {
-  background: #171717 !important;
+  background: #000000 !important;
 }
 
 .admin-container.admin-dark .perfil-avatar {
-  background: rgba(194,168,120,.10) !important;
-  color: #c2a878 !important;
-  border-color: rgba(194,168,120,.25) !important;
+  background: rgba(212,175,55,.10) !important;
+  color: #d4af37 !important;
+  border-color: rgba(212,175,55,.25) !important;
 }
 
 .admin-container.admin-dark .perfil-user-card h2,
@@ -519,8 +530,8 @@
 .admin-container.admin-dark .pedido-cancel-button,
 .admin-container.admin-dark .domicilio-cancel-button {
   background: transparent !important;
-  color: #bdbdbd !important;
-  border-color: rgba(255,255,255,.15) !important;
+  color: var(--admin-text-secondary) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .rol-cancel-button:hover,
@@ -529,8 +540,8 @@
 .admin-container.admin-dark .cliente-cancel-button:hover,
 .admin-container.admin-dark .pedido-cancel-button:hover,
 .admin-container.admin-dark .domicilio-cancel-button:hover {
-  background: rgba(255,255,255,.06) !important;
-  color: #ffffff !important;
+  background: var(--admin-border) !important;
+  color: var(--admin-text) !important;
   border-color: var(--admin-btn-primary) !important;
 }
 
@@ -542,14 +553,14 @@
 .admin-container.admin-dark .detail-cerrar-button.detail-cerrar-button {
   background: var(--admin-cta-gold, #d4af37) !important;
   border-color: var(--admin-cta-gold, #d4af37) !important;
-  color: #111111 !important;
+  color: var(--admin-surface-2) !important;
 }
 
 .admin-container .detail-cerrar-button.detail-cerrar-button:hover,
 .admin-container.admin-dark .detail-cerrar-button.detail-cerrar-button:hover {
   background: var(--admin-btn-primary-hover, #a98718) !important;
   border-color: var(--admin-btn-primary-hover, #a98718) !important;
-  color: #111111 !important;
+  color: var(--admin-surface-2) !important;
 }
 
 /* ---------- OVERLAYS ---------- */
@@ -560,7 +571,7 @@
 .admin-container.admin-dark .cliente-modal-overlay,
 .admin-container.admin-dark .pedido-modal-overlay,
 .admin-container.admin-dark .domicilio-modal-overlay {
-  background: rgba(0,0,0,.78) !important;
+  background: var(--admin-overlay) !important;
 }
 
 /* ---------- BARRAS / SCROLL ---------- */
@@ -571,7 +582,7 @@
 }
 
 .admin-container.admin-dark ::-webkit-scrollbar-track {
-  background: #0b0b0b;
+  background: var(--admin-bg);
 }
 
 .admin-container.admin-dark ::-webkit-scrollbar-thumb {
@@ -580,7 +591,7 @@
 }
 
 .admin-container.admin-dark ::-webkit-scrollbar-thumb:hover {
-  background: #c2a878;
+  background: var(--admin-gold);
 }
 
 /* ---------- SIN BARRA VISIBLE EN EL PANEL (el scroll sigue activo) ---------- */
@@ -610,44 +621,48 @@
 .admin-container:not(.admin-dark),
 .admin-container:not(.admin-dark) .admin-main,
 .admin-container:not(.admin-dark) .admin-content {
-  background: #f5ead6 !important;
-  color: #1a1a1a !important;
+  background: var(--admin-bg) !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container:not(.admin-dark) .admin-sidebar,
 .admin-container:not(.admin-dark) .admin-sidebar-bottom {
-  background: #ffffff !important;
-  color: #1a1a1a !important;
+  background: var(--admin-sidebar-bg) !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container:not(.admin-dark) .admin-logo h2,
 .admin-container:not(.admin-dark) .admin-user-data strong {
-  color: #1a1a1a !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container:not(.admin-dark) .admin-logo span,
-.admin-container:not(.admin-dark) .admin-link.active,
 .admin-container:not(.admin-dark) .admin-link:hover,
 .admin-container:not(.admin-dark) .admin-profile-link:hover {
-  color: #c9a227 !important;
+  color: var(--admin-gold) !important;
+}
+
+.admin-container:not(.admin-dark) .admin-link.active {
+  color: var(--admin-text) !important;
+  font-weight: 600 !important;
 }
 
 .admin-container:not(.admin-dark) .admin-link,
 .admin-container:not(.admin-dark) .admin-profile-link {
-  color: #444444 !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 /* ---------- ESTRUCTURA EN MODO OSCURO ---------- */
 .admin-container.admin-dark,
 .admin-container.admin-dark .admin-main,
 .admin-container.admin-dark .admin-content {
-  background: #0b0b0b !important;
-  color: #ffffff !important;
+  background: var(--admin-bg) !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .admin-sidebar,
 .admin-container.admin-dark .admin-sidebar-bottom {
-  background: #090909 !important;
+  background: var(--admin-card) !important;
 }
 
 /* ---------- DOMICILIOS: TABLA CONSISTENTE ---------- */
@@ -677,28 +692,28 @@
 
 /* ---------- DOMICILIOS EN DARK ---------- */
 .admin-container.admin-dark .domicilios-table-container {
-  background: #171717 !important;
-  border-color: rgba(194,168,120,.16) !important;
+  background: var(--admin-card) !important;
+  border-color: rgba(212,175,55,.16) !important;
 }
 
 .admin-container.admin-dark .domicilios-table th {
-  color: #bdbdbd !important;
-  border-bottom-color: rgba(255,255,255,.10) !important;
+  color: var(--admin-text-secondary) !important;
+  border-bottom-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .domicilios-table td {
-  border-bottom-color: rgba(255,255,255,.08) !important;
+  border-bottom-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .domicilio-cliente {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 .admin-container.admin-dark .domicilio-id-relacion,
 .admin-container.admin-dark .domicilio-direccion,
 .admin-container.admin-dark .domicilio-ciudad,
 .admin-container.admin-dark .domicilio-fecha {
-  color: #bdbdbd !important;
+  color: var(--admin-text-secondary) !important;
 }
 
 /* ---------- EVITAR DESBORDAMIENTO DEL PANEL ---------- */
@@ -742,7 +757,7 @@
 .admin-container.admin-dark .domicilio-direccion,
 .admin-container.admin-dark .domicilio-ciudad,
 .admin-container.admin-dark .domicilio-id-relacion {
-  color: #aeb7c6 !important;
+  color: var(--admin-text-muted) !important;
 }
 
 .admin-container.admin-dark .rol-nombre,
@@ -752,7 +767,7 @@
 .admin-container.admin-dark .venta-cliente,
 .admin-container.admin-dark .pedido-cliente,
 .admin-container.admin-dark .domicilio-cliente {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 /* ---------- DARK: PANELES DEL DASHBOARD ---------- */
@@ -763,9 +778,9 @@
 .admin-container.admin-dark .dashboard-page .dashboard-products,
 .admin-container.admin-dark .dashboard-page .dashboard-payments,
 .admin-container.admin-dark .dashboard-page .dashboard-inventory {
-  background: #171717 !important;
-  color: #ffffff !important;
-  border-color: rgba(194,168,120,.18) !important;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  border-color: rgba(212,175,55,.18) !important;
 }
 
 .admin-container.admin-dark .dashboard-page .dashboard-payment-name,
@@ -775,13 +790,13 @@
 .admin-container.admin-dark .dashboard-page .dashboard-product-info span,
 .admin-container.admin-dark .dashboard-page .dashboard-chart-label,
 .admin-container.admin-dark .dashboard-page .dashboard-chart-value {
-  color: #aeb7c6 !important;
+  color: var(--admin-text-muted) !important;
 }
 
 .admin-container.admin-dark .dashboard-page strong,
 .admin-container.admin-dark .dashboard-page h3,
 .admin-container.admin-dark .dashboard-page h4 {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 /* No quitar los colores de estado del dashboard */
@@ -818,7 +833,7 @@
 .admin-container.admin-dark .pedido-modal h3,
 .admin-container.admin-dark .domicilio-modal h2,
 .admin-container.admin-dark .domicilio-modal h3 {
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
 }
 
 /* =========================================================
@@ -856,8 +871,8 @@
 .admin-container .producto-actions button:first-child:hover,
 .admin-container .rol-actions button:first-child:hover,
 .admin-container .usuario-actions button:first-child:hover {
-  color: #c2a878 !important;
-  background: rgba(194,168,120,.10) !important;
+  color: #d4af37 !important;
+  background: rgba(212,175,55,.10) !important;
 }
 
 /* LÁPIZ */
@@ -924,28 +939,28 @@
 .admin-container.admin-dark .clientes-table-container,
 .admin-container.admin-dark .pedidos-table-container,
 .admin-container.admin-dark .domicilios-table-container {
-  background: #171717 !important;
-  border-color: rgba(194,168,120,.18) !important;
+  background: var(--admin-card) !important;
+  border-color: rgba(212,175,55,.18) !important;
   box-shadow: 0 10px 30px rgba(0,0,0,.28) !important;
 }
 
 .admin-container.admin-dark table thead,
 .admin-container.admin-dark table thead tr,
 .admin-container.admin-dark table th {
-  background: #202020 !important;
+  background: var(--admin-surface-2) !important;
 }
 
 .admin-container.admin-dark table th {
-  color: #c2a878 !important;
+  color: #d4af37 !important;
 }
 
 .admin-container.admin-dark table tbody tr,
 .admin-container.admin-dark table tbody td {
-  background: #171717 !important;
+  background: var(--admin-card) !important;
 }
 
 .admin-container.admin-dark table tbody tr:hover td {
-  background: #1f1f1f !important;
+  background: var(--admin-hover) !important;
 }
 
 /* ---------- DARK: CONTROLES ---------- */
@@ -956,9 +971,9 @@
 .admin-container.admin-dark .clientes-filter-button,
 .admin-container.admin-dark .pedidos-filter-button,
 .admin-container.admin-dark .domicilios-filter-button {
-  background: #171717 !important;
+  background: var(--admin-card) !important;
   color: #d0d0d0 !important;
-  border-color: rgba(255,255,255,.13) !important;
+  border-color: var(--admin-border) !important;
 }
 
 .admin-container.admin-dark .roles-filter:hover,
@@ -968,9 +983,9 @@
 .admin-container.admin-dark .clientes-filter-button:hover,
 .admin-container.admin-dark .pedidos-filter-button:hover,
 .admin-container.admin-dark .domicilios-filter-button:hover {
-  color: #c2a878 !important;
-  border-color: #c2a878 !important;
-  background: rgba(194,168,120,.08) !important;
+  color: #d4af37 !important;
+  border-color: #d4af37 !important;
+  background: rgba(212,175,55,.08) !important;
 }
 
 /* =========================================================
@@ -986,7 +1001,7 @@
 .admin-container .domicilio-estado,
 .admin-container .pedido-estado,
 .admin-container .venta-estado {
-  background: #ffffff !important;
+  background: var(--admin-sidebar-bg) !important;
   border: 1px solid currentColor !important;
   border-radius: 999px !important;
   padding: 7px 14px !important;
@@ -1007,7 +1022,7 @@
 .admin-container .pedido-estado.entregado,
 .admin-container .venta-estado.completada {
   color: #0ca653 !important;
-  background: #ffffff !important;
+  background: var(--admin-sidebar-bg) !important;
   border-color: #0ca653 !important;
 }
 
@@ -1020,7 +1035,7 @@
 .admin-container .domicilio-estado.cancelado,
 .admin-container .pedido-estado.cancelado {
   color: #e53935 !important;
-  background: #ffffff !important;
+  background: var(--admin-sidebar-bg) !important;
   border-color: #e53935 !important;
 }
 
@@ -1028,7 +1043,7 @@
 .admin-container .domicilio-estado.camino,
 .admin-container .pedido-estado.despachado {
   color: #2563eb !important;
-  background: #ffffff !important;
+  background: var(--admin-sidebar-bg) !important;
   border-color: #2563eb !important;
 }
 
@@ -1036,7 +1051,7 @@
 .admin-container .domicilio-estado.pendiente,
 .admin-container .pedido-estado.registrado {
   color: #c58a00 !important;
-  background: #ffffff !important;
+  background: var(--admin-sidebar-bg) !important;
   border-color: #c58a00 !important;
 }
 
@@ -1044,7 +1059,7 @@
 .admin-container .pedido-estado.preparacion,
 .admin-container .venta-estado.cerrada {
   color: #7652b8 !important;
-  background: #ffffff !important;
+  background: var(--admin-sidebar-bg) !important;
   border-color: #7652b8 !important;
 }
 
@@ -1067,9 +1082,9 @@
 .admin-container.admin-dark .domicilio-estado.entregado,
 .admin-container.admin-dark .pedido-estado.entregado,
 .admin-container.admin-dark .venta-estado.completada {
-  color: #0ca653 !important;
-  background: rgba(12,166,83,.14) !important;
-  border-color: rgba(12,166,83,.40) !important;
+  color: #34d399 !important;
+  background: rgba(52,211,153,.14) !important;
+  border-color: rgba(52,211,153,.40) !important;
 }
 
 /* ROJO - Inactivo / Anulada / Cancelado */
@@ -1080,33 +1095,33 @@
 .admin-container.admin-dark .venta-estado.anulada,
 .admin-container.admin-dark .domicilio-estado.cancelado,
 .admin-container.admin-dark .pedido-estado.cancelado {
-  color: #e53935 !important;
-  background: rgba(229,57,53,.14) !important;
-  border-color: rgba(229,57,53,.40) !important;
+  color: #f87171 !important;
+  background: rgba(248,113,113,.14) !important;
+  border-color: rgba(248,113,113,.40) !important;
 }
 
 /* AZUL - En camino / Despachado */
 .admin-container.admin-dark .domicilio-estado.camino,
 .admin-container.admin-dark .pedido-estado.despachado {
-  color: #2563eb !important;
-  background: rgba(37,99,235,.14) !important;
-  border-color: rgba(37,99,235,.40) !important;
+  color: #60a5fa !important;
+  background: rgba(96,165,250,.14) !important;
+  border-color: rgba(96,165,250,.40) !important;
 }
 
 /* DORADO - Pendiente / Registrado */
 .admin-container.admin-dark .domicilio-estado.pendiente,
 .admin-container.admin-dark .pedido-estado.registrado {
-  color: #c58a00 !important;
-  background: rgba(197,138,0,.14) !important;
-  border-color: rgba(197,138,0,.40) !important;
+  color: #e0a93b !important;
+  background: rgba(224,169,59,.14) !important;
+  border-color: rgba(224,169,59,.40) !important;
 }
 
 /* MORADO - En preparación / Cerrada */
 .admin-container.admin-dark .pedido-estado.preparacion,
 .admin-container.admin-dark .venta-estado.cerrada {
-  color: #7652b8 !important;
-  background: rgba(118,82,184,.14) !important;
-  border-color: rgba(118,82,184,.40) !important;
+  color: #a78bfa !important;
+  background: rgba(167,139,250,.14) !important;
+  border-color: rgba(167,139,250,.40) !important;
 }
 
 /* Cursor según el estado: los estados clicables avanzan de estado */
@@ -1139,8 +1154,8 @@
 .admin-container .producto-actions button:first-child:hover,
 .admin-container .rol-actions button:first-child:hover,
 .admin-container .usuario-actions button:first-child:hover {
-  color: #c2a878 !important;
-  background: rgba(194, 168, 120, 0.10) !important;
+  color: #d4af37 !important;
+  background: rgba(212, 175, 55, 0.10) !important;
 }
 
 .admin-container .cliente-actions button:nth-child(2):hover,
@@ -1199,4 +1214,66 @@
   font-size: 12px;
   margin-top: 4px;
   display: block;
+}
+/* =========================================================
+   FASE 3 - BOTONES UNIFICADOS
+   ========================================================= */
+.admin-container button[class*="-add-button"],
+.admin-container button[class*="-create-button"],
+.admin-container .perfil-edit-button,
+.admin-container .detail-cerrar-button,
+.admin-container .admin-btn-primary,
+.admin-container .confirm-action-button,
+.admin-container .pagination-number.active {
+  background: var(--admin-grad) !important;
+  color: var(--admin-on-gold) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(212,160,23,.30) !important;
+  border: 1px solid transparent !important;
+}
+
+.admin-container button[class*="-add-button"]:hover,
+.admin-container button[class*="-create-button"]:hover,
+.admin-container .perfil-edit-button:hover,
+.admin-container .detail-cerrar-button:hover,
+.admin-container .admin-btn-primary:hover,
+.admin-container .confirm-action-button:hover,
+.admin-container .pagination-number.active:hover {
+  filter: brightness(1.05) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Secundarios / cancelar */
+.admin-container button[class*="-cancel-button"],
+.admin-container .confirm-cancel-button {
+  background: transparent !important;
+  border: 1px solid var(--admin-border) !important;
+  color: var(--admin-text-secondary) !important;
+  border-radius: 10px !important;
+}
+
+.admin-container button[class*="-cancel-button"]:hover,
+.admin-container .confirm-cancel-button:hover {
+  border-color: var(--admin-gold) !important;
+  color: var(--admin-gold) !important;
+}
+
+/* Destructivos */
+.admin-container button[class*="-delete-button"],
+.admin-container .venta-anular-button,
+.admin-container .venta-product-delete,
+.admin-container .pedido-product-delete,
+.admin-container .producto-talla-delete {
+  background: #e53935 !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+}
+
+.admin-container button[class*="-delete-button"]:hover,
+.admin-container .venta-anular-button:hover,
+.admin-container .venta-product-delete:hover,
+.admin-container .pedido-product-delete:hover,
+.admin-container .producto-talla-delete:hover {
+  background: #c62828 !important;
+  transform: translateY(-1px) !important;
 }

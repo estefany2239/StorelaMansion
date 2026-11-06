@@ -58,13 +58,13 @@
   padding: 0 14px;
   box-sizing: border-box;
   background: #ffffff;
-  border: 1px solid rgba(201, 162, 39, 0.30);
+  border: 1px solid rgba(153, 101, 21, 0.30);
   border-radius: 9px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .abonos-minimo:hover {
-  box-shadow: 0 3px 10px rgba(201, 162, 39, 0.10);
+  box-shadow: 0 3px 10px rgba(153, 101, 21, 0.10);
 }
 
 .abonos-minimo-etiqueta {
@@ -96,8 +96,8 @@
 }
 
 .abonos-minimo input:focus {
-  border-color: var(--admin-gold, #c9a227);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+  border-color: var(--admin-gold, #996515);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.10);
 }
 
 .abonos-minimo-boton {
@@ -107,7 +107,7 @@
   padding: 7px 11px;
   border: none;
   border-radius: 7px;
-  background: var(--admin-cta-gold, #d4af37);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-family: var(--font-body, "Inter", sans-serif);
   font-size: 13px;
@@ -160,7 +160,7 @@
   padding: 18px;
   box-sizing: border-box;
   background: #ffffff;
-  border: 1px solid rgba(201, 162, 39, 0.14);
+  border: 1px solid rgba(153, 101, 21, 0.14);
   border-radius: 15px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
@@ -173,9 +173,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(201, 162, 39, 0.10);
+  background: rgba(153, 101, 21, 0.10);
   border-radius: 12px;
-  color: var(--admin-gold, #c9a227);
+  color: var(--admin-gold, #996515);
   flex-shrink: 0;
 }
 
@@ -260,11 +260,11 @@
 }
 
 .abonos-pestana:hover {
-  color: var(--admin-gold, #c9a227);
+  color: var(--admin-gold, #996515);
 }
 
 .abonos-pestana.activa {
-  background: var(--admin-cta-gold, #d4af37);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
 }
 
@@ -284,8 +284,8 @@
 }
 
 .abonos-search:focus-within {
-  border-color: var(--admin-gold, #c9a227);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+  border-color: var(--admin-gold, #996515);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.10);
 }
 
 .abonos-search input {
@@ -421,7 +421,7 @@
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    var(--admin-gold, #c9a227),
+    var(--admin-gold, #996515),
     #e2c775
   );
   transition: width 0.35s ease;
@@ -529,8 +529,8 @@
 }
 
 .abonos-acciones button:hover {
-  color: var(--admin-gold, #c9a227);
-  background: rgba(201, 162, 39, 0.10);
+  color: var(--admin-gold, #996515);
+  background: rgba(153, 101, 21, 0.10);
   transform: translateY(-1px);
 }
 
@@ -568,7 +568,7 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border: 1px solid rgba(201, 162, 39, 0.16);
+  border: 1px solid rgba(153, 101, 21, 0.16);
   border-radius: 16px;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
   overflow: hidden;
@@ -601,7 +601,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(201, 162, 39, 0.12);
+  background: rgba(153, 101, 21, 0.12);
   color: var(--admin-gold, #b8860b);
   border-radius: 11px;
 }
@@ -638,7 +638,7 @@
 }
 
 .abonos-modal-close:hover:not(:disabled) {
-  background: rgba(201, 162, 39, 0.10);
+  background: rgba(153, 101, 21, 0.10);
   color: var(--admin-gold, #b8860b);
 }
 
@@ -671,7 +671,7 @@
   padding: 13px 15px;
   box-sizing: border-box;
   background: #faf6ec;
-  border: 1px solid rgba(201, 162, 39, 0.18);
+  border: 1px solid rgba(153, 101, 21, 0.18);
   border-radius: 11px;
 }
 
@@ -775,7 +775,7 @@
   padding: 10px 16px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold, #d4af37);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-family: var(--font-body, "Inter", sans-serif);
   font-size: 13.5px;
@@ -799,7 +799,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold, #d4af37);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-family: var(--font-body, "Inter", sans-serif);
   font-size: 14px;
@@ -858,7 +858,7 @@
   font-size: 14px;
   color: #8b93a1;
   background: #faf6ec;
-  border: 1px dashed rgba(201, 162, 39, 0.30);
+  border: 1px dashed rgba(153, 101, 21, 0.30);
   border-radius: 11px;
 }
 
@@ -902,7 +902,7 @@
   padding: 11px 13px;
   box-sizing: border-box;
   background: #faf6ec;
-  border: 1px solid rgba(201, 162, 39, 0.18);
+  border: 1px solid rgba(153, 101, 21, 0.18);
   border-radius: 10px;
 }
 
@@ -964,8 +964,8 @@
 .abonos-form-grupo input:focus,
 .abonos-form-grupo select:focus,
 .abonos-form-grupo textarea:focus {
-  border-color: var(--admin-gold, #c9a227);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+  border-color: var(--admin-gold, #996515);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.10);
 }
 
 .abonos-form-contador {
@@ -1118,7 +1118,7 @@
 
 .admin-container.admin-dark .abonos-actions .abonos-minimo {
   background: #171717;
-  border-color: rgba(194, 168, 120, 0.25);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .admin-container.admin-dark .abonos-minimo-etiqueta {
@@ -1126,7 +1126,7 @@
 }
 
 .admin-container.admin-dark .abonos-minimo strong {
-  color: #c2a878;
+  color: #d4af37;
 }
 
 .admin-container.admin-dark .abonos-minimo input {
@@ -1142,7 +1142,7 @@
 
 .admin-container.admin-dark .abonos-tarjeta {
   background: #171717;
-  border-color: rgba(194, 168, 120, 0.16);
+  border-color: rgba(212, 175, 55, 0.16);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.30);
 }
 
@@ -1173,7 +1173,7 @@
 }
 
 .admin-container.admin-dark .abonos-pestana.activa {
-  background: #c2a878;
+  background: #d4af37;
   color: #111111;
 }
 
@@ -1188,12 +1188,12 @@
 
 .admin-container.admin-dark .abonos-table-container {
   background: #171717;
-  border-color: rgba(194, 168, 120, 0.18);
+  border-color: rgba(212, 175, 55, 0.18);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
 }
 
 .admin-container.admin-dark .abonos-table th {
-  color: #c2a878;
+  color: #d4af37;
   border-bottom-color: rgba(255, 255, 255, 0.10);
   background: #202020;
 }
@@ -1213,11 +1213,11 @@
 }
 
 .admin-container.admin-dark .abonos-id-pedido {
-  color: #c2a878;
+  color: #d4af37;
 }
 
 .admin-container.admin-dark .abonos-total {
-  color: #c2a878;
+  color: #d4af37;
 }
 
 .admin-container.admin-dark .abonos-abonado {
@@ -1237,7 +1237,7 @@
 }
 
 .admin-container.admin-dark .abonos-progreso-texto {
-  color: #c2a878;
+  color: #d4af37;
 }
 
 .admin-container.admin-dark .abonos-estado {
@@ -1294,7 +1294,7 @@
 
 .admin-container.admin-dark .abonos-modal {
   background: #1b1b1b;
-  border-color: rgba(194, 168, 120, 0.18);
+  border-color: rgba(212, 175, 55, 0.18);
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.65);
 }
 
@@ -1317,7 +1317,7 @@
 
 .admin-container.admin-dark .abonos-detalle-resumen-item {
   background: #111111;
-  border-color: rgba(194, 168, 120, 0.25);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .admin-container.admin-dark .abonos-detalle-resumen-item.abonado {
@@ -1358,16 +1358,16 @@
 }
 
 .admin-container.admin-dark .abonos-detalle-progreso-cabecera strong {
-  color: #c2a878;
+  color: #d4af37;
 }
 
 .admin-container.admin-dark .abonos-detalle-movimientos-cabecera label {
-  color: #c2a878;
+  color: #d4af37;
 }
 
 .admin-container.admin-dark .abonos-form-ayuda div {
   background: #111111;
-  border-color: rgba(194, 168, 120, 0.25);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .admin-container.admin-dark .abonos-form-ayuda span {
@@ -1396,21 +1396,21 @@
 }
 
 .admin-container.admin-dark .abonos-registrar-boton {
-  background: #c2a878;
+  background: #d4af37;
   color: #111111;
 }
 
 .admin-container.admin-dark .abonos-registrar-boton:hover:not(:disabled) {
-  background: #d4bc94;
+  background: #e7c75c;
 }
 
 .admin-container.admin-dark .abonos-boton-primario {
-  background: #c2a878;
+  background: #d4af37;
   color: #111111;
 }
 
 .admin-container.admin-dark .abonos-boton-primario:hover:not(:disabled) {
-  background: #d4bc94;
+  background: #e7c75c;
 }
 
 .admin-container.admin-dark .abonos-boton-secundario {
@@ -1425,19 +1425,19 @@
 }
 
 .admin-container.admin-dark .abonos-boton-secundario.cerrar {
-  background: #c2a878;
-  border-color: #c2a878;
+  background: #d4af37;
+  border-color: #d4af37;
   color: #111111;
 }
 
 .admin-container.admin-dark .abonos-boton-secundario.cerrar:hover:not(:disabled) {
-  background: #d4bc94;
+  background: #e7c75c;
 }
 
 .admin-container.admin-dark .abonos-detalle-cargando,
 .admin-container.admin-dark .abonos-historial-vacio {
   background: #111111;
-  border-color: rgba(194, 168, 120, 0.30);
+  border-color: rgba(212, 175, 55, 0.30);
   color: #9b9b9b;
 }
 
@@ -1457,7 +1457,7 @@
 
 .admin-container.admin-dark .abonos-historial-table th {
   background: #202020;
-  color: #c2a878;
+  color: #d4af37;
   border-bottom-color: rgba(255, 255, 255, 0.10);
 }
 

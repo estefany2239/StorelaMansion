@@ -96,7 +96,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -206,7 +206,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -232,7 +232,7 @@
   border-radius: 10px;
 
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 
   color:
     var(--admin-gold);
@@ -282,10 +282,10 @@
 
 .ventas-indicator-gold {
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 
   border-color:
-    rgba(201, 162, 39, 0.28);
+    rgba(153, 101, 21, 0.28);
 }
 
 
@@ -311,7 +311,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -695,7 +695,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -848,7 +848,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -1087,7 +1087,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -1100,7 +1100,7 @@
   border-radius: 9px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 
   color:
     #7a6420;
@@ -1205,7 +1205,7 @@
 
 .venta-selector-step.active {
   background:
-    rgba(201, 162, 39, 0.12);
+    rgba(153, 101, 21, 0.12);
 
   color:
     #1a1a1a;
@@ -1242,10 +1242,10 @@
 
 .venta-selector-step.completed .venta-selector-step-numero {
   border-color:
-    rgba(201, 162, 39, 0.45);
+    rgba(153, 101, 21, 0.45);
 
   background:
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   color:
     #6f5a18;
@@ -1385,7 +1385,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -1488,10 +1488,10 @@
 
 .venta-producto-resultado:hover {
   border-color:
-    rgba(201, 162, 39, 0.55);
+    rgba(153, 101, 21, 0.55);
 
   background:
-    rgba(201, 162, 39, 0.05);
+    rgba(153, 101, 21, 0.05);
 }
 
 
@@ -1611,7 +1611,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.06);
+    rgba(153, 101, 21, 0.06);
 }
 
 
@@ -1620,7 +1620,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 }
 
 
@@ -1687,7 +1687,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.06);
+    rgba(153, 101, 21, 0.06);
 }
 
 
@@ -1696,7 +1696,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 }
 
 
@@ -1751,7 +1751,7 @@
   border-radius: 9px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -1849,7 +1849,7 @@
   border-radius: 9px;
 
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 
   color:
     #111111;
@@ -2068,7 +2068,7 @@
   padding: 0 18px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 
   border-radius: 9px;
 }
@@ -2370,7 +2370,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -2386,7 +2386,7 @@
   border-radius: 8px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 
   font-size: 13px;
 
@@ -2497,7 +2497,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.20);
+    rgba(212, 175, 55, 0.20);
 }
 
 
@@ -2512,7 +2512,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 
@@ -2550,7 +2550,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 
@@ -2568,7 +2568,7 @@
 
 .admin-container.admin-dark .ventas-indicator-gold {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 }
 
 
@@ -2629,10 +2629,10 @@
 
 .admin-container.admin-dark .venta-form-hint {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 
   color:
-    #d4bc94;
+    #e7c75c;
 }
 
 
@@ -2688,7 +2688,7 @@
 
 .admin-container.admin-dark .venta-selector-panel {
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 
   background:
     #181818;
@@ -2708,13 +2708,13 @@
 
 .admin-container.admin-dark .venta-selector-step.completed {
   color:
-    #d4bc94;
+    #e7c75c;
 }
 
 
 .admin-container.admin-dark .venta-selector-step.active {
   background:
-    rgba(194, 168, 120, 0.14);
+    rgba(212, 175, 55, 0.14);
 
   color:
     #ffffff;
@@ -2739,13 +2739,13 @@
 .venta-selector-step.completed
 .venta-selector-step-numero {
   border-color:
-    rgba(194, 168, 120, 0.40);
+    rgba(212, 175, 55, 0.40);
 
   background:
-    rgba(194, 168, 120, 0.12);
+    rgba(212, 175, 55, 0.12);
 
   color:
-    #d4bc94;
+    #e7c75c;
 }
 
 
@@ -2786,7 +2786,7 @@
 
 .admin-container.admin-dark .venta-selector-cambiar {
   color:
-    #d4bc94;
+    #e7c75c;
 }
 
 
@@ -2828,10 +2828,10 @@
 
 .admin-container.admin-dark .venta-producto-resultado:hover {
   border-color:
-    rgba(194, 168, 120, 0.50);
+    rgba(212, 175, 55, 0.50);
 
   background:
-    rgba(194, 168, 120, 0.08);
+    rgba(212, 175, 55, 0.08);
 }
 
 
@@ -2857,10 +2857,10 @@
 .admin-container.admin-dark .venta-talla-chip:hover:not(:disabled),
 .admin-container.admin-dark .venta-color-chip:hover {
   border-color:
-    rgba(194, 168, 120, 0.50);
+    rgba(212, 175, 55, 0.50);
 
   background:
-    rgba(194, 168, 120, 0.08);
+    rgba(212, 175, 55, 0.08);
 }
 
 
@@ -2870,7 +2870,7 @@
     var(--admin-gold);
 
   background:
-    rgba(194, 168, 120, 0.14);
+    rgba(212, 175, 55, 0.14);
 }
 
 
@@ -2906,7 +2906,7 @@
 
 .admin-container.admin-dark .venta-selector-resumen {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 }
 
 
@@ -2918,7 +2918,7 @@
 
 .admin-container.admin-dark .venta-selector-subtotal strong {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 
   color:
     #ffffff;
@@ -3036,7 +3036,7 @@
 
 .admin-container.admin-dark .venta-total-box {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 }
 
 
@@ -3331,7 +3331,7 @@
   justify-content: center;
 
   border:
-    1px solid rgba(179, 151, 99, 0.28);
+    1px solid rgba(153, 101, 21, 0.28);
 
   border-radius: 11px;
 
@@ -3396,7 +3396,7 @@
   padding: 20px;
 
   border:
-    1px solid rgba(179, 151, 99, 0.18);
+    1px solid rgba(153, 101, 21, 0.18);
 
   border-radius: 14px;
 
@@ -3667,7 +3667,7 @@
   scrollbar-width: thin;
 
   scrollbar-color:
-    rgba(179, 151, 99, 0.35)
+    rgba(153, 101, 21, 0.35)
     transparent;
 }
 
@@ -3684,7 +3684,7 @@
   border-radius: 999px;
 
   background:
-    rgba(179, 151, 99, 0.35);
+    rgba(153, 101, 21, 0.35);
 }
 
 .venta-registro-linea {
@@ -3969,7 +3969,7 @@
   padding: 16px;
 
   border:
-    1px solid rgba(179, 151, 99, 0.24);
+    1px solid rgba(153, 101, 21, 0.24);
 
   border-radius: 11px;
 
@@ -4587,7 +4587,7 @@ strong {
 
 .admin-container.admin-dark .venta-registro-nota {
   background: #1a1a1a;
-  color: #d4bc94;
+  color: #e7c75c;
 }
 
 .admin-container.admin-dark .venta-registro-card {
@@ -4674,7 +4674,7 @@ strong {
 }
 
 .admin-container.admin-dark .venta-selector-step.completed {
-  color: #d4bc94;
+  color: #e7c75c;
 }
 
 .admin-container.admin-dark .venta-selector-step-numero {
@@ -4692,7 +4692,7 @@ strong {
 .admin-container.admin-dark .venta-selector-step.completed .venta-selector-step-numero {
   background: rgba(212, 175, 55, 0.12);
   border-color: rgba(212, 175, 55, 0.35);
-  color: #d4bc94;
+  color: #e7c75c;
 }
 
 .admin-container.admin-dark .venta-talla-chip,
@@ -4757,7 +4757,7 @@ strong {
 }
 
 .admin-container.admin-dark .venta-selector-cambiar {
-  color: #d4bc94;
+  color: #e7c75c;
 }
 
 .admin-container.admin-dark .venta-registro-empty {

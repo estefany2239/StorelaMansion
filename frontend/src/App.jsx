@@ -771,6 +771,18 @@ export default function App() {
 
   };
 
+  const handleAdminPerfilActualizado = (datos) => {
+
+    const actualizado = {
+      ...user,
+      ...datos
+    };
+
+    localStorage.setItem("usuario", JSON.stringify(actualizado));
+    setUser(actualizado);
+
+  };
+
 
   // ==========================================
   // SEGUIR COMPRANDO (Mis pedidos / Configuración)
@@ -1151,6 +1163,8 @@ export default function App() {
           user={user}
 
           onLogout={handleLogout}
+
+          onUserUpdated={handleAdminPerfilActualizado}
 
         />
 
