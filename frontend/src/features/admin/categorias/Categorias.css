@@ -90,7 +90,7 @@
   border-color: var(--admin-gold);
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 /* =========================================================
@@ -106,7 +106,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -127,7 +127,7 @@
   background: #ffffff;
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
   border-radius: 15px;
   box-shadow:
     0 4px 14px
@@ -185,7 +185,7 @@
 
 .categorias-table tbody tr:hover {
   background:
-    rgba(201, 162, 39, 0.025);
+    rgba(153, 101, 21, 0.025);
 }
 
 /* =========================================================
@@ -321,7 +321,7 @@
 .categoria-actions button:hover {
   color: var(--admin-gold);
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 .categoria-actions button:last-child:hover {
@@ -483,7 +483,7 @@
   border-color: var(--admin-gold);
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 .categoria-form-group input:disabled {
@@ -653,7 +653,7 @@
   padding: 0 24px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -695,7 +695,7 @@
 .admin-container.admin-dark .categorias-table-container {
   background: #171717;
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 .admin-container.admin-dark .categorias-table th {
@@ -711,7 +711,7 @@
 
 .admin-container.admin-dark .categorias-table tbody tr:hover {
   background:
-    rgba(194, 168, 120, 0.04);
+    rgba(212, 175, 55, 0.04);
 }
 
 .admin-container.admin-dark .categoria-nombre {

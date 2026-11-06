@@ -130,7 +130,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -188,7 +188,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -469,7 +469,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -696,7 +696,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -946,7 +946,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -1151,7 +1151,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.20);
+    rgba(212, 175, 55, 0.20);
 }
 
 
@@ -1166,7 +1166,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 

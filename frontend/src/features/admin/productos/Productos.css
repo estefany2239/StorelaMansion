@@ -90,7 +90,7 @@
   border-color: var(--admin-gold);
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 /* =========================================================
@@ -106,7 +106,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -147,7 +147,7 @@
   background: #ffffff;
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
   border-radius: 15px;
   box-shadow:
     0 4px 14px
@@ -209,7 +209,7 @@
 
 .productos-table tbody tr:hover {
   background:
-    rgba(201, 162, 39, 0.025);
+    rgba(153, 101, 21, 0.025);
 }
 
 /* =========================================================
@@ -236,9 +236,9 @@
 
 .producto-image-empty {
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
   border: 1px dashed
-    rgba(201, 162, 39, 0.45);
+    rgba(153, 101, 21, 0.45);
 }
 
 /* =========================================================
@@ -462,7 +462,7 @@
 .producto-actions button:hover {
   color: var(--admin-gold);
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 .producto-actions button:last-child:hover {
@@ -618,7 +618,7 @@
   border-color: var(--admin-gold);
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 .producto-form-group input:disabled {
@@ -758,7 +758,7 @@
   padding: 0 24px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -782,7 +782,7 @@
 .admin-container.admin-dark .productos-search {
   background: var(--admin-card);
   border-color:
-    rgba(194, 168, 120, 0.20);
+    rgba(212, 175, 55, 0.20);
 }
 
 .admin-container.admin-dark .productos-search input {
@@ -800,7 +800,7 @@
 .admin-container.admin-dark .productos-table-container {
   background: var(--admin-card);
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 .admin-container.admin-dark .productos-table th {
@@ -816,7 +816,7 @@
 
 .admin-container.admin-dark .productos-table tbody tr:hover {
   background:
-    rgba(194, 168, 120, 0.04);
+    rgba(212, 175, 55, 0.04);
 }
 
 .admin-container.admin-dark .producto-nombre,
@@ -1066,10 +1066,10 @@
 
 .producto-modal-form .producto-form-group input:focus,
 .producto-modal-form .producto-form-group select:focus {
-  border-color: #c9a227;
+  border-color: #996515;
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.12);
+    rgba(153, 101, 21, 0.12);
 }
 
 .producto-modal-form .producto-form-group input:disabled,
@@ -1304,7 +1304,7 @@
   padding: 0 14px 12px;
   border-top:
     1px solid
-    rgba(201, 162, 39, 0.16);
+    rgba(153, 101, 21, 0.16);
 }
 
 .producto-talla-row {
@@ -1347,11 +1347,11 @@
 .producto-modal-form .producto-talla-control input:focus,
 .producto-modal-form .producto-talla-control select:focus,
 .producto-modal-form .producto-stock-group input:focus {
-  border-color: #c9a227;
+  border-color: #996515;
   outline: none;
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.12);
+    rgba(153, 101, 21, 0.12);
 }
 
 .producto-modal-form .producto-talla-control input:disabled,
@@ -1626,10 +1626,10 @@
   .producto-modal-form
   .producto-form-group
   select:focus {
-  border-color: #c9a227 !important;
+  border-color: #996515 !important;
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.12);
+    rgba(153, 101, 21, 0.12);
 }
 
 .admin-container:not(.admin-dark)

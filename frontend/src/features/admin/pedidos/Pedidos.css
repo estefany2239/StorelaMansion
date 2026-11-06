@@ -130,7 +130,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -188,7 +188,7 @@
 
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
 
   border-radius: 15px;
 
@@ -443,7 +443,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -629,7 +629,7 @@
     var(--admin-gold);
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -886,7 +886,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -1167,7 +1167,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 
@@ -1183,7 +1183,7 @@
   border-radius: 8px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 
   font-size: 13px;
 
@@ -1230,7 +1230,7 @@
   border-radius: 9px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -1346,12 +1346,12 @@
   padding: 16px;
 
   border: 1px dashed
-    rgba(201, 162, 39, 0.5);
+    rgba(153, 101, 21, 0.5);
 
   border-radius: 10px;
 
   background:
-    rgba(201, 162, 39, 0.05);
+    rgba(153, 101, 21, 0.05);
 }
 
 
@@ -1418,7 +1418,7 @@
   border-radius: 9px;
 
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 
@@ -1551,7 +1551,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.20);
+    rgba(212, 175, 55, 0.20);
 }
 
 
@@ -1566,7 +1566,7 @@
     var(--admin-card);
 
   border-color:
-    rgba(194, 168, 120, 0.18);
+    rgba(212, 175, 55, 0.18);
 }
 
 
@@ -1728,7 +1728,7 @@
 
 .admin-container.admin-dark .pedido-product-edit-subtotal strong {
   background:
-    rgba(194, 168, 120, 0.12);
+    rgba(212, 175, 55, 0.12);
 
   color:
     #ffffff;
@@ -1737,7 +1737,7 @@
 
 .admin-container.admin-dark .pedido-abonos-resumen-item {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 }
 
 
@@ -1793,16 +1793,16 @@
 
 .admin-container.admin-dark .pedido-abono-form {
   border-color:
-    rgba(194, 168, 120, 0.35);
+    rgba(212, 175, 55, 0.35);
 
   background:
-    rgba(194, 168, 120, 0.06);
+    rgba(212, 175, 55, 0.06);
 }
 
 
 .admin-container.admin-dark .pedido-total-box {
   background:
-    rgba(194, 168, 120, 0.10);
+    rgba(212, 175, 55, 0.10);
 }
 
 
@@ -2028,7 +2028,7 @@
 
 .pedido-payment-confirm {
   border: none;
-  background: var(--admin-cta-gold, #c9a227);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
 }
 
@@ -2050,7 +2050,7 @@
 }
 
 .admin-container.admin-dark .pedido-pago-badge.pendiente {
-  background: rgba(201, 162, 39, 0.18);
+  background: rgba(153, 101, 21, 0.18);
   color: #f0d48a;
 }
 
@@ -2210,10 +2210,10 @@
   flex-direction: column;
   gap: 8px;
 
-  border: 1px dashed rgba(201, 162, 39, 0.5);
+  border: 1px dashed rgba(153, 101, 21, 0.5);
   border-radius: 10px;
 
-  background: rgba(201, 162, 39, 0.05);
+  background: rgba(153, 101, 21, 0.05);
 }
 
 .pedido-comprobante-rechazo label {
@@ -2247,7 +2247,7 @@
 .pedido-comprobante-rechazo textarea:focus {
   border-color: var(--admin-gold);
 
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.10);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.10);
 }
 
 .pedido-comprobante-rechazo-footer {
@@ -2455,7 +2455,7 @@
 }
 
 .pedido-comprobante-miniatura-abrir:hover {
-  background: rgba(201, 162, 39, 0.1);
+  background: rgba(153, 101, 21, 0.1);
 }
 
 .pedido-comprobante-spinner {
@@ -2549,7 +2549,7 @@
 }
 
 .admin-container.admin-dark .pedido-comprobante-badge.pendiente {
-  background: rgba(201, 162, 39, 0.18);
+  background: rgba(153, 101, 21, 0.18);
   color: #f0d48a;
 }
 
@@ -2564,8 +2564,8 @@
 }
 
 .admin-container.admin-dark .pedido-comprobante-rechazo {
-  border-color: rgba(194, 168, 120, 0.35);
-  background: rgba(194, 168, 120, 0.06);
+  border-color: rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.06);
 }
 
 .admin-container.admin-dark .pedido-comprobante-rechazo label {

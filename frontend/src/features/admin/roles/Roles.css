@@ -88,7 +88,7 @@
   border-color: var(--admin-gold);
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 /* =========================================================
@@ -104,7 +104,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 9px;
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
   font-size: 14px;
   font-weight: 600;
@@ -130,7 +130,7 @@
   background: #ffffff;
   border:
     1px solid
-    rgba(201, 162, 39, 0.14);
+    rgba(153, 101, 21, 0.14);
   border-radius: 15px;
   box-shadow:
     0 4px 14px
@@ -189,7 +189,7 @@
 
 .roles-table tbody tr:hover {
   background:
-    rgba(201, 162, 39, 0.025);
+    rgba(153, 101, 21, 0.025);
 }
 
 /* =========================================================
@@ -233,7 +233,7 @@
   padding: 4px 10px;
   border-radius: 8px;
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
   color: var(--admin-gold-dark);
   font-size: 11px;
   font-weight: 600;
@@ -449,7 +449,7 @@
 .rol-actions button:hover {
   color: var(--admin-gold);
   background:
-    rgba(201, 162, 39, 0.08);
+    rgba(153, 101, 21, 0.08);
 }
 
 .rol-actions button.disabled {
@@ -637,7 +637,7 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 }
 
 .rol-form-group input:disabled {
@@ -701,7 +701,7 @@
   justify-content: center;
   padding: 4px 10px;
   border-radius: 20px;
-  background: rgba(201, 162, 39, 0.10);
+  background: rgba(153, 101, 21, 0.10);
   color: var(--admin-gold-dark);
   font-size: 11px;
   font-weight: 600;
@@ -734,12 +734,12 @@
 
 .rol-privilegio-item:hover {
   border-color: var(--admin-gold);
-  background: rgba(201, 162, 39, 0.04);
+  background: rgba(153, 101, 21, 0.04);
 }
 
 .rol-privilegio-item.activo {
   border-color: var(--admin-gold);
-  background: rgba(201, 162, 39, 0.10);
+  background: rgba(153, 101, 21, 0.10);
   color: var(--admin-gold-dark);
 }
 
@@ -811,7 +811,7 @@
   border: none;
   border-radius: 9px;
 
-  background: var(--admin-cta-gold);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
 
   font-size: 14px;
@@ -851,7 +851,7 @@
   border-radius: 11px;
 
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 
   color: var(--admin-gold-dark);
 }
@@ -1022,7 +1022,7 @@
   border-radius: 12px;
 
   background:
-    rgba(201, 162, 39, 0.10);
+    rgba(153, 101, 21, 0.10);
 
   color: var(--admin-gold-dark);
 

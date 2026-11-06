@@ -213,6 +213,16 @@ export async function actualizarMiPerfil(datos) {
   })
 }
 
+// Actualiza la fotografía de perfil del usuario autenticado.
+// foto: data URL (base64) de la imagen.
+export async function actualizarFotoPerfil(foto) {
+  return peticionAdmin('/api/auth/foto', {
+    metodo: 'PUT',
+    cuerpo: { foto },
+    mensajeError: 'No se pudo actualizar la fotografía'
+  })
+}
+
 export async function obtenerClientes() {
   const respuesta = await fetch(`${API_URL}/api/clientes`, {
     headers: {

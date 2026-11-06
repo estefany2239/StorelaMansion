@@ -207,7 +207,7 @@
 /* Variante info (aviso) */
 
 .confirm-dialog-info .confirm-action-button {
-  background: var(--admin-cta-gold, #d4af37);
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
   color: #111111;
 }
 
