@@ -7,7 +7,7 @@
   min-height: 100vh;
   margin: 0;
   padding: 40px 20px;
-  background-color: var(--bg-main, #f5ead6) !important;
+  background-color: var(--site-bg) !important;
   color: var(--text-main, #1a1a1a) !important;
   box-sizing: border-box;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -20,7 +20,7 @@ body.dark .category-catalog-section,
 .dark-mode .category-catalog-section,
 .dark .category-catalog-section,
 .category-catalog-section.dark-mode-active {
-  background-color: var(--bg-main) !important;
+  background-color: var(--site-bg) !important;
   color: var(--text-main) !important;
 }
 
@@ -82,8 +82,8 @@ body.dark .category-catalog-section,
    SIDEBAR DE FILTROS
    ========================================== */
 .catalog__sidebar {
-  background: var(--bg-main, #f5ead6);
-  border: 1px solid rgba(216, 180, 56, 0.4);
+  background: var(--site-card);
+  border: 1px solid var(--site-border);
   padding: 20px;
   border-radius: 12px;
   height: fit-content;

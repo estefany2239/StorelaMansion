@@ -27,7 +27,7 @@
 ========================================================= */
 
 .payment-page.payment-light {
-  background: #f7e7ce;
+  background: var(--site-bg);
   color: #111111;
 }
 
@@ -198,15 +198,15 @@
 /* LIGHT */
 
 .payment-light .payment-card {
-  background: #ffffff;
+  background: var(--site-card);
 
   color: #111111;
 
   border:
-    1px solid rgba(0, 0, 0, 0.04);
+    1px solid var(--site-border);
 
   box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.06);
+    0 2px 10px rgba(0, 0, 0, .05);
 }
 
 
@@ -554,6 +554,7 @@
 
 .payment-page .form-group select:disabled,
 .payment-page .form-group input:disabled {
+  background: var(--site-surface-2);
   opacity: 0.55;
 
   cursor: not-allowed;
@@ -1019,7 +1020,7 @@
 
 .payment-light .payment-notice {
   background:
-    #f0eadf;
+    var(--site-surface-2);
 
   color:
     #555555;
@@ -1326,16 +1327,16 @@
 
 .payment-light .payment-summary {
   background:
-    #ffffff;
+    var(--site-card);
 
   color:
     #111111;
 
   border:
-    1px solid rgba(0, 0, 0, 0.04);
+    1px solid var(--site-border);
 
   box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.06);
+    0 2px 10px rgba(0, 0, 0, .05);
 }
 
 

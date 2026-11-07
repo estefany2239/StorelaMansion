@@ -201,25 +201,32 @@
 .pedidos-table {
   width: 100%;
 
-  min-width: 680px;
+  min-width: 980px;
 
   border-collapse: collapse;
 
   table-layout: fixed;
 }
 
-/* DISTRIBUCIÓN: ID PEDIDO | CLIENTE | TOTAL | ESTADO | ACCIONES */
-.pedidos-table th:nth-child(1) { width: 11%; }
-.pedidos-table th:nth-child(2) { width: 33%; }
-.pedidos-table th:nth-child(3) { width: 24%; }
-.pedidos-table th:nth-child(4) { width: 18%; }
-.pedidos-table th:nth-child(5) { width: 14%; }
+/* DISTRIBUCIÓN: ID | CLIENTE | MODALIDAD | TOTAL | ABONADO | SALDO | ESTADO | ESTADO PAGO | ACCIONES */
+.pedidos-table th:nth-child(1) { width: 8%; }
+.pedidos-table th:nth-child(2) { width: 15%; }
+.pedidos-table th:nth-child(3) { width: 12%; }
+.pedidos-table th:nth-child(4) { width: 11%; }
+.pedidos-table th:nth-child(5) { width: 11%; }
+.pedidos-table th:nth-child(6) { width: 11%; }
+.pedidos-table th:nth-child(7) { width: 10%; }
+.pedidos-table th:nth-child(8) { width: 12%; }
+.pedidos-table th:nth-child(9) { width: 10%; }
 
-.pedidos-table th:nth-child(4),
-.pedidos-table td:nth-child(4) { text-align: center; }
+.pedidos-table th:nth-child(7),
+.pedidos-table td:nth-child(7) { text-align: center; }
 
-.pedidos-table th:nth-child(5),
-.pedidos-table td:nth-child(5) { text-align: center; }
+.pedidos-table th:nth-child(8),
+.pedidos-table td:nth-child(8) { text-align: center; }
+
+.pedidos-table th:nth-child(9),
+.pedidos-table td:nth-child(9) { text-align: center; }
 
 
 .pedidos-table th {
@@ -1543,6 +1550,106 @@
 
 
 /* =========================================================
+   FILTRO CON SALDO
+   ========================================================= */
+
+.pedidos-filter-button {
+  height: 45px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d8dce2;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #333333;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.pedidos-filter-button.activo {
+  background: var(--admin-cta-gold, #d4af37);
+
+  color: #111111;
+
+  border-color: var(--admin-cta-gold, #d4af37);
+}
+
+.pedidos-filter-button:hover {
+  border-color: var(--admin-gold);
+}
+
+/* =========================================================
+   MODALIDAD / ABONADO / SALDO / ESTADO DEL PAGO (LISTA)
+   ========================================================= */
+
+.pedido-modalidad {
+  color: #738096;
+
+  font-size: 13px;
+
+  font-weight: 500;
+}
+
+.pedido-abonado {
+  color: #0ca653;
+
+  font-size: 14px;
+}
+
+.pedido-saldo {
+  color: #c68a00;
+
+  font-size: 14px;
+}
+
+.pedido-estado-pago {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-width: 92px;
+
+  min-height: 26px;
+
+  padding: 0 11px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.pedido-estado-pago.pendiente {
+  background: #fde5e5;
+
+  color: #c62828;
+}
+
+.pedido-estado-pago.parcial {
+  background: #fff2d2;
+
+  color: #c68a00;
+}
+
+.pedido-estado-pago.pagado {
+  background: #dff5e8;
+
+  color: #0ca653;
+}
+
+/* =========================================================
    DARK MODE
    ========================================================= */
 
@@ -1838,6 +1945,54 @@
     #b0b0b0;
 }
 
+
+/* =========================================================
+   DARK MODE - LISTA PAGOS
+   ========================================================= */
+
+.admin-container.admin-dark .pedidos-filter-button {
+  background: var(--admin-card);
+
+  border-color: rgba(212, 175, 55, 0.20);
+
+  color: var(--admin-text);
+}
+
+.admin-container.admin-dark .pedidos-filter-button.activo {
+  background: var(--admin-cta-gold, #d4af37);
+
+  color: #111111;
+}
+
+.admin-container.admin-dark .pedido-modalidad {
+  color: var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .pedido-abonado {
+  color: #67d99b;
+}
+
+.admin-container.admin-dark .pedido-saldo {
+  color: #e5b84c;
+}
+
+.admin-container.admin-dark .pedido-estado-pago.pendiente {
+  background: rgba(229, 57, 53, 0.16);
+
+  color: #ef8089;
+}
+
+.admin-container.admin-dark .pedido-estado-pago.parcial {
+  background: rgba(212, 175, 55, 0.16);
+
+  color: #e5b84c;
+}
+
+.admin-container.admin-dark .pedido-estado-pago.pagado {
+  background: rgba(12, 166, 83, 0.16);
+
+  color: #67d99b;
+}
 
 /* =========================================================
    RESPONSIVE

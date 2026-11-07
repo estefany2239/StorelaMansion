@@ -18,7 +18,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: clip;
-  background-color: var(--bg-main) !important;
+  background-color: var(--site-bg) !important;
   color: var(--text-main);
   font-family: var(--font-body, "Inter", sans-serif);
   -webkit-font-smoothing: antialiased;
@@ -31,7 +31,7 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-main) !important;
+  background-color: var(--site-bg) !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -52,7 +52,7 @@ html, body {
 main {
   width: 100%;
   flex: 1;
-  background-color: var(--bg-main) !important;
+  background-color: var(--site-bg) !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -83,9 +83,9 @@ ul, ol {
   top: 0 !important;
   z-index: 1000 !important;
   width: 100% !important;
-  background-color: var(--bg-header) !important;
+  background-color: var(--site-bg) !important;
   color: var(--text-main) !important;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--site-border);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -97,7 +97,7 @@ section,
 .section-beige,
 .categories-section {
   width: 100%;
-  background-color: var(--bg-main) !important;
+  background-color: var(--site-bg) !important;
   color: var(--text-main) !important;
   padding-left: 20px;
   padding-right: 20px;
@@ -251,16 +251,15 @@ div[class*="view"] {
    ========================================== */
 .product-card {
   position: relative;
-  background-color: var(--card-bg);
+  background-color: var(--site-card);
   color: var(--text-main);
   border-radius: 12px;
-  border: 1.5px solid transparent;
+  border: 1px solid var(--site-border);
   isolation: isolate;
   display: flex;
   flex-direction: column;
   width: 250px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04),
-    0 0 0 0 rgba(201, 162, 39, 0);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
   transition: transform 0.3s ease, box-shadow 0.35s ease,
     border-color 0.35s ease, background-color 0.3s ease;
 }

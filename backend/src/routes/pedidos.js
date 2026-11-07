@@ -1,6 +1,13 @@
 import { Router } from 'express'
 import { pool } from '../config/db.js'
 import {
+  buscarProductosVenta,
+  tallasProductoVenta,
+  coloresProductoVenta,
+  varianteProductoVenta,
+  clientesPanelVenta,
+} from '../services/catalogoVentas.js'
+import {
   verificarToken,
   soloRoles,
   bloquearCambioPendiente,
@@ -13,6 +20,7 @@ import {
   montoMinimo,
   registrar,
   abonoPorClave,
+  traducirEstadoMonto,
 } from '../services/abonos.js'
 import {
   ESTADOS,
@@ -86,6 +94,7 @@ const notificarDecisionComprobante = async ({
             TRIM(u.nombres || ' ' || u.apellidos) AS nombre
        FROM pedido p
        JOIN usuario u ON u.id_usuario = p.id_usuario
+   LEFT JOIN pedido_abonos pa ON pa.id_pedido = p.id_pedido
       WHERE p.id_pedido = $1`,
     [idPedido]
   )
@@ -259,9 +268,15 @@ const SELECT_PEDIDO = `
          (SELECT municipio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS municipio,
          (SELECT barrio FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS barrio,
          (SELECT nombre_destinatario FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS nombre_destinatario,
-         (SELECT telefono_destinatario FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS telefono_destinatario
+         (SELECT telefono_destinatario FROM domicilio WHERE id_pedido = p.id_pedido ORDER BY id_domicilio LIMIT 1) AS telefono_destinatario,
+         COALESCE(pa.total_abonado, 0)::float8 AS total_abonado,
+         COALESCE(pa.saldo_pendiente, 0)::float8 AS saldo_pendiente,
+         COALESCE(pa.porcentaje_pagado, 0) AS porcentaje_pagado,
+         pa.estado_monto,
+         COALESCE(pa.es_contra_entrega, FALSE) AS es_contra_entrega
   FROM pedido p
   JOIN usuario u ON u.id_usuario = p.id_usuario
+  LEFT JOIN pedido_abonos pa ON pa.id_pedido = p.id_pedido
 `
 
 const SELECT_PAGOS = `
@@ -499,6 +514,144 @@ const validarEntrega = (body, metodoEnvio) => {
   }
 }
 
+// Helper compartido: crea pedido + items + stock + venta + domicilio en la
+// transacción del llamador (client). Devuelve id_pedido. No hace COMMIT.
+const crearPedidoTransaccion = async (client, {
+  idUsuario,
+  cantidades,
+  metodoGuardado,
+  metodoEnvio,
+  entrega,
+  fecha = null,
+  estadoInicial = ESTADO_INICIAL,
+  estadoPago = ESTADO_PAGO_PENDIENTE,
+  origen = 'Tienda virtual',
+}) => {
+  const ids = [...cantidades.keys()].sort((a, b) => a - b)
+
+  const { rows: variantes } = await client.query(
+    `SELECT pv.id_variante, pv.stock, p.precio::float8 AS precio,
+            p.estado AS activo, p.nombre
+       FROM producto_variante pv
+       JOIN producto p ON p.id_producto = pv.id_producto
+      WHERE pv.id_variante = ANY($1::int[])
+      FOR UPDATE OF pv`,
+    [ids]
+  )
+  const mapa = new Map(variantes.map((v) => [v.id_variante, v]))
+
+  for (const id of ids) {
+    const variante = mapa.get(id)
+    const cantidad = cantidades.get(id)
+    if (!variante) throw new ErrorHttp(400, `La variante ${id} no existe`)
+    if (!variante.activo) throw new ErrorHttp(409, `El producto "${variante.nombre}" no está disponible`)
+    if (cantidad > variante.stock) {
+      throw new ErrorHttp(409, `Stock insuficiente para "${variante.nombre}" (disponible: ${variante.stock})`)
+    }
+  }
+
+  const subtotal = ids.reduce(
+    (acumulado, id) => acumulado + mapa.get(id).precio * cantidades.get(id),
+    0
+  )
+  const { costo: costoEnvio, pendiente: costoEnvioPendiente } =
+    calcularCostoEnvio(metodoEnvio)
+  const total = subtotal + (costoEnvioPendiente ? 0 : costoEnvio)
+
+  const { rows: pedidoRows } = await client.query(
+    `INSERT INTO pedido (id_usuario, fecha, subtotal, descuento, iva, total,
+                          costo_envio, costo_envio_pendiente, estado,
+                          metodo_pago, estado_pago)
+     VALUES ($1, COALESCE($2::date, CURRENT_DATE), $3, 0, 0, $4, $5, $6, $7, $8, $9)
+     RETURNING id_pedido`,
+    [
+      idUsuario,
+      fecha,
+      subtotal,
+      total,
+      costoEnvioPendiente ? null : costoEnvio,
+      costoEnvioPendiente,
+      estadoInicial,
+      metodoGuardado,
+      estadoPago,
+    ]
+  )
+  const idPedido = pedidoRows[0].id_pedido
+
+  for (const id of ids) {
+    const variante = mapa.get(id)
+    const cantidad = cantidades.get(id)
+    await client.query(
+      `INSERT INTO detalle_pedido (id_pedido, id_variante, cantidad, precio_unitario)
+       VALUES ($1, $2, $3, $4)`,
+      [idPedido, id, cantidad, variante.precio]
+    )
+    const actualizado = await client.query(
+      `UPDATE producto_variante
+          SET stock = stock - $1
+        WHERE id_variante = $2 AND stock >= $1`,
+      [cantidad, id]
+    )
+    if (actualizado.rowCount === 0) {
+      throw new ErrorHttp(409, `Stock insuficiente para "${variante.nombre}"`)
+    }
+  }
+
+  const { rows: ventaRows } = await client.query(
+    `INSERT INTO venta (id_pedido, id_cliente, nombre_cliente, id_vendedor,
+                         fecha, metodo_pago, estado, total, origen,
+                         estado_pago, fecha_pago)
+     SELECT p.id_pedido,
+            p.id_usuario,
+            TRIM(u.nombres || ' ' || u.apellidos),
+            NULL,
+            p.fecha,
+            p.metodo_pago,
+            'Completada',
+            p.total,
+            $2,
+            'Pendiente',
+            NULL
+       FROM pedido p
+       JOIN usuario u ON u.id_usuario = p.id_usuario
+      WHERE p.id_pedido = $1
+     ON CONFLICT (id_pedido) DO NOTHING
+     RETURNING id_venta`,
+    [idPedido, origen]
+  )
+
+  if (ventaRows.length > 0) {
+    await client.query(
+      `INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario)
+       SELECT $1, id_variante, cantidad, precio_unitario
+         FROM detalle_pedido
+        WHERE id_pedido = $2`,
+      [ventaRows[0].id_venta, idPedido]
+    )
+  }
+
+  await client.query(
+    `INSERT INTO domicilio (id_pedido, direccion_entrega, metodo_envio, estado,
+                             departamento, municipio, barrio,
+                             nombre_destinatario, telefono_destinatario)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [
+      idPedido,
+      entrega.direccion,
+      metodoEnvio,
+      'Pendiente',
+      entrega.departamento,
+      entrega.municipio,
+      entrega.barrio,
+      entrega.nombreDestinatario,
+      entrega.telefonoDestinatario,
+    ]
+  )
+
+  return idPedido
+}
+
+
 // POST / -> crea un pedido (solo Cliente). El precio lo calcula el backend.
 router.post('/', soloRoles('Cliente'), async (req, res) => {
   const client = await pool.connect()
@@ -509,137 +662,17 @@ router.post('/', soloRoles('Cliente'), async (req, res) => {
     const metodoEnvio = normalizarEnvio(req.body)
     const entrega = validarEntrega(req.body, metodoEnvio)
 
-    const ids = [...cantidades.keys()].sort((a, b) => a - b)
-
     await client.query('BEGIN')
 
-    // Bloquea las variantes para evitar carreras de stock.
-    const { rows: variantes } = await client.query(
-      `SELECT pv.id_variante, pv.stock, p.precio::float8 AS precio,
-              p.estado AS activo, p.nombre
-       FROM producto_variante pv
-       JOIN producto p ON p.id_producto = pv.id_producto
-       WHERE pv.id_variante = ANY($1::int[])
-       FOR UPDATE OF pv`,
-      [ids]
-    )
-
-    const mapa = new Map(variantes.map((v) => [v.id_variante, v]))
-
-    for (const id of ids) {
-      const variante = mapa.get(id)
-      const cantidad = cantidades.get(id)
-
-      if (!variante) {
-        throw new ErrorHttp(400, `La variante ${id} no existe`)
-      }
-      if (!variante.activo) {
-        throw new ErrorHttp(409, `El producto "${variante.nombre}" no está disponible`)
-      }
-      if (cantidad > variante.stock) {
-        throw new ErrorHttp(409, `Stock insuficiente para "${variante.nombre}" (disponible: ${variante.stock})`)
-      }
-    }
-
-    const subtotal = ids.reduce(
-      (acumulado, id) => acumulado + mapa.get(id).precio * cantidades.get(id),
-      0
-    )
-
-    // El costo de envío también lo calcula el backend. Si la tarifa está
-    // pendiente se guarda NULL + pendiente=true y el total no inventa un
-    // valor de envío.
-    const { costo: costoEnvio, pendiente: costoEnvioPendiente } =
-      calcularCostoEnvio(metodoEnvio)
-    const total = subtotal + (costoEnvioPendiente ? 0 : costoEnvio)
-
-    const { rows: pedidoRows } = await client.query(
-      `INSERT INTO pedido (id_usuario, subtotal, descuento, iva, total,
-                           costo_envio, costo_envio_pendiente, estado,
-                           metodo_pago, estado_pago)
-       VALUES ($1, $2, 0, 0, $3, $4, $5, $6, $7, $8)
-       RETURNING id_pedido`,
-      [
-        req.usuario.id,
-        subtotal,
-        total,
-        costoEnvioPendiente ? null : costoEnvio,
-        costoEnvioPendiente,
-        ESTADO_INICIAL,
-        metodo_guardado,
-        ESTADO_PAGO_PENDIENTE,
-      ]
-    )
-    const idPedido = pedidoRows[0].id_pedido
-
-    for (const id of ids) {
-      const variante = mapa.get(id)
-      const cantidad = cantidades.get(id)
-
-      await client.query(
-        `INSERT INTO detalle_pedido (id_pedido, id_variante, cantidad, precio_unitario)
-         VALUES ($1, $2, $3, $4)`,
-        [idPedido, id, cantidad, variante.precio]
-      )
-
-      const actualizado = await client.query(
-        `UPDATE producto_variante
-         SET stock = stock - $1
-         WHERE id_variante = $2 AND stock >= $1`,
-        [cantidad, id]
-      )
-      if (actualizado.rowCount === 0) {
-        throw new ErrorHttp(409, `Stock insuficiente para "${variante.nombre}"`)
-      }
-    }
-
-    // La venta del pedido se crea en la MISMA transacción. El stock ya se
-    // descontó arriba con el pedido: aquí no se vuelve a tocar.
-    const { rows: ventaRows } = await client.query(
-      `INSERT INTO venta (id_pedido, id_cliente, nombre_cliente, id_vendedor,
-                          fecha, metodo_pago, estado, total, origen,
-                          estado_pago, fecha_pago)
-       SELECT p.id_pedido,
-              p.id_usuario,
-              TRIM(u.nombres || ' ' || u.apellidos),
-              NULL,
-              p.fecha,
-              p.metodo_pago,
-              'Completada',
-              p.total,
-              'Tienda virtual',
-              'Pendiente',
-              NULL
-         FROM pedido p
-         JOIN usuario u ON u.id_usuario = p.id_usuario
-        WHERE p.id_pedido = $1
-       ON CONFLICT (id_pedido) DO NOTHING
-       RETURNING id_venta`,
-      [idPedido]
-    )
-
-    if (ventaRows.length > 0) {
-      await client.query(
-        `INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario)
-         SELECT $1, id_variante, cantidad, precio_unitario
-           FROM detalle_pedido
-          WHERE id_pedido = $2`,
-        [ventaRows[0].id_venta, idPedido]
-      )
-    }
-
-    // El pago NO se registra aquí: el pedido nace en "Pendiente de
-    // verificación" y la tienda lo confirma o rechaza desde el admin.
-
-    await client.query(
-      `INSERT INTO domicilio (id_pedido, direccion_entrega, metodo_envio, estado,
-                              departamento, municipio, barrio,
-                              nombre_destinatario, telefono_destinatario)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [idPedido, entrega.direccion, metodoEnvio, 'Pendiente',
-       entrega.departamento, entrega.municipio, entrega.barrio,
-       entrega.nombreDestinatario, entrega.telefonoDestinatario]
-    )
+    const idPedido = await crearPedidoTransaccion(client, {
+      idUsuario: req.usuario.id,
+      cantidades,
+      metodoGuardado: metodo_guardado,
+      metodoEnvio,
+      entrega,
+      estadoPago: ESTADO_PAGO_PENDIENTE,
+      origen: 'Tienda virtual',
+    })
 
     await client.query('COMMIT')
 
@@ -1207,12 +1240,111 @@ router.get('/mis', soloRoles('Cliente'), async (req, res) => {
 router.get('/', requierePrivilegio('Pedidos', 'Consultar'), async (req, res) => {
   try {
     const { rows } = await pool.query(`${SELECT_PEDIDO} ORDER BY p.id_pedido DESC`)
-    const conItems = await adjuntarItems(rows)
+    let filtradas = rows
+    if (req.query.con_saldo === '1' || req.query.con_saldo === 'true') {
+      filtradas = filtradas.filter((pedido) => Number(pedido.saldo_pendiente) > 0)
+    }
+    const conItems = await adjuntarItems(filtradas)
     const conPagos = await adjuntarPagos(conItems)
-    res.json(conPagos)
+    const enriquecidas = conPagos.map((pedido) => ({
+      ...pedido,
+      modalidad: pedido.es_contra_entrega ? 'Contra entrega' : 'Pago anticipado',
+      estado_pago_etiqueta: traducirEstadoMonto(pedido.estado_monto),
+    }))
+    res.json(enriquecidas)
   } catch (error) {
     console.error('Error en GET /api/pedidos:', error.message)
     res.status(500).json({ error: 'No se pudieron cargar los pedidos' })
+  }
+})
+
+// ===== PANEL DE ADMINISTRACIÓN (Pedidos:Crear) =====
+// Catálogo reutilizado de ventas.js (servicio compartido), sin duplicar lógica.
+
+router.get('/panel/clientes', requierePrivilegio('Pedidos', 'Crear'), async (req, res) => {
+  try {
+    const rows = await clientesPanelVenta()
+    res.json(rows)
+  } catch (error) {
+    console.error('Error en GET /api/pedidos/panel/clientes:', error.message)
+    res.status(500).json({ error: 'No se pudieron cargar los clientes' })
+  }
+})
+
+router.get('/panel/productos', requierePrivilegio('Pedidos', 'Crear'), async (req, res) => {
+  try {
+    const texto = String(req.query.q ?? '').trim()
+    if (texto.replace(/s+/g, '').length < 2) return res.json([])
+    const rows = await buscarProductosVenta(texto)
+    res.json(rows)
+  } catch (error) {
+    console.error('Error en GET /api/pedidos/panel/productos:', error.message)
+    res.status(500).json({ error: 'No se pudieron buscar los productos' })
+  }
+})
+
+router.get('/panel/productos/:id/tallas', requierePrivilegio('Pedidos', 'Crear'), async (req, res) => {
+  const idProducto = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(idProducto) || idProducto <= 0) {
+    return res.status(400).json({ error: 'El id del producto no es válido' })
+  }
+  try {
+    const rows = await tallasProductoVenta(idProducto)
+    res.json(rows)
+  } catch (error) {
+    console.error('Error en GET /api/pedidos/panel/productos/:id/tallas:', error.message)
+    res.status(500).json({ error: 'No se pudieron cargar las tallas del producto' })
+  }
+})
+
+router.get('/panel/productos/:id/colores', requierePrivilegio('Pedidos', 'Crear'), async (req, res) => {
+  const idProducto = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(idProducto) || idProducto <= 0) {
+    return res.status(400).json({ error: 'El id del producto no es válido' })
+  }
+  const tallaTexto = String(req.query.talla ?? '').trim()
+  const sinTalla =
+    tallaTexto === '' ||
+    tallaTexto.toLowerCase() === 'null' ||
+    tallaTexto.toLowerCase() === 'undefined'
+  const idTalla = sinTalla ? null : Number.parseInt(tallaTexto, 10)
+  if (!sinTalla && (Number.isNaN(idTalla) || idTalla <= 0)) {
+    return res.status(400).json({ error: 'La talla no es válida' })
+  }
+  try {
+    const rows = await coloresProductoVenta(idProducto, idTalla)
+    res.json(rows)
+  } catch (error) {
+    console.error('Error en GET /api/pedidos/panel/productos/:id/colores:', error.message)
+    res.status(500).json({ error: 'No se pudieron cargar los colores del producto' })
+  }
+})
+
+router.get('/panel/productos/:id/variante', requierePrivilegio('Pedidos', 'Crear'), async (req, res) => {
+  const idProducto = Number.parseInt(req.params.id, 10)
+  if (Number.isNaN(idProducto) || idProducto <= 0) {
+    return res.status(400).json({ error: 'El id del producto no es válido' })
+  }
+  const tallaTexto = String(req.query.talla ?? '').trim()
+  const sinTalla =
+    tallaTexto === '' ||
+    tallaTexto.toLowerCase() === 'null' ||
+    tallaTexto.toLowerCase() === 'undefined'
+  const idTalla = sinTalla ? null : Number.parseInt(tallaTexto, 10)
+  if (!sinTalla && (Number.isNaN(idTalla) || idTalla <= 0)) {
+    return res.status(400).json({ error: 'La talla no es válida' })
+  }
+  const idColor = Number.parseInt(req.query.color, 10)
+  if (Number.isNaN(idColor) || idColor <= 0) {
+    return res.status(400).json({ error: 'El color es obligatorio y debe ser válido' })
+  }
+  try {
+    const variante = await varianteProductoVenta(idProducto, idTalla, idColor)
+    if (!variante) return res.status(404).json({ error: 'Variante no encontrada' })
+    res.json(variante)
+  } catch (error) {
+    console.error('Error en GET /api/pedidos/panel/productos/:id/variante:', error.message)
+    res.status(500).json({ error: 'No se pudo cargar la variante' })
   }
 })
 
@@ -1287,6 +1419,7 @@ router.get('/:id/abonos', autorizarAbonosPedido, async (req, res) => {
   try {
     const { rows: abonos } = await pool.query(
       `SELECT pa.id_pago AS id,
+              TRIM(uc.nombres || ' ' || uc.apellidos) AS cliente,
               TO_CHAR(pa.fecha, 'YYYY-MM-DD') AS fecha,
               TO_CHAR(pa.registrado_en, 'YYYY-MM-DD HH24:MI:SS') AS fecha_hora,
               pa.registrado_en,
@@ -1295,8 +1428,14 @@ router.get('/:id/abonos', autorizarAbonosPedido, async (req, res) => {
               pa.referencia,
               pa.id_comprobante,
               pa.observacion,
-              TRIM(ru.nombres || ' ' || ru.apellidos) AS usuario
+              TRIM(ru.nombres || ' ' || ru.apellidos) AS usuario,
+              (pe.total - SUM(pa.monto) OVER (
+                 PARTITION BY pa.id_pedido
+                 ORDER BY pa.registrado_en ASC, pa.id_pago ASC
+               ))::float8 AS saldo_despues
          FROM pago pa
+         JOIN pedido pe ON pe.id_pedido = pa.id_pedido
+         LEFT JOIN usuario uc ON uc.id_usuario = pe.id_usuario
          LEFT JOIN usuario ru ON ru.id_usuario = pa.registrado_por
         WHERE pa.id_pedido = $1
         ORDER BY pa.registrado_en DESC, pa.id_pago DESC`,
@@ -1315,6 +1454,9 @@ router.get('/:id/abonos', autorizarAbonosPedido, async (req, res) => {
       [id]
     )
     let totales = totalesRows[0]
+    if (totales && totales.estado_monto) {
+      totales.estado_monto = traducirEstadoMonto(totales.estado_monto)
+    }
 
     if (!totales || !totales.total) {
       const { rows: existe } = await pool.query(
@@ -1381,9 +1523,9 @@ router.post('/:id/abonos', requierePrivilegio('Abonos', 'Crear'), async (req, re
     const monto = Math.round(crudo * 100) / 100
 
     const metodo = String(req.body?.metodo || '').trim()
-    if (!['Efectivo', 'Transferencia'].includes(metodo)) {
+    if (!['Efectivo', 'Transferencia', 'Nequi', 'Bancolombia', 'QR'].includes(metodo)) {
       return res.status(400).json({
-        error: 'El método del abono debe ser Efectivo o Transferencia',
+        error: 'El método del abono debe ser Efectivo, Transferencia, Nequi, Bancolombia o QR',
         campo: 'metodo',
       })
     }
@@ -1412,13 +1554,6 @@ router.post('/:id/abonos', requierePrivilegio('Abonos', 'Crear'), async (req, re
         await client.query('ROLLBACK')
         return res.status(409).json({ error: 'Un pedido cancelado no admite abonos' })
       }
-      if (!esContraEntrega(pedido.metodo_pago)) {
-        await client.query('ROLLBACK')
-        return res.status(400).json({
-          error: 'Los abonos solo aplican a pedidos de contra entrega; los de transferencia pagan el 100 %',
-        })
-      }
-
       // Idempotencia: repetir la misma clave devuelve el mismo resultado sin
       // duplicar (el pago es inmutable; solo se vuelve a leer y responder).
       if (clave) {
@@ -1477,6 +1612,12 @@ router.post('/:id/abonos', requierePrivilegio('Abonos', 'Crear'), async (req, re
         referencia,
         claveIdempotencia: clave,
       })
+      if (Number(registrado.saldo) <= 0) {
+        await client.query(
+          "UPDATE pedido SET estado_pago = 'Pago confirmado' WHERE id_pedido = $1 AND estado <> 'Cancelado'",
+          [id]
+        )
+      }
       await client.query('COMMIT')
 
       const { rows: estadoRows } = await pool.query(
@@ -1506,5 +1647,152 @@ router.post('/:id/abonos', requierePrivilegio('Abonos', 'Crear'), async (req, re
     res.status(500).json({ error: 'No se pudo registrar el abono' })
   }
 })
+
+// Mapa en memoria para idempotencia del panel (clave -> id_pedido).
+// Persistente solo en el proceso; para producción conviene migrar a columna/tabla.
+const panelIdempotencia = new Map()
+
+// POST /panel -> crea un pedido desde el panel (Pedidos:Crear).
+router.post('/panel', requierePrivilegio('Pedidos', 'Crear'), async (req, res) => {
+  const client = await pool.connect()
+  try {
+    const idCliente = Number.parseInt(req.body?.id_cliente, 10)
+    if (!Number.isInteger(idCliente) || idCliente <= 0) {
+      return res.status(400).json({ error: 'El cliente es obligatorio', campo: 'id_cliente' })
+    }
+
+    const { rows: clienteRows } = await pool.query(
+      `SELECT u.id_usuario
+         FROM usuario u
+         JOIN rol r ON r.id_rol = u.id_rol
+        WHERE u.id_usuario = $1 AND r.nombre = 'Cliente' AND u.estado = TRUE`,
+      [idCliente]
+    )
+    if (clienteRows.length === 0) {
+      return res.status(400).json({ error: 'El cliente no existe o no está activo', campo: 'id_cliente' })
+    }
+
+    const modalidad = String(req.body?.modalidad || '').trim()
+    if (!['Contra entrega', 'Pago anticipado'].includes(modalidad)) {
+      return res.status(400).json({ error: "Modalidad inválida. Usa: Contra entrega o Pago anticipado", campo: 'modalidad' })
+    }
+
+    let fecha = req.body?.fecha
+    if (fecha !== undefined && fecha !== null && String(fecha).trim() !== '') {
+      fecha = String(fecha).trim()
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        return res.status(400).json({ error: 'La fecha debe tener formato YYYY-MM-DD', campo: 'fecha' })
+      }
+      const hoy = new Date().toISOString().slice(0, 10)
+      if (fecha > hoy) {
+        return res.status(400).json({ error: 'La fecha no puede ser futura', campo: 'fecha' })
+      }
+    } else {
+      fecha = null
+    }
+
+    const cantidades = normalizarItems(req.body?.items)
+    const entregaInput = req.body?.entrega || {}
+    const entregaBody = {
+      nombre_entrega: String(entregaInput.nombre_entrega || entregaInput.nombre || '').trim(),
+      telefono_entrega: String(entregaInput.telefono_entrega || entregaInput.telefono || '').trim(),
+      departamento_codigo: String(entregaInput.departamento_codigo || entregaInput.departamento || '').trim(),
+      municipio_codigo: String(entregaInput.municipio_codigo || entregaInput.municipio || '').trim(),
+      barrio: entregaInput.barrio,
+      direccion: entregaInput.direccion,
+      metodo_envio: entregaInput.metodo_envio || 'Domicilio',
+    }
+    const metodoEnvio = normalizarEnvio(entregaBody)
+    const entrega = validarEntrega(entregaBody, metodoEnvio)
+
+    const abono = req.body?.abono_inicial || null
+    const montoAbono = abono ? Number(abono.monto) : 0
+    if (abono && (abono.monto !== undefined && abono.monto !== null && String(abono.monto).trim() !== '')) {
+      if (!Number.isFinite(montoAbono) || montoAbono <= 0) {
+        return res.status(400).json({ error: 'El abono inicial debe ser un monto positivo', campo: 'monto' })
+      }
+      if (montoAbono > 999999999) {
+        return res.status(400).json({ error: 'El abono excede el máximo permitido (999999999)', campo: 'monto' })
+      }
+    }
+    const montoAbonoFinal = (abono && montoAbono > 0) ? Math.round(montoAbono * 100) / 100 : 0
+    const medioAbono = String(abono?.medio || '').trim()
+    if (montoAbonoFinal > 0) {
+      const mediosPermitidos = ['Nequi', 'Bancolombia', 'Efectivo', 'QR']
+      if (!mediosPermitidos.includes(medioAbono)) {
+        return res.status(400).json({ error: 'El medio del abono es obligatorio', campo: 'medio' })
+      }
+    }
+
+    const clave = String(req.body?.clave_idempotencia || '').trim().slice(0, 80) || null
+    if (clave && panelIdempotencia.has(clave)) {
+      const idExistente = panelIdempotencia.get(clave)
+      const existente = await obtenerPedidoPorId(idExistente)
+      return res.status(200).json(existente)
+    }
+
+    const medioTexto = medioAbono || (modalidad === 'Contra entrega' ? 'Nequi' : 'Nequi')
+    const metodoGuardado = modalidad === 'Contra entrega'
+      ? (montoAbonoFinal > 0 ? `Contra entrega - Abono 50% - ${medioAbono || 'Nequi'}` : 'Contra entrega')
+      : `Pago anticipado - ${medioAbono || 'Nequi'}`
+
+    await client.query('BEGIN')
+
+    const idPedido = await crearPedidoTransaccion(client, {
+      idUsuario: idCliente,
+      cantidades,
+      metodoGuardado,
+      metodoEnvio,
+      entrega,
+      fecha,
+      estadoInicial: ESTADO_INICIAL,
+      estadoPago: 'No aplica',
+      origen: 'Mostrador',
+    })
+
+    if (montoAbonoFinal > 0) {
+      const { rows: totalRows } = await client.query(
+        'SELECT total::float8 AS total FROM pedido WHERE id_pedido = $1',
+        [idPedido]
+      )
+      const totalPedido = Number(totalRows[0]?.total || 0)
+      if (montoAbonoFinal > totalPedido) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({ error: 'El abono no puede superar el total del pedido', campo: 'monto' })
+      }
+      const minimo = await montoMinimo(client)
+      if (montoAbonoFinal < minimo) {
+        await client.query('ROLLBACK')
+        return res.status(400).json({ error: `El abono debe ser mayor o igual a ${minimo}`, campo: 'monto' })
+      }
+      await registrar(client, {
+        idPedido,
+        registradoPor: req.usuario.id,
+        monto: montoAbonoFinal,
+        metodo: medioAbono,
+        observacion: String(abono?.observacion || '').trim().slice(0, 500) || null,
+        referencia: String(abono?.referencia || '').trim().slice(0, 100) || null,
+      })
+    }
+
+    await client.query('COMMIT')
+
+    if (clave) panelIdempotencia.set(clave, idPedido)
+
+    const pedido = await obtenerPedidoPorId(idPedido)
+    res.status(201).json(pedido)
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    if (error.status) {
+      const detalle = error.campo ? { error: error.message, campo: error.campo } : { error: error.message }
+      return res.status(error.status).json(detalle)
+    }
+    console.error('Error en POST /api/pedidos/panel:', error.message)
+    res.status(500).json({ error: 'No se pudo crear el pedido' })
+  } finally {
+    client.release()
+  }
+})
+
 
 export default router

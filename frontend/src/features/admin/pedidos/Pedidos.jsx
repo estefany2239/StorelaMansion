@@ -37,7 +37,9 @@ import {
   obtenerArchivoComprobantePedido,
   aprobarComprobantePedido,
   rechazarComprobantePedido,
-  obtenerAbonosPedido
+  obtenerAbonosPedido,
+  registrarAbonoPedido,
+  obtenerConfiguracionAbonos
 } from "../../../shared/services/api";
 
 
@@ -587,6 +589,26 @@ export default function Pedidos({ vendedorId, user }) {
 
   const [errorPagos, setErrorPagos] =
     useState("");
+
+  const [mostrarFormularioAbono, setMostrarFormularioAbono] =
+    useState(false);
+
+  const [formularioAbono, setFormularioAbono] =
+    useState({
+      monto: "",
+      metodo: "Efectivo",
+      referencia: "",
+      observacion: ""
+    });
+
+  const [erroresAbono, setErroresAbono] =
+    useState({});
+
+  const [enviandoAbono, setEnviandoAbono] =
+    useState(false);
+
+  const [montoMinimoAbono, setMontoMinimoAbono] =
+    useState(1);
 
 
   // =====================================================
@@ -1766,10 +1788,147 @@ export default function Pedidos({ vendedorId, user }) {
     setErrorPagos("");
     setCargandoPagos(true);
 
+    setMostrarFormularioAbono(false);
+    setFormularioAbono({
+      monto: "",
+      metodo: "Efectivo",
+      referencia: "",
+      observacion: ""
+    });
+    setErroresAbono({});
+    setEnviandoAbono(false);
+
+    obtenerConfiguracionAbonos()
+      .then((respuesta) => {
+        setMontoMinimoAbono(
+          Number(
+            respuesta?.monto_minimo ??
+              respuesta?.montoMinimo ??
+              1
+          ) || 1
+        );
+      })
+      .catch(() => {});
+
     setMostrarDetalle(true);
 
   };
 
+
+  const generarClaveIdempotenciaAbono = () => {
+    if (crypto?.randomUUID) {
+      return crypto.randomUUID().slice(0, 80);
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  };
+
+  const parsearMontoAbono = (valor) => {
+    const numero = Number(String(valor).replace(",", "."));
+    return Number.isFinite(numero) ? numero : 0;
+  };
+
+  const enviarAbonoDetalle = async () => {
+    if (enviandoAbono || !pedidoSeleccionado) return;
+
+    const monto = parsearMontoAbono(formularioAbono.monto);
+    const nuevosErrores = {};
+
+    if (!monto || monto <= 0) {
+      nuevosErrores.monto = "Escribe el monto del abono.";
+    } else if (montoMinimoAbono > 0 && monto < montoMinimoAbono) {
+      nuevosErrores.monto = `El monto debe ser al menos ${formatearPrecio(montoMinimoAbono)}.`;
+    } else if (monto > pedidoSeleccionado.saldo) {
+      nuevosErrores.monto = `El abono no puede superar el saldo pendiente (${formatearPrecio(pedidoSeleccionado.saldo)}).`;
+    }
+
+    setErroresAbono(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
+
+    setEnviandoAbono(true);
+
+    try {
+      const respuesta = await registrarAbonoPedido(pedidoSeleccionado.id, {
+        monto,
+        metodo: formularioAbono.metodo,
+        referencia: formularioAbono.referencia.trim(),
+        observacion: formularioAbono.observacion.trim(),
+        claveIdempotencia: generarClaveIdempotenciaAbono()
+      });
+
+      mostrarToast("Abono registrado con éxito");
+
+      setMostrarFormularioAbono(false);
+      setFormularioAbono({
+        monto: "",
+        metodo: "Efectivo",
+        referencia: "",
+        observacion: ""
+      });
+      setErroresAbono({});
+
+      const totales = respuesta?.pedido || null;
+      const totalAbonado = Number(totales?.total_abonado);
+      const saldoPendiente = Number(totales?.saldo_pendiente);
+      const estadoMontoCrudo = totales?.estado_monto;
+      const estadoMonto = estadoMontoCrudo
+        ? ({
+            "Pendiente de pago": "Pendiente",
+            "Abono parcial": "Pago parcial",
+            Pagado: "Pagado"
+          }[estadoMontoCrudo] || estadoMontoCrudo)
+        : respuesta?.saldo_pendiente <= 0
+          ? "Pagado"
+          : "Pago parcial";
+
+      setPedidoSeleccionado((actual) => {
+        if (!actual) return actual;
+        return {
+          ...actual,
+          totalPagado: Number.isFinite(totalAbonado)
+            ? totalAbonado
+            : actual.totalPagado,
+          saldo: Number.isFinite(saldoPendiente)
+            ? saldoPendiente
+            : Math.max(0, actual.total - actual.totalPagado),
+          estadoPagoEtiqueta: estadoMonto
+        };
+      });
+
+      setPedidos((actuales) =>
+        actuales.map((pedido) =>
+          pedido.id === String(pedidoSeleccionado.id)
+            ? {
+                ...pedido,
+                totalPagado: Number.isFinite(totalAbonado)
+                  ? totalAbonado
+                  : pedido.totalPagado,
+                saldo: Number.isFinite(saldoPendiente)
+                  ? saldoPendiente
+                  : pedido.saldo,
+                estadoPagoEtiqueta: estadoMonto
+              }
+            : pedido
+        )
+      );
+
+      try {
+        const historial = await obtenerAbonosPedido(pedidoSeleccionado.id);
+        setPagosDetalle(
+          Array.isArray(historial?.abonos) ? historial.abonos : []
+        );
+      } catch {
+        // El abono ya quedó guardado; el fallo de recarga no lo revierte.
+      }
+    } catch (error) {
+      mostrarToast(
+        error?.message || "No se pudo registrar el abono",
+        "error"
+      );
+    } finally {
+      setEnviandoAbono(false);
+    }
+  };
 
   /* =====================================================
      CARGAR PAGOS DEL PEDIDO EN EL DETALLE
@@ -3098,6 +3257,43 @@ export default function Pedidos({ vendedorId, user }) {
 
             <div className="pedido-modal-body">
 
+              <div className="pedido-abonos-resumen">
+
+                <div className="pedido-abonos-resumen-item">
+                  <span>CLIENTE</span>
+                  <strong>{pedidoSeleccionado.cliente}</strong>
+                </div>
+
+                <div className="pedido-abonos-resumen-item">
+                  <span>FECHA</span>
+                  <strong>{formatearFecha(pedidoSeleccionado.fecha)}</strong>
+                </div>
+
+                <div className="pedido-abonos-resumen-item">
+                  <span>VALOR TOTAL</span>
+                  <strong>{formatearPrecio(pedidoSeleccionado.total)}</strong>
+                </div>
+
+                <div className="pedido-abonos-resumen-item">
+                  <span>TOTAL ABONADO</span>
+                  <strong className="abonado">{formatearPrecio(pedidoSeleccionado.totalPagado)}</strong>
+                </div>
+
+                <div className="pedido-abonos-resumen-item">
+                  <span>SALDO PENDIENTE</span>
+                  <strong className={pedidoSeleccionado.saldo > 0 ? "pendiente" : "saldado"}>{formatearPrecio(pedidoSeleccionado.saldo)}</strong>
+                </div>
+
+                <div className="pedido-abonos-resumen-item">
+                  <span>MODALIDAD</span>
+                  <strong>{pedidoSeleccionado.modalidad}</strong>
+                </div>
+
+              </div>
+
+              <div style={{ margin: "12px 0 18px", height: 8, background: "rgba(153,101,21,0.12)", borderRadius: 999, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pedidoSeleccionado.total > 0 ? Math.min(100, Math.round((pedidoSeleccionado.totalPagado / pedidoSeleccionado.total) * 100)) : 0}%`, background: "var(--admin-cta-gold, #d4af37)", borderRadius: 999 }} />
+              </div>
 
               <div className="pedido-form-row">
 
@@ -3482,7 +3678,7 @@ export default function Pedidos({ vendedorId, user }) {
               <div className="pedido-detail-products">
 
                 <label>
-                  PAGOS
+                  HISTORIAL DE ABONOS
                 </label>
 
 
@@ -3505,6 +3701,171 @@ export default function Pedidos({ vendedorId, user }) {
                 )}
 
               </div>
+
+
+              {tienePermiso(user, "Abonos", "Crear") &&
+                pedidoSeleccionado.saldo > 0 &&
+                pedidoSeleccionado.estado !== "Cancelado" && (
+                  <div className="pedido-detail-products">
+
+                    <label>
+                      REGISTRAR ABONO
+                    </label>
+
+                    {!mostrarFormularioAbono ? (
+                      <button
+                        type="button"
+                        className="pedido-add-product"
+                        onClick={() =>
+                          setMostrarFormularioAbono(true)
+                        }
+                      >
+                        Registrar abono
+                      </button>
+                    ) : (
+                      <div className="pedido-abono-form">
+
+                        <div className="pedido-form-row">
+
+                          <div className="pedido-form-group">
+
+                            <label>
+                              MONTO
+                            </label>
+
+                            <input
+                              type="number"
+                              min={montoMinimoAbono}
+                              max={pedidoSeleccionado.saldo}
+                              value={formularioAbono.monto}
+                              onChange={(e) =>
+                                setFormularioAbono((actual) => ({
+                                  ...actual,
+                                  monto: e.target.value
+                                }))
+                              }
+                              placeholder={`Mínimo ${formatearPrecio(montoMinimoAbono)} · Saldo ${formatearPrecio(pedidoSeleccionado.saldo)}`}
+                            />
+
+                            {erroresAbono.monto && (
+                              <span className="pedido-comprobante-error">
+                                {erroresAbono.monto}
+                              </span>
+                            )}
+
+                          </div>
+
+                          <div className="pedido-form-group">
+
+                            <label>
+                              MEDIO
+                            </label>
+
+                            <select
+                              value={formularioAbono.metodo}
+                              onChange={(e) =>
+                                setFormularioAbono((actual) => ({
+                                  ...actual,
+                                  metodo: e.target.value
+                                }))
+                              }
+                            >
+                              <option value="Efectivo">
+                                Efectivo
+                              </option>
+                              <option value="Transferencia">
+                                Transferencia
+                              </option>
+                              <option value="Nequi">
+                                Nequi
+                              </option>
+                              <option value="Bancolombia">
+                                Bancolombia
+                              </option>
+                              <option value="QR">
+                                QR
+                              </option>
+                            </select>
+
+                          </div>
+
+                        </div>
+
+                        <div className="pedido-form-row">
+
+                          <div className="pedido-form-group">
+
+                            <label>
+                              REFERENCIA
+                            </label>
+
+                            <input
+                              type="text"
+                              value={formularioAbono.referencia}
+                              onChange={(e) =>
+                                setFormularioAbono((actual) => ({
+                                  ...actual,
+                                  referencia: e.target.value
+                                }))
+                              }
+                              placeholder="Número de referencia"
+                            />
+
+                          </div>
+
+                          <div className="pedido-form-group">
+
+                            <label>
+                              OBSERVACIÓN
+                            </label>
+
+                            <input
+                              type="text"
+                              value={formularioAbono.observacion}
+                              onChange={(e) =>
+                                setFormularioAbono((actual) => ({
+                                  ...actual,
+                                  observacion: e.target.value
+                                }))
+                              }
+                              placeholder="Observación (opcional)"
+                            />
+
+                          </div>
+
+                        </div>
+
+                        <div className="pedido-abono-form-actions">
+
+                          <button
+                            type="button"
+                            className="pedido-cancel-button"
+                            onClick={() =>
+                              setMostrarFormularioAbono(false)
+                            }
+                            disabled={enviandoAbono}
+                          >
+                            Cancelar
+                          </button>
+
+                          <button
+                            type="button"
+                            className="pedido-create-button"
+                            onClick={enviarAbonoDetalle}
+                            disabled={enviandoAbono}
+                          >
+                            {enviandoAbono
+                              ? "Guardando..."
+                              : "Guardar abono"}
+                          </button>
+
+                        </div>
+
+                      </div>
+                    )}
+
+                  </div>
+                )}
 
 
               {/* TOTAL */}

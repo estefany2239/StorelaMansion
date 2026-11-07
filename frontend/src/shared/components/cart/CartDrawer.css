@@ -413,10 +413,10 @@
 }
 
 .checkout-login-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-soft);
+  background: var(--site-card);
+  border: 1px solid var(--site-border);
   border-radius: 20px;
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--shadow-color) 55%, transparent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
 }
 
 /* Columna izquierda: lista de productos */

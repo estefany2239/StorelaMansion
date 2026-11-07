@@ -112,3 +112,14 @@ export const montoMinimo = async (db) => {
   )
   return Number(rows[0]?.monto_minimo ?? 1)
 }
+
+// Traducción única de estado_monto de la vista pedido_abonos a las
+// etiquetas que pide la interfaz, sin tocar la vista.
+export const traducirEstadoMonto = (estado) => {
+  const mapa = {
+    'Pendiente de pago': 'Pendiente',
+    'Abono parcial': 'Pago parcial',
+    'Pagado': 'Pagado',
+  }
+  return mapa[estado] || estado
+}

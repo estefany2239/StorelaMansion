@@ -17,8 +17,7 @@ import {
   ChevronDown,
   Tags,
   Ruler,
-  Palette,
-  Wallet
+  Palette
 } from "lucide-react";
 
 import Dashboard from "./dashboard/Dashboard";
@@ -121,11 +120,6 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
       vista: "domicilios",
       icono: Truck
     },
-    {
-      nombre: "Abonos",
-      vista: "abonos",
-      icono: Wallet
-    }
   ].filter((item) =>
     tienePermiso(user, item.nombre, "Consultar")
   );
