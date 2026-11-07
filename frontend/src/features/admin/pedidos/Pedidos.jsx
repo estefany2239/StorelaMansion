@@ -80,10 +80,14 @@ const mapearPedidoBackend = (pedido) => {
   }));
 
   const total = Number(pedido.total) || 0;
-  const totalPagado = abonos.reduce(
-    (suma, abono) => suma + abono.valor,
-    0
-  );
+  const totalAbonado = Number(pedido.total_abonado);
+  const totalPagado = Number.isFinite(totalAbonado)
+    ? totalAbonado
+    : abonos.reduce((suma, abono) => suma + abono.valor, 0);
+  const saldoBackend = Number(pedido.saldo_pendiente);
+  const saldo = Number.isFinite(saldoBackend)
+    ? saldoBackend
+    : Math.max(0, total - totalPagado);
 
   return {
     id: String(pedido.id),
@@ -98,6 +102,8 @@ const mapearPedidoBackend = (pedido) => {
     total,
     estado: pedido.estado,
     estadoPago: pedido.estado_pago || "No aplica",
+    estadoPagoEtiqueta: pedido.estado_pago_etiqueta || (saldo <= 0 ? "Pagado" : totalPagado > 0 ? "Pago parcial" : "Pendiente"),
+    modalidad: pedido.modalidad || (pedido.es_contra_entrega ? "Contra entrega" : "Pago anticipado"),
     metodoPago: pedido.metodo_pago || "—",
     banco:
       pagos[0]?.banco ||
@@ -109,8 +115,6 @@ const mapearPedidoBackend = (pedido) => {
         : Number(pedido.costo_envio) || 0,
     costoEnvioPendiente: Boolean(pedido.costo_envio_pendiente),
     direccion: pedido.direccion || "",
-    // Pedidos nuevos: ubicación estructurada. Los históricos quedan
-    // vacíos y su dirección vieja se ve tal cual en `direccion`.
     departamento: pedido.departamento || "",
     municipio: pedido.municipio || "",
     barrio: pedido.barrio || "",
@@ -125,7 +129,7 @@ const mapearPedidoBackend = (pedido) => {
     })),
     abonos,
     totalPagado,
-    saldo: Math.max(0, total - totalPagado)
+    saldo
   };
 };
 
@@ -136,6 +140,13 @@ const claseEstadoPago = (estadoPago) => {
   if (valor.includes("rechazado")) return "rechazado";
   if (valor.includes("pendiente")) return "pendiente";
   return "no-aplica";
+};
+
+const claseEstadoPagoMonto = (estadoPago) => {
+  const valor = String(estadoPago || "").toLowerCase();
+  if (valor.includes("parcial")) return "parcial";
+  if (valor.includes("pagado")) return "pagado";
+  return "pendiente";
 };
 
 const claseEstadoComprobante = (estado) => {
@@ -505,9 +516,13 @@ export default function Pedidos({ vendedorId, user }) {
   // CARGA DE PEDIDOS DESDE EL BACKEND
   // =====================================================
 
+  const [conSaldo, setConSaldo] = useState(false);
+
   const refrescarPedidos = async () => {
 
-    const respuesta = await obtenerPedidos();
+    const respuesta = await obtenerPedidos(
+      conSaldo ? { con_saldo: 1 } : {}
+    );
 
     setPedidos((respuesta || []).map(mapearPedidoBackend));
 
@@ -519,7 +534,7 @@ export default function Pedidos({ vendedorId, user }) {
   useEffect(() => {
     let activo = true;
 
-    obtenerPedidos()
+    obtenerPedidos(conSaldo ? { con_saldo: 1 } : {})
       .then((respuesta) => {
         if (!activo) return;
         setPedidos((respuesta || []).map(mapearPedidoBackend));
@@ -536,7 +551,7 @@ export default function Pedidos({ vendedorId, user }) {
     return () => {
       activo = false;
     };
-  }, []);
+  }, [conSaldo]);
 
 
   // =========================================================
@@ -1904,6 +1919,25 @@ export default function Pedidos({ vendedorId, user }) {
           )}
 
 
+          {/* FILTRO CON SALDO */}
+
+          {puedeConsultar && (
+
+          <button
+            type="button"
+            className={
+              "pedidos-filter-button" +
+              (conSaldo ? " activo" : "")
+            }
+            onClick={() =>
+              setConSaldo((valor) => !valor)
+            }
+          >
+            Con saldo
+          </button>
+
+          )}
+
           {/* AGREGAR */}
 
           {puedeCrear && (
@@ -1943,9 +1977,17 @@ export default function Pedidos({ vendedorId, user }) {
 
               <th>CLIENTE</th>
 
+              <th>MODALIDAD</th>
+
               <th>TOTAL</th>
 
+              <th>ABONADO</th>
+
+              <th>SALDO</th>
+
               <th>ESTADO</th>
+
+              <th>ESTADO DEL PAGO</th>
 
               <th>ACCIONES</th>
 
@@ -1986,6 +2028,17 @@ export default function Pedidos({ vendedorId, user }) {
 
                   <td>
 
+                    <span className="pedido-modalidad">
+
+                      {pedido.modalidad}
+
+                    </span>
+
+                  </td>
+
+
+                  <td>
+
                     <div className="pedido-total-cell">
 
                       <strong className="pedido-total">
@@ -2007,6 +2060,32 @@ export default function Pedidos({ vendedorId, user }) {
                       )}
 
                     </div>
+
+                  </td>
+
+
+                  <td>
+
+                    <strong className="pedido-abonado">
+
+                      {formatearPrecio(
+                        pedido.totalPagado
+                      )}
+
+                    </strong>
+
+                  </td>
+
+
+                  <td>
+
+                    <strong className="pedido-saldo">
+
+                      {formatearPrecio(
+                        pedido.saldo
+                      )}
+
+                    </strong>
 
                   </td>
 
@@ -2124,6 +2203,19 @@ export default function Pedidos({ vendedorId, user }) {
                       )}
 
                     </div>
+
+                  </td>
+
+
+                  <td>
+
+                    <span
+                      className={`pedido-estado-pago ${claseEstadoPagoMonto(
+                        pedido.estadoPagoEtiqueta
+                      )}`}
+                    >
+                      {pedido.estadoPagoEtiqueta}
+                    </span>
 
                   </td>
 
