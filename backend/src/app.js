@@ -17,6 +17,8 @@ import categoriasAdminRouter from './routes/categoriasAdmin.js'
 import rolesAdminRouter from './routes/rolesAdmin.js'
 import tallasAdminRouter from './routes/tallasAdmin.js'
 import coloresAdminRouter from './routes/coloresAdmin.js'
+import proveedoresAdminRouter from './routes/proveedoresAdmin.js'
+import comprasAdminRouter from './routes/comprasAdmin.js'
 import configuracionRouter from './routes/configuracion.js'
 import pruebasRouter from './routes/pruebas.js'
 import { modoSimulacion } from './services/correos.js'
@@ -86,6 +88,8 @@ app.use('/api/admin/categorias', categoriasAdminRouter)
 app.use('/api/admin/roles', rolesAdminRouter)
 app.use('/api/admin/tallas', tallasAdminRouter)
 app.use('/api/admin/colores', coloresAdminRouter)
+app.use('/api/admin/proveedores', proveedoresAdminRouter)
+app.use('/api/admin/compras', comprasAdminRouter)
 app.use('/api/configuracion', configuracionRouter)
 
 // MODO DE PRUEBA: la bandeja de correos simulados (que contiene contraseñas
