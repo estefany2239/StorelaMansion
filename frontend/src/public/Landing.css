@@ -1,0 +1,1553 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap');
+
+/* =========================================================
+   LANDING Â· STORE LA MANSIÃ“N
+   Ãndice:
+   1. Tokens de tema
+   2. Base y botones nativos
+   3. Fondos de la pÃ¡gina (claro y oscuro)
+   4. Botones y elementos comunes
+   5. Navbar
+   6. Hero
+   7. Secciones y encabezados
+   8. CategorÃ­as (carrusel)
+   9. Productos
+   10. Sobre nosotros
+   11. Franja de tela (satÃ©n)
+   12. Barra de informaciÃ³n
+   13. Footer
+   14. Animaciones
+   15. Responsive
+   ========================================================= */
+
+/* =========================================================
+   1. TOKENS DE TEMA
+   Claro: beige #F7E7CE, tarjetas blancas, texto negro.
+   Oscuro: negro #121212, superficies #1E1E1E, texto blanco.
+   ========================================================= */
+
+.landing {
+  --dorado: #d4af37;
+  --fondo: #f7e7ce;
+  --superficie: #ffffff;
+  --texto: #000000;
+  --texto-suave: #5c564d;
+  --borde: rgba(0, 0, 0, 0.08);
+  --sombra: 0 10px 30px rgba(70, 45, 10, 0.12);
+  --sombra-hover: 0 18px 40px rgba(70, 45, 10, 0.22);
+  --nav-fondo: rgba(255, 255, 255, 0.9);
+  --footer-fondo: #fbf3e4;
+
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+  background-color: var(--fondo);
+  color: var(--texto);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.landing[data-tema='oscuro'] {
+  --fondo: #121212;
+  --superficie: #1e1e1e;
+  --texto: #ffffff;
+  --texto-suave: #b8b2a7;
+  --borde: rgba(255, 255, 255, 0.08);
+  --sombra: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --sombra-hover: 0 18px 40px rgba(0, 0, 0, 0.7);
+  --nav-fondo: rgba(30, 30, 30, 0.85);
+  --footer-fondo: #0d0d0d;
+}
+
+/* =========================================================
+   2. BASE Y BOTONES NATIVOS
+   Los <button> y <a> se ven como etiquetas, no como botones
+   del navegador. Los estilos de variante usan selectores
+   ".landing .clase" para ganarle a esta regla.
+   ========================================================= */
+
+.landing *,
+.landing *::before,
+.landing *::after {
+  box-sizing: border-box;
+}
+
+.landing img {
+  display: block;
+  max-width: 100%;
+}
+
+.landing a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.landing h1,
+.landing h2,
+.landing h3,
+.landing h4,
+.landing p {
+  margin: 0;
+}
+
+.landing button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.landing button:focus-visible,
+.landing a:focus-visible {
+  outline: 2px solid var(--dorado);
+  outline-offset: 3px;
+}
+
+/* Las secciones no tienen fondo propio: se ve el fondo de la pÃ¡gina */
+.landing section {
+  background: transparent !important;
+}
+
+.landing-dorado {
+  color: var(--dorado);
+}
+
+/* =========================================================
+   3. FONDOS DE LA PÃGINA (claro y oscuro)
+   Modo claro: fondo-claro.jpg
+   Modo oscuro: fondo-oscuro.jpg (se muestra encima con ::after)
+   ========================================================= */
+
+.landing-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('/landing/fondo-claro.jpg') center / 100% 100% no-repeat;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.landing-fondo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/landing/fondo-oscuro.jpg') center / 100% 100% no-repeat;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.landing[data-tema='oscuro'] .landing-fondo::after {
+  opacity: 1;
+}
+
+/* =========================================================
+   4. BOTONES Y ELEMENTOS COMUNES
+   ========================================================= */
+
+.landing .landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease,
+    color 0.25s ease, border-color 0.25s ease;
+}
+
+.landing .landing-btn:hover {
+  transform: translateY(-2px);
+}
+
+.landing .landing-btn-dorado {
+  background: var(--dorado);
+  color: #000000;
+  border-color: transparent;
+  box-shadow: 0 8px 22px rgba(212, 175, 55, 0.35);
+}
+
+.landing .landing-btn-dorado:hover {
+  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.5);
+}
+
+.landing .landing-btn-contorno {
+  background: transparent;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.landing .landing-btn-contorno:hover {
+  border-color: var(--dorado);
+  color: var(--dorado);
+}
+
+.landing .landing-icono-boton {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--borde);
+  background: transparent;
+  color: var(--texto);
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.landing .landing-icono-boton:hover {
+  color: var(--dorado);
+  border-color: var(--dorado);
+  transform: rotate(12deg);
+}
+
+.landing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--dorado);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.landing-eyebrow::before,
+.landing-eyebrow::after {
+  content: '';
+  width: 26px;
+  height: 1px;
+  background: var(--dorado);
+}
+
+.landing-eyebrow--claro::after {
+  display: none;
+}
+
+/* =========================================================
+   5. NAVBAR (flotante, compacta, bordes redondeados)
+   ========================================================= */
+
+.landing-nav {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: min(1000px, calc(100% - 24px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--borde);
+  background: var(--nav-fondo);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--sombra);
+  transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+.landing-marca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.landing-marca-icono {
+  width: 26px;
+  height: 18px;
+  color: var(--dorado);
+}
+
+.landing-marca-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.landing-marca-texto strong {
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.landing-marca-texto small {
+  color: var(--dorado);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.landing-nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-nav-links a {
+  position: relative;
+  padding: 4px 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.landing-nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: var(--dorado);
+  transition: width 0.3s ease;
+}
+
+.landing-nav-links a:hover {
+  color: var(--dorado);
+}
+
+.landing-nav-links a:hover::after {
+  width: 100%;
+}
+
+.landing-nav-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.landing-nav .landing-btn {
+  padding: 7px 14px;
+  font-size: 0.8rem;
+}
+
+/* Escritorio: el menÃº hamburguesa y la sesiÃ³n mÃ³vil no aparecen */
+.landing .landing-menu-boton,
+.landing .landing-nav-sesion-movil {
+  display: none;
+}
+
+/* =========================================================
+   6. HERO (estÃ¡tico: una sola foto segÃºn el tema)
+   La foto se muestra completa (contain).
+   Si quedan dos imÃ¡genes en el HTML, solo se ve la del tema.
+   ========================================================= */
+
+.landing-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  min-height: min(72vh, 600px);
+  padding: 120px 16px 80px;
+  color: #ffffff;
+  background: #14100b;
+  overflow: hidden;
+  scroll-margin-top: 90px;
+}
+
+.landing-hero-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.landing-hero-fondo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: none;
+}
+
+.landing:not([data-tema='oscuro']) .landing-hero-fondo img:first-child {
+  display: block;
+}
+
+.landing[data-tema='oscuro'] .landing-hero-fondo img:last-child {
+  display: block;
+}
+
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 8, 5, 0.6) 0%,
+    rgba(10, 8, 5, 0.25) 50%,
+    rgba(10, 8, 5, 0) 100%
+  );
+}
+
+.landing-hero-contenido {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: landing-entrada 0.9s ease both;
+}
+
+.landing-hero .landing-eyebrow {
+  margin-bottom: 18px;
+}
+
+.landing-hero-titulo {
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: #e9e6df;
+}
+
+.landing-hero-cursiva {
+  font-style: italic;
+  font-weight: 800;
+}
+
+.landing-hero-descripcion {
+  max-width: 480px;
+  margin-top: 22px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.landing-hero-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.landing-beneficios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-beneficios li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.landing-beneficios li + li::before {
+  content: '';
+  width: 1px;
+  height: 28px;
+  margin-right: 18px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* =========================================================
+   7. SECCIONES Y ENCABEZADOS
+   ========================================================= */
+
+.landing-seccion {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 56px 16px;
+  scroll-margin-top: 90px;
+}
+
+/* Anchos mÃ¡s amplios para categorÃ­as, productos y sobre nosotros */
+#categorias,
+#productos,
+#nosotros {
+  max-width: 1200px;
+}
+
+/* La barra de informaciÃ³n va encima de la franja de tela */
+.landing-seccion--compacta {
+  padding-top: 16px;
+  padding-bottom: 24px;
+  z-index: 3;
+}
+
+.landing-encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 26px;
+  text-align: center;
+}
+
+.landing-encabezado h2,
+.landing-sobre-texto h2 {
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* "Productos Destacados": mismo estilo que "Nuestras categorÃ­as",
+   con "Ver mÃ¡s" a la derecha alineado al ancho de la rejilla */
+.landing-encabezado--destacados {
+  position: relative;
+  width: 100%;
+}
+
+.landing-encabezado--destacados .landing-btn-ver-mas {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 9px 18px;
+  font-size: 0.82rem;
+}
+
+.landing-encabezado--destacados .landing-btn-ver-mas:hover {
+  transform: translateY(calc(-50% - 2px));
+}
+
+.landing-vacio {
+  grid-column: 1 / -1;
+  padding: 24px 0;
+  text-align: center;
+  color: var(--texto-suave);
+}
+
+/* =========================================================
+   8. CATEGORÃAS (carrusel con flechas blancas)
+   Se mantiene como en la app actual: 4 tarjetas visibles.
+   ========================================================= */
+
+.landing-categorias-wrap {
+  position: relative;
+}
+
+.landing-categorias {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 6px 4px 10px;
+}
+
+.landing-categorias::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-categorias .landing-categoria {
+  flex: 0 0 calc((100% - 60px) / 4);
+  scroll-snap-align: start;
+  aspect-ratio: 4 / 5;
+}
+
+.landing .landing-categoria {
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  color: #ffffff;
+}
+
+.landing-categoria {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #3a3026 0%, #1b1714 100%);
+  box-shadow: var(--sombra);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.landing-categoria img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.landing-categoria::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0) 55%);
+}
+
+.landing-categoria-pie {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.landing-categoria-nombre {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.landing-categoria-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--dorado);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing-categoria:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--sombra-hover);
+}
+
+.landing-categoria:hover img {
+  transform: scale(1.07);
+}
+
+.landing-carrusel-flecha {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: transform 0.25s ease;
+}
+
+/* Flechas blancas (escritorio y mÃ³vil) */
+.landing .landing-carrusel-flecha {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.landing .landing-carrusel-flecha:hover {
+  transform: translateY(-50%) scale(1.08);
+}
+
+.landing[data-tema='oscuro'] .landing .landing-carrusel-flecha {
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+.landing-carrusel-flecha--izq {
+  left: -20px;
+}
+
+.landing-carrusel-flecha--der {
+  right: -20px;
+}
+
+/* =========================================================
+   9. PRODUCTOS DESTACADOS
+   La secciÃ³n va por encima de la franja de tela para que
+   el nombre de cada producto no quede tapado.
+   ========================================================= */
+
+#productos {
+  z-index: 3;
+}
+
+.landing-productos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.landing-producto {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  transition: transform 0.35s ease, box-shadow 0.35s ease, background-color 0.5s ease;
+}
+
+.landing-producto:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--sombra-hover);
+}
+
+.landing-producto-imagen {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--superficie);
+}
+
+.landing-producto-imagen img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.landing-producto:hover .landing-producto-imagen img {
+  transform: scale(1.05);
+}
+
+.landing-producto-imagen > .landing-producto-enlace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.landing-imagen-vacia {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--dorado);
+}
+
+.landing-imagen-vacia svg {
+  width: 56px;
+  height: auto;
+}
+
+.landing-favorito-slot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.landing-producto-texto {
+  padding: 12px 14px 14px;
+}
+
+.landing-producto-texto.landing-producto-enlace {
+  display: block;
+  width: 100%;
+}
+
+.landing-producto-texto h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.landing-producto-texto p {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--texto-suave);
+}
+
+.landing-producto--cargando {
+  min-height: 320px;
+  background: linear-gradient(90deg, var(--superficie) 25%, var(--borde) 50%, var(--superficie) 75%);
+  background-size: 200% 100%;
+  animation: landing-carga 1.4s ease-in-out infinite;
+}
+
+/* =========================================================
+   10. SOBRE NOSOTROS (dos columnas)
+   ========================================================= */
+
+.landing-sobre {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 36px;
+}
+
+.landing-sobre-imagen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  box-shadow: var(--sombra);
+  aspect-ratio: 4 / 3;
+}
+
+.landing-sobre-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.landing-sobre-imagen:hover img {
+  transform: scale(1.04);
+}
+
+.landing-sobre-texto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.landing-sobre-texto > p:not(.landing-eyebrow):not(.landing-sobre-frase) {
+  max-width: 540px;
+  line-height: 1.7;
+  color: var(--texto-suave);
+}
+
+.landing-sobre-frase {
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.landing-corona-decor {
+  position: absolute;
+  top: -10px;
+  right: 0;
+  width: 96px;
+  height: auto;
+  color: var(--dorado);
+  opacity: 0.9;
+}
+
+/* =========================================================
+   11. FRANJA DE TELA (satÃ©n que sobresale sobre la foto)
+   Cubre el borde inferior del hero. El borde de abajo se
+   difumina sobre la secciÃ³n siguiente.
+   La franja que va despuÃ©s de productos se oculta.
+   ========================================================= */
+
+.landing-ola {
+  position: relative;
+  z-index: 2;
+  height: 140px;
+  margin-top: -110px;
+  pointer-events: none;
+  background: url('/landing/fondo-claro.jpg') center / cover no-repeat;
+  -webkit-mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cpath d='M0 60C240 0 480 120 720 60S1200 0 1440 60V120H0Z'/%3E%3C/svg%3E"),
+    linear-gradient(to bottom, #000 85%, transparent 100%);
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cpath d='M0 60C240 0 480 120 720 60S1200 0 1440 60V120H0Z'/%3E%3C/svg%3E"),
+    linear-gradient(to bottom, #000 85%, transparent 100%);
+  -webkit-mask-size: 100% 100%, 100% 100%;
+  mask-size: 100% 100%, 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.landing-ola::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/landing/fondo-oscuro.jpg') center / cover no-repeat;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.landing[data-tema='oscuro'] .landing-ola::after {
+  opacity: 1;
+}
+
+/* Sin franja de tela despuÃ©s de productos */
+#productos + .landing-ola {
+  display: none;
+}
+
+/* =========================================================
+   12. BARRA DE INFORMACIÃ“N DE LA TIENDA
+   ========================================================= */
+
+.landing-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 24px;
+  border-radius: 28px;
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  transition: background-color 0.5s ease;
+}
+
+.landing-barra-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  padding-right: 24px;
+  border-right: 1px solid var(--borde);
+}
+
+.landing-barra-item strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.landing-barra-item small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+
+.landing-barra-frase {
+  flex: 0 0 auto;
+  padding-left: 12px;
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+/* =========================================================
+   14. ANIMACIONES
+   ========================================================= */
+
+@keyframes landing-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-carga {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* =========================================================
+   15. RESPONSIVE
+   Orden: tablet (1024) â†’ menÃº (900) â†’ mÃ³vil (640) â†’ pequeÃ±o (380)
+   ========================================================= */
+
+/* Tablet: 3 columnas de productos */
+@media (max-width: 1024px) {
+  .landing-productos {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .landing-categorias .landing-categoria {
+    flex-basis: calc((100% - 20px) / 2);
+  }
+
+  .landing-barra {
+    flex-wrap: wrap;
+    padding: 22px 20px;
+  }
+
+  .landing-barra-item {
+    flex: 1 1 40%;
+    border-right: none;
+    padding-right: 0;
+  }
+
+  .landing-barra-frase {
+    flex-basis: 100%;
+    padding-left: 0;
+  }
+}
+
+/* MenÃº desplegable */
+@media (max-width: 900px) {
+  .landing-nav {
+    flex-wrap: wrap;
+    padding: 6px 8px;
+  }
+
+  .landing-nav-acciones {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .landing .landing-menu-boton {
+    display: inline-grid;
+  }
+
+  .landing-nav-links {
+    display: none;
+    order: 3;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    width: 100%;
+    padding-top: 12px;
+    border-top: 1px solid var(--borde);
+  }
+
+  .landing-nav-links.abierto {
+    display: flex;
+  }
+
+  .landing-nav-links li {
+    width: 100%;
+  }
+
+  .landing-nav-links a {
+    display: block;
+    padding: 9px 6px;
+    font-size: 0.92rem;
+  }
+
+  .landing-nav-links a::after {
+    display: none;
+  }
+
+  .landing .landing-nav-sesion {
+    display: inline-flex;
+  }
+}
+
+/* MÃ³vil */
+@media (max-width: 640px) {
+  /* El botÃ³n de sesiÃ³n pasa al menÃº para liberar la barra */
+  .landing .landing-nav-sesion {
+    display: none;
+  }
+
+  .landing-nav-links.abierto .landing-nav-sesion-movil {
+    display: block;
+  }
+
+  .landing-nav-sesion-movil .landing-btn {
+    width: 100%;
+  }
+
+  .landing-hero {
+    min-height: auto;
+    padding: 110px 16px 64px;
+  }
+
+  .landing-hero::before {
+    background: linear-gradient(
+      180deg,
+      rgba(10, 8, 5, 0.75) 0%,
+      rgba(10, 8, 5, 0.85) 60%,
+      rgba(10, 8, 5, 0.95) 100%
+    );
+  }
+
+  .landing-hero-botones .landing-btn {
+    flex: 1 1 auto;
+  }
+
+  .landing-beneficios {
+    gap: 14px 18px;
+  }
+
+  .landing-beneficios li + li::before {
+    display: none;
+  }
+
+  .landing-seccion {
+    padding: 56px 16px;
+  }
+
+  .landing-encabezado {
+    margin-bottom: 28px;
+  }
+
+  .landing-categorias {
+    gap: 14px;
+  }
+
+  .landing-categorias .landing-categoria {
+    flex-basis: 72%;
+    aspect-ratio: 3 / 4;
+  }
+
+  .landing-categoria {
+    border-radius: 18px;
+  }
+
+  .landing-categoria-pie {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .landing-categoria-nombre {
+    font-size: 0.98rem;
+  }
+
+  .landing-carrusel-flecha {
+    width: 38px;
+    height: 38px;
+  }
+
+  .landing-carrusel-flecha--izq {
+    left: -4px;
+  }
+
+  .landing-carrusel-flecha--der {
+    right: -4px;
+  }
+
+  /* MÃ³vil: 2 columnas de productos */
+  .landing-productos {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .landing-producto-imagen {
+    aspect-ratio: 4 / 5;
+  }
+
+  .landing-producto-texto {
+    padding: 12px 14px 14px;
+  }
+
+  .landing-producto-texto p {
+    font-size: 0.8rem;
+  }
+
+  .landing-sobre {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .landing-sobre-imagen {
+    border-radius: 18px;
+  }
+
+  .landing-corona-decor {
+    width: 64px;
+    top: -18px;
+  }
+
+  .landing-ola {
+    height: 100px;
+    margin-top: -80px;
+  }
+
+  .landing-barra {
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+
+  .landing-barra-item {
+    flex-basis: 100%;
+  }
+
+  .landing-barra-frase {
+    text-align: left;
+  }
+}
+
+/* TelÃ©fonos muy pequeÃ±os */
+@media (max-width: 380px) {
+  .landing-marca-texto small {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing *,
+  .landing *::before,
+  .landing *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================================================
+   32. Modo oscuro mÃ¡s profundo
+   ========================================================= */
+
+.landing[data-tema='oscuro'] .landing-fondo::after {
+  filter: brightness(0.35);
+}
+
+.landing[data-tema='oscuro'] .landing-ola::after {
+  filter: brightness(0.35);
+}
+
+/* =========================================================
+   33. Hover dorado en tarjetas
+   ========================================================= */
+
+.landing-producto-texto h3,
+.landing-categoria-nombre {
+  transition: color 0.3s ease;
+}
+
+.landing .landing-categoria:hover,
+.landing .landing-producto:hover {
+  box-shadow: 0 0 0 2px var(--dorado), var(--sombra-hover);
+}
+
+.landing .landing-categoria:hover .landing-categoria-nombre,
+.landing .landing-producto:hover .landing-producto-texto h3 {
+  color: var(--dorado);
+}
+
+/* =========================================================
+   34. LÃ­nea dorada luminosa en tarjetas
+   ========================================================= */
+
+.landing-producto,
+.landing-barra {
+  position: relative;
+}
+
+.landing-categoria::before,
+.landing-producto::before,
+.landing-barra::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #f5d36b 50%, transparent);
+  box-shadow: 0 0 10px 1px rgba(245, 211, 107, 0.55);
+  opacity: 0.6;
+  transition: opacity 0.5s ease;
+}
+
+.landing[data-tema='oscuro'] .landing-categoria::before,
+.landing[data-tema='oscuro'] .landing-producto::before,
+.landing[data-tema='oscuro'] .landing-barra::before {
+  opacity: 1;
+}
+/* =========================================================
+   36. Fondo oscuro sin tinte azul
+   ========================================================= */
+
+.landing[data-tema='oscuro'] .landing-fondo::after {
+  filter: saturate(0.4) sepia(0.25) brightness(0.8);
+}
+
+.landing[data-tema='oscuro'] .landing-ola::after {
+  filter: saturate(0.4) sepia(0.25) brightness(0.8);
+}
+/* =========================================================
+   37. Banda dorada debajo de Sobre nosotros (solo modo oscuro)
+   ========================================================= */
+
+#nosotros {
+  overflow: visible;
+}
+
+#nosotros::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -40px;
+  z-index: -1;
+  width: 100vw;
+  height: 320px;
+  transform: translateX(-50%);
+  background: url('/landing/banda-dorada.jpg') center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.landing[data-tema='oscuro'] #nosotros::after {
+  opacity: 1;
+}
+/* =========================================================
+   38. Fondo sÃ³lido del modo claro (#fffaf0)
+   ========================================================= */
+
+.landing:not([data-tema='oscuro']) {
+  --fondo: #fffaf0;
+  --footer-fondo: #fffaf0;
+  background-color: #fffaf0;
+}
+
+.landing:not([data-tema='oscuro']) .landing-fondo {
+  background: none;
+}
+
+/* =========================================================
+   42. OrganizaciÃ³n de las tarjetas de productos
+   ========================================================= */
+
+.landing .landing-producto-texto {
+  width: 100%;
+  padding: 14px 16px 18px;
+  text-align: left;
+}
+
+.landing .landing-producto-texto h3 {
+  margin-bottom: 4px;
+}
+
+.landing-producto-imagen img {
+  color: transparent;
+  font-size: 0;
+}
+
+/* =========================================================
+   43. Navbar del mismo largo que las tarjetas + encabezados de secciÃ³n
+   ========================================================= */
+
+@media (min-width: 901px) {
+  .landing .landing-nav {
+    width: min(1160px, calc(100% - 40px));
+    padding: 8px 12px 8px 20px;
+    gap: 24px;
+  }
+
+  .landing .landing-marca {
+    order: 1;
+  }
+
+  .landing .landing-nav-links {
+    order: 2;
+    gap: 32px;
+  }
+
+  .landing .landing-nav-links a {
+    font-size: 0.9rem;
+  }
+
+  .landing .landing-nav-acciones {
+    order: 3;
+  }
+}
+
+.landing .landing-encabezado {
+  gap: 6px;
+  margin-bottom: 30px;
+}
+
+.landing .landing-encabezado .landing-eyebrow {
+  gap: 18px;
+  font-family: 'Montserrat', 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.25rem, 2.6vw, 2rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+.landing .landing-encabezado .landing-eyebrow::before,
+.landing .landing-encabezado .landing-eyebrow::after {
+  width: clamp(24px, 4vw, 48px);
+  height: 2px;
+}
+
+.landing .landing-encabezado h2 {
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 640px) {
+  .landing .landing-encabezado .landing-eyebrow {
+    gap: 10px;
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+
+  .landing .landing-encabezado .landing-eyebrow::before,
+  .landing .landing-encabezado .landing-eyebrow::after {
+    width: 20px;
+  }
+
+  .landing-encabezado--destacados .landing-btn-ver-mas {
+    position: static;
+    transform: none;
+    margin-top: 8px;
+  }
+
+  .landing-encabezado--destacados .landing-btn-ver-mas:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* =========================================================
+   44. Tarjetas de categorÃ­as: foto con borde inferior ondulado
+   y el nombre debajo, sobre el fondo de la pÃ¡gina
+   ========================================================= */
+
+.landing {
+  --categoria-foto: 78%;
+  --onda-mascara: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 0H100V90C84 100 68 86 50 91S16 99 0 92Z' fill='black'/%3E%3C/svg%3E");
+  --onda-linea: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 92C16 99 34 91 50 91S84 100 100 90' fill='none' stroke='%23d4af37' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+
+.landing .landing-categorias .landing-categoria {
+  aspect-ratio: 3 / 4;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--texto);
+}
+
+.landing .landing-categorias .landing-categoria > img,
+.landing .landing-categorias .landing-categoria > .landing-imagen-vacia {
+  position: absolute;
+  inset: 0 0 auto 0;
+  width: 100%;
+  height: var(--categoria-foto);
+  border-radius: 22px 22px 0 0;
+  -webkit-mask: var(--onda-mascara) center / 100% 100% no-repeat;
+  mask: var(--onda-mascara) center / 100% 100% no-repeat;
+}
+
+.landing .landing-categorias .landing-categoria > .landing-imagen-vacia {
+  background: var(--superficie);
+}
+
+.landing .landing-categorias .landing-categoria::after {
+  inset: 0 0 auto 0;
+  height: var(--categoria-foto);
+  background: var(--onda-linea) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.landing .landing-categorias .landing-categoria::before {
+  display: none;
+}
+
+.landing .landing-categorias .landing-categoria-pie {
+  inset: calc(var(--categoria-foto) + 4%) 0 auto 0;
+  padding-left: 22px;
+}
+
+.landing .landing-categorias .landing-categoria-nombre {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--texto);
+}
+
+.landing .landing-categorias .landing-categoria-ver {
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+
+.landing .landing-categorias .landing-categoria:not(:first-child) .landing-categoria-pie::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 2px;
+  width: 1px;
+  height: 56px;
+  background: rgba(212, 175, 55, 0.5);
+}
+
+.landing .landing-categorias .landing-categoria:hover {
+  transform: translateY(-4px);
+  box-shadow: none;
+}
+
+.landing .landing-categorias .landing-categoria:hover img {
+  transform: none;
+  filter: brightness(1.06);
+}
+
+@media (max-width: 640px) {
+  .landing .landing-categorias .landing-categoria-pie { padding-left: 14px; }
+  .landing .landing-categorias .landing-categoria-nombre { font-size: 1.1rem; }
+  .landing .landing-categorias .landing-categoria-ver { font-size: 0.7rem; }
+  .landing .landing-categorias .landing-categoria:not(:first-child) .landing-categoria-pie::before {
+    left: -7px;
+    height: 46px;
+  }
+}
+
+/* =========================================================
+   45. LÃ­nea dorada sobre el borde de la onda (claro y oscuro)
+   La onda usa una mÃ¡scara que recorta todo lo que lleva dentro,
+   por eso la lÃ­nea va en un elemento hermano (.landing-ola-linea)
+   con la misma forma y el mismo tamaÃ±o que la onda.
+   ========================================================= */
+
+.landing {
+  --onda-borde: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cpath d='M0 60C240 0 480 120 720 60S1200 0 1440 60' fill='none' stroke='%23d4af37' stroke-width='3' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+
+.landing-ola-linea {
+  position: relative;
+  z-index: 3;
+  height: 0;
+  pointer-events: none;
+}
+
+.landing-ola-linea::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  background: var(--onda-borde) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.45));
+}
+
+.landing[data-tema='oscuro'] .landing-ola-linea::before {
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.7));
+}
+
+/* La franja que va despuÃ©s de productos estÃ¡ oculta: su lÃ­nea tambiÃ©n */
+#productos + .landing-ola + .landing-ola-linea {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .landing-ola-linea::before {
+    height: 100px;
+  }
+}

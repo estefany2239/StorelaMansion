@@ -1,0 +1,37 @@
+/* ==========================================
+   PÁGINA "TODOS LOS PRODUCTOS"
+   Reutiliza la plantilla de categorías (.landing +
+   .categoria-pagina para tokens, banner y curva) y las
+   clases de tarjetas del listado de categorías
+   (CategoryProductsView.css). Solo define el contenedor
+   del listado a ancho completo, sin panel de filtros.
+   ========================================== */
+
+/* El contenedor interno: mismo ancho que .catalog__page */
+.todos-productos-contenido {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 0 16px 56px;
+  box-sizing: border-box;
+  border: none;
+  box-shadow: none;
+}
+
+/* Modo oscuro: fondo y texto al nivel de la página */
+.todos-productos--oscuro {
+  --fondo: #121212;
+  --superficie: #1e1e1e;
+  --texto: #ffffff;
+  --texto-suave: #b8b2a7;
+  --borde: rgba(255, 255, 255, 0.08);
+  --sombra: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --sombra-hover: 0 18px 40px rgba(0, 0, 0, 0.7);
+  --nav-fondo: rgba(30, 30, 30, 0.85);
+}
+
+/* Sin scroll horizontal en pantallas muy angostas (390px) */
+@media (max-width: 640px) {
+  .todos-productos-contenido {
+    padding: 0 12px 40px;
+  }
+}

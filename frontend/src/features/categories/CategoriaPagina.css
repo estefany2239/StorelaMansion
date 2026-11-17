@@ -1,0 +1,921 @@
+/* =========================================================
+   PLANTILLA DE PÁGINA DE CATEGORÍA · Store La Mansión
+   Reutiliza los tokens y clases del landing (el contenedor
+   lleva la clase .landing). Prefijo propio: .categoria-pagina-*
+   Índice:
+   1. Tokens de la página
+   2. Navbar (desplegable de Categorías y separador)
+   3. Banner principal
+   4. Curva asimétrica dorada
+   5. Sección DESCUBRE
+   6. Tarjetas de público
+   7. Responsive
+   ========================================================= */
+
+/* =========================================================
+   1. TOKENS DE LA PÁGINA
+   Igual que el landing; solo --fondo cambia a cream #fffaf0
+   en claro (el oscuro ya es #121212) para fundir curva y fondo.
+   ========================================================= */
+
+.categoria-pagina:not([data-tema='oscuro']) {
+  --fondo: #fffaf0;
+}
+
+/* =========================================================
+   2. NAVBAR
+   Hereda .landing-nav del landing; aquí solo el desplegable
+   de Categorías y el separador fino entre acciones.
+   ========================================================= */
+
+/* El navbar también se usa fuera del landing (vista de productos
+   de la categoría), donde las reglas ".landing ..." no aplican:
+   mismo look con alcance propio. El header lleva data-tema. */
+.categoria-pagina-nav {
+  --dorado: #d4af37;
+  --fondo: #f7e7ce;
+  --superficie: #ffffff;
+  --texto: #000000;
+  --texto-suave: #5c564d;
+  --borde: rgba(0, 0, 0, 0.08);
+  --sombra: 0 10px 30px rgba(70, 45, 10, 0.12);
+  --sombra-hover: 0 18px 40px rgba(70, 45, 10, 0.22);
+  --nav-fondo: rgba(255, 255, 255, 0.9);
+
+  color: var(--texto);
+}
+
+.categoria-pagina-nav[data-tema='oscuro'] {
+  --fondo: #121212;
+  --superficie: #1e1e1e;
+  --texto: #ffffff;
+  --texto-suave: #b8b2a7;
+  --borde: rgba(255, 255, 255, 0.08);
+  --sombra: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --sombra-hover: 0 18px 40px rgba(0, 0, 0, 0.7);
+  --nav-fondo: rgba(30, 30, 30, 0.85);
+}
+
+/* Reset de botones y enlaces del navbar (equivalente a
+   ".landing button" y ".landing a"), solo dentro del header */
+.categoria-pagina-nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.categoria-pagina-nav button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.categoria-pagina-nav button:focus-visible,
+.categoria-pagina-nav a:focus-visible {
+  outline: 2px solid var(--dorado);
+  outline-offset: 3px;
+}
+
+.categoria-pagina-nav .landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.categoria-pagina-nav .landing-btn:hover {
+  transform: translateY(-2px);
+}
+
+.categoria-pagina-nav .landing-btn-dorado {
+  background: var(--dorado);
+  color: #000000;
+  border-color: transparent;
+  box-shadow: 0 8px 22px rgba(212, 175, 55, 0.35);
+}
+
+.categoria-pagina-nav .landing-btn-dorado:hover {
+  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.5);
+}
+
+.categoria-pagina-nav .landing-icono-boton {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--borde);
+  background: transparent;
+  color: var(--texto);
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.categoria-pagina-nav .landing-icono-boton:hover {
+  color: var(--dorado);
+  border-color: var(--dorado);
+  transform: translateY(-1px);
+}
+
+/* Visibilidad equivalente a las reglas ".landing ..." del landing:
+   en escritorio el menú hamburguesa y la sesión móvil no aparecen */
+.categoria-pagina-nav .landing-menu-boton,
+.categoria-pagina-nav .landing-nav-sesion-movil {
+  display: none;
+}
+
+/* Ídem para el modo responsivo (≤900px) y el ajuste fino (≤640px) */
+@media (max-width: 900px) {
+  .categoria-pagina-nav .landing-menu-boton {
+    display: inline-grid;
+  }
+
+  .categoria-pagina-nav .landing-nav-sesion {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .categoria-pagina-nav .landing-nav-sesion {
+    display: none;
+  }
+}
+
+/* Escritorio: orden y ancho idénticos al navbar del landing. En
+   Landing.css esas reglas viven bajo ".landing .landing-nav-*"
+   (logo → links → acciones) y no aplican fuera del landing, por lo
+   que sin esto el DOM manda: acciones pegadas al logo y links a la
+   derecha. Mismo look con alcance propio. */
+@media (min-width: 901px) {
+  .categoria-pagina-nav {
+    width: min(1160px, calc(100% - 40px));
+    padding: 8px 12px 8px 20px;
+    gap: 24px;
+  }
+
+  .categoria-pagina-nav .landing-marca {
+    order: 1;
+  }
+
+  .categoria-pagina-nav .landing-nav-links {
+    order: 2;
+    gap: 32px;
+  }
+
+  .categoria-pagina-nav .landing-nav-links a {
+    font-size: 0.9rem;
+  }
+
+  .categoria-pagina-nav .landing-nav-acciones {
+    order: 3;
+  }
+}
+
+.categoria-pagina-separador {
+  width: 1px;
+  height: 20px;
+  background: var(--borde);
+}
+
+.categoria-pagina-item-categorias {
+  position: relative;
+}
+
+.categoria-pagina-boton-categorias {
+  position: relative;
+  display: inline-block;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: inherit;
+  color: var(--texto);
+  background: none;
+  border: 0;
+  transition: color 0.3s ease;
+}
+
+.categoria-pagina-boton-categorias::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--dorado);
+  transition: width 0.3s ease;
+}
+
+.categoria-pagina-boton-categorias:hover,
+.categoria-pagina-item-categorias.abierto .categoria-pagina-boton-categorias {
+  color: var(--dorado);
+}
+
+.categoria-pagina-boton-categorias:hover::after,
+.categoria-pagina-item-categorias.abierto .categoria-pagina-boton-categorias::after {
+  width: 100%;
+}
+
+.categoria-pagina-menu-categorias {
+  display: none;
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  min-width: 190px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  border-radius: 14px;
+  border: 1px solid var(--borde);
+  background: var(--nav-fondo);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--sombra-hover);
+}
+
+.categoria-pagina-item-categorias.abierto .categoria-pagina-menu-categorias {
+  display: block;
+}
+
+.categoria-pagina-menu-categorias button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--texto);
+  text-align: left;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.categoria-pagina-menu-categorias button:hover {
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--dorado);
+}
+
+.categoria-pagina-menu-categorias button:focus-visible {
+  outline: 2px solid var(--dorado);
+  outline-offset: -2px;
+}
+
+/* =========================================================
+   3. BANNER PRINCIPAL
+   ========================================================= */
+
+.categoria-pagina-banner {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  /* Todo el ancho de la ventana, de borde a borde: sin márgenes,
+     sin padding lateral, sin radius ni sombra. El aire a los lados
+     del texto lo pone el contenedor interno (.categoria-pagina-
+     banner-contenido), no el banner. */
+  width: 100%;
+  max-width: none;
+  min-height: clamp(340px, 32vw, 480px);
+  padding: 110px 0 clamp(140px, 15vw, 240px);
+  background-color: #14100b;
+  background-image: radial-gradient(
+    ellipse 55% 75% at 68% 42%,
+    rgba(212, 175, 55, 0.1),
+    transparent 62%
+  );
+  color: #ffffff;
+  /* Recorta el excedente inferior de la foto ancha cuando baja
+     para esquivar el navbar (se extiende calc(100% + Npx) y este
+     recorte deja la cobertura del borde inferior intacta, sin
+     derramar la foto sobre la sección siguiente). */
+  overflow: hidden;
+}
+
+/* Foto de la categoría a la derecha, fundida hacia la izquierda
+   con una máscara horizontal: sin borde visible ni corte */
+.categoria-pagina-banner-foto {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 62%;
+}
+
+/* Variante fotoAncha (fotos de escena anchas): la foto ocupa TODO
+   el banner, de borde a borde. La posición la fija cada categoría
+   con `fotoPosicion` (variable --foto-pos; por defecto 75% center):
+   horizontal para dejar el sujeto a la derecha del texto y vertical
+   para no cortar las prendas ni asomar franja abajo (la curva dorada
+   cubre el borde inferior). */
+.categoria-pagina-banner-foto--ancha {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* Cuánto baja la foto para dejar el borde alto (ganchos,
+     perchas, corona) debajo del navbar flotante (~85px). */
+  --foto-baja: clamp(40px, 4vw, 70px);
+}
+
+/* Escritorio y tablet: la foto ancha baja --foto-baja para que lo
+   importante no quede detrás del navbar, se extiende hacia abajo
+   lo mismo para no dejar hueco (el overflow hidden del banner
+   recorta el excedente bajo la curva dorada) y un degradado
+   vertical funde su borde superior con el fondo #14100b sin
+   línea ni franja. En móvil (≤760px) la foto sigue cubriendo el
+   banner atenuada, como estaba. */
+@media (min-width: 761px) {
+  .categoria-pagina-banner-foto--ancha {
+    top: var(--foto-baja);
+    bottom: auto;
+    height: calc(100% + var(--foto-baja));
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      #000 14%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      #000 14%
+    );
+  }
+}
+
+.categoria-pagina-banner-foto--ancha img {
+  object-position: var(--foto-pos, 75% center);
+}
+
+.categoria-pagina-banner-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.5) 18%,
+    #000 40%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.5) 18%,
+    #000 40%
+  );
+}
+
+.categoria-pagina-banner-foto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Arranca TRANSPARENTE en el borde izquierdo del contenedor:
+     antes pintaba #14100b sólido aquí y el escalón contra el
+     resplandor dorado del fondo (que sigue a la izquierda) se
+     veía como una línea vertical tenue (Perfumes/Sudaderas). */
+  background: linear-gradient(
+    90deg,
+    rgba(20, 16, 11, 0) 0%,
+    rgba(20, 16, 11, 0.55) 14%,
+    rgba(20, 16, 11, 0.72) 26%,
+    rgba(20, 16, 11, 0) 62%
+  );
+}
+
+/* Con fotoAncha la capa oscura de la izquierda es más sólida
+   y ancha para que el texto (volver, título, descripción)
+   siempre se lea sobre la foto a todo el ancho */
+.categoria-pagina-banner-foto--ancha::after {
+  background: linear-gradient(
+    90deg,
+    #14100b 0%,
+    #14100b 28%,
+    rgba(20, 16, 11, 0.7) 42%,
+    rgba(20, 16, 11, 0) 68%
+  );
+}
+
+/* Categoría sin foto de banner (Perfumes): la corona de la
+   marca ocupa la misma zona derecha, sobre el resplandor dorado */
+.categoria-pagina-banner-corona {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 62%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.categoria-pagina-banner-corona svg {
+  width: clamp(170px, 23vw, 290px);
+  color: var(--dorado);
+  opacity: 0.45;
+  filter: drop-shadow(0 8px 34px rgba(212, 175, 55, 0.4));
+}
+
+.categoria-pagina-banner-contenido {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* 1232px = 1200px de contenido + 16px de aire por lado, para que
+     el texto quede exactamente donde estaba con el banner a todo
+     el ancho y sin padding lateral. */
+  max-width: 1232px;
+  margin: 0 auto;
+  padding: 0 16px;
+  animation: landing-entrada 0.9s ease both;
+}
+
+.categoria-pagina-banner-contenido > * {
+  max-width: 560px;
+}
+
+/* Píldora "Volver a categorías". Prefijo ".landing" para ganarle
+   a ".landing button" de Landing.css (que quita borde y padding). */
+.landing .categoria-pagina-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 22px;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+
+.landing .categoria-pagina-volver:hover {
+  border-color: var(--dorado);
+  color: var(--dorado);
+  transform: translateX(-2px);
+}
+
+.categoria-pagina-banner-titulo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.4rem, 4.2vw, 4.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.categoria-pagina-banner-linea {
+  display: block;
+  width: 64px;
+  height: 6px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8860b, #f5d36b);
+}
+
+.categoria-pagina-banner-descripcion {
+  margin-top: 18px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* =========================================================
+   4. CURVA ASIMÉTRICA DORADA ("OLA")
+   Va directamente después del banner en el flujo normal y se
+   monta sobre su base con margen negativo, cortando la foto.
+   El relleno toma var(--fondo) para fundirse con la página;
+   margin-bottom -2px evita la costura fina entre el SVG y el
+   fondo de la sección siguiente.
+   ========================================================= */
+
+.categoria-pagina-curva-fondo {
+  fill: var(--fondo);
+}
+
+.categoria-pagina-curva {
+  display: block;
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: clamp(120px, 14vw, 220px);
+  margin-top: calc(-1 * clamp(120px, 14vw, 220px));
+  margin-bottom: -2px;
+  pointer-events: none;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Resplandor dorado SOLO sobre las cintas de la curva
+   (cinta de relleno + trazo fino): el fondo de la curva y el
+   recuadro del SVG quedan sin sombra, así debajo solo se ve el
+   fondo crema de la página, sin caja ni halo cuadrado. */
+.categoria-pagina-curva-oro {
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.35));
+}
+
+[data-tema='oscuro'] .categoria-pagina-curva-oro {
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
+}
+
+/* =========================================================
+   5. SECCIÓN DESCUBRE
+   ========================================================= */
+
+.categoria-pagina-descubre {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 34px 0 76px;
+}
+
+.categoria-pagina-encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 34px;
+  text-align: center;
+}
+
+.categoria-pagina-eyebrow {
+  letter-spacing: 0.2em;
+}
+
+.categoria-pagina-titulo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  line-height: 1.2;
+  color: var(--texto);
+}
+
+.categoria-pagina-titulo em {
+  color: var(--dorado);
+  font-style: italic;
+}
+
+/* =========================================================
+   6. TARJETAS DE PÚBLICO
+   ========================================================= */
+
+.categoria-pagina-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.categoria-pagina-tarjeta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 280px;
+  height: 330px;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(212, 175, 55, 0);
+  background: linear-gradient(120deg, #1a1a1a 0%, #0e0e0e 100%);
+  box-shadow: var(--sombra);
+  transition: transform 0.35s ease, border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.categoria-pagina-tarjeta:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.55);
+  box-shadow: var(--sombra-hover);
+}
+
+.categoria-pagina-tarjeta-foto {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 56%;
+}
+
+.categoria-pagina-tarjeta-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+}
+
+.categoria-pagina-tarjeta-foto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    #131313 0%,
+    rgba(19, 19, 19, 0.62) 34%,
+    rgba(19, 19, 19, 0) 68%
+  );
+}
+
+.categoria-pagina-tarjeta-contenido {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(58%, 300px);
+  padding: 26px;
+  color: #ffffff;
+}
+
+.categoria-pagina-tarjeta-kicker {
+  color: var(--dorado);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.categoria-pagina-tarjeta-nombre {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+  line-height: 1.08;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.categoria-pagina-tarjeta-descripcion {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Botón dorado. Se usa el prefijo ".landing" para ganarle a la
+   regla base ".landing button" de Landing.css (que lo deja sin
+   fondo), así el degradado dorado aplica en ambos temas. */
+.landing .categoria-pagina-btn-publico {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b8860b 0%, #f5d36b 50%, #d4af37 100%);
+  color: #1a1400;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(212, 175, 55, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.landing .categoria-pagina-btn-publico svg {
+  transition: transform 0.25s ease;
+}
+
+.landing .categoria-pagina-btn-publico:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.landing .categoria-pagina-btn-publico:hover svg {
+  transform: translateX(4px);
+}
+
+.categoria-pagina-btn-publico:focus-visible,
+.categoria-pagina-volver:focus-visible,
+.categoria-pagina-boton-categorias:focus-visible {
+  outline: 2px solid var(--dorado);
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   7. RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  /* El desplegable pasa a lista dentro del menú hamburguesa */
+  .categoria-pagina-menu-categorias {
+    position: static;
+    transform: none;
+    min-width: 0;
+    margin-top: 4px;
+    padding: 6px;
+  }
+
+  .categoria-pagina-item-categorias {
+    width: 100%;
+  }
+
+  .categoria-pagina-boton-categorias {
+    display: block;
+    width: 100%;
+    padding: 9px 6px;
+    font-size: 0.92rem;
+  }
+
+  .categoria-pagina-boton-categorias::after {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .categoria-pagina-banner {
+    height: auto;
+    min-height: 300px;
+    padding: 110px 0 130px;
+  }
+
+  .categoria-pagina-banner-contenido {
+    padding: 0 20px;
+  }
+
+  /* En móvil la foto cubre el banner, atenuada con degradado
+     vertical para que el texto se lea */
+  .categoria-pagina-banner-foto {
+    width: 100%;
+  }
+
+  .categoria-pagina-banner-foto img {
+    object-position: center 30%;
+    opacity: 0.55;
+  }
+
+  .categoria-pagina-banner-foto::after {
+    background: linear-gradient(
+      180deg,
+      rgba(20, 16, 11, 0.82) 0%,
+      rgba(20, 16, 11, 0.7) 45%,
+      rgba(20, 16, 11, 0.94) 100%
+    );
+  }
+
+  .categoria-pagina-banner-corona svg {
+    opacity: 0.22;
+  }
+
+  .categoria-pagina-banner-titulo {
+    font-size: 2.4rem;
+  }
+
+  .categoria-pagina-tarjetas {
+    grid-template-columns: 1fr;
+  }
+
+  .categoria-pagina-tarjeta {
+    height: auto;
+    min-height: 280px;
+  }
+
+  .categoria-pagina-tarjeta-contenido {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 420px) {
+  .categoria-pagina-banner {
+    min-height: 280px;
+  }
+
+  .categoria-pagina-banner-titulo {
+    font-size: 2.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .categoria-pagina-tarjeta,
+  .landing .categoria-pagina-btn-publico,
+  .landing .categoria-pagina-volver,
+  .categoria-pagina-boton-categorias,
+  .categoria-pagina-boton-categorias::after {
+    transition: none;
+  }
+
+  .categoria-pagina-banner-contenido {
+    animation: none;
+  }
+}
+
+/* =========================================================
+   8. VARIANTE COMPACTA DEL BANNER (listado de productos)
+   Misma composición del banner con banda baja; el botón
+   vuelve a la plantilla de la categoría. Se declara al final
+   para ganarle a las media queries de la plantilla (760px).
+   ========================================================= */
+
+.categoria-pagina-banner--compacto {
+  /* Un poco más de alto (antes clamp(260px, 36vh, 340px)) para que
+     la foto ancha quepa con su encuadre bajo el navbar sin
+     estirarse; la curva dorada se mantiene igual. */
+  min-height: clamp(320px, 28vw, 400px);
+  padding: 96px 0 calc(clamp(70px, 8vw, 120px) + 16px);
+}
+
+/* Píldora "‹ Volver" de la variante compacta: vive fuera del
+   landing (vista de productos), así que no hereda las reglas
+   ".landing .categoria-pagina-volver"; look idéntico y propio. */
+.categoria-pagina-banner--compacto .categoria-pagina-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.25s ease, color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.categoria-pagina-banner--compacto .categoria-pagina-volver:hover {
+  border-color: var(--dorado);
+  color: var(--dorado);
+  transform: translateX(-2px);
+}
+
+.categoria-pagina-banner--compacto .categoria-pagina-volver:focus-visible {
+  outline: 2px solid var(--dorado);
+  outline-offset: 3px;
+}
+
+.categoria-pagina-banner--compacto .categoria-pagina-banner-titulo {
+  font-size: clamp(2.1rem, 3.2vw, 3rem);
+}
+
+.categoria-pagina-banner--compacto .categoria-pagina-banner-linea {
+  margin-top: 12px;
+}
+
+.categoria-pagina-banner--compacto .categoria-pagina-banner-descripcion {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+/* Curva compacta: misma cinta dorada, altura reducida y el
+   mismo margin-top negativo proporcional (sin costura). */
+.categoria-pagina-curva--compacto {
+  height: clamp(70px, 8vw, 120px);
+  margin-top: calc(-1 * clamp(70px, 8vw, 120px));
+}
+
+@media (max-width: 760px) {
+  .categoria-pagina-banner--compacto {
+    min-height: clamp(260px, 36vh, 340px);
+    padding: 100px 0 calc(clamp(70px, 12vw, 120px) + 14px);
+  }
+
+  .categoria-pagina-banner--compacto .categoria-pagina-banner-titulo {
+    font-size: 2.1rem;
+  }
+
+  .categoria-pagina-curva--compacto {
+    height: clamp(70px, 12vw, 120px);
+    margin-top: calc(-1 * clamp(70px, 12vw, 120px));
+  }
+}
+
+/* =========================================================
+   FOOTER COMPARTIDO AL FONDO
+   Las páginas de categoría (y las vistas cliente que usan
+   .categoria-pagina) son columna flex de 100vh: el footer
+   compartido queda pegado al fondo en páginas cortas.
+   ========================================================= */
+
+.categoria-pagina {
+  display: flex;
+  flex-direction: column;
+}
+
+.categoria-pagina > .sitio-footer {
+  margin-top: auto;
+}

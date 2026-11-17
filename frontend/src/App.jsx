@@ -3,12 +3,12 @@ import { ArrowLeft, ArrowRight, Lock, Trash2 } from "lucide-react";
 
 import SplashScreen from "./shared/components/splash/SplashScreen";
 
-import Navbar from "./shared/components/layout/Navbar";
-import Hero from "./features/home/Hero";
-import Categories from "./features/categories/Categories";
-import FeaturedProducts from "./features/home/products/FeaturedProducts";
-import Nosotros from "./features/home/Nosotros";
-import Footer from "./shared/components/layout/Footer";
+import NavbarCategoria from "./features/categories/NavbarCategoria";
+import Landing from "./public/Landing";
+import Footer from "./shared/components/footer/Footer";
+
+import BotonFavorito from "./shared/components/favoritos/BotonFavorito";
+import { useCategorias } from "./shared/hooks/useCategorias";
 
 import Login from "./features/auth/pages/Login";
 import Register from "./features/auth/pages/Register";
@@ -16,6 +16,7 @@ import ForgotPassword from "./features/auth/pages/ForgotPassword";
 import CambiarContrasena from "./features/auth/pages/CambiarContrasena";
 
 import CartDrawer from "./shared/components/cart/CartDrawer";
+import ErrorBoundaryCartDrawer from "./shared/components/cart/ErrorBoundaryCartDrawer";
 import CantidadControl from "./shared/components/cart/CantidadControl";
 import {
   cantidadParaCarrito,
@@ -25,10 +26,12 @@ import {
 import PaymentView from "./features/checkout/pages/PaymentView";
 import { useNotify } from "./shared/components/notifications/useNotify.js";
 import CategoryProductsView from "./features/categories/CategoryProductsView";
+import PaginaCategoria from "./features/categories/PaginaCategoria";
+import TodosProductosView from "./features/categories/TodosProductosView";
 import ProductDetailPage from "./features/product/ProductDetailPage";
 import { useCatalogo, refrescarCatalogo, suscribirCatalogo } from "./shared/hooks/useCatalogo";
 import { buscarVariantePorId, getVarianteBase, tallaVisible } from "./shared/utils/catalogo";
-import { resolverDestacado } from "./shared/utils/destacados";
+import { claveCategoria, obtenerPublicoDirecto } from "./features/categories/categoriasConfig";
 import { obtenerPerfil } from "./shared/services/api";
 import FavoritosProvider from "./shared/hooks/FavoritosProvider";
 
@@ -90,6 +93,11 @@ export default function App() {
   // Catálogo real (base de datos) reutilizado por destacados y catálogo.
   const { catalogo } = useCatalogo();
 
+  // Categorías reales (GET /api/categorias con respaldo local): la landing
+  // nueva solo envía el nombre de la categoría; aquí se resuelve al objeto
+  // completo que usa CategoryProductsView.
+  const { categorias } = useCategorias();
+
   // ==========================================
   // VISTA ACTUAL
   // ==========================================
@@ -110,6 +118,10 @@ export default function App() {
     return guardado && tieneAccesoPanel(guardado) ? "admin" : "home";
   });
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Género con el que se abre CategoryProductsView al pulsar
+  // "Ver productos" en una tarjeta de la plantilla de categoría.
+  const [generoInicial, setGeneroInicial] = useState(null);
 
   // Producto de "Destacados" abierto en su detalle (vista propia sobre el home)
   const [productoDestacado, setProductoDestacado] = useState(null);
@@ -440,6 +452,131 @@ export default function App() {
 
 
   // ==========================================
+  // NAVEGACIÓN DESDE LA LANDING NUEVA
+  // ==========================================
+
+  // Abre la vista de login existente (misma acción que usaba el navbar).
+  const irALogin = () => {
+    setFlujoCheckout(false);
+    setCurrentView("login");
+  };
+
+  // La landing solo conoce el nombre de la categoría ("Camisetas",
+  // "Buzos", "Tenis", "Sudaderas"); se resuelve al objeto real de
+  // /api/categorias comparando AMBOS nombres con la misma función
+  // claveCategoria que usa la plantilla (sin tildes, singular/plural
+  // y buso/buzo equivalentes), y se abre la plantilla de categoría
+  // (PaginaCategoria). Las categorías con publicoDirecto (ej.
+  // Vestidos → mujer, Pantalonetas/Sudaderas → hombre) saltan
+  // directo al listado con el público ya aplicado, sin la pantalla
+  // de selección.
+  const handleVerCategoria = (nombre) => {
+    const buscada = claveCategoria(nombre);
+
+    const cat = categorias.find(
+      (c) => claveCategoria(c.name) === buscada
+    );
+    if (!cat) return;
+
+    const publicoDirecto = obtenerPublicoDirecto(cat.name);
+
+    setSelectedCategory({
+      id: cat.id,
+      title: cat.name,
+      image: cat.image,
+      genders:
+        Array.isArray(cat.genders) && cat.genders.length > 0
+          ? cat.genders
+          : ["hombre", "mujer"]
+    });
+    setGeneroInicial(publicoDirecto);
+    setProductoDestacado(null);
+    setCurrentView(publicoDirecto ? "categoria-genero" : "categoria");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Botón "Ver más" de la sección Productos Destacados del landing:
+  // abre la página "Todos los productos" (mismo mecanismo de vistas
+  // por estado que las páginas de categoría).
+  const verTodosProductos = () => {
+    setProductoDestacado(null);
+    setCurrentView("todos-productos");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Botón "Ver productos" de la plantilla de categoría: abre la vista
+  // existente de productos (CategoryProductsView) con el género ya
+  // filtrado usando el campo `gender` de los productos (masculino →
+  // hombre, femenino → mujer); el listado no cambia.
+  const verProductosCategoria = (publico) => {
+    const GENERO_POR_PUBLICO = { masculino: "hombre", femenino: "mujer" };
+    setGeneroInicial(GENERO_POR_PUBLICO[publico] || null);
+    setCurrentView("categoria-genero");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Cambio de categoría desde el panel de filtros de CategoryProductsView.
+  // Mantiene el género actual (si la nueva categoría lo admite) y se queda
+  // en la vista de productos. "Todas" es una categoría virtual (id 'todos')
+  // que muestra todos los productos del género actual: getFilteredProducts
+  // ya lo soporta, así que no hay plantilla de página para ella.
+  const cambiarCategoriaDesdeFiltro = (idCategoria, generoActual) => {
+    const generoPedido = generoActual || generoInicial;
+
+    if (!idCategoria || idCategoria === "todos") {
+      setSelectedCategory({
+        id: "todos",
+        title: "Todas",
+        image: null,
+        genders: ["hombre", "mujer"]
+      });
+      setGeneroInicial(generoPedido || "hombre");
+    } else {
+      const cat = categorias.find((c) => String(c.id) === String(idCategoria));
+      if (!cat) return;
+
+      const genders =
+        Array.isArray(cat.genders) && cat.genders.length > 0
+          ? cat.genders
+          : ["hombre", "mujer"];
+      // Si el género actual no aplica en la nueva categoría, se usa el
+      // primero que sí tenga productos (sin quedar en género nulo).
+      const generoFinal =
+        generoPedido && genders.includes(generoPedido)
+          ? generoPedido
+          : genders[0];
+
+      setSelectedCategory({
+        id: cat.id,
+        title: cat.name,
+        image: cat.image,
+        genders
+      });
+      setGeneroInicial(generoFinal);
+    }
+
+    // La vista se remonta con la key de CategoryProductsView: los filtros
+    // (talla, color y precio) arrancan limpios para la nueva categoría.
+    setProductoDestacado(null);
+    setCurrentView("categoria-genero");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // La landing envía el producto tal como viene de /api/productos
+  // (una fila agrupada con id_producto). Se resuelve al producto real del
+  // catálogo (con sus variantes) para abrir ProductDetailPage.
+  const handleVerProducto = (producto) => {
+    const real = catalogo.find(
+      (p) => String(p.id_producto) === String(producto?.id_producto)
+    );
+    if (!real) return;
+
+    setProductoDestacado(real);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+
+  // ==========================================
   // FLUJO DE COMPRA (gate de inicio de sesión)
   // ==========================================
 
@@ -602,6 +739,14 @@ export default function App() {
 
   };
 
+  // ==========================================
+  // VACIAR CARRITO
+  // ==========================================
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
 
   // ==========================================
   // AGREGAR AL CARRITO Y ABRIR EL DRAWER
@@ -672,17 +817,6 @@ export default function App() {
     setFlujoCheckout(false);
     setCurrentView(viewAnterior);
   };
-
-
-  // ==========================================
-  // VISTAS DE AUTENTICACIÓN
-  // ==========================================
-
-  const isAuthView =
-    currentView === "login" ||
-    currentView === "register" ||
-    currentView === "forgot" ||
-    currentView === "cambiar-contrasena";
 
 
   // ==========================================
@@ -866,6 +1000,11 @@ export default function App() {
     0
   );
 
+  const cantidadCarrito = cart.reduce(
+    (acumulado, item) => acumulado + (Number(item.quantity) || 1),
+    0
+  );
+
 
   // ==========================================
   // RENDERIZADO
@@ -891,44 +1030,7 @@ export default function App() {
       )}
 
 
-      {/* ======================================
-          NAVBAR
-      ====================================== */}
-
-      {!isAuthView &&
-        currentView !== "admin" && (
-
-          <Navbar
-
-            user={user}
-
-            onLoginClick={() => {
-              setFlujoCheckout(false);
-              setCurrentView("login");
-            }}
-
-            onNavigate={(vista) =>
-              setCurrentView(vista)
-            }
-
-            onNavigateSection={irASeccion}
-
-            onBrandClick={() => {
-              setProductoDestacado(null);
-              setCurrentView("home");
-            }}
-
-            onLogout={() => {
-              notify("Sesión cerrada", "success");
-              handleLogout();
-            }}
-
-            theme={theme}
-
-            onToggleTheme={toggleTheme}
-          />
-
-      )}
+      {/* Navbar viejo solo fuera de las vistas públicas unificadas (admin/auth/checkout usan sus propias reglas) */}
 
 
       {/* ======================================
@@ -939,43 +1041,30 @@ export default function App() {
 
         <main>
 
-          <Hero />
-
-           <Categories
-
-             onSelectCategory={(cat) => {
-               const genders =
-                 Array.isArray(cat.genders) && cat.genders.length > 0
-                   ? cat.genders
-                   : ["hombre", "mujer"];
-               setSelectedCategory({
-                 id: cat.id,
-                 title: cat.name,
-                 image: cat.image,
-                 genders
-               });
-               setCurrentView("categoria-genero");
-               window.scrollTo({
-                 top: 0,
-                 behavior: "smooth"
-               });
-             }}
-
-           />
-
-          <FeaturedProducts
-            onIrALogin={() => {
-              setFlujoCheckout(false);
-              setCurrentView("login");
+          <Landing
+            tema={theme === "dark" ? "oscuro" : "claro"}
+            onAlternarTema={toggleTheme}
+            onIrALogin={irALogin}
+            onVerProducto={handleVerProducto}
+            onVerCategoria={handleVerCategoria}
+            onVerTodos={verTodosProductos}
+            renderFavorito={(producto) => (
+              <BotonFavorito
+                idProducto={producto.id_producto}
+                nombre={producto.nombre}
+                onIniciarSesion={irALogin}
+              />
+            )}
+            user={user}
+            onNavigate={(vista) => setCurrentView(vista)}
+            onLogout={() => {
+              notify("Sesión cerrada", "success");
+              handleLogout();
             }}
-            onViewProduct={(product) => {
-              const real = resolverDestacado(product, catalogo);
-              setProductoDestacado(real || { ...product, sinVariante: true });
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
+            cartCount={cantidadCarrito}
+            onCartClick={() => setIsCartOpen(true)}
+            onNavigateSection={irASeccion}
           />
-
-          <Nosotros />
 
         </main>
 
@@ -988,20 +1077,91 @@ export default function App() {
 
        {currentView === "home" && productoDestacado && (
 
-         <ProductDetailPage
-           key={productoDestacado.id}
-           product={productoDestacado}
-           catalogoCompleto={catalogo}
-           onBack={() => {
-              setProductoDestacado(null);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            addToCart={handleAddToCart}
-            onIrALogin={() => {
-              setFlujoCheckout(false);
-              setCurrentView("login");
-            }}
-          />
+         <div className="landing categoria-pagina" data-tema={theme === "dark" ? "oscuro" : "claro"}>
+           <NavbarCategoria
+             tema={theme === "dark" ? "oscuro" : "claro"}
+             user={user}
+             onAlternarTema={toggleTheme}
+             onIrALogin={irALogin}
+             onNavigate={(vista) => setCurrentView(vista)}
+             onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+             onNavigateSection={irASeccion}
+             onVerCategoria={handleVerCategoria}
+             cartCount={cantidadCarrito}
+             onCartClick={() => setIsCartOpen(true)}
+           />
+           <div style={{ paddingTop: 110 }}>
+             <ProductDetailPage
+               key={productoDestacado.id}
+               product={productoDestacado}
+               catalogoCompleto={catalogo}
+               onBack={() => {
+                 setProductoDestacado(null);
+                 window.scrollTo({ top: 0, behavior: "smooth" });
+               }}
+               addToCart={handleAddToCart}
+               onIrALogin={() => {
+                 setFlujoCheckout(false);
+                 setCurrentView("login");
+               }}
+             />
+           </div>
+
+           <Footer
+             tema={theme === "dark" ? "oscuro" : "claro"}
+             onNavigateSection={irASeccion}
+             onVerCategoria={handleVerCategoria}
+           />
+         </div>
+
+       )}
+
+
+       {/* ======================================
+           PLANTILLA DE PÁGINA DE CATEGORÍA (PÚBLICO)
+       ====================================== */}
+
+       {currentView === "categoria" && selectedCategory && (
+
+         <PaginaCategoria
+           categoria={selectedCategory}
+           tema={theme === "dark" ? "oscuro" : "claro"}
+           user={user}
+           onAlternarTema={toggleTheme}
+           onIrALogin={irALogin}
+           onNavigate={(vista) => setCurrentView(vista)}
+           onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+           onNavigateSection={irASeccion}
+           onVolverCategorias={() => irASeccion("categorias")}
+           onVerProductos={verProductosCategoria}
+           onVerCategoria={handleVerCategoria}
+           cartCount={cantidadCarrito}
+           onCartClick={() => setIsCartOpen(true)}
+         />
+
+       )}
+
+
+       {/* ======================================
+           PÁGINA TODOS LOS PRODUCTOS (PÚBLICO)
+       ====================================== */}
+
+       {currentView === "todos-productos" && (
+
+         <TodosProductosView
+           tema={theme === "dark" ? "oscuro" : "claro"}
+           user={user}
+           onAlternarTema={toggleTheme}
+           onIrALogin={irALogin}
+           onNavigate={(vista) => setCurrentView(vista)}
+           onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+           onNavigateSection={irASeccion}
+           onVolver={() => irASeccion("productos")}
+           onVerCategoria={handleVerCategoria}
+           addToCart={handleAddToCart}
+           cartCount={cantidadCarrito}
+           onCartClick={() => setIsCartOpen(true)}
+         />
 
        )}
 
@@ -1010,24 +1170,45 @@ export default function App() {
            SELECCIÓN GÉNERO POR CATEGORÍA (PÚBLICO)
        ====================================== */}
 
-       {currentView === "categoria-genero" && selectedCategory && (
+        {currentView === "categoria-genero" && selectedCategory && (
 
-         <CategoryProductsView
-           category={selectedCategory}
-           initialGender={
-             selectedCategory.genders?.length === 1
-               ? selectedCategory.genders[0]
-               : null
+          <CategoryProductsView
+            key={`${selectedCategory.id}|${generoInicial || ""}`}
+            category={selectedCategory}
+            categorias={categorias}
+            tema={theme === "dark" ? "oscuro" : "claro"}
+            user={user}
+            onAlternarTema={toggleTheme}
+            onNavigate={(vista) => setCurrentView(vista)}
+            onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+            onNavigateSection={irASeccion}
+            onCambiarCategoria={cambiarCategoriaDesdeFiltro}
+            onVerCategoria={handleVerCategoria}
+            initialGender={
+             generoInicial && selectedCategory.genders?.includes(generoInicial)
+               ? generoInicial
+               : selectedCategory.genders?.length === 1
+                 ? selectedCategory.genders[0]
+                 : null
            }
             onBack={() => {
-              setSelectedCategory(null);
-              setCurrentView("home");
+              if (
+                selectedCategory?.id === "todos" ||
+                obtenerPublicoDirecto(selectedCategory?.title)
+              ) {
+                irASeccion("categorias");
+                return;
+              }
+              setCurrentView("categoria");
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             addToCart={handleAddToCart}
             onIrALogin={() => {
               setFlujoCheckout(false);
               setCurrentView("login");
             }}
+            cartCount={cantidadCarrito}
+            onCartClick={() => setIsCartOpen(true)}
           />
 
        )}
@@ -1041,15 +1222,24 @@ export default function App() {
 
         <MisFavoritos
 
+          user={user}
+          tema={theme === "dark" ? "oscuro" : "claro"}
+          onAlternarTema={toggleTheme}
+          onIrALogin={() => {
+            setFlujoCheckout(false);
+            setCurrentView("login");
+          }}
+          onNavigate={(vista) => setCurrentView(vista)}
+          onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+          onNavigateSection={irASeccion}
+          onVerCategoria={handleVerCategoria}
+          cartCount={cantidadCarrito}
+          onCartClick={() => setIsCartOpen(true)}
           onBack={handleSeguirComprando}
 
           onVerProductos={() => irASeccion("productos")}
 
           addToCart={handleAddToCart}
-          onIrALogin={() => {
-            setFlujoCheckout(false);
-            setCurrentView("login");
-          }}
         />
 
       )}
@@ -1065,6 +1255,16 @@ export default function App() {
           cart={cart}
           user={user}
           darkMode={theme === "dark"}
+          tema={theme === "dark" ? "oscuro" : "claro"}
+          onAlternarTema={toggleTheme}
+          onIrALogin={irALogin}
+          onNavigate={(vista) => setCurrentView(vista)}
+          onLogout={() => {
+            notify("Sesión cerrada", "success");
+            handleLogout();
+          }}
+          onNavigateSection={irASeccion}
+          onVerCategoria={handleVerCategoria}
           onConfirmarPedido={handleConfirmarPedido}
           onIrAMisPedidos={() => {
             setCurrentView("mis-pedidos");
@@ -1072,6 +1272,8 @@ export default function App() {
           }}
           onBack={handleSeguirComprando}
           onStockActualizado={refrescarCatalogo}
+          cartCount={cantidadCarrito}
+          onCartClick={() => setIsCartOpen(true)}
         />
 
       )}
@@ -1084,6 +1286,16 @@ export default function App() {
       {currentView === "compra-exitosa" && user && (
 
         <CompraExitosa
+          user={user}
+          tema={theme === "dark" ? "oscuro" : "claro"}
+          onAlternarTema={toggleTheme}
+          onIrALogin={irALogin}
+          onNavigate={(vista) => setCurrentView(vista)}
+          onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+          onNavigateSection={irASeccion}
+          onVerCategoria={handleVerCategoria}
+          cartCount={cantidadCarrito}
+          onCartClick={() => setIsCartOpen(true)}
 
           onVerMisPedidos={() => {
             setCurrentView("mis-pedidos");
@@ -1106,6 +1318,16 @@ export default function App() {
           pedidos={pedidosDelCliente}
 
           onBack={handleSeguirComprando}
+          user={user}
+          tema={theme === "dark" ? "oscuro" : "claro"}
+          onAlternarTema={toggleTheme}
+          onIrALogin={irALogin}
+          onNavigate={(vista) => setCurrentView(vista)}
+          onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+          onNavigateSection={irASeccion}
+          onVerCategoria={handleVerCategoria}
+          cartCount={cantidadCarrito}
+          onCartClick={() => setIsCartOpen(true)}
 
         />
 
@@ -1123,8 +1345,10 @@ export default function App() {
           user={user}
 
           theme={theme}
+          tema={theme === "dark" ? "oscuro" : "claro"}
 
           onToggleTheme={toggleTheme}
+          onAlternarTema={toggleTheme}
 
           onLogout={() => {
             notify("Sesión cerrada", "success");
@@ -1132,6 +1356,12 @@ export default function App() {
           }}
 
           onBack={handleSeguirComprando}
+          onIrALogin={irALogin}
+          onNavigate={(vista) => setCurrentView(vista)}
+          onNavigateSection={irASeccion}
+          onVerCategoria={handleVerCategoria}
+          cartCount={cantidadCarrito}
+          onCartClick={() => setIsCartOpen(true)}
 
           perfilCliente={perfilCliente}
 
@@ -1178,8 +1408,20 @@ export default function App() {
       {currentView === "checkout-login" && (
 
         <section className="checkout-login-page">
+          <NavbarCategoria
+            tema={theme === "dark" ? "oscuro" : "claro"}
+            user={user}
+            onAlternarTema={toggleTheme}
+            onIrALogin={() => setCurrentView("login")}
+            onNavigate={(vista) => setCurrentView(vista)}
+            onLogout={() => { notify("Sesión cerrada", "success"); handleLogout(); }}
+            onNavigateSection={irASeccion}
+            onVerCategoria={handleVerCategoria}
+            cartCount={cantidadCarrito}
+            onCartClick={() => setIsCartOpen(true)}
+          />
 
-          <div className="checkout-login-inner">
+          <div className="checkout-login-inner" style={{ paddingTop: 110 }}>
 
             <button
               type="button"
@@ -1364,6 +1606,12 @@ export default function App() {
 
           </div>
 
+          <Footer
+            tema={theme === "dark" ? "oscuro" : "claro"}
+            onNavigateSection={irASeccion}
+            onVerCategoria={handleVerCategoria}
+          />
+
         </section>
 
       )}
@@ -1466,41 +1714,34 @@ export default function App() {
 
       )}
 
-
       {/* ======================================
           CARRITO
       ====================================== */}
 
-      <CartDrawer
+      <ErrorBoundaryCartDrawer>
+        <CartDrawer
 
-        isOpen={isCartOpen}
+          isOpen={isCartOpen}
 
-        onClose={() =>
-          setIsCartOpen(false)
-        }
+          onClose={() =>
+            setIsCartOpen(false)
+          }
 
-        cart={cart}
+          cart={cart}
 
-        removeFromCart={removeFromCart}
+          removeFromCart={removeFromCart}
 
-        updateQuantity={updateQuantity}
+          updateQuantity={updateQuantity}
 
-        onContinuarCompra={handleContinuarCompra}
+          clearCart={clearCart}
 
-        darkMode={theme === "dark"}
+          onContinuarCompra={handleContinuarCompra}
 
-      />
+          darkMode={theme === "dark"}
 
+        />
+      </ErrorBoundaryCartDrawer>
 
-      {/* ======================================
-          FOOTER
-      ====================================== */}
-
-      {!isAuthView &&
-        currentView !== "admin" && (
-
-        <Footer />
-      )}
 
       </div>
 

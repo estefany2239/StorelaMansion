@@ -1,4 +1,4 @@
-/* ==========================================
+﻿/* ==========================================
    HEADER ACTIONS FIX COMPLETO
    ========================================== */
 
@@ -9,7 +9,7 @@
   flex-shrink: 0 !important;
 }
 
-/* 1. Botón toggle de tema (Sol / Luna) */
+/* Botón toggle de tema (Sol / Luna) */
 .header-actions__theme-toggle,
 .header-actions button:has(.sun-icon, .moon-icon),
 button.theme-toggle {
@@ -21,8 +21,9 @@ button.theme-toggle {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 38px !important;
-  height: 38px !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
   border-radius: 50% !important;
   color: #ffffff !important;
   cursor: pointer !important;
@@ -30,18 +31,23 @@ button.theme-toggle {
 }
 
 .header-actions__theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(212, 175, 55, 0.12) !important;
 }
 
-/* 2. Botón Iniciar Sesión (Cápsula Dorada) */
+.header-actions__theme-toggle:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1.5px #d4af37 !important;
+}
+
+/* Botón Iniciar Sesión (cápsula dorada) */
 .header-actions__login,
-.header-actions button:not(.header-actions__theme-toggle):not(.profile-trigger-btn):not(.header-actions__favoritos) {
+.header-actions button:not(.header-actions__theme-toggle):not(.profile-trigger-btn):not(.header-actions__favoritos):not(.header-actions__cart):not(.navbar-carrito) {
   background-color: var(--gold, #c9a227) !important;
-  color: #000000 !important; /* Texto negro para contraste */
+  color: #000000 !important;
   border: none !important;
   outline: none !important;
   padding: 10px 24px !important;
-  border-radius: 999px !important; /* Forma redondeada de píldora */
+  border-radius: 999px !important;
   font-family: var(--font-body, "Inter", sans-serif) !important;
   font-size: 14px !important;
   font-weight: 600 !important;
@@ -56,9 +62,11 @@ button.theme-toggle {
   transform: translateY(-1px) !important;
 }
 
-/* 3. Botón MIS FAVORITOS (corazón + contador, mismo estilo del toggle) */
-.header-actions__favoritos {
-  position: relative;
+/* Botón carrito (icono como tema/cuenta, sin píldora) */
+.landing .header-actions .header-actions__cart.navbar-carrito,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito,
+.header-actions .header-actions__cart.navbar-carrito {
+  position: relative !important;
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
@@ -67,46 +75,69 @@ button.theme-toggle {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 38px !important;
-  height: 38px !important;
+  width: 40px !important;
+  height: 40px !important;
   padding: 0 !important;
+  margin: 0 !important;
   border-radius: 50% !important;
   cursor: pointer !important;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
   color: #ffffff !important;
   transition: background 0.2s ease !important;
+  transform: none !important;
 }
 
-.header-actions__favoritos:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: var(--gold) !important;
+.landing .header-actions .header-actions__cart.navbar-carrito:hover,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito:hover,
+.header-actions .header-actions__cart.navbar-carrito:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #ffffff !important;
+  transform: none !important;
+  filter: none !important;
 }
 
-:root:not([data-theme="dark"]) .header-actions__favoritos {
+.landing .header-actions .header-actions__cart.navbar-carrito:focus-visible,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito:focus-visible,
+.header-actions .header-actions__cart.navbar-carrito:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1.5px #d4af37 !important;
+}
+
+:root:not([data-theme="dark"]) .landing .header-actions .header-actions__cart.navbar-carrito,
+:root:not([data-theme="dark"]) .navbar-categoria .header-actions .header-actions__cart.navbar-carrito,
+:root:not([data-theme="dark"]) .header-actions .header-actions__cart.navbar-carrito {
   color: #1a1a1a !important;
 }
 
-:root:not([data-theme="dark"]) .header-actions__favoritos:hover {
-  background: rgba(0, 0, 0, 0.06) !important;
+:root:not([data-theme="dark"]) .landing .header-actions .header-actions__cart.navbar-carrito:hover,
+:root:not([data-theme="dark"]) .navbar-categoria .header-actions .header-actions__cart.navbar-carrito:hover,
+:root:not([data-theme="dark"]) .header-actions .header-actions__cart.navbar-carrito:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #1a1a1a !important;
 }
 
-.header-actions__favoritos-count {
-  position: absolute;
-  top: -1px;
-  right: -3px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background-color: var(--gold);
-  color: #000000;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 16px;
-  text-align: center;
+.landing .header-actions .header-actions__cart.navbar-carrito .header-actions__favoritos-count,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito .header-actions__favoritos-count,
+.header-actions .header-actions__cart.navbar-carrito .header-actions__favoritos-count {
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  background: #d4af37 !important;
+  background-color: #d4af37 !important;
+  color: #1a1407 !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  text-align: center !important;
 }
 
-/* 2b. Botón de PERFIL (sesión iniciada) - icono redondo, sin píldora */
+/* Botón de PERFIL (sesión iniciada) - icono redondo */
 .header-actions .profile-trigger-btn {
   background: transparent !important;
   background-color: transparent !important;
@@ -126,22 +157,24 @@ button.theme-toggle {
 }
 
 .header-actions .profile-trigger-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: var(--gold, #c9a227) !important;
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #ffffff !important;
   transform: none !important;
   filter: none !important;
 }
 
-/* ==========================================
-   MANTENER ESTILOS EN MODO CLARO (BEIGE)
-   ========================================== */
+.header-actions .profile-trigger-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1.5px #d4af37 !important;
+}
 
+/* Modo claro */
 :root:not([data-theme="dark"]) .header-actions__theme-toggle {
   color: #1a1a1a !important;
 }
 
 :root:not([data-theme="dark"]) .header-actions__theme-toggle:hover {
-  background: rgba(0, 0, 0, 0.06) !important;
+  background: rgba(212, 175, 55, 0.12) !important;
 }
 
 :root:not([data-theme="dark"]) .header-actions .profile-trigger-btn {
@@ -149,5 +182,6 @@ button.theme-toggle {
 }
 
 :root:not([data-theme="dark"]) .header-actions .profile-trigger-btn:hover {
-  background: rgba(0, 0, 0, 0.06) !important;
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #1a1a1a !important;
 }

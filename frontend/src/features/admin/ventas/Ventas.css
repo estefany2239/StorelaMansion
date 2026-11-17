@@ -323,7 +323,6 @@
 
 .ventas-table {
   width: 100%;
-  min-width: 1120px;
   border-collapse: collapse;
   table-layout: fixed;
 }

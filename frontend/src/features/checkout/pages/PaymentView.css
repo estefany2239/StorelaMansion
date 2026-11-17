@@ -1,6 +1,38 @@
+﻿/* === Rediseño visual seguro (checkout) - wrapper y tokens, no altera lógica === */
+.payment-view-root{width:100%;min-height:100vh;--dorado:#d4af37;--fondo:#fffaf0;--texto:#1a1407;--superficie:#ffffff;--texto-suave:#5c564d;--borde-dorado:rgba(212,175,55,.35);position:relative;overflow-x:clip;background:#fffaf0;color:var(--texto)}
+
+/* Footer compartido: columna flex; queda al fondo, debajo de las
+   tarjetas y sin tapar el botón de confirmar (la cinta .payment-bg
+   es fija arriba y no lo cruza). */
+.payment-view-root{display:flex;flex-direction:column}
+.payment-view-root > .sitio-footer{margin-top:auto}
+.payment-view-root.payment-dark{--fondo:#121212;--texto:#ffffff;--superficie:#1e1e1e;--texto-suave:#b8b2a7;background:var(--fondo);color:#fff}
+.payment-bg{position:fixed;top:0;left:0;width:100vw;height:clamp(170px,14vw,230px);pointer-events:none;z-index:0;overflow:hidden}
+.payment-bg-svg{position:absolute;top:0;left:0;width:100%;height:100%;display:block;filter:drop-shadow(0 2px 6px rgba(212,175,55,.35))}
+.payment-view-root::after{content:none}
+.payment-bg::after{content:none}
+.payment-view-root.payment-dark .payment-bg-svg path:first-of-type{fill:rgba(255,255,255,.03)}
+.payment-view-root.payment-dark .payment-bg-svg{filter:drop-shadow(0 2px 8px rgba(212,175,55,.45)) brightness(1.15)}
+
+@media (max-width:850px){.payment-bg{height:100px}}
+@media (max-width:420px){.payment-bg{height:100px}}
+.payment-view-root .categoria-pagina-nav{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:70;width:min(1160px,calc(100% - 40px));margin:0}
+.payment-view-root .payment-page{position:relative;z-index:1;width:min(1160px,calc(100% - 32px));margin:0 auto;padding:calc(clamp(170px,14vw,230px) + 24px) 0 56px;background:transparent !important;color:inherit}
+.payment-view-root .categoria-pagina-nav .header-actions__theme-toggle,
+.payment-view-root .categoria-pagina-nav .header-actions__favoritos,
+.payment-view-root .categoria-pagina-nav .header-actions .profile-trigger-btn{color:var(--texto) !important}
+.payment-view-root .categoria-pagina-nav .header-actions__theme-toggle:hover,
+.payment-view-root .categoria-pagina-nav .header-actions__favoritos:hover,
+.payment-view-root .categoria-pagina-nav .header-actions .profile-trigger-btn:hover{background:rgba(0,0,0,.06) !important;color:var(--dorado) !important}
+.payment-view-root.payment-dark .categoria-pagina-nav .header-actions__theme-toggle,
+.payment-view-root.payment-dark .categoria-pagina-nav .header-actions__favoritos,
+.payment-view-root.payment-dark .categoria-pagina-nav .header-actions .profile-trigger-btn{color:#fff !important}
+.payment-view-root.payment-dark .categoria-pagina-nav .header-actions__theme-toggle:hover,
+.payment-view-root.payment-dark .categoria-pagina-nav .header-actions__favoritos:hover,
+.payment-view-root.payment-dark .categoria-pagina-nav .header-actions .profile-trigger-btn:hover{background:rgba(255,255,255,.1) !important;color:var(--dorado) !important}
 /* =========================================================
    PAYMENT VIEW
-   STORE LA MANSIÓN
+   STORE LA MANSI├ôN
 ========================================================= */
 
 .payment-page {
@@ -26,20 +58,14 @@
    LIGHT MODE
 ========================================================= */
 
-.payment-page.payment-light {
-  background: var(--site-bg);
-  color: #111111;
-}
+.payment-page.payment-light{background:transparent;color:var(--texto,#1a1407);}
 
 
 /* =========================================================
    DARK MODE
 ========================================================= */
 
-.payment-page.payment-dark {
-  background: #0b0b0b !important;
-  color: #ffffff !important;
-}
+.payment-page.payment-dark{background:transparent !important;color:inherit !important;}
 
 
 /* =========================================================
@@ -80,14 +106,14 @@
   color: #d4af37;
 }
 
-/* Enlace del pie: «Volver a la tienda», abajo a la izquierda. */
+/* Enlace del pie: ┬½Volver a la tienda┬╗, abajo a la izquierda. */
 .payment-back--bottom {
   margin-top: 34px;
 }
 
 
 /* =========================================================
-   TÍTULO
+   T├ìTULO
 ========================================================= */
 
 .payment-title {
@@ -197,28 +223,26 @@
 
 /* LIGHT */
 
-.payment-light .payment-card {
-  background: var(--site-card);
+.payment-light .payment-card{background:#ffffff !important;
 
   color: #111111;
 
-  border:
-    1px solid var(--site-border);
+  border:1px solid rgba(212,175,55,.35);
 
   box-shadow:
     0 2px 10px rgba(0, 0, 0, .05);
+
+  opacity: 1;
 }
 
 
 /* DARK */
 
-.payment-page.payment-dark .payment-card {
-  background: #171717 !important;
+.payment-page.payment-dark .payment-card{background:#1e1e1e !important;
 
   color: #ffffff !important;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.22) !important;
+  border:1px solid var(--borde-dorado, rgba(212,175,55,.35)) !important;
 
   box-shadow:
     0 8px 25px rgba(0, 0, 0, 0.35) !important;
@@ -226,7 +250,7 @@
 
 
 /* =========================================================
-   ENCABEZADO DE SECCIÓN
+   ENCABEZADO DE SECCI├ôN
 ========================================================= */
 
 .section-heading {
@@ -262,15 +286,7 @@
   font-weight: 800;
 }
 
-.section-heading h2 {
-  margin: 0;
-
-  font-family: var(--font-body, "Inter", sans-serif);
-
-  font-size: 25px;
-
-  font-weight: 700;
-}
+.section-heading h2{margin:0;font-family:var(--font-body,"Inter",sans-serif);font-size:25px;font-weight:700;color:var(--texto,#1a1407);}.section-heading h2::after{content:"";display:block;width:42px;height:3px;margin-top:8px;border-radius:999px;background:#d4af37;}
 
 .section-heading p {
   margin: 4px 0 0;
@@ -365,7 +381,7 @@
 /* DARK */
 
 .payment-page.payment-dark .form-group input {
-  background: #101010 !important;
+  background:#1a1a1a !important;
 
   color: #ffffff !important;
 
@@ -448,9 +464,9 @@
 
 
 /* =========================================================
-   SELECTS (departamento y municipio del catálogo DIVIPOLA)
-   Mismo alto, radio y tipografía que los inputs; el chevron
-   es un SVG en background para no depender de librerías.
+   SELECTS (departamento y municipio del cat├ílogo DIVIPOLA)
+   Mismo alto, radio y tipograf├¡a que los inputs; el chevron
+   es un SVG en background para no depender de librer├¡as.
 ========================================================= */
 
 .payment-page .form-group select {
@@ -519,7 +535,7 @@
 /* DARK */
 
 .payment-page.payment-dark .form-group select {
-  background-color: #101010 !important;
+  background-color:#1a1a1a !important;
 
   color: #ffffff !important;
 
@@ -529,10 +545,10 @@
 
 
 /* Opciones del desplegable: en modo oscuro el sistema suele pintarlas
-   claras, así que se fija el fondo para que el texto siga legible. */
+   claras, as├¡ que se fija el fondo para que el texto siga legible. */
 
 .payment-page.payment-dark .form-group select option {
-  background: #101010 !important;
+  background:#1a1a1a !important;
 
   color: #ffffff !important;
 }
@@ -554,7 +570,7 @@
 
 .payment-page .form-group select:disabled,
 .payment-page .form-group input:disabled {
-  background: var(--site-surface-2);
+  background:rgba(212,175,55,.06);
   opacity: 0.55;
 
   cursor: not-allowed;
@@ -562,7 +578,7 @@
 
 
 /* =========================================================
-   MÉTODOS DE PAGO
+   M├ëTODOS DE PAGO
 ========================================================= */
 
 .payment-methods {
@@ -577,15 +593,15 @@
 }
 
 
-/* Fila con solo dos opciones (Método de pago: Transferencia y Contra
-   entrega): ocupan el ancho completo, sin dejar un tercer hueco vacío. */
+/* Fila con solo dos opciones (M├®todo de pago: Transferencia y Contra
+   entrega): ocupan el ancho completo, sin dejar un tercer hueco vac├¡o. */
 
 .payment-methods.payment-methods--par {
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
 }
 
-/* Una sola opción disponible (Transportadora). */
+/* Una sola opci├│n disponible (Transportadora). */
 .payment-methods.payment-methods--una {
   grid-template-columns:
     minmax(0, 1fr);
@@ -652,20 +668,17 @@
 
 /* LIGHT */
 
-.payment-light .payment-method {
-  background: #ffffff;
+.payment-light .payment-method{background:#fff;
 
   color: #111111;
 
-  border:
-    1px solid #dddddd;
+  border:1px solid rgba(212,175,55,.3);
 }
 
 
 /* DARK */
 
-.payment-page.payment-dark .payment-method {
-  background: #171717 !important;
+.payment-page.payment-dark .payment-method{background:#1e1e1e !important;
 
   color: #ffffff !important;
 
@@ -687,9 +700,7 @@
 
 /* SELECTED LIGHT */
 
-.payment-light .payment-method.selected {
-  background:
-    #fff9eb;
+.payment-light .payment-method.selected{background:rgba(212,175,55,.1);
 
   border:
     2px solid #d4af37;
@@ -698,10 +709,7 @@
 
 /* SELECTED DARK */
 
-.payment-page.payment-dark
-.payment-method.selected {
-  background:
-    #211e12 !important;
+.payment-page.payment-dark .payment-method.selected{background:rgba(212,175,55,.12) !important;
 
   border:
     2px solid #d4af37 !important;
@@ -709,7 +717,7 @@
 
 
 /* =========================================================
-   RADIO DE SELECCIÓN (izquierda de cada tarjeta de método)
+   RADIO DE SELECCI├ôN (izquierda de cada tarjeta de m├®todo)
 ========================================================= */
 
 .method-radio {
@@ -812,7 +820,7 @@
 
 
 /* =========================================================
-   INFORMACIÓN EXTRA
+   INFORMACI├ôN EXTRA
 ========================================================= */
 
 .payment-extra {
@@ -830,31 +838,26 @@
 
 /* LIGHT */
 
-.payment-light .payment-extra {
-  background:
-    #f8f8f8;
+.payment-light .payment-extra{background:#ffffff !important;
 
-  border:
-    1px solid #e2e2e2;
+  border:1px solid rgba(212,175,55,.35);
 }
 
 
 /* DARK */
 
-.payment-page.payment-dark .payment-extra {
-  background:
-    #101010 !important;
+.payment-page.payment-dark .payment-extra{background:var(--superficie,#1e1e1e) !important;
 
   color:
     #ffffff !important;
 
   border:
-    1px solid #363636 !important;
+    1px solid rgba(212,175,55,.35) !important;
 }
 
 
 /* =========================================================
-   TÍTULO EXTRA
+   T├ìTULO EXTRA
 ========================================================= */
 
 .extra-title {
@@ -934,8 +937,7 @@
   color:
     #111111;
 
-  border:
-    1px solid #dddddd;
+  border:1px solid rgba(212,175,55,.3);
 }
 
 
@@ -1019,8 +1021,7 @@
 /* LIGHT */
 
 .payment-light .payment-notice {
-  background:
-    var(--site-surface-2);
+  background:rgba(212,175,55,.06);
 
   color:
     #555555;
@@ -1107,8 +1108,7 @@
 /* LIGHT */
 
 .payment-light .bank-data {
-  border-color:
-    #e2e2e2;
+  border-color:rgba(212,175,55,.22);
 }
 
 
@@ -1164,8 +1164,7 @@
 }
 
 .payment-light .proof-upload {
-  border-color:
-    #e2e2e2;
+  border-color:rgba(212,175,55,.22);
 }
 
 .payment-page.payment-dark .proof-upload {
@@ -1189,7 +1188,7 @@
 
 
 /* =========================================================
-   BOTÓN SUBIR COMPROBANTE
+   BOT├ôN SUBIR COMPROBANTE
 ========================================================= */
 
 .upload-proof-btn {
@@ -1325,32 +1324,28 @@
 
 /* LIGHT */
 
-.payment-light .payment-summary {
-  background:
-    var(--site-card);
+.payment-light .payment-summary{background:#ffffff !important;
 
   color:
     #111111;
 
-  border:
-    1px solid var(--site-border);
+  border:1px solid rgba(212,175,55,.35);
 
   box-shadow:
     0 2px 10px rgba(0, 0, 0, .05);
+
+  opacity: 1;
 }
 
 
 /* DARK */
 
-.payment-page.payment-dark .payment-summary {
-  background:
-    #171717 !important;
+.payment-page.payment-dark .payment-summary{background:#1e1e1e !important;
 
   color:
     #ffffff !important;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.22) !important;
+  border:1px solid var(--borde-dorado, rgba(212,175,55,.35)) !important;
 
   box-shadow:
     0 8px 25px rgba(0, 0, 0, 0.35) !important;
@@ -1379,8 +1374,7 @@
 }
 
 .payment-light .summary-header {
-  border-color:
-    #e3e3e3;
+  border-color:rgba(212,175,55,.22);
 }
 
 .payment-page.payment-dark .summary-header {
@@ -1459,8 +1453,7 @@
 }
 
 .payment-light .summary-product {
-  border-color:
-    #eeeeee;
+  border-color:rgba(212,175,55,.18);
 }
 
 .payment-page.payment-dark .summary-product {
@@ -1556,7 +1549,7 @@
 
 
 /* =========================================================
-   INFORMACIÓN PRODUCTO
+   INFORMACI├ôN PRODUCTO
 ========================================================= */
 
 .summary-product-info {
@@ -1588,7 +1581,7 @@
     0.55;
 }
 
-/* Línea del resumen sin unidades disponibles */
+/* L├¡nea del resumen sin unidades disponibles */
 .summary-product-agotado {
   margin:
     4px 0 0;
@@ -1612,9 +1605,7 @@
     1;
 }
 
-.summary-product > strong {
-  color:
-    #d4af37;
+.summary-product > strong{color:#1a1407;
 
   font-size:
     12px;
@@ -1628,7 +1619,7 @@
 
 
 /* =========================================================
-   SUBTOTAL Y ENVÍO (filas del resumen)
+   SUBTOTAL Y ENV├ìO (filas del resumen)
 ========================================================= */
 
 .summary-line {
@@ -1652,8 +1643,7 @@
 }
 
 .payment-light .summary-line {
-  border-color:
-    #eeeeee;
+  border-color:rgba(212,175,55,.18);
 }
 
 .payment-page.payment-dark .summary-line {
@@ -1685,26 +1675,10 @@
    TOTAL
 ========================================================= */
 
-.summary-total {
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  padding:
-    21px 0;
-
-  border-bottom:
-    1px solid;
-}
+.summary-total{display:flex;align-items:center;justify-content:space-between;padding:18px 0;margin-top:4px;border-top:2px solid #d4af37;border-bottom:1px solid;}
 
 .payment-light .summary-total {
-  border-color:
-    #dddddd;
+  border-color:rgba(212,175,55,.22);
 }
 
 .payment-page.payment-dark .summary-total {
@@ -1753,7 +1727,7 @@
     fit-content;
 
   margin:
-    16px auto 0;
+    16px auto;
 
   padding:
     9px 14px;
@@ -1779,7 +1753,7 @@
     1px solid rgba(212, 175, 55, 0.28);
 
   color:
-    #8a6d1f;
+    #1a1407;
 }
 
 .payment-page.payment-dark .secure-payment {
@@ -1800,94 +1774,51 @@
 
 
 /* =========================================================
-   BOTÓN CONFIRMAR
+   BOT├ôN CONFIRMAR
 ========================================================= */
 
-.confirm-payment-btn {
-  width:
-    100%;
-
-  height:
-    56px;
-
-  box-sizing:
-    border-box;
-
-  border:
-    none;
-
-  border-radius:
-    12px;
-
-  background:
-    linear-gradient(135deg, #e8c96a 0%, #d4af37 55%, #b8912b 100%);
-
-  color:
-    #000000;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  gap:
-    9px;
-
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-
-  font-size:
-    15px;
-
-  font-weight:
-    800;
-
-  cursor:
-    pointer;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+.payment-summary .confirm-payment-btn {
+  width: 100%;
+  height: 56px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 20px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d4af37 0%, #e6c65a 100%);
+  color: #1a1407;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.confirm-payment-btn:hover {
-  transform:
-    translateY(-2px);
-
-  box-shadow:
-    0 8px 20px
-    rgba(212, 175, 55, 0.22);
+.payment-summary .confirm-payment-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow: 0 10px 22px rgba(212, 175, 55, 0.42);
 }
 
-.confirm-payment-btn:disabled {
-  background:
-    #6b6b6b;
-
-  color:
-    #d9d9d9;
-
-  cursor:
-    not-allowed;
-
-  transform:
-    none;
-
-  box-shadow:
-    none;
+.payment-summary .confirm-payment-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.confirm-payment-btn:disabled:hover {
-  transform:
-    none;
-
-  box-shadow:
-    none;
+.payment-summary .confirm-payment-btn:disabled,
+.payment-summary .confirm-payment-btn:disabled:hover {
+  background: linear-gradient(180deg, #d4af37 0%, #e6c65a 100%);
+  color: #1a1407;
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
 }
 
 /* Aviso de bloqueo cuando el pedido lleva productos agotados */
@@ -1943,12 +1874,7 @@
 }
 
 
-@media (max-width: 850px) {
-
-  .payment-page {
-    padding:
-      30px 25px 50px;
-  }
+  @media (max-width: 850px){.payment-page{width:min(1160px,calc(100% - 24px));}
 
   .payment-methods {
     grid-template-columns:
@@ -1968,12 +1894,7 @@
 }
 
 
-@media (max-width: 650px) {
-
-  .payment-page {
-    padding:
-      25px 15px 45px;
-  }
+  @media (max-width: 650px){.payment-page{width:calc(100% - 20px);}
 
   .payment-title {
     gap:
@@ -2035,7 +1956,7 @@
 
 
 /* =========================================================
-   ERRORES DE VALIDACIÓN
+   ERRORES DE VALIDACI├ôN
    (campos en rojo + texto bajo el campo)
 ========================================================= */
 
@@ -2097,9 +2018,9 @@
 
 
 /* =========================================================
-   ESTADO VÁLIDO (check verde bajo el campo)
-   Solo se pinta cuando el campo tiene contenido válido:
-   nunca en campos vacíos sin interactuar.
+   ESTADO V├üLIDO (check verde bajo el campo)
+   Solo se pinta cuando el campo tiene contenido v├ílido:
+   nunca en campos vac├¡os sin interactuar.
 ========================================================= */
 
 .field-valid {
@@ -2174,7 +2095,7 @@
 
   background: #ffffff;
 
-  border: 1px solid #e2e2e2;
+  border:1px solid rgba(212,175,55,.22);
 
   border-radius: 18px;
 
@@ -2204,7 +2125,7 @@
 
   padding: 24px;
 
-  color: #8a6d1d;
+  color: #1a1407;
 
   font-size: 14px;
 
@@ -2238,7 +2159,7 @@
 }
 
 .qr-payment-amount span {
-  color: #8a6d1d;
+  color: #1a1407;
 
   font-size: 12px;
 
@@ -2250,7 +2171,7 @@
 }
 
 .qr-payment-amount strong {
-  color: #6f5410;
+  color: #1a1407;
 
   font-size: 24px;
 
@@ -2260,7 +2181,7 @@
 .qr-payment-amount small {
   max-width: 420px;
 
-  color: #6b6b6b;
+  color: #5c564d;
 
   font-size: 12px;
 
@@ -2290,11 +2211,11 @@
 }
 
 .qr-payment-balance span {
-  color: #6b6b6b;
+  color: #5c564d;
 }
 
 .qr-payment-balance strong {
-  color: #6f5410;
+  color: #1a1407;
 
   font-size: 16px;
 }
@@ -2364,3 +2285,4 @@
     gap: 4px;
   }
 }
+

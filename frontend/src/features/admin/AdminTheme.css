@@ -6,7 +6,7 @@
 .admin-container.admin-dark {
   --admin-bg: #1c1c1c;
   --admin-card: #262626;
-  --admin-sidebar: #202020;
+  --admin-sidebar: var(--admin-surface-2);
   --admin-text: #f2f2f2;
   --admin-text-secondary: #c9c9c9;
   --admin-text-muted: #9a9a9a;
@@ -22,7 +22,7 @@
   --admin-surface-2: #2e2e2e;
   --admin-overlay: rgba(0, 0, 0, 0.62);
   --admin-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  --admin-sidebar-bg: #1f1f1f;
+  --admin-sidebar-bg: var(--admin-hover);
   --admin-sidebar-border: #333333;
   --admin-sidebar-hover: rgba(212, 175, 55, 0.08);
   --admin-sidebar-active: rgba(212, 175, 55, 0.12);
@@ -1296,7 +1296,7 @@
 .admin-container .pedido-product-delete,
 .admin-container .producto-talla-delete {
   background: #e53935 !important;
-  color: #ffffff !important;
+  color: var(--admin-text) !important;
   border-radius: 10px !important;
 }
 

@@ -536,16 +536,16 @@ export default function Colores({ user }) {
       {mostrarModal && (
 
         <div
-          className="color-modal-overlay"
+          className="color-modal-overlay am-overlay"
           onClick={cerrarModal}
         >
 
           <div
-            className="color-modal"
+            className="color-modal am-modal am-modal--sm"
             onClick={(e) => e.stopPropagation()}
           >
 
-            <div className="color-modal-header">
+            <div className="color-modal-header am-header">
 
               <h3>
                 {modoEdicion
@@ -555,7 +555,7 @@ export default function Colores({ user }) {
 
               <button
                 type="button"
-                className="color-modal-close"
+                className="color-modal-close am-close"
                 onClick={cerrarModal}
               >
 
@@ -565,9 +565,9 @@ export default function Colores({ user }) {
 
             </div>
 
-            <div className="color-modal-body">
+            <div className="color-modal-body am-body">
 
-              <div className="color-form-group">
+              <div className="color-form-group am-field">
 
                 <label>
                   NOMBRE DEL COLOR
@@ -579,7 +579,7 @@ export default function Colores({ user }) {
                   placeholder="Ej: Café"
                   maxLength={30}
                   value={formulario.nombre}
-                  className={`input ${errores.nombre ? "input-error" : ""}`}
+                  className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "nombre",
@@ -599,14 +599,14 @@ export default function Colores({ user }) {
                 />
 
                 {errores.nombre && (
-                  <span className="error-text">
+                  <span className="error-text am-error">
                     {errores.nombre}
                   </span>
                 )}
 
               </div>
 
-              <div className="color-form-group">
+              <div className="color-form-group am-field">
 
                 <label>
                   CÓDIGO HEXADECIMAL
@@ -618,7 +618,7 @@ export default function Colores({ user }) {
                   placeholder="Ej: #A0522D"
                   maxLength={7}
                   value={formulario.codigo_hex}
-                  className={`input ${errores.codigo_hex ? "input-error" : ""}`}
+                  className={`am-input input ${errores.codigo_hex ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "codigo_hex",
@@ -635,7 +635,7 @@ export default function Colores({ user }) {
                 />
 
                 {errores.codigo_hex && (
-                  <span className="error-text">
+                  <span className="error-text am-error">
                     {errores.codigo_hex}
                   </span>
                 )}
@@ -644,11 +644,11 @@ export default function Colores({ user }) {
 
             </div>
 
-            <div className="color-modal-footer">
+            <div className="color-modal-footer am-footer">
 
               <button
                 type="button"
-                className="color-cancel-button"
+                className="color-cancel-button am-btn-ghost"
                 onClick={cerrarModal}
               >
                 Cancelar
@@ -656,7 +656,7 @@ export default function Colores({ user }) {
 
               <button
                 type="button"
-                className="color-create-button"
+                className="color-create-button am-btn-gold"
                 onClick={guardarColor}
               >
                 {modoEdicion ? "Guardar" : "Crear"}

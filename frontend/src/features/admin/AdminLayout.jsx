@@ -17,7 +17,8 @@ import {
   ChevronDown,
   Tags,
   Ruler,
-  Palette
+  Palette,
+  Scale
 } from "lucide-react";
 
 import Dashboard from "./dashboard/Dashboard";
@@ -39,6 +40,7 @@ import { tienePermiso } from "./utils/permisos";
 import "./AdminLayout.css";
 import "./AdminTheme.css";
 import "./AdminDesign.css";
+import "./shared/AdminModal.css";
 
 export default function AdminLayout({ user, onLogout, onUserUpdated }) {
 
@@ -696,6 +698,19 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
                   {darkMode ? <Sun size={16} /> : <Moon size={16} />}
                   {darkMode ? "Modo claro" : "Modo oscuro"}
                 </button>
+
+                {/* Enlace de información del sistema (no requiere permisos):
+                    abre la página pública /licencias en una pestaña nueva. */}
+                <a
+                  href="/licencias"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="admin-navbar-profile-link"
+                  onClick={() => setMenuPerfilAbierto(false)}
+                >
+                  <Scale size={16} />
+                  Licencias y derechos de autor
+                </a>
 
                 <button
                   type="button"

@@ -105,9 +105,18 @@ section,
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* La landing nueva gestiona su propio tema (data-tema) y fondos por
+   sección (satén, hero con foto): sin este override la regla global de
+   arriba les pintaría el fondo y les forzaría 20px de padding. */
+.landing section {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
 /* Contenedores con ancho máximo controlado y centrados perfectamente */
 .categories,
-.gender-selector-wrapper,
 .category-catalog-section,
 .category-catalog-container,
 .catalog-container,

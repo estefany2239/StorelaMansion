@@ -422,32 +422,32 @@ export default function Perfil({
 
       {modalAbierto && (
         <div
-          className="rol-modal-overlay"
+          className="rol-modal-overlay am-overlay"
           onClick={cerrarModal}
         >
           <div
-            className="rol-modal"
+            className="rol-modal am-modal am-modal--md"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
-            <div className="rol-modal-header">
+            <div className="rol-modal-header am-header">
               <h3>
                 Actualizar perfil
               </h3>
               <button
                 type="button"
-                className="rol-modal-close"
+                className="rol-modal-close am-close"
                 onClick={cerrarModal}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={guardarPerfil}>
-              <div className="rol-modal-body">
-                <div className="rol-form-row">
-                  <div className="rol-form-group">
+            <form className="am-form-wrap" onSubmit={guardarPerfil}>
+              <div className="rol-modal-body am-body">
+                <div className="rol-form-row am-form-grid">
+                  <div className="rol-form-group am-field">
                     <label>
                       NOMBRE COMPLETO
                     </label>
@@ -457,24 +457,25 @@ export default function Perfil({
                       placeholder="Tu nombre completo"
                       value={form.nombre}
                       onChange={manejarCambio}
-                      className={`input ${errores.nombre ? "input-error" : ""}`}
+                      className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                       required
                     />
                     {errores.nombre && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.nombre}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="rol-form-row">
-                  <div className="rol-form-group">
+                <div className="rol-form-row am-form-grid">
+                  <div className="rol-form-group am-field">
                     <label>
                       CORREO ELECTRÓNICO
                     </label>
                     <input
                       type="email"
+                      className="am-input"
                       name="correo"
                       placeholder="tu@correo.com"
                       value={form.correo}
@@ -483,12 +484,13 @@ export default function Perfil({
                     />
                   </div>
 
-                  <div className="rol-form-group">
+                  <div className="rol-form-group am-field">
                     <label>
                       TELÉFONO
                     </label>
                     <input
                       type="text"
+                      className="am-input"
                       name="telefono"
                       placeholder="+57 300 000 0000"
                       value={form.telefono}
@@ -498,32 +500,35 @@ export default function Perfil({
                   </div>
                 </div>
 
-                <div className="rol-form-group">
-                  <label>
-                    DIRECCIÓN
-                  </label>
-                  <input
-                    type="text"
-                    name="direccion"
-                    placeholder="Tu dirección"
-                    value={form.direccion}
-                    onChange={manejarCambio}
-                    required
-                  />
+                <div className="am-form-grid">
+                  <div className="rol-form-group am-field am-field--full">
+                    <label>
+                      DIRECCI�"N
+                    </label>
+                    <input
+                      type="text"
+                      className="am-input"
+                      name="direccion"
+                      placeholder="Tu direcci��n"
+                      value={form.direccion}
+                      onChange={manejarCambio}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="rol-modal-footer">
+              <div className="rol-modal-footer am-footer">
                 <button
                   type="button"
-                  className="rol-cancel-button"
+                  className="rol-cancel-button am-btn-ghost"
                   onClick={cerrarModal}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="rol-create-button"
+                  className="rol-create-button am-btn-gold"
                 >
                   Guardar cambios
                 </button>

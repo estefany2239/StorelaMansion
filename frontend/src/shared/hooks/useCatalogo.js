@@ -40,6 +40,9 @@ const adaptarVariante = (p) => {
           ? Number(p.stock)
           : null,
     price: formatearPrecio(p.precio),
+    // Precio numérico real de la variante (para filtros y ordenamientos).
+    // `price` sigue siendo el string formateado que muestra la tarjeta.
+    precio: Number.isFinite(Number(p.precio)) ? Number(p.precio) : null,
     image: urlImagen(p.imagen),
   }
 }
