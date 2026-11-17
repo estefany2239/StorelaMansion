@@ -1,0 +1,91 @@
+LICENCIA DE SOFTWARE PROPIETARIA: STORE LA MANSIÓN
+===================================================
+
+1. AVISO DE COPYRIGHT
+---------------------
+© 2026 Estefany Arango Morales y Hannah Molina Valencia. Todos los derechos reservados.
+(© 2026, con finalización prevista del proyecto en 2027).
+
+2. DATOS DEL PROYECTO
+---------------------
+- Nombre del proyecto: STORE LA MANSIÓN (tienda virtual con panel administrativo).
+- Programa: Tecnología en Análisis y Desarrollo de Software.
+- Institución: Servicio Nacional de Aprendizaje — SENA.
+- Ficha: 3256538.
+- Instructor: Alber Arango.
+- Beneficiaria: Leidy Juliet Quiroga Herrera.
+- Autoras y desarrolladoras: Estefany Arango Morales y Hannah Molina Valencia, quienes
+  conservan la autoría de la obra y sus derechos morales conforme a la legislación
+  colombiana de derecho de autor.
+
+3. TITULARIDAD PATRIMONIAL PREVISTA
+-----------------------------------
+La transferencia de los derechos patrimoniales a STORE LA MANSIÓN, representada por
+Leidy Juliet Quiroga Herrera, se encuentra pendiente de formalización mediante convenio;
+este documento no sustituye ni perfecciona dicho convenio.
+Hasta la formalización del convenio de transferencia, los derechos patrimoniales
+corresponden a las autoras. Las autoras conservan su autoría y sus derechos morales
+conforme a la legislación colombiana.
+
+4. MODALIDAD DE LICENCIA
+------------------------
+Licencia propietaria de software. Este software NO se distribuye bajo una licencia
+abierta ni de código fuente disponible. El código fuente original del proyecto
+(código propio de frontend y backend) está protegido por el derecho de autor.
+
+5. AUTORIZACIÓN DE USO
+----------------------
+Sin necesidad de autorización escrita adicional, y en los términos de esta licencia:
+a) STORE LA MANSIÓN puede operar el aplicativo para el funcionamiento de su tienda
+   virtual.
+b) Los empleados y administradores contratados o designados por STORE LA MANSIÓN
+   pueden acceder al aplicativo únicamente según los roles y permisos establecidos
+   en el sistema.
+c) Los clientes usan la tienda virtual como usuarios finales (consultar productos
+   y comprar), sin acceso al código fuente y sin derecho de reproducción,
+   distribución o explotación del software.
+
+Ninguna otra persona u organización queda autorizada por este documento.
+
+6. RESTRICCIONES
+----------------
+Sin autorización escrita previa de los titulares de los derechos queda prohibido:
+copiar, reproducir, modificar, crear obras derivadas, distribuir, sublicenciar, ceder,
+publicar el código fuente, o realizar ingeniería inversa del software, excepto en la
+medida en que lo permita expresamente la ley aplicable. La obtención del código fuente
+por medios no autorizados no otorga derecho alguno de uso, modificación o distribución.
+
+7. AUTORÍA Y DERECHOS MORALES
+-----------------------------
+Se reconoce expresamente la autoría de Estefany Arango Morales y Hannah Molina Valencia
+y sus derechos morales, que son irrenunciables e inalienables, conforme a la legislación
+colombiana de derecho de autor (Ley 23 de 1982, por la cual se dictan disposiciones
+sobre derecho de autor; Decisión 351 de 1993 de la Comisión del Acuerdo de Cartagena,
+Régimen Común sobre Protección de los Derechos de Propiedad Intelectual)
+[a verificar con el instructor o asesor jurídico].
+
+8. COMPONENTES DE TERCEROS
+--------------------------
+Este proyecto incorpora componentes de terceros (bibliotecas, herramientas y servicios
+externos) que se rigen por sus propias licencias y términos, indicados en el archivo
+THIRD_PARTY_NOTICES.md y en los textos originales conservados en la carpeta licenses/.
+La presente licencia propietaria no reemplaza ni modifica dichas licencias de terceros,
+ni las licencias MIT/ISC/BSD u otras de las dependencias aplican al código original
+del proyecto.
+
+9. EXENCIÓN DE GARANTÍAS Y LIMITACIÓN DE RESPONSABILIDAD
+--------------------------------------------------------
+El software se entrega "tal cual" (as is) y según esté disponible, sin garantía alguna,
+expresa o implícita, incluyendo, sin limitación, garantías de comerciabilidad,
+aptitud para un propósito particular o no infracción. En la máxima medida permitida
+por la ley, los titulares y autoras no serán responsables por reclamos, daños u otras
+responsabilidades derivadas del uso o la imposibilidad de uso del software. Nada en
+este documento constituye promesa de soporte, actualizaciones, mantenimiento o
+disponibilidad continua del software.
+
+10. AVALÚO Y FUERZA DEL DOCUMENTO
+----------------------------------
+Documento borrador sujeto a revisión del instructor y a la formalización del convenio
+de transferencia.
+
+STORE LA MANSIÓN — Proyecto de grado SENA, ficha 3256538 — 2026.

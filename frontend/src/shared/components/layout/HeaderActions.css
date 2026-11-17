@@ -1,0 +1,187 @@
+﻿/* ==========================================
+   HEADER ACTIONS FIX COMPLETO
+   ========================================== */
+
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Botón toggle de tema (Sol / Luna) */
+.header-actions__theme-toggle,
+.header-actions button:has(.sun-icon, .moon-icon),
+button.theme-toggle {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease !important;
+}
+
+.header-actions__theme-toggle:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+}
+
+.header-actions__theme-toggle:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1.5px #d4af37 !important;
+}
+
+/* Botón Iniciar Sesión (cápsula dorada) */
+.header-actions__login,
+.header-actions button:not(.header-actions__theme-toggle):not(.profile-trigger-btn):not(.header-actions__favoritos):not(.header-actions__cart):not(.navbar-carrito) {
+  background-color: var(--gold, #c9a227) !important;
+  color: #000000 !important;
+  border: none !important;
+  outline: none !important;
+  padding: 10px 24px !important;
+  border-radius: 999px !important;
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+.header-actions__login:hover {
+  filter: brightness(0.9) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Botón carrito (icono como tema/cuenta, sin píldora) */
+.landing .header-actions .header-actions__cart.navbar-carrito,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito,
+.header-actions .header-actions__cart.navbar-carrito {
+  position: relative !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  color: #ffffff !important;
+  transition: background 0.2s ease !important;
+  transform: none !important;
+}
+
+.landing .header-actions .header-actions__cart.navbar-carrito:hover,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito:hover,
+.header-actions .header-actions__cart.navbar-carrito:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #ffffff !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.landing .header-actions .header-actions__cart.navbar-carrito:focus-visible,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito:focus-visible,
+.header-actions .header-actions__cart.navbar-carrito:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1.5px #d4af37 !important;
+}
+
+:root:not([data-theme="dark"]) .landing .header-actions .header-actions__cart.navbar-carrito,
+:root:not([data-theme="dark"]) .navbar-categoria .header-actions .header-actions__cart.navbar-carrito,
+:root:not([data-theme="dark"]) .header-actions .header-actions__cart.navbar-carrito {
+  color: #1a1a1a !important;
+}
+
+:root:not([data-theme="dark"]) .landing .header-actions .header-actions__cart.navbar-carrito:hover,
+:root:not([data-theme="dark"]) .navbar-categoria .header-actions .header-actions__cart.navbar-carrito:hover,
+:root:not([data-theme="dark"]) .header-actions .header-actions__cart.navbar-carrito:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #1a1a1a !important;
+}
+
+.landing .header-actions .header-actions__cart.navbar-carrito .header-actions__favoritos-count,
+.navbar-categoria .header-actions .header-actions__cart.navbar-carrito .header-actions__favoritos-count,
+.header-actions .header-actions__cart.navbar-carrito .header-actions__favoritos-count {
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  background: #d4af37 !important;
+  background-color: #d4af37 !important;
+  color: #1a1407 !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  text-align: center !important;
+}
+
+/* Botón de PERFIL (sesión iniciada) - icono redondo */
+.header-actions .profile-trigger-btn {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+
+.header-actions .profile-trigger-btn:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #ffffff !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.header-actions .profile-trigger-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 1.5px #d4af37 !important;
+}
+
+/* Modo claro */
+:root:not([data-theme="dark"]) .header-actions__theme-toggle {
+  color: #1a1a1a !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions__theme-toggle:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions .profile-trigger-btn {
+  color: #1a1a1a !important;
+}
+
+:root:not([data-theme="dark"]) .header-actions .profile-trigger-btn:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #1a1a1a !important;
+}

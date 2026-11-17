@@ -1,0 +1,38 @@
+-- Propuesta: nombre de producto único (normalizado).
+-- NO APLICAR TODAVÍA.
+--
+-- Revisión previa (SELECT) del 2026-10-27: la base YA tiene nombres
+-- duplicados, por lo que el índice único NO se incluye activo en este archivo.
+-- Duplicados detectados agrupando por nombre normalizado:
+--
+--   buzo                    -> 10 productos (ids 74-83)
+--   camiseta                -> 50 productos (ids 86-136)
+--   camiseta deportiva fit  -> 34 productos (ids 26-59)
+--   gorra                   -> 11 productos (ids 63-73)
+--   gorra casual classic    ->  2 productos (ids 61-62)
+--   tenis classic casual    -> 18 productos (ids 7-25, excepto 12)
+--   tenis sport low         ->  2 productos (ids 2, 12)
+--
+-- Antes de activarlo hay que decidir qué hacer con esos duplicados (no se
+-- modificaron ni eliminaron). Una vez resueltos, crear el índice en una
+-- migración nueva con esta expresión (equivalente a la comparación del
+-- backend: sin espacios sobrantes, sin distinguir mayúsculas y sin tildes):
+--
+-- CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS producto_nombre_normalizado_uidx
+--   ON producto (
+--     translate(
+--       lower(regexp_replace(btrim(nombre), '\s+', ' ', 'g')),
+--       'áàäâãçéèëêíìïîñóòöôõúùüûýÿ',
+--       'aaaaaceeeeiiiinooooouuuuyy'
+--     )
+--   );
+--
+-- Consulta de verificación previa:
+-- SELECT translate(lower(regexp_replace(btrim(nombre), '\s+', ' ', 'g')),
+--                  'áàäâãçéèëêíìïîñóòöôõúùüûýÿ',
+--                  'aaaaaceeeeiiiinooooouuuuyy') AS nombre_normalizado,
+--        array_agg(id_producto ORDER BY id_producto) AS ids
+--   FROM producto
+--  GROUP BY 1
+-- HAVING count(*) > 1
+--  ORDER BY 1;

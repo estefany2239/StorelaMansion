@@ -1,0 +1,266 @@
+/* =========================================================
+   FOOTER COMPARTIDO DE LA TIENDA PÚBLICA (.sitio-footer)
+   Copia fiel de los estilos del footer del landing, pero
+   desacoplado: variables propias con valores de respaldo
+   (dorado, texto, texto suave, fondo crema #fffaf0 y borde)
+   y modo oscuro vía [data-tema='oscuro']. No depende de
+   .landing ni de sus variables.
+   ========================================================= */
+
+.sitio-footer {
+  --sf-dorado: #d4af37;
+  --sf-texto: #000000;
+  --sf-texto-suave: #5c564d;
+  --sf-fondo: #fffaf0;
+  --sf-borde: rgba(0, 0, 0, 0.08);
+
+  position: relative;
+  z-index: 1;
+  margin-top: 40px;
+  padding: 44px 16px 20px;
+  background: var(--sf-fondo, #fffaf0);
+  border-top: 1px solid var(--sf-borde, rgba(0, 0, 0, 0.08));
+  color: var(--sf-texto, #000000);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.sitio-footer,
+.sitio-footer *,
+.sitio-footer *::before,
+.sitio-footer *::after {
+  box-sizing: border-box;
+}
+
+/* Modo oscuro (mismos valores del landing oscuro) */
+.sitio-footer[data-tema='oscuro'] {
+  --sf-texto: #ffffff;
+  --sf-texto-suave: #b8b2a7;
+  --sf-fondo: #0d0d0d;
+  --sf-borde: rgba(255, 255, 255, 0.08);
+}
+
+/* Reset equivalente al del landing (para verse igual en
+   cualquier página, con o sin .landing arriba) */
+.sitio-footer h4,
+.sitio-footer p {
+  margin: 0;
+}
+
+.sitio-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sitio-footer a:focus-visible {
+  outline: 2px solid var(--sf-dorado, #d4af37);
+  outline-offset: 3px;
+}
+
+/* ---------- Rejilla de columnas ---------- */
+
+.sitio-footer-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 1.3fr;
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ---------- Marca ---------- */
+
+.sitio-footer-marca {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sitio-footer-marca strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.sitio-footer-marca > span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+
+.sitio-footer-corona {
+  width: 58px;
+  height: auto;
+  color: var(--sf-dorado, #d4af37);
+  margin-bottom: 4px;
+}
+
+.sitio-footer-destacado {
+  color: var(--sf-dorado, #d4af37);
+}
+
+.sitio-footer-marca p {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--sf-texto-suave, #5c564d);
+}
+
+/* ---------- Redes sociales ---------- */
+
+.sitio-footer-redes {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.sitio-footer-redes a {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--sf-dorado, #d4af37);
+  color: var(--sf-dorado, #d4af37);
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+
+.sitio-footer-redes a:hover {
+  background: var(--sf-dorado, #d4af37);
+  color: #000000;
+  transform: translateY(-3px);
+}
+
+.sitio-footer-redes svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Columnas de enlaces ---------- */
+
+.sitio-footer-columna {
+  padding-left: 32px;
+  border-left: 1px solid var(--sf-borde, rgba(0, 0, 0, 0.08));
+}
+
+.sitio-footer-columna h4 {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-bottom: 2px solid var(--sf-dorado, #d4af37);
+}
+
+.sitio-footer-columna ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sitio-footer-columna ul a {
+  font-size: 0.85rem;
+  color: var(--sf-texto-suave, #5c564d);
+  transition: color 0.25s ease, padding-left 0.25s ease;
+}
+
+.sitio-footer-columna ul a:hover {
+  color: var(--sf-dorado, #d4af37);
+  padding-left: 4px;
+}
+
+/* ---------- Atención al cliente ---------- */
+
+.sitio-footer-contacto li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--sf-texto-suave, #5c564d);
+}
+
+.sitio-footer-contacto strong {
+  color: var(--sf-texto, #000000);
+  font-weight: 600;
+}
+
+.sitio-footer-contacto svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.sitio-footer-icono-dorado {
+  color: var(--sf-dorado, #d4af37);
+}
+
+/* ---------- Derechos de autor ---------- */
+
+.sitio-footer-derechos {
+  display: flex;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 28px auto 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--sf-borde, rgba(0, 0, 0, 0.08));
+  font-size: 0.78rem;
+  color: var(--sf-texto-suave, #5c564d);
+  text-align: center;
+}
+
+/* =========================================================
+   RESPONSIVE (mismos cortes que el landing)
+   Escritorio: 4 columnas · Tablet (1024): 2 · Móvil (640): 1
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  .sitio-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 32px;
+  }
+
+  .sitio-footer-marca {
+    grid-column: 1 / -1;
+    align-items: center;
+    text-align: center;
+  }
+
+  .sitio-footer-marca p {
+    max-width: 480px;
+  }
+
+  .sitio-footer-redes {
+    justify-content: center;
+  }
+
+  .sitio-footer-columna:nth-child(2) {
+    border-left: none;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .sitio-footer {
+    padding: 48px 16px 24px;
+  }
+
+  .sitio-footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sitio-footer-columna {
+    padding-left: 0;
+    padding-top: 24px;
+    border-left: none;
+    border-top: 1px solid var(--sf-borde, rgba(0, 0, 0, 0.08));
+  }
+
+  .sitio-footer-marca {
+    text-align: center;
+  }
+}

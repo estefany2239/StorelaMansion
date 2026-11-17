@@ -1,0 +1,458 @@
+/* ==========================================
+   SECCIÓN "SOBRE NOSOTROS"
+   Light: sobre el beige/crema de la página.
+   Dark: fondo oscuro (como el Hero).
+   ========================================== */
+
+.about {
+  position: relative;
+  width: 100%;
+  padding: 72px 20px;
+  /* Mismo fondo que las secciones vecinas (crema en Light, negro en Dark). */
+  background-color: var(--bg-main);
+  color: var(--ink);
+  /* El difuminado dorado compartido (glow arriba y abajo) se aplica con
+     la clase .section-glow--both definida en index.css. */
+}
+
+.about__inner {
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+}
+
+/* ---------- Panel superior: foto (~40%) + texto (~60%) ---------- */
+.about__panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: stretch;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+/* Columna izquierda: foto a toda la altura */
+.about__media {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.about__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* En Light la foto termina en borde nítido (sin degradado oscuro). */
+.about__media-fade {
+  display: none;
+}
+
+/* Columna derecha: bloque de texto centrado verticalmente */
+.about__main {
+  padding: 46px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.about__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+}
+
+.about__eyebrow::before {
+  content: "";
+  width: 30px;
+  height: 2px;
+  background: var(--gold-dark);
+  border-radius: 2px;
+}
+
+.about__title {
+  margin-bottom: 22px;
+  font-family: var(--font-display, "Inter", sans-serif);
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  font-weight: 600;
+  line-height: 1.18;
+  color: var(--ink);
+}
+
+.about__title-gold {
+  color: var(--gold-dark);
+  font-style: italic;
+}
+
+.about__text {
+  margin-bottom: 16px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.about__text:last-of-type {
+  margin-bottom: 26px;
+}
+
+/* Frase manuscrita (2 líneas, inclinada) + subrayado curvo */
+.about__signature {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 8px;
+  transform: rotate(-5deg);
+  transform-origin: left center;
+}
+
+.about__signature-text {
+  display: inline-block;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 2.05rem;
+  line-height: 1.05;
+  color: var(--gold-dark);
+}
+
+.about__signature-line {
+  width: 210px;
+  max-width: 100%;
+  height: 12px;
+  margin-top: 2px;
+}
+
+.about__signature-line path {
+  fill: none;
+  stroke: var(--gold-dark);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* ---------- Franja inferior de datos ---------- */
+.about__stats {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: minmax(120px, 20%) 1fr auto;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--gold-dark) 40%, transparent);
+  border-radius: 20px;
+  overflow: hidden;
+  background-color: var(--card-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* Foto decorativa a la izquierda, difuminada hacia el beige */
+.about__stats-photo {
+  position: relative;
+  overflow: hidden;
+  min-height: 96px;
+}
+
+.about__stats-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.9;
+}
+
+.about__stats-photo-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 55%,
+    rgba(255, 255, 255, 0.96) 100%
+  );
+  pointer-events: none;
+}
+
+.about__stats-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  width: 100%;
+  padding: 26px 20px 26px 10px;
+}
+
+.about__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 0 18px;
+  border-left: 1px solid color-mix(in srgb, var(--gold-dark) 30%, transparent);
+}
+
+.about__stat:first-child {
+  border-left: none;
+}
+
+.about__stat-value {
+  font-family: var(--font-display, "Inter", sans-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold-dark);
+  line-height: 1.2;
+  white-space: pre-line; /* respeta el salto de línea de la fecha */
+}
+
+.about__stat-label {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Frase manuscrita (2 líneas, inclinada) + subrayado curvo */
+.about__stats-signature {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 1.9rem;
+  line-height: 1.05;
+  color: var(--gold-dark);
+  white-space: nowrap;
+  padding: 22px 34px 22px 20px;
+  transform: rotate(-4deg);
+  transform-origin: left center;
+}
+
+.about__stats-signature-line {
+  width: 190px;
+  max-width: 100%;
+  height: 12px;
+  margin-top: 2px;
+}
+
+.about__stats-signature-line path {
+  fill: none;
+  stroke: var(--gold-dark);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* ==========================================
+   MODO OSCURO (mismo aspecto que antes)
+   ========================================== */
+[data-theme="dark"] .about {
+  color: #f4f4f4;
+}
+
+[data-theme="dark"] .about__panel {
+  background: linear-gradient(135deg, #151515 0%, #0e0e0e 55%, #0a0a0a 100%);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .about__media-fade {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0) 45%,
+    rgba(13, 13, 13, 0.7) 78%,
+    #101010 100%
+  );
+}
+
+[data-theme="dark"] .about__eyebrow,
+[data-theme="dark"] .about__title-gold {
+  color: var(--gold);
+}
+
+[data-theme="dark"] .about__eyebrow::before {
+  background: var(--gold);
+}
+
+[data-theme="dark"] .about__title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .about__text {
+  color: #d8d8d8;
+}
+
+[data-theme="dark"] .about__signature-text {
+  color: var(--gold-light);
+}
+
+[data-theme="dark"] .about__signature-line path {
+  stroke: var(--gold);
+}
+
+[data-theme="dark"] .about__stats {
+  border-color: rgba(216, 180, 56, 0.28);
+  background: linear-gradient(90deg, #131313 0%, #0b0b0b 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .about__stats-photo img {
+  opacity: 0.28;
+  filter: saturate(0.85);
+}
+
+[data-theme="dark"] .about__stats-photo-fade {
+  background: linear-gradient(
+    90deg,
+    rgba(19, 19, 19, 0) 0%,
+    rgba(19, 19, 19, 0.55) 55%,
+    rgba(19, 19, 19, 0.96) 100%
+  );
+}
+
+[data-theme="dark"] .about__stat {
+  border-left-color: rgba(216, 180, 56, 0.18);
+}
+
+[data-theme="dark"] .about__stat-value,
+[data-theme="dark"] .about__stats-signature {
+  color: var(--gold-light);
+}
+
+[data-theme="dark"] .about__stat-label {
+  color: #9a9a9a;
+}
+
+[data-theme="dark"] .about__stats-signature-line path {
+  stroke: var(--gold);
+}
+
+/* ==========================================
+   TABLET
+   ========================================== */
+@media (max-width: 1024px) {
+  .about {
+    padding: 56px 18px;
+  }
+
+  .about__panel {
+    grid-template-columns: 1fr;
+  }
+
+  .about__media {
+    min-height: 0;
+  }
+
+  .about__img {
+    height: 300px;
+    min-height: 0;
+  }
+
+  /* En Dark la foto va arriba: el desvanecido apunta hacia abajo */
+  [data-theme="dark"] .about__media-fade {
+    background: linear-gradient(
+      180deg,
+      rgba(10, 10, 10, 0) 55%,
+      rgba(13, 13, 13, 0.85) 100%
+    );
+  }
+
+  .about__main {
+    padding: 34px 32px 30px;
+  }
+
+  .about__stats {
+    grid-template-columns: minmax(96px, 24%) 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  .about__stats-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px 0;
+    padding: 24px 18px;
+  }
+
+  .about__stat:nth-child(odd) {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .about__stats-signature {
+    grid-column: 1 / -1;
+    justify-self: center;
+    align-items: center;
+    text-align: center;
+    white-space: normal;
+    padding: 6px 20px 22px;
+  }
+}
+
+/* ==========================================
+   CELULAR
+   ========================================== */
+@media (max-width: 640px) {
+  .about {
+    padding: 44px 14px;
+  }
+
+  .about__img {
+    height: 230px;
+  }
+
+  .about__main {
+    padding: 28px 20px 24px;
+  }
+
+  .about__title {
+    font-size: 1.9rem;
+  }
+
+  .about__stats {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .about__stats-photo {
+    min-height: 84px;
+  }
+
+  .about__stats-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 0;
+    padding: 20px 12px;
+  }
+
+  .about__stat {
+    padding: 0 12px;
+  }
+
+  .about__stat-value {
+    font-size: 1rem;
+  }
+
+  .about__stats-signature {
+    justify-self: center;
+    align-items: center;
+    text-align: center;
+    font-size: 1.5rem;
+    white-space: normal;
+    padding: 4px 16px 20px;
+  }
+}
+
+/* Movimiento reducido: sin transiciones */
+@media (prefers-reduced-motion: reduce) {
+  .about * {
+    transition: none !important;
+  }
+}

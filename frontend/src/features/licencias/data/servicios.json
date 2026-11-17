@@ -1,0 +1,131 @@
+{
+  "generado": "2026-11-13T12:26:40.979Z",
+  "servicios": [
+    {
+      "nombre": "React",
+      "tipo": "biblioteca",
+      "uso": "Interfaz de usuario de la tienda virtual y del panel administrativo (frontend).",
+      "licencia": "MIT",
+      "urlOficial": "https://react.dev/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "Node.js",
+      "tipo": "entorno de ejecución",
+      "uso": "Ejecuta el servidor backend (Express) y los scripts del proyecto.",
+      "licencia": "MIT (con componentes incluidos de terceros con sus propias licencias, listados en el archivo LICENSE del proyecto Node.js)",
+      "urlOficial": "https://nodejs.org/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "Express",
+      "tipo": "biblioteca",
+      "uso": "Servidor web y API REST del backend.",
+      "licencia": "MIT",
+      "urlOficial": "https://expressjs.com/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "Vite",
+      "tipo": "herramienta de desarrollo",
+      "uso": "Empaquetador y servidor de desarrollo del frontend; genera la build de producción.",
+      "licencia": "MIT",
+      "urlOficial": "https://vite.dev/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "jsPDF",
+      "tipo": "biblioteca",
+      "uso": "Generación de comprobantes de venta en PDF desde el panel administrativo.",
+      "licencia": "MIT",
+      "urlOficial": "https://github.com/parallax/jsPDF",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "Lucide React (lucide-react)",
+      "tipo": "biblioteca",
+      "uso": "Iconos SVG de la interfaz del panel administrativo y la tienda.",
+      "licencia": "ISC (porciones derivadas del proyecto Feather bajo MIT)",
+      "urlOficial": "https://lucide.dev/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "React Router DOM",
+      "tipo": "biblioteca",
+      "uso": "Declarada como dependencia de producción en frontend/package.json; no se detectaron imports en el código fuente al 2026-11-13 (usado en: PENDIENTE DE VERIFICACIÓN).",
+      "licencia": "MIT",
+      "urlOficial": "https://reactrouter.com/",
+      "terminosUrl": null,
+      "estado": "verificada (licencia); USO EN EL CÓDIGO: PENDIENTE DE VERIFICACIÓN"
+    },
+    {
+      "nombre": "PostgreSQL",
+      "tipo": "base de datos",
+      "uso": "Sistema gestor de la base de datos de la tienda (se accede desde el backend mediante el paquete pg).",
+      "licencia": "PostgreSQL Licence (tipo BSD, aprobada por la OSI)",
+      "urlOficial": "https://www.postgresql.org/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "Neon",
+      "tipo": "servicio en la nube",
+      "uso": "Hospedaje administrado de PostgreSQL serverless donde corre la base de datos del proyecto (referenciado en backend/src/services/comprobantes.js y en la configuración del backend).",
+      "licencia": "Términos de servicio (no es software MIT); Neon opera la base de datos. El software del motor Neon es Apache-2.0, pero lo que se usa aquí es el SERVICIO, regido por sus términos.",
+      "urlOficial": "https://neon.tech/",
+      "terminosUrl": "https://neon.tech/terms-of-service",
+      "estado": "verificada (términos de servicio)"
+    },
+    {
+      "nombre": "Brevo",
+      "tipo": "servicio en la nube",
+      "uso": "Envío de correos transaccionales (invitaciones de usuarios, recuperaciones) mediante su API v3 SMTP: POST https://api.brevo.com/v3/smtp/email (backend/src/services/correos.js).",
+      "licencia": "Términos de servicio (servicio, no software local)",
+      "urlOficial": "https://www.brevo.com/",
+      "terminosUrl": "https://www.brevo.com/legal/termsofuse/",
+      "estado": "verificada (términos de servicio)"
+    },
+    {
+      "nombre": "Cloudflare Turnstile",
+      "tipo": "servicio en la nube",
+      "uso": "Verificación de captcha en registro, login y recuperación de contraseña (backend/src/middlewares/verificarCaptcha.js, endpoint siteverify de Turnstile).",
+      "licencia": "Términos de servicio de Cloudflare (Servicios de Suscripción Autoservicio); Turnstile es un servicio, no software distribuido.",
+      "urlOficial": "https://developers.cloudflare.com/turnstile/",
+      "terminosUrl": "https://www.cloudflare.com/terms/",
+      "estado": "verificada (términos de servicio)"
+    },
+    {
+      "nombre": "Cloudinary",
+      "tipo": "servicio en la nube",
+      "uso": "No se detectó uso en el código fuente, dependencias ni configuración del proyecto durante la auditoría del 2026-11-13. Se lista por mención del contexto del proyecto; estado PENDIENTE DE VERIFICACIÓN. Si se incorpora, documentar aquí su uso real.",
+      "licencia": "Términos de servicio (servicio, no software local)",
+      "urlOficial": "https://cloudinary.com/",
+      "terminosUrl": null,
+      "estado": "Pendiente de verificación"
+    },
+    {
+      "nombre": "Git",
+      "tipo": "herramienta de desarrollo",
+      "uso": "Control de versiones del código fuente del proyecto.",
+      "licencia": "GPL-2.0-only (algunas partes incluidas bajo licencias compatibles, según el archivo COPYING del proyecto)",
+      "urlOficial": "https://git-scm.com/",
+      "terminosUrl": null,
+      "estado": "verificada"
+    },
+    {
+      "nombre": "GitHub",
+      "tipo": "plataforma de código",
+      "uso": "Hospedaje del repositorio de código fuente y control de versiones colaborativo.",
+      "licencia": "Términos de servicio de GitHub (servicio, no software)",
+      "urlOficial": "https://github.com/",
+      "terminosUrl": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+      "estado": "verificada (términos de servicio)"
+    }
+  ]
+}

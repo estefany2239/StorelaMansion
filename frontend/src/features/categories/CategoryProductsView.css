@@ -1,0 +1,618 @@
+/* ==========================================
+   LISTADO DE PRODUCTOS DE LA CATEGORÍA
+   Banner compacto (BannerCategoria/CurvaCategoria
+   en variante compacta) + contador + panel de filtros
+   + cuadrícula de tarjetas. Acento dorado #d4af37;
+   claro y oscuro vía tokens propios de la vista.
+   ========================================== */
+
+/* ---------- TOKENS DE LA VISTA ---------- */
+
+.category-catalog-section {
+  --dorado: #d4af37;
+  --fondo: #fffaf0;
+  --superficie: #ffffff;
+  --texto: #1a1a1a;
+  --texto-suave: #5c564d;
+
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  /* El banner compacto lleva el aire superior (navbar flotante) */
+  padding: 0 0 56px;
+  background-color: var(--fondo) !important;
+  color: var(--texto) !important;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* La vista es la página completa: ni el banner compacto ni la curva
+   pueden quedar encerrados en la columna de 1280px que las reglas
+   globales de index.css (div[class*="category"]) le imponen con
+   !important. Doble clase para ganarle seguro. El contenido real del
+   listado (.catalog__page) conserva su ancho y centrado, así que el
+   panel de filtros y la cuadrícula no cambian. */
+.category-catalog-section.category-catalog-section {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* MODO OSCURO */
+[data-theme="dark"] .category-catalog-section,
+body.dark-mode .category-catalog-section,
+body.dark .category-catalog-section,
+.dark-mode .category-catalog-section,
+.dark .category-catalog-section,
+.category-catalog-section.dark-mode-active {
+  --dorado: #d4af37;
+  --fondo: #121212;
+  --superficie: #1e1e1e;
+  --texto: #f5f2ea;
+  --texto-suave: #b8b2a7;
+
+  background-color: var(--fondo) !important;
+  color: var(--texto) !important;
+}
+
+/* ---------- PÁGINA: CONTENEDOR + CONTADOR ---------- */
+
+.catalog__page {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: none;
+  box-shadow: none;
+}
+
+/* Contador alineado a la derecha del contenido */
+.catalog__contador {
+  margin: 24px 4px 16px;
+  text-align: right;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.catalog__contador strong:first-child {
+  color: var(--dorado);
+  font-size: 1.15rem;
+}
+
+/* ---------- LAYOUT: FILTROS + CUADRÍCULA ---------- */
+
+.catalog__layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Tarjeta del panel de filtros */
+.catalog__sidebar {
+  position: sticky;
+  top: 96px;
+  background: var(--superficie);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.1);
+}
+
+/* Cuadrícula de productos: 4 columnas en escritorio */
+.catalog__products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+/* ---------- TARJETA DE PRODUCTO ---------- */
+
+.catalog__product-card {
+  background: var(--superficie);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.1);
+  transition: transform 0.25s ease, border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.catalog__product-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 12px 28px rgba(70, 45, 10, 0.14);
+}
+
+/* Imagen: fondo neutro mientras carga */
+.product__img-wrap {
+  width: 100%;
+  height: 200px;
+  background-color: #efe9dd;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .product__img-wrap,
+.category-catalog-section.dark-mode-active .product__img-wrap {
+  background-color: #262626;
+}
+
+.product__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 1;
+}
+
+.product__img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--dorado);
+  background: var(--superficie, #efe9dd);
+  z-index: 0;
+}
+
+/* Corazón flotado (BotonFavorito variante chip): círculo
+   oscuro de 34px con corazón dorado. Selectores reforzados
+   para ganarle a cualquier reset global de botones. */
+.catalog__product-card .product__img-wrap .btn-favorito.btn-favorito--chip {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #d4af37;
+}
+
+.catalog__product-card .product__img-wrap .btn-favorito.btn-favorito--chip:hover,
+.catalog__product-card .product__img-wrap .btn-favorito.btn-favorito--chip.isActive {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #d4af37;
+}
+
+/* Selector de talla ("Elige una talla") */
+.product__size-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.product__size-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .catalog__product-card:hover .product__size-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.product__size-overlay-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.product__size-overlay-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.product__size-btn {
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.product__size-btn.active {
+  background: #d4af37;
+  color: #1a1400;
+  border-color: #d4af37;
+  font-weight: 700;
+}
+
+.product__size-btn.disabled,
+.product__size-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.product__size-overlay-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ---------- INFO DE LA TARJETA ---------- */
+
+.product__info {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.product__info h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--texto);
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.product__details {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+/* Puntos de color de los colores disponibles del grupoId */
+.product__color-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.product__color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.product__color-dots-more {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.product__details-divider {
+  display: block;
+  height: 1px;
+  background: rgba(212, 175, 55, 0.25);
+  margin: 2px 0 8px;
+}
+
+.product__card-price {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--texto);
+  display: block;
+}
+
+.product__footer {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.product__btn-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* "Ver": píldora de contorno dorado */
+.landing .catalog__product-card .product__view-btn,
+.category-catalog-section .catalog__product-card .product__view-btn,
+.todos-productos .catalog__product-card .product__view-btn,
+.catalog__product-card .product__view-btn {
+  flex: 1 1 0;
+  width: 50%;
+  height: 44px;
+  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px solid #d4af37;
+  border-radius: 999px;
+  color: #8a6d0b;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.landing .catalog__product-card .product__view-btn:hover,
+.category-catalog-section .catalog__product-card .product__view-btn:hover,
+.todos-productos .catalog__product-card .product__view-btn:hover,
+.catalog__product-card .product__view-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: #8a6d0b;
+}
+
+/* "Comprar": píldora dorada sólida */
+.landing .catalog__product-card .product__add-btn,
+.category-catalog-section .catalog__product-card .product__add-btn,
+.todos-productos .catalog__product-card .product__add-btn,
+.catalog__product-card .product__add-btn {
+  flex: 1 1 0;
+  width: 50%;
+  height: 44px;
+  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  box-sizing: border-box;
+  background: #d4af37;
+  border: 1.5px solid #d4af37;
+  border-radius: 999px;
+  color: #1a1407;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.landing .catalog__product-card .product__add-btn:hover:not(:disabled),
+.category-catalog-section .catalog__product-card .product__add-btn:hover:not(:disabled),
+.todos-productos .catalog__product-card .product__add-btn:hover:not(:disabled),
+.catalog__product-card .product__add-btn:hover:not(:disabled) {
+  background: #c29d2c;
+  border-color: #c29d2c;
+}
+
+/* Variante sin unidades: el botón de compra queda deshabilitado */
+.product__add-btn.is-agotado,
+.product__add-btn:disabled {
+  background: rgba(224, 82, 82, 0.12);
+  color: #e05252;
+  border: 1.5px solid rgba(224, 82, 82, 0.55);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.product__add-btn.is-agotado:hover,
+.product__add-btn:disabled:hover {
+  background: rgba(224, 82, 82, 0.12);
+  border-color: rgba(224, 82, 82, 0.55);
+}
+
+/* Modo oscuro: contraste dorado en botones */
+[data-theme="dark"] .catalog__product-card .product__view-btn,
+.landing[data-tema='oscuro'] .catalog__product-card .product__view-btn,
+.category-catalog-section.dark-mode-active .catalog__product-card .product__view-btn,
+.todos-productos--oscuro .catalog__product-card .product__view-btn {
+  background: transparent;
+  border-color: #d4af37;
+  color: #f0d06a;
+}
+
+[data-theme="dark"] .catalog__product-card .product__view-btn:hover,
+.landing[data-tema='oscuro'] .catalog__product-card .product__view-btn:hover,
+.category-catalog-section.dark-mode-active .catalog__product-card .product__view-btn:hover,
+.todos-productos--oscuro .catalog__product-card .product__view-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: #f0d06a;
+}
+
+[data-theme="dark"] .catalog__product-card .product__add-btn,
+.landing[data-tema='oscuro'] .catalog__product-card .product__add-btn,
+.category-catalog-section.dark-mode-active .catalog__product-card .product__add-btn,
+.todos-productos--oscuro .catalog__product-card .product__add-btn {
+  background: #d4af37;
+  border-color: #d4af37;
+  color: #1a1407;
+}
+
+[data-theme="dark"] .catalog__product-card .product__add-btn:hover:not(:disabled),
+.landing[data-tema='oscuro'] .catalog__product-card .product__add-btn:hover:not(:disabled),
+.category-catalog-section.dark-mode-active .catalog__product-card .product__add-btn:hover:not(:disabled),
+.todos-productos--oscuro .catalog__product-card .product__add-btn:hover:not(:disabled) {
+  background: #c29d2c;
+  border-color: #c29d2c;
+}
+
+/* ---------- ESTADO VACÍO ---------- */
+
+.catalog__no-products {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--superficie);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.1);
+  margin: 0;
+}
+
+.catalog__no-products p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.catalog__no-products-corona {
+  width: 56px;
+  color: #d4af37;
+  opacity: 0.85;
+  filter: drop-shadow(0 4px 14px rgba(212, 175, 55, 0.4));
+}
+
+.catalog__no-products-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 24px;
+  background: linear-gradient(135deg, #b8860b 0%, #f5d36b 50%, #d4af37 100%);
+  border: none;
+  border-radius: 999px;
+  color: #1a1400;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.catalog__no-products-volver:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+/* 900-1099px: 3 columnas de producto */
+@media (max-width: 1099px) {
+  .catalog__products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 640-899px: el panel de filtros pasa ARRIBA de la cuadrícula
+   a ancho completo (plegable con su chevron, cerrado por
+   defecto) y la cuadrícula queda en 2 columnas */
+@media (max-width: 899px) {
+  .catalog__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog__sidebar {
+    position: static;
+  }
+
+  .catalog__products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .category-catalog-section {
+    padding-bottom: 40px;
+  }
+
+  .catalog__page {
+    padding: 0 16px;
+  }
+
+  .catalog__contador {
+    text-align: right;
+    margin-top: 24px;
+    margin-bottom: 16px;
+  }
+
+  .catalog__layout {
+    gap: 16px;
+  }
+
+  .catalog__sidebar {
+    padding: 14px;
+  }
+
+  .catalog__products-grid {
+    gap: 14px;
+  }
+
+  .product__img-wrap {
+    height: 160px;
+  }
+
+  .product__view-btn,
+  .product__add-btn {
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+  }
+}
+
+/* Sin scroll horizontal en pantallas muy angostas (360px) */
+@media (max-width: 380px) {
+  .catalog__page {
+    padding: 0 12px;
+  }
+
+  .product__btn-pair {
+    gap: 8px;
+  }
+}
+
+/* =========================================================
+   FOOTER COMPARTIDO AL FONDO
+   La vista es columna flex de 100vh: el footer compartido
+   queda pegado al fondo aunque haya pocos productos.
+   ========================================================= */
+
+.category-catalog-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-catalog-section > .sitio-footer {
+  margin-top: auto;
+}

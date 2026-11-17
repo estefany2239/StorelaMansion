@@ -1,0 +1,963 @@
+/* =========================================================
+   CLIENTES - STORE LA MANSIÓN
+   ========================================================= */
+
+.clientes-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.clientes-header {
+  width: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 25px;
+
+  margin-bottom: 30px;
+}
+
+
+.clientes-title h2 {
+  margin: 0;
+
+  font-family: var(--font-display);
+
+  font-size: 38px;
+
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  color:
+    var(--admin-text);
+}
+
+
+.clientes-title p {
+  margin: 14px 0 0;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+
+  font-size: 15px;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   BUSCADOR Y BOTÓN
+   ========================================================= */
+
+.clientes-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+
+.clientes-search {
+  width: 265px;
+
+  height: 45px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 13px;
+
+  box-sizing: border-box;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid #d8dce2;
+
+  border-radius: 9px;
+
+  color:
+    #718096;
+}
+
+
+.clientes-search input {
+  width: 100%;
+
+  border: none;
+
+  outline: none;
+
+  background: transparent;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 14px;
+
+  color:
+    #333333;
+}
+
+
+.clientes-search input::placeholder {
+  color:
+    #a5acb8;
+}
+
+
+.clientes-search:focus-within {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(153, 101, 21, 0.10);
+}
+
+
+/* =========================================================
+   BOTÓN AGREGAR
+   ========================================================= */
+
+.clientes-add-button {
+  height: 45px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 21px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background:
+    var(--admin-cta-gold);
+
+  color:
+    #111111;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.clientes-add-button:hover {
+  background:
+    var(--admin-btn-primary-hover);
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.clientes-table-container {
+  width: 100%;
+
+  overflow-x: auto;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    rgba(153, 101, 21, 0.14);
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+.clientes-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+/* DISTRIBUCIÓN: ID | NOMBRE | DOCUMENTO | CORREO | ESTADO | INVITACIÓN | ACCIONES */
+.clientes-table th:nth-child(1) { width: 9%; }
+.clientes-table th:nth-child(2) { width: 18%; }
+.clientes-table th:nth-child(3) { width: 14%; }
+.clientes-table th:nth-child(4) { width: 27%; }
+.clientes-table th:nth-child(5) { width: 11%; }
+.clientes-table th:nth-child(6) { width: 10%; }
+
+.clientes-table th:nth-child(7),
+.clientes-table td:nth-child(7) { width: 11%; min-width: 130px; text-align: center; }
+
+.clientes-table th:nth-child(5),
+.clientes-table td:nth-child(5) { text-align: center; }
+
+.clientes-table th:nth-child(6),
+.clientes-table td:nth-child(6) { text-align: center; }
+
+.clientes-table th:nth-child(7),
+.clientes-table td:nth-child(7) { text-align: center; }
+
+
+.clientes-table td:nth-child(2),
+.clientes-table td:nth-child(3) {
+  overflow-wrap: anywhere;
+}
+
+.clientes-table td:nth-child(4) {
+  min-width: 0;
+  vertical-align: middle;
+  padding-right: 12px;
+}
+
+.clientes-table .cliente-correo {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.clientes-table th {
+  height: 44px;
+
+  padding: 0 16px;
+
+  text-align: left;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+
+  border-bottom:
+    1px solid #e2e2e2;
+
+  white-space: nowrap;
+}
+
+
+.clientes-table td {
+  height: 72px;
+
+  padding: 0 16px;
+
+  vertical-align: middle;
+
+  border-bottom:
+    1px solid #e8e8e8;
+
+  font-size: 14px;
+}
+
+
+.clientes-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   DATOS
+   ========================================================= */
+
+.cliente-id {
+  color:
+    #b8860b;
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+
+.clientes-table .cliente-nombre {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cliente-nombre {
+  color:
+    #111111;
+
+  font-size: 15px;
+
+  font-weight: 500;
+}
+
+
+.cliente-correo,
+.cliente-telefono,
+.cliente-fecha,
+.cliente-documento {
+  color:
+    #738096;
+
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+/*
+   CONTENEDOR DEL SWITCH
+*/
+
+.cliente-estado-control {
+  display: inline-flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 5px;
+
+  background: transparent;
+
+  border: none;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  vertical-align: middle;
+}
+
+
+/*
+   INTERRUPTOR
+*/
+
+.cliente-estado-toggle {
+  position: relative;
+
+  width: 36px;
+
+  height: 20px;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 20px;
+
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+
+  flex-shrink: 0;
+}
+
+
+/*
+   CÍRCULO DEL SWITCH
+*/
+
+.cliente-estado-toggle-circle {
+  position: absolute;
+
+  top: 3px;
+
+  width: 14px;
+
+  height: 14px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 1px 3px
+    rgba(0, 0, 0, 0.15);
+
+  transition:
+    left 0.2s ease;
+}
+
+
+/*
+   ACTIVO
+*/
+
+.cliente-estado-toggle.activo {
+  background:
+    #16a34a;
+}
+
+
+.cliente-estado-toggle.activo
+.cliente-estado-toggle-circle {
+  left: 19px;
+}
+
+
+/*
+   INACTIVO
+*/
+
+.cliente-estado-toggle.inactivo {
+  background:
+    #d1d5db;
+}
+
+
+.cliente-estado-toggle.inactivo
+.cliente-estado-toggle-circle {
+  left: 3px;
+}
+
+
+/*
+   TEXTO ACTIVO / INACTIVO
+*/
+
+.cliente-estado-label {
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+
+  line-height: 1;
+}
+
+
+.cliente-estado-label.activo {
+  color:
+    #16a34a;
+}
+
+
+.cliente-estado-label.inactivo {
+  color:
+    #9ca3af;
+}
+
+
+/*
+   HOVER
+*/
+
+.cliente-estado-control:hover
+.cliente-estado-toggle {
+  opacity: 0.85;
+}
+
+
+/* =========================================================
+   ESTADO DEL DETALLE
+   ========================================================= */
+
+.cliente-estado {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-width: 69px;
+
+  height: 25px;
+
+  padding: 0 11px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+
+.cliente-estado.activo {
+  background:
+    #dff5e8;
+
+  color:
+    #0ca653;
+}
+
+
+.cliente-estado.inactivo {
+  background:
+    #fde5e5;
+
+  color:
+    #e53935;
+}
+
+
+/* =========================================================
+   INVITACIÓN POR CORREO (columna de la tabla)
+   ========================================================= */
+
+.cliente-invitacion-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.cliente-invitacion-badge.enviada {
+  color: #15803d;
+  background: rgba(21, 128, 61, 0.12);
+}
+
+.cliente-invitacion-badge.pendiente {
+  color: #b54708;
+  background: rgba(181, 71, 8, 0.12);
+}
+
+/* Cuenta real (su propia contraseña): no hay invitación que mostrar */
+.cliente-invitacion-badge.cuenta {
+  color: #738096;
+  background: rgba(115, 128, 150, 0.12);
+  padding: 3px 10px;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.cliente-actions {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 5px;
+}
+
+
+.cliente-actions button {
+  width: 32px;
+
+  height: 32px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background:
+    transparent;
+
+  color:
+    #70798a;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+}
+
+
+.cliente-actions button:hover {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(153, 101, 21, 0.08);
+}
+
+
+.cliente-actions button:last-child:hover {
+  color:
+    #e53935;
+
+  background:
+    rgba(229, 57, 53, 0.08);
+}
+
+
+/* Envío de invitación en curso: el botón de la fila queda cargando */
+.cliente-actions button.enviando {
+  color:
+    var(--admin-gold);
+}
+
+
+.cliente-actions button.enviando svg {
+  animation:
+    cliente-invitar-girar 0.9s linear infinite;
+}
+
+
+.cliente-actions button:disabled {
+  opacity: 0.8;
+
+  cursor:
+    wait;
+}
+
+
+.cliente-actions button:disabled:hover {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(153, 101, 21, 0.08);
+}
+
+
+@keyframes cliente-invitar-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   VACÍO
+   ========================================================= */
+
+.clientes-empty {
+  height: 100px !important;
+
+  text-align: center;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+
+
+
+
+
+
+
+/* =========================================================
+   INVITACIÓN POR CORREO (casilla solo al crear)
+   ========================================================= */
+
+.cliente-invitar-box {
+  grid-column: 1 / -1;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.cliente-invitar-check {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  color:
+    #333333;
+}
+
+
+.cliente-invitar-check input[type="checkbox"] {
+  width: 16px;
+
+  height: 16px;
+
+  margin: 0;
+
+  accent-color:
+    var(--admin-gold);
+
+  cursor:
+    pointer;
+}
+
+
+.cliente-invitar-ayuda {
+  margin: 0;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+
+  color:
+    #738096;
+}
+
+
+
+/* =========================================================
+   HISTORIAL
+   ========================================================= */
+
+.cliente-history {
+  margin-top: 24px;
+}
+
+
+.cliente-history-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+}
+
+
+.cliente-history-header > span {
+  font-size: 12px;
+
+  color:
+    var(--admin-gold-dark);
+
+  font-weight: 600;
+}
+
+
+.cliente-history-item {
+  padding: 15px;
+
+  border:
+    1px solid #e1e1e1;
+
+  border-radius: 9px;
+
+  background:
+    #fafafa;
+}
+
+
+.cliente-history-item div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.cliente-history-item strong {
+  font-size: 14px;
+
+  color:
+    #222222;
+}
+
+
+.cliente-history-item span {
+  font-size: 12px;
+
+  color:
+    #738096;
+}
+
+
+
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+.admin-container.admin-dark .clientes-search {
+  background:
+    var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.20);
+}
+
+
+.admin-container.admin-dark .clientes-search input {
+  color:
+    var(--admin-text);
+}
+
+
+.admin-container.admin-dark .clientes-table-container {
+  background:
+    var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.18);
+}
+
+
+.admin-container.admin-dark .clientes-table th {
+  color:
+    var(--admin-text-secondary);
+
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+.admin-container.admin-dark .clientes-table td {
+  border-color:
+    rgba(255, 255, 255, 0.08);
+}
+
+
+.admin-container.admin-dark .cliente-nombre {
+  color:
+    var(--admin-text);
+}
+
+
+.admin-container.admin-dark .cliente-correo,
+.admin-container.admin-dark .cliente-telefono,
+.admin-container.admin-dark .cliente-fecha {
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   DARK MODE - ESTADO SWITCH
+   ========================================================= */
+
+.admin-container.admin-dark .cliente-estado-toggle.inactivo {
+  background:
+    #4b4b4b;
+}
+
+
+.admin-container.admin-dark .cliente-estado-label.activo {
+  color:
+    #4ade80;
+}
+
+
+.admin-container.admin-dark .cliente-estado-label.inactivo {
+  color:
+    #a1a1aa;
+}
+
+
+/* =========================================================
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .clientes-header {
+    flex-direction: column;
+  }
+
+  .clientes-actions {
+    width: 100%;
+
+    justify-content: flex-end;
+  }
+
+}
+
+
+@media (max-width: 850px) {
+
+  .clientes-actions {
+    flex-wrap: wrap;
+  }
+
+  .clientes-search {
+    flex: 1;
+
+    min-width: 220px;
+  }
+
+  .clientes-table {
+    min-width: 900px;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .clientes-title h2 {
+    font-size: 32px;
+  }
+
+  .clientes-actions {
+    width: 100%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .clientes-search,
+  .clientes-add-button {
+    width: 100%;
+  }
+
+  .clientes-table {
+    min-width: 900px;
+  }
+
+
+}
+.admin-container.admin-dark .clientes-page .cliente-id {
+  color: var(--admin-gold) !important;
+}
+

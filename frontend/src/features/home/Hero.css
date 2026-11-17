@@ -1,0 +1,196 @@
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-dark, #0a0a0a);
+  overflow: hidden;
+}
+
+/* --- CARRUSEL DE FONDO --- */
+.hero__slides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero__slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.hero__slide--active {
+  opacity: 1;
+}
+
+/* --- PUNTOS INDICADORES --- */
+.hero__dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  z-index: 3;
+}
+
+.hero__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.hero__dot:hover {
+  background-color: rgba(255, 255, 255, 0.85);
+  transform: scale(1.15);
+}
+
+.hero__dot--active {
+  background-color: var(--gold-light, #d7af32);
+  transform: scale(1.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__slide {
+    transition: none;
+  }
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 20, 0.82) 0%, rgba(10, 10, 10, 0.75) 50%, rgba(10, 10, 10, 0.88) 100%),
+    radial-gradient(ellipse at 75% 15%, rgba(255, 254, 250, 0.12) 0%, transparent 55%);
+  z-index: 1;
+}
+
+.hero__container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+  padding: 60px 20px;
+}
+
+.hero__content {
+  max-width: 540px;
+  color: #ffffff;
+}
+
+.hero__eyebrow {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold, #c9a227);
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.hero__title {
+  font-family: var(--font-display, "Inter", sans-serif);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.hero__title span {
+  color: var(--gold, #c9a227);
+  font-style: italic;
+}
+
+.hero__description {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 32px;
+}
+
+/* --- BOTONES COMPLETAMENTE REDONDOS --- */
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 1. Botón Comprar ahora (Relleno dorado / Letra negra) */
+.hero .btn-primary {
+  border-radius: 999px !important;
+  background-color: var(--gold, #c9a227) !important;
+  color: #000000 !important;
+  border: 1.5px solid var(--gold, #c9a227) !important;
+  padding: 12px 28px !important;
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.hero .btn-primary svg {
+  stroke: #000000 !important;
+}
+
+.hero .btn-primary:hover {
+  background-color: var(--gold-dark, #a5831c) !important;
+  border-color: var(--gold-dark, #a5831c) !important;
+  transform: translateY(-2px);
+}
+
+/* 2. Botón Ver colección (Borde visible / Letra blanca) */
+.hero .btn-outline {
+  border-radius: 999px !important;
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #ffffff !important;
+  padding: 12px 28px !important;
+  font-family: var(--font-body, "Inter", sans-serif) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease !important;
+}
+
+.hero .btn-outline svg {
+  stroke: #ffffff !important;
+}
+
+.hero .btn-outline:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+.hero .btn-outline:hover svg {
+  stroke: #000000 !important;
+}

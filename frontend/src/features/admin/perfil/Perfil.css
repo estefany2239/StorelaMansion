@@ -1,0 +1,594 @@
+/* =========================================================
+   PERFIL - STORE LA MANSIÓN (rediseño dorado)
+   ========================================================= */
+
+.perfil-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.perfil-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  box-sizing: border-box;
+}
+
+.perfil-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.perfil-header-icon {
+  color: var(--admin-gold);
+  flex-shrink: 0;
+}
+
+.perfil-header-text h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--admin-text);
+}
+
+.perfil-header-text p {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--admin-text-muted);
+}
+
+.perfil-header-line {
+  flex: 1;
+  height: 1px;
+  min-width: 40px;
+  background: linear-gradient(90deg, rgba(226, 178, 60, .6), transparent);
+}
+
+.perfil-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--admin-selection);
+  color: var(--admin-gold-dark);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.perfil-role-pill svg {
+  color: var(--admin-gold);
+}
+
+.perfil-role-pill--inline {
+  margin-top: 8px;
+}
+
+/* =========================================================
+   CONTENIDO / LAYOUT
+   ========================================================= */
+
+.perfil-content {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  padding: 0 24px 24px;
+  box-sizing: border-box;
+  align-items: start;
+}
+
+.perfil-user-card,
+.perfil-account-card {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 20px;
+  box-shadow: var(--admin-shadow);
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   TARJETA IZQUIERDA
+   ========================================================= */
+
+.perfil-user-card {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.perfil-avatar {
+  position: relative;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 2px solid var(--admin-gold);
+  background: var(--admin-selection);
+  color: var(--admin-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.perfil-avatar svg {
+  width: 52px;
+  height: 52px;
+}
+
+.perfil-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.perfil-avatar-edit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--admin-gold);
+  background: var(--admin-card);
+  color: var(--admin-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.perfil-avatar-edit:hover {
+  background: var(--admin-hover);
+}
+
+.perfil-foto-error {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #dc2626;
+  text-align: center;
+}
+
+.perfil-foto-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 6px 14px;
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  border-radius: 999px;
+  background: var(--admin-selection);
+  color: var(--admin-gold-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.perfil-foto-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.perfil-user-card h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--admin-text);
+  text-align: center;
+}
+
+.perfil-email {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--admin-text-muted);
+  text-align: center;
+}
+
+.perfil-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--admin-border);
+  margin: 16px 0;
+}
+
+.perfil-edit-button {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--admin-grad);
+  color: var(--admin-on-gold);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(212, 160, 23, .30);
+  margin-bottom: 8px;
+}
+
+.perfil-edit-button:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.perfil-secondary-button {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-bottom: 8px;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.perfil-secondary-button:last-child {
+  margin-bottom: 0;
+}
+
+.perfil-secondary-button:hover {
+  border-color: var(--admin-gold);
+  background: var(--admin-hover);
+  color: var(--admin-gold);
+}
+
+/* =========================================================
+   TARJETA DERECHA
+   ========================================================= */
+
+.perfil-account-card {
+  padding: 28px;
+}
+
+.perfil-account-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.perfil-account-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--admin-grad);
+  color: var(--admin-on-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.perfil-account-card h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.perfil-line {
+  width: 100%;
+  height: 1px;
+  margin: 16px 0 20px;
+  background: linear-gradient(90deg, rgba(226, 178, 60, .6), transparent);
+}
+
+.perfil-form-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+
+.perfil-field {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+}
+
+.perfil-field-full {
+  grid-column: 1 / -1;
+}
+
+.perfil-field-icon {
+  color: var(--admin-text-secondary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perfil-field-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perfil-field-body label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+}
+
+.perfil-input {
+  width: auto;
+  height: auto;
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--admin-text);
+  font-size: 15px;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.perfil-input-bold {
+  font-weight: 700;
+}
+
+/* =========================================================
+   ESTADO PILL
+   ========================================================= */
+
+.perfil-estado-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, .12);
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.perfil-estado-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* =========================================================
+   MODO OSCURO
+   ========================================================= */
+
+.admin-dark .perfil-estado-pill {
+  color: #34d399;
+}
+
+/* =========================================================
+   MODAL EDITAR PERFIL
+   ========================================================= */
+
+.perfil-page .rol-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.perfil-page .rol-modal {
+  width: 100%;
+  max-width: 768px;
+  max-height: calc(100vh - 50px);
+  overflow-y: auto;
+  background: var(--admin-card);
+  border-radius: 18px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+  color: var(--admin-text);
+}
+
+.perfil-page .rol-modal-header {
+  min-height: 86px;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.perfil-page .rol-modal-header h3 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.perfil-page .rol-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.perfil-page .rol-modal-close:hover {
+  background: var(--admin-hover);
+}
+
+.perfil-page .rol-modal-body {
+  padding: 30px;
+}
+
+.perfil-page .rol-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.perfil-page .rol-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.perfil-page .rol-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.perfil-page .rol-form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--admin-text-muted);
+}
+
+.perfil-page .rol-form-group input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  outline: none;
+  background: var(--admin-surface-2);
+  font-size: 14px;
+  color: var(--admin-text);
+}
+
+.perfil-page .rol-form-group input::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.perfil-page .rol-form-group input:focus {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.10);
+}
+
+.perfil-page .rol-modal-footer {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 0 30px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.perfil-page .rol-cancel-button {
+  height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.perfil-page .rol-cancel-button:hover {
+  background: var(--admin-hover);
+}
+
+.perfil-page .rol-create-button {
+  height: 48px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 9px;
+  background: var(--admin-grad);
+  color: var(--admin-on-gold);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(212, 160, 23, .30);
+}
+
+.perfil-page .rol-create-button:hover {
+  filter: brightness(1.05);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .perfil-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .perfil-header {
+    flex-wrap: wrap;
+  }
+
+  .perfil-header-line {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .perfil-content {
+    padding: 0 16px 20px;
+    gap: 16px;
+  }
+
+  .perfil-user-card,
+  .perfil-account-card {
+    padding: 22px 20px;
+  }
+
+  .perfil-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .perfil-field-full {
+    grid-column: auto;
+  }
+
+  .perfil-page .rol-form-row {
+    grid-template-columns: 1fr;
+  }
+}
