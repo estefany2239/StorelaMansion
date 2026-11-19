@@ -1,0 +1,601 @@
+import { useState, useRef } from "react";
+
+import {
+  UserRound,
+  Moon,
+  LogOut,
+  Pencil,
+  X,
+  Camera
+} from "lucide-react";
+
+import ConfirmDialog from "../shared/ConfirmDialog";
+import { actualizarFotoPerfil } from "../../../shared/services/api";
+
+import "./Perfil.css";
+
+export default function Perfil({
+  user,
+  onLogout,
+  onToggleTheme,
+  foto,
+  onFotoActualizada
+}) {
+
+  const [perfil, setPerfil] = useState({
+    id: "USR-001",
+    nombre:
+      user?.nombre || "Carlos Rodríguez",
+    correo:
+      user?.email || "admin@storelamansion.com",
+    telefono: "+57 310 555 0001",
+    direccion: "Cra 15 #93-47, Bogotá",
+    rol:
+      user?.rol || "Administrador",
+  });
+
+  const [modalAbierto, setModalAbierto] =
+    useState(false);
+
+  const [form, setForm] = useState(perfil);
+
+  const [errores, setErrores] = useState({});
+
+  const [confirmarEdicion, setConfirmarEdicion] =
+    useState(false);
+
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const inputFotoRef = useRef(null);
+
+  const manejarCambioFoto = async (e) => {
+    const archivo = e.target.files?.[0];
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      return;
+    }
+
+    if (archivo.size > 2 * 1024 * 1024) {
+      return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = async () => {
+      const dataUrl = String(lector.result || "");
+      setSubiendoFoto(true);
+      try {
+        await actualizarFotoPerfil(dataUrl);
+        if (onFotoActualizada) onFotoActualizada(dataUrl);
+      } catch {
+        // ignore
+      } finally {
+        setSubiendoFoto(false);
+      }
+    };
+    lector.readAsDataURL(archivo);
+
+    e.target.value = "";
+  };
+
+  /* =====================================================
+     ABRIR MODAL EDITAR
+     ===================================================== */
+
+  const abrirEditar = () => {
+    setForm({ ...perfil });
+    setErrores({});
+    setModalAbierto(true);
+  };
+
+  /* =====================================================
+     CERRAR MODAL
+     ===================================================== */
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+  };
+
+  /* =====================================================
+     MANEJAR CAMPOS
+     ===================================================== */
+
+  const manejarCambio = (e) => {
+    const { name, value } = e.target;
+
+    const valorFiltrado =
+      name === "nombre"
+        ? value.replace(
+            /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+            ""
+          )
+        : name === "telefono"
+          ? value.replace(/[^0-9]/g, "")
+          : value;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: valorFiltrado,
+    }));
+
+    if (String(valorFiltrado).trim()) {
+      setErrores((prev) => {
+        if (!prev[name]) return prev;
+
+        const nuevos = { ...prev };
+        delete nuevos[name];
+        return nuevos;
+      });
+    }
+  };
+
+  /* =====================================================
+     GUARDAR PERFIL
+     ===================================================== */
+
+  const guardarPerfil = (e) => {
+    e.preventDefault();
+
+    const nuevosErrores = {};
+
+    if (!form.nombre.trim()) {
+      nuevosErrores.nombre = "Este campo es obligatorio.";
+    }
+
+    setErrores(nuevosErrores);
+
+    if (Object.keys(nuevosErrores).length > 0) return;
+
+    setConfirmarEdicion(true);
+  };
+
+  const confirmarEdicionPerfil = () => {
+    setPerfil({ ...form });
+    setConfirmarEdicion(false);
+    cerrarModal();
+  };
+
+  return (
+    <div className="perfil-page">
+
+      {/* =====================================================
+          ENCABEZADO
+          ===================================================== */}
+
+      <div className="perfil-header">
+
+        <h1>
+          Mi Perfil
+        </h1>
+
+        <p>
+          Información de tu cuenta
+        </p>
+
+      </div>
+
+
+      {/* =====================================================
+          CONTENIDO
+          ===================================================== */}
+
+      <div className="perfil-content">
+
+
+        {/* ===================================================
+            TARJETA IZQUIERDA
+            =================================================== */}
+
+        <div className="perfil-user-card">
+
+          <div className="perfil-avatar">
+
+            {foto ? (
+              <img
+                src={foto}
+                alt="Foto de perfil"
+                className="perfil-avatar-img"
+              />
+            ) : (
+              <UserRound size={52} />
+            )}
+
+          </div>
+
+          <input
+            ref={inputFotoRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={manejarCambioFoto}
+          />
+
+          <button
+            type="button"
+            className="perfil-foto-button"
+            onClick={() => inputFotoRef.current?.click()}
+            disabled={subiendoFoto}
+          >
+            <Camera size={16} />
+            {subiendoFoto ? "Subiendo..." : "Cambiar foto"}
+          </button>
+
+
+          <h2>
+            {perfil.nombre}
+          </h2>
+
+
+          <p className="perfil-email">
+            {perfil.correo}
+          </p>
+
+
+          <p className="perfil-role">
+            {perfil.rol}
+          </p>
+
+
+          {/* EDITAR PERFIL */}
+
+          <button
+            type="button"
+            className="perfil-edit-button"
+            onClick={abrirEditar}
+          >
+
+            <Pencil size={17} />
+
+            Actualizar perfil
+
+          </button>
+
+
+          {/* MODO OSCURO */}
+
+          <button
+            type="button"
+            className="perfil-secondary-button"
+            onClick={onToggleTheme}
+          >
+
+            <Moon size={18} />
+
+            Modo oscuro
+
+          </button>
+
+
+          {/* CERRAR SESIÓN */}
+
+          <button
+            type="button"
+            className="perfil-secondary-button"
+            onClick={onLogout}
+          >
+
+            <LogOut size={18} />
+
+            Cerrar sesión
+
+          </button>
+
+        </div>
+
+
+        {/* ===================================================
+            INFORMACIÓN DE CUENTA
+            =================================================== */}
+
+        <div className="perfil-account-card">
+
+          <div className="perfil-account-header">
+
+            <h2>
+              Información de cuenta
+            </h2>
+
+            <span>
+              ADMINISTRADOR
+            </span>
+
+          </div>
+
+
+          <div className="perfil-line"></div>
+
+
+          <div className="perfil-form-grid">
+
+
+            {/* ID USUARIO */}
+
+            <div className="perfil-field">
+
+              <label>
+                ID USUARIO
+              </label>
+
+              <div className="perfil-input perfil-input-bold">
+                {perfil.id}
+              </div>
+
+            </div>
+
+
+            {/* NOMBRE */}
+
+            <div className="perfil-field">
+
+              <label>
+                NOMBRE COMPLETO
+              </label>
+
+              <div className="perfil-input">
+                {perfil.nombre}
+              </div>
+
+            </div>
+
+
+            {/* CORREO */}
+
+            <div className="perfil-field">
+
+              <label>
+                CORREO ELECTRÓNICO
+              </label>
+
+              <div className="perfil-input">
+                {perfil.correo}
+              </div>
+
+            </div>
+
+
+            {/* TELÉFONO */}
+
+            <div className="perfil-field">
+
+              <label>
+                TELÉFONO
+              </label>
+
+              <div className="perfil-input">
+                {perfil.telefono}
+              </div>
+
+            </div>
+
+
+            {/* ROL */}
+
+            <div className="perfil-field">
+
+              <label>
+                ROL
+              </label>
+
+              <div className="perfil-input">
+                {perfil.rol}
+              </div>
+
+            </div>
+
+
+            {/* ESTADO */}
+
+            <div className="perfil-field">
+
+              <label>
+                ESTADO
+              </label>
+
+              <div className="perfil-input">
+                Activo
+              </div>
+
+            </div>
+
+
+            {/* FECHA */}
+
+            <div className="perfil-field">
+
+              <label>
+                FECHA DE REGISTRO
+              </label>
+
+              <div className="perfil-input">
+                2024-01-15
+              </div>
+
+            </div>
+
+
+            {/* DIRECCIÓN */}
+
+            <div className="perfil-field perfil-field-full">
+
+              <label>
+                DIRECCIÓN
+              </label>
+
+              <div className="perfil-input">
+                {perfil.direccion}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* =====================================================
+          MODAL EDITAR PERFIL
+          ===================================================== */}
+
+      {modalAbierto && (
+
+        <div
+          className="rol-modal-overlay"
+          onClick={cerrarModal}
+        >
+
+          <div
+            className="rol-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <div className="rol-modal-header">
+
+              <h3>
+                Actualizar perfil
+              </h3>
+
+              <button
+                type="button"
+                className="rol-modal-close"
+                onClick={cerrarModal}
+              >
+                <X size={20} />
+              </button>
+
+            </div>
+
+            <form onSubmit={guardarPerfil}>
+
+              <div className="rol-modal-body">
+
+                <div className="rol-form-row">
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      NOMBRE COMPLETO
+                    </label>
+
+                    <input
+                      type="text"
+                      name="nombre"
+                      placeholder="Tu nombre completo"
+                      value={form.nombre}
+                      onChange={manejarCambio}
+                      className={`input ${errores.nombre ? "input-error" : ""}`}
+                      required
+                    />
+
+                    {errores.nombre && (
+                      <span className="error-text">
+                        {errores.nombre}
+                      </span>
+                    )}
+
+                  </div>
+
+                </div>
+
+                <div className="rol-form-row">
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      CORREO ELECTRÓNICO
+                    </label>
+
+                    <input
+                      type="email"
+                      name="correo"
+                      placeholder="tu@correo.com"
+                      value={form.correo}
+                      onChange={manejarCambio}
+                      required
+                    />
+
+                  </div>
+
+                  <div className="rol-form-group">
+
+                    <label>
+                      TELÉFONO
+                    </label>
+
+                    <input
+                      type="text"
+                      name="telefono"
+                      placeholder="+57 300 000 0000"
+                      value={form.telefono}
+                      onChange={manejarCambio}
+                      required
+                    />
+
+                  </div>
+
+                </div>
+
+                <div className="rol-form-group">
+
+                  <label>
+                    DIRECCIÓN
+                  </label>
+
+                  <input
+                    type="text"
+                    name="direccion"
+                    placeholder="Tu dirección"
+                    value={form.direccion}
+                    onChange={manejarCambio}
+                    required
+                  />
+
+                </div>
+
+              </div>
+
+              <div className="rol-modal-footer">
+
+                <button
+                  type="button"
+                  className="rol-cancel-button"
+                  onClick={cerrarModal}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="rol-create-button"
+                >
+                  Guardar cambios
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      )}
+
+      <ConfirmDialog
+        abierto={confirmarEdicion}
+        titulo="Confirmar cambios"
+        mensaje={
+          <>¿Deseas guardar los cambios realizados en tu perfil "
+            <strong>{form.nombre.trim()}</strong>"?</>
+        }
+        textoConfirmar="Guardar cambios"
+        textoCancelar="Cancelar"
+        variante="info"
+        onConfirmar={confirmarEdicionPerfil}
+        onCancelar={() => setConfirmarEdicion(false)}
+      />
+
+    </div>
+  );
+}

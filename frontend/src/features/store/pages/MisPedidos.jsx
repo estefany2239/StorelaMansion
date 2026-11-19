@@ -1,0 +1,1016 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  X,
+  Check,
+  Eye,
+  Receipt,
+  Package,
+  Clock,
+  Truck,
+  CheckCircle2,
+  XCircle,
+  Upload,
+  RotateCw,
+  CircleAlert,
+  FileText
+} from "lucide-react";
+
+import {
+  CLASES_ESTADO_COMPROBANTE,
+  ETIQUETAS_ESTADO_COMPROBANTE,
+  getTotalAbonado,
+  getSaldoPendiente,
+  normalizarHistorialComprobantes,
+  permiteNuevoComprobante,
+  validarComprobante
+} from "../data/pedidosCliente";
+import {
+  obtenerComprobantesPedido,
+  obtenerMisPedidos,
+  subirComprobantePedido
+} from "../../../shared/services/api";
+import { useCatalogo } from "../../../shared/hooks/useCatalogo";
+import { buscarVariantePorId, tallaVisible } from "../../../shared/utils/catalogo";
+import "./MisPedidos.css";
+
+// Estados del backend -> estados visuales del cliente.
+const MAPA_ESTADO = {
+  Registrado: "En proceso",
+  "En preparación": "En proceso",
+  Despachado: "En camino",
+  Entregado: "Entregado",
+  Cancelado: "Cancelado"
+};
+
+// Los mensajes son textos informativos del frontend (la base no los guarda);
+// no se muestran fechas estimadas porque el backend no las persiste.
+const MENSAJES_ESTADO = {
+  "En proceso": "Tu pedido está siendo preparado",
+  "En camino": "Tu pedido está en camino",
+  Entregado: "Tu pedido fue entregado",
+  Cancelado: "Tu pedido fue cancelado"
+};
+
+const IMAGEN_FALLBACK =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#e5e5e5"/></svg>'
+  );
+
+// Convierte un pedido del backend al modelo que usa esta pantalla.
+const mapearPedido = (pedido, catalogo) => {
+  const estado = MAPA_ESTADO[pedido.estado] || "En proceso";
+
+  const productos = (pedido.items || []).map((item) => {
+    const variante = buscarVariantePorId(catalogo, item.id_variante);
+
+    return {
+      nombre: item.nombre,
+      imagen: variante?.image || IMAGEN_FALLBACK,
+      cantidad: item.cantidad,
+      talla: tallaVisible(item.talla),
+      color: item.color || "-",
+      precio: Number(item.precio_unitario) || 0
+    };
+  });
+
+  const montoPagado = Number(pedido.monto_pagado) || 0;
+
+  // Historial real de pagos del backend (todas las filas de la tabla pago);
+  // el fallback solo cubre respuestas antiguas con un único monto.
+  const pagos =
+    Array.isArray(pedido.pagos) && pedido.pagos.length > 0
+      ? pedido.pagos
+      : montoPagado > 0
+        ? [
+            {
+              fecha: pedido.fecha,
+              monto: montoPagado,
+              metodo: pedido.metodo_pago
+            }
+          ]
+        : [];
+
+  return {
+    id: pedido.id,
+    fecha: pedido.fecha,
+    estado,
+    estadoBackend: pedido.estado,
+    estadoPago: pedido.estado_pago || "No aplica",
+    mensajeEstado: MENSAJES_ESTADO[estado],
+    estimadoEntrega: null,
+    metodoEnvio: pedido.metodo_envio || "Domicilio",
+    costoEnvio:
+      pedido.costo_envio === null || pedido.costo_envio === undefined
+        ? null
+        : Number(pedido.costo_envio) || 0,
+    costoEnvioPendiente: Boolean(pedido.costo_envio_pendiente),
+    direccion: pedido.direccion,
+    // Pedidos nuevos: datos estructurados de entrega. Pedidos históricos
+    // llegan vacíos y se muestra la cadena vieja de `direccion`.
+    departamento: pedido.departamento || "",
+    municipio: pedido.municipio || "",
+    barrio: pedido.barrio || "",
+    nombreDestinatario: pedido.nombre_destinatario || "",
+    telefonoDestinatario: pedido.telefono_destinatario || "",
+    productos,
+    total: Number(pedido.total) || 0,
+    abonos: pagos.map((pago) => ({
+      fecha: pago.fecha || pedido.fecha,
+      valor: Number(pago.monto) || 0,
+      metodoPago: pago.metodo || ""
+    }))
+  };
+};
+
+const formatearPrecio = (valor) =>
+  "$" + Number(valor || 0).toLocaleString("es-CO");
+
+const claseEstadoPago = (estadoPago) => {
+  const valor = String(estadoPago || "No aplica").toLowerCase();
+  if (valor.includes("confirmado")) return "confirmado";
+  if (valor.includes("rechazado")) return "rechazado";
+  if (valor.includes("pendiente")) return "pendiente";
+  return "no-aplica";
+};
+
+const formatearFecha = (iso) => {
+  const [anio, mes, dia] = iso.split("-").map(Number);
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+  return `${dia} de ${meses[mes - 1]}, ${anio}`;
+};
+
+const formatearFechaHora = (valor) => {
+  if (!valor) return "";
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) return String(valor).slice(0, 10);
+
+  return fecha.toLocaleString("es-CO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+const ESTADOS = [
+  { valor: "En proceso", icono: <Clock size={13} /> },
+  { valor: "En camino", icono: <Truck size={13} /> },
+  { valor: "Entregado", icono: <CheckCircle2 size={13} /> },
+  { valor: "Cancelado", icono: <XCircle size={13} /> }
+];
+
+const TABS = [
+  { id: "todos", etiqueta: "Todos" },
+  { id: "En proceso", etiqueta: "En proceso" },
+  { id: "En camino", etiqueta: "En camino" },
+  { id: "Entregado", etiqueta: "Entregados" },
+  { id: "Cancelado", etiqueta: "Cancelados" }
+];
+
+const IMAGENES_MAX = 3;
+
+const PASOS_PROCESO = [
+  "Pedido confirmado",
+  "En preparación",
+  "En camino",
+  "Entregado"
+];
+
+const INDICE_ESTADO = {
+  "En proceso": 1,
+  "En camino": 2,
+  "Entregado": 3
+};
+
+function StepperPedido({ pedido }) {
+  if (pedido.estado === "Cancelado") {
+    return (
+      <div className="mp-stepper mp-stepper--cancelado">
+        <div className="mp-step">
+          <div className="mp-step-visual">
+            <div className="mp-step-dot done">
+              <Check size={14} strokeWidth={3} />
+            </div>
+            <span className="mp-step-line done" />
+          </div>
+          <div className="mp-step-copy">
+            <span className="mp-step-label done">Pedido confirmado</span>
+            <span className="mp-step-date">{formatearFecha(pedido.fecha)}</span>
+          </div>
+        </div>
+        <div className="mp-step">
+          <div className="mp-step-visual">
+            <div className="mp-step-dot cancelado">
+              <X size={14} strokeWidth={3} />
+            </div>
+          </div>
+          <div className="mp-step-copy">
+            <span className="mp-step-label cancelado">Cancelado</span>
+            <span className="mp-step-date">El proceso fue interrumpido</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const indiceActual = INDICE_ESTADO[pedido.estado] ?? 0;
+
+  return (
+    <div className="mp-stepper">
+      {PASOS_PROCESO.map((nombre, i) => {
+        const completado = i <= indiceActual;
+        const activo =
+          i === indiceActual && pedido.estado !== "Entregado";
+        const textoApoyo =
+          i === 0
+            ? formatearFecha(pedido.fecha)
+            : activo &&
+              (pedido.estado === "En proceso" || pedido.estado === "En camino")
+              ? pedido.estimadoEntrega
+              : "";
+
+        return (
+          <div className="mp-step" key={nombre}>
+            <div className="mp-step-visual">
+              <div
+                className={`mp-step-dot ${activo ? "active" : completado ? "done" : "pending"}`}
+              >
+                {completado ? (
+                  <Check size={14} strokeWidth={3} />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              {i < PASOS_PROCESO.length - 1 && (
+                <span
+                  className={`mp-step-line ${completado ? "done" : ""}`}
+                />
+              )}
+            </div>
+            <div className="mp-step-copy">
+              <span
+                className={`mp-step-label ${activo ? "active" : completado ? "done" : "pending"}`}
+              >
+                {nombre}
+              </span>
+              {textoApoyo && (
+                <span className="mp-step-date">{textoApoyo}</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AdjuntarComprobante({ pedidoId, onSubido }) {
+  const inputRef = useRef(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [error, setError] = useState("");
+
+  const seleccionarArchivo = async (event) => {
+    const archivo = event.target.files?.[0];
+    event.target.value = "";
+    if (!archivo) return;
+
+    const mensaje = validarComprobante(archivo);
+    if (mensaje) {
+      setError(mensaje);
+      return;
+    }
+
+    setError("");
+    setSubiendo(true);
+    try {
+      await subirComprobantePedido(pedidoId, archivo);
+      await onSubido();
+    } catch (err) {
+      setError(err?.message || "No se pudo subir el comprobante");
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
+  return (
+    <div className="mp-comprobante-upload">
+      <input
+        ref={inputRef}
+        type="file"
+        hidden
+        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+        onChange={seleccionarArchivo}
+      />
+      <button
+        type="button"
+        className="mp-btn mp-btn-outline"
+        disabled={subiendo}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload size={15} />
+        {subiendo ? "Subiendo comprobante..." : "Adjuntar nuevo comprobante"}
+      </button>
+      {error && (
+        <p className="mp-comprobante-alerta" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BloqueComprobantes({
+  pedido,
+  cargando,
+  error,
+  onReintentar,
+  onSubido
+}) {
+  const historial = pedido.comprobantes || [];
+  const ultimo = historial[0] || null;
+  const puedeSubir = permiteNuevoComprobante(
+    pedido.estadoBackend,
+    historial
+  );
+
+  return (
+    <div className="mp-comprobantes">
+      <div className="mp-comprobantes-head">
+        <span className="mp-comprobantes-title">
+          <FileText size={14} /> Comprobante de pago
+        </span>
+        {!cargando && !error && ultimo && (
+          <span
+            className={`mp-pago-estado ${
+              CLASES_ESTADO_COMPROBANTE[ultimo.estado] || "no-aplica"
+            }`}
+          >
+            {ETIQUETAS_ESTADO_COMPROBANTE[ultimo.estado] || ultimo.estado}
+          </span>
+        )}
+      </div>
+
+      {error ? (
+        <div className="mp-comprobantes-error" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="mp-btn-reintentar"
+            onClick={onReintentar}
+          >
+            <RotateCw size={14} /> Reintentar
+          </button>
+        </div>
+      ) : cargando ? (
+        <p className="mp-comprobante-vacio">
+          Consultando el estado del comprobante...
+        </p>
+      ) : historial.length === 0 ? (
+        <p className="mp-comprobante-vacio">
+          Todavía no hay comprobantes registrados para este pedido.
+        </p>
+      ) : (
+        <>
+          {ultimo.estado === "Rechazado" && (
+            <div className="mp-comprobante-motivo">
+              <span className="mp-comprobante-motivo-label">
+                Motivo del rechazo
+              </span>
+              <p>{ultimo.motivoRechazo || "No se registró un motivo."}</p>
+            </div>
+          )}
+
+          <ul className="mp-comprobantes-historial">
+            {historial.map((comprobante, indice) => (
+              <li
+                className="mp-comprobante-item"
+                key={comprobante.id ?? indice}
+              >
+                <div className="mp-comprobante-info">
+                  <span className="mp-comprobante-fecha">
+                    {formatearFechaHora(comprobante.fechaCarga)}
+                  </span>
+                  {comprobante.intento > 0 && (
+                    <span className="mp-comprobante-intento">
+                      Intento {comprobante.intento}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className={`mp-pago-estado ${
+                    CLASES_ESTADO_COMPROBANTE[comprobante.estado] ||
+                    "no-aplica"
+                  }`}
+                >
+                  {ETIQUETAS_ESTADO_COMPROBANTE[comprobante.estado] ||
+                    comprobante.estado}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {puedeSubir && (
+            <AdjuntarComprobante pedidoId={pedido.id} onSubido={onSubido} />
+          )}
+          {!puedeSubir && ultimo.estado === "Rechazado" && (
+            <p className="mp-comprobante-nota">
+              Este pedido ya no admite nuevos comprobantes.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function MisPedidos({ pedidos = [], onBack }) {
+  const { catalogo } = useCatalogo();
+  const [filtro, setFiltro] = useState("todos");
+  const [modalPedido, setModalPedido] = useState(null);
+  const [modalTipo, setModalTipo] = useState(null);
+  const [pedidosApi, setPedidosApi] = useState(null);
+  const [errorPedidos, setErrorPedidos] = useState("");
+  const [cargandoPedidos, setCargandoPedidos] = useState(true);
+  const [comprobantes, setComprobantes] = useState({});
+  const [erroresComprobantes, setErroresComprobantes] = useState({});
+  const [cargandoComprobantes, setCargandoComprobantes] = useState({});
+
+  const cargarPedidos = useCallback(async () => {
+    setCargandoPedidos(true);
+    setErrorPedidos("");
+
+    try {
+      const respuesta = await obtenerMisPedidos();
+      setPedidosApi(Array.isArray(respuesta) ? respuesta : []);
+    } catch (error) {
+      setPedidosApi(null);
+      setComprobantes({});
+      setErroresComprobantes({});
+      setCargandoComprobantes({});
+      setErrorPedidos(error?.message || "No se pudieron cargar tus pedidos");
+    } finally {
+      setCargandoPedidos(false);
+    }
+  }, []);
+
+  const refrescarPedidos = useCallback(async () => {
+    const respuesta = await obtenerMisPedidos().catch(() => null);
+    if (!Array.isArray(respuesta)) return;
+
+    setPedidosApi(respuesta);
+    setErrorPedidos("");
+  }, []);
+
+  useEffect(() => {
+    cargarPedidos();
+  }, [cargarPedidos]);
+
+  useEffect(() => {
+    if (!pedidosApi || pedidosApi.length === 0) return;
+
+    let activo = true;
+    const ids = pedidosApi.map((pedido) => pedido.id);
+
+    setCargandoComprobantes((previo) => {
+      const siguiente = { ...previo };
+      ids.forEach((id) => {
+        siguiente[id] = true;
+      });
+      return siguiente;
+    });
+
+    Promise.all(
+      ids.map(async (id) => {
+        try {
+          const historial = await obtenerComprobantesPedido(id);
+          return { id, historial: normalizarHistorialComprobantes(historial) };
+        } catch (error) {
+          return {
+            id,
+            error: error?.message || "No se pudo cargar el comprobante"
+          };
+        }
+      })
+    ).then((resultados) => {
+      if (!activo) return;
+
+      setComprobantes((previo) => {
+        const siguiente = { ...previo };
+        resultados.forEach((resultado) => {
+          if (resultado.error) {
+            delete siguiente[resultado.id];
+          } else {
+            siguiente[resultado.id] = resultado.historial;
+          }
+        });
+        return siguiente;
+      });
+
+      setErroresComprobantes((previo) => {
+        const siguiente = { ...previo };
+        resultados.forEach((resultado) => {
+          if (resultado.error) {
+            siguiente[resultado.id] = resultado.error;
+          } else {
+            delete siguiente[resultado.id];
+          }
+        });
+        return siguiente;
+      });
+
+      setCargandoComprobantes((previo) => {
+        const siguiente = { ...previo };
+        ids.forEach((id) => {
+          delete siguiente[id];
+        });
+        return siguiente;
+      });
+    });
+
+    return () => {
+      activo = false;
+    };
+  }, [pedidosApi]);
+
+  const recargarComprobantes = useCallback(async (id) => {
+    setCargandoComprobantes((previo) => ({ ...previo, [id]: true }));
+
+    try {
+      const historial = await obtenerComprobantesPedido(id);
+      setComprobantes((previo) => ({
+        ...previo,
+        [id]: normalizarHistorialComprobantes(historial)
+      }));
+      setErroresComprobantes((previo) => {
+        const siguiente = { ...previo };
+        delete siguiente[id];
+        return siguiente;
+      });
+    } catch (error) {
+      setErroresComprobantes((previo) => ({
+        ...previo,
+        [id]: error?.message || "No se pudo cargar el comprobante"
+      }));
+    } finally {
+      setCargandoComprobantes((previo) => {
+        const siguiente = { ...previo };
+        delete siguiente[id];
+        return siguiente;
+      });
+    }
+  }, []);
+
+  const manejarComprobanteSubido = useCallback(
+    async (id) => {
+      await recargarComprobantes(id);
+      await refrescarPedidos();
+    },
+    [recargarComprobantes, refrescarPedidos]
+  );
+
+  const pedidosMapeados = useMemo(() => {
+    if (!pedidosApi) return null;
+
+    return pedidosApi.map((pedido) => ({
+      ...mapearPedido(pedido, catalogo),
+      comprobantes: comprobantes[pedido.id] || [],
+      cargandoComprobante: Boolean(cargandoComprobantes[pedido.id]),
+      errorComprobante: erroresComprobantes[pedido.id] || ""
+    }));
+  }, [
+    pedidosApi,
+    catalogo,
+    comprobantes,
+    cargandoComprobantes,
+    erroresComprobantes
+  ]);
+
+  const lista = pedidosMapeados ?? pedidos;
+
+  const pedidosFiltrados =
+    filtro === "todos"
+      ? lista
+      : lista.filter((pedido) => pedido.estado === filtro);
+
+  const cerrarModal = () => {
+    setModalPedido(null);
+    setModalTipo(null);
+  };
+
+  const abrirDetalles = (pedido) => {
+    setModalPedido(pedido);
+    setModalTipo("detalles");
+  };
+
+  const abrirAbonos = (pedido) => {
+    setModalPedido(pedido);
+    setModalTipo("abonos");
+  };
+
+  const estadoVisual = (estado) =>
+    ESTADOS.find((e) => e.valor === estado) || {
+      icono: <Package size={13} />
+    };
+
+  return (
+    <section className="mis-pedidos-section">
+      <div className="mis-pedidos-wrap">
+
+        <div className="mis-pedidos-topbar">
+          <button className="mp-back-btn" onClick={onBack}>
+            <ArrowLeft size={16} /> Seguir comprando
+          </button>
+        </div>
+
+        <div className="mis-pedidos-header">
+          <span className="mp-kicker">Tu historial</span>
+          <h2 className="mp-title">Mis pedidos</h2>
+          <p className="mp-subtitle">
+            Aquí puedes ver el estado de tus pedidos y los detalles de cada uno.
+          </p>
+        </div>
+
+        {errorPedidos && (
+          <div className="mp-api-error" role="alert">
+            <p>
+              <CircleAlert size={16} />
+              No pudimos cargar tus pedidos desde el servidor. El estado de los
+              comprobantes no está disponible. {errorPedidos}
+            </p>
+            <button
+              type="button"
+              className="mp-btn-reintentar"
+              onClick={cargarPedidos}
+              disabled={cargandoPedidos}
+            >
+              <RotateCw size={14} />
+              {cargandoPedidos ? "Reintentando..." : "Reintentar"}
+            </button>
+          </div>
+        )}
+
+        <div className="mp-tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`mp-tab ${filtro === tab.id ? "active" : ""}`}
+              onClick={() => setFiltro(tab.id)}
+            >
+              {tab.etiqueta}
+            </button>
+          ))}
+        </div>
+
+        {pedidosFiltrados.length > 0 ? (
+          <div className="mp-grid">
+            {pedidosFiltrados.map((pedido) => {
+              const { icono } = estadoVisual(pedido.estado);
+              const slug = pedido.estado.toLowerCase().replace(/\s+/g, "-");
+              const productosVisibles = pedido.productos.slice(0, IMAGENES_MAX);
+              const productosExtra =
+                pedido.productos.length - productosVisibles.length;
+              const totalAbonado = getTotalAbonado(pedido);
+              const saldo = getSaldoPendiente(pedido);
+              const muestraEstimado =
+                pedido.estado === "En proceso" || pedido.estado === "En camino";
+
+              return (
+                <article className="mp-card" key={pedido.id}>
+                  <div className="mp-card-head">
+                    <h3 className="mp-card-id">Pedido #{pedido.id}</h3>
+                    <span className="mp-card-fecha">
+                      {formatearFecha(pedido.fecha)}
+                    </span>
+                  </div>
+
+                  <div className="mp-thumbs">
+                    {productosVisibles.map((producto, i) => (
+                      <img
+                        key={i}
+                        className="mp-thumb"
+                        src={producto.imagen}
+                        alt={producto.nombre}
+                      />
+                    ))}
+                    {productosExtra > 0 && (
+                      <span className="mp-thumb-more">+{productosExtra}</span>
+                    )}
+                  </div>
+
+                  <span className={`mp-estado ${slug}`}>
+                    {icono} {pedido.estado}
+                  </span>
+
+                  {pedido.estadoPago !== "No aplica" && (
+                    <div className="mp-payment-status">
+                      <span>Pago:</span>
+                      <span className={`mp-pago-estado ${claseEstadoPago(pedido.estadoPago)}`}>
+                        {pedido.estadoPago}
+                      </span>
+                    </div>
+                  )}
+
+                  {pedido.estadoBackend && (
+                    <BloqueComprobantes
+                      pedido={pedido}
+                      cargando={pedido.cargandoComprobante}
+                      error={pedido.errorComprobante}
+                      onReintentar={() => recargarComprobantes(pedido.id)}
+                      onSubido={() => manejarComprobanteSubido(pedido.id)}
+                    />
+                  )}
+
+                  <p className="mp-msg">{pedido.mensajeEstado}</p>
+                  {muestraEstimado && (
+                    <p className="mp-estimado">{pedido.estimadoEntrega}</p>
+                  )}
+
+                  <div className="mp-finance">
+                    <div className="mp-finance-row">
+                      <span>Método de envío</span>
+                      <span className="mp-amount">{pedido.metodoEnvio}</span>
+                    </div>
+                    <div className="mp-finance-row mp-total">
+                      <span>
+                        {pedido.costoEnvioPendiente
+                          ? "Total productos"
+                          : "Total del pedido"}
+                      </span>
+                      <span className="mp-amount-total">
+                        {formatearPrecio(pedido.total)}
+                      </span>
+                    </div>
+                    <div className="mp-finance-row">
+                      <span>Abonado</span>
+                      <span className="mp-amount">
+                        {formatearPrecio(totalAbonado)}
+                      </span>
+                    </div>
+                    <div className="mp-finance-row">
+                      <span>Saldo pendiente</span>
+                      <span className={saldo > 0 ? "mp-saldo-pendiente" : "mp-saldo-cero"}>
+                        {formatearPrecio(saldo)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mp-card-btns">
+                    <button
+                      className="mp-btn mp-btn-outline"
+                      onClick={() => abrirAbonos(pedido)}
+                    >
+                      <Receipt size={15} /> Ver abonos
+                    </button>
+                    <button
+                      className="mp-btn mp-btn-primary"
+                      onClick={() => abrirDetalles(pedido)}
+                    >
+                      <Eye size={15} /> Ver detalles
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mp-empty">
+            <Package size={44} />
+            <h3>No tienes pedidos en esta categoría todavía.</h3>
+            <p>Puedes revisar otra pestaña o explorar nuevos productos.</p>
+          </div>
+        )}
+
+      </div>
+
+      {modalPedido && modalTipo && (
+        <div className="mp-modal-overlay" onClick={cerrarModal}>
+          <div
+            className="mp-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="mp-modal-header">
+              <h3 className="mp-modal-title">Pedido #{modalPedido.id}</h3>
+              <button className="mp-modal-close" onClick={cerrarModal}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="mp-modal-sub">
+              {formatearFecha(modalPedido.fecha)}
+              <span className={`mp-estado ${modalPedido.estado.toLowerCase().replace(/\s+/g, "-")}`}>
+                {estadoVisual(modalPedido.estado).icono} {modalPedido.estado}
+              </span>
+            </p>
+
+            {modalTipo === "detalles" ? (
+              <>
+                <StepperPedido pedido={modalPedido} />
+
+                <div className="mp-details-list">
+                  {modalPedido.productos.map((producto, i) => (
+                    <div className="mp-detail-item" key={i}>
+                      <img
+                        className="mp-detail-img"
+                        src={producto.imagen}
+                        alt={producto.nombre}
+                      />
+                      <div className="mp-detail-info">
+                        <p className="mp-detail-name">{producto.nombre}</p>
+                        <p className="mp-detail-meta">
+                          {[
+                            producto.talla ? `Talla: ${producto.talla}` : "",
+                            producto.color ? `Color: ${producto.color}` : "",
+                            `Cant: ${producto.cantidad}`
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      <div className="mp-detail-price">
+                        <span className="mp-detail-unit">
+                          {formatearPrecio(producto.precio)} c/u
+                        </span>
+                        <span className="mp-detail-subtotal">
+                          {formatearPrecio(producto.precio * producto.cantidad)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Datos de entrega: los pedidos nuevos muestran la
+                    ubicación estructurada; los históricos, la cadena
+                    original guardada en direccion_entrega. */}
+                <div className="mp-entrega">
+                  <h4 className="mp-entrega-title">Datos de entrega</h4>
+
+                  {modalPedido.nombreDestinatario ||
+                  modalPedido.departamento ? (
+                    <>
+                      {modalPedido.nombreDestinatario && (
+                        <div className="mp-finance-row">
+                          <span>Destinatario</span>
+                          <span className="mp-amount">
+                            {modalPedido.nombreDestinatario}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.telefonoDestinatario && (
+                        <div className="mp-finance-row">
+                          <span>Teléfono</span>
+                          <span className="mp-amount">
+                            {modalPedido.telefonoDestinatario}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.departamento && (
+                        <div className="mp-finance-row">
+                          <span>Departamento</span>
+                          <span className="mp-amount">
+                            {modalPedido.departamento}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.municipio && (
+                        <div className="mp-finance-row">
+                          <span>Ciudad o municipio</span>
+                          <span className="mp-amount">
+                            {modalPedido.municipio}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.barrio && (
+                        <div className="mp-finance-row">
+                          <span>Barrio</span>
+                          <span className="mp-amount">
+                            {modalPedido.barrio}
+                          </span>
+                        </div>
+                      )}
+                      {modalPedido.direccion &&
+                        modalPedido.metodoEnvio !== "Recoger en tienda" && (
+                          <div className="mp-finance-row">
+                            <span>Dirección</span>
+                            <span className="mp-amount">
+                              {modalPedido.direccion}
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  ) : (
+                    modalPedido.direccion && (
+                      <div className="mp-finance-row">
+                        <span>Dirección de entrega</span>
+                        <span className="mp-amount">
+                          {modalPedido.direccion}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <div className="mp-finance mp-finance-modal">
+                  <div className="mp-finance-row">
+                    <span>Método de envío</span>
+                    <span className="mp-amount">
+                      {modalPedido.metodoEnvio}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row">
+                    <span>Costo de envío</span>
+                    <span className="mp-amount">
+                      {modalPedido.costoEnvioPendiente
+                        ? "Por confirmar"
+                        : modalPedido.costoEnvio === null
+                          ? "No registrado"
+                          : modalPedido.costoEnvio === 0
+                            ? "Sin costo"
+                            : formatearPrecio(modalPedido.costoEnvio)}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row mp-total">
+                    <span>
+                      {modalPedido.costoEnvioPendiente
+                        ? "Total productos"
+                        : "Total del pedido"}
+                    </span>
+                    <span className="mp-amount-total">
+                      {formatearPrecio(modalPedido.total)}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row">
+                    <span>Abonado</span>
+                    <span className="mp-amount">
+                      {formatearPrecio(getTotalAbonado(modalPedido))}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row">
+                    <span>Saldo pendiente</span>
+                    <span className={getSaldoPendiente(modalPedido) > 0 ? "mp-saldo-pendiente" : "mp-saldo-cero"}>
+                      {formatearPrecio(getSaldoPendiente(modalPedido))}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row">
+                    <span>Estado del pago</span>
+                    <span className={`mp-pago-estado ${claseEstadoPago(modalPedido.estadoPago)}`}>
+                      {modalPedido.estadoPago || "No aplica"}
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {modalPedido.abonos.length > 0 ? (
+                  <div className="mp-abonos-list">
+                    {modalPedido.abonos.map((abono, i) => (
+                      <div className="mp-abono-item" key={i}>
+                        <div className="mp-abono-info">
+                          <span className="mp-abono-fecha">
+                            {formatearFecha(abono.fecha)}
+                          </span>
+                          <span className="mp-abono-metodo">
+                            {abono.metodoPago}
+                          </span>
+                        </div>
+                        <span className="mp-abono-valor">
+                          {formatearPrecio(abono.valor)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mp-abonos-empty">
+                    Aún no se han registrado abonos para este pedido.
+                  </div>
+                )}
+
+                <div className="mp-finance mp-finance-modal">
+                  <div className="mp-finance-row">
+                    <span>Total abonado</span>
+                    <span className="mp-amount">
+                      {formatearPrecio(getTotalAbonado(modalPedido))}
+                    </span>
+                  </div>
+                  <div className="mp-finance-row mp-total">
+                    <span>Saldo pendiente</span>
+                    <span className={getSaldoPendiente(modalPedido) > 0 ? "mp-saldo-pendiente" : "mp-saldo-cero"}>
+                      {formatearPrecio(getSaldoPendiente(modalPedido))}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

@@ -1,0 +1,67 @@
+/* ============================================================
+   BOTÓN FAVORITOS (corazón reutilizable)
+   beige / dorado / sans-serif, alineado a variables.css
+   ============================================================ */
+
+.btn-favorito {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.btn-favorito:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* --- Variante CHIP: flotado sobre la imagen de una tarjeta --- */
+
+.btn-favorito--chip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--gold);
+}
+
+.btn-favorito--chip:hover,
+.btn-favorito--chip.isActive {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--gold);
+  transform: scale(1.06);
+}
+
+/* --- Variante CONTORNO: junto a textos y precios del detalle --- */
+
+.btn-favorito--contorno {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  background-color: transparent;
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-favorito--contorno:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.btn-favorito--contorno.isActive {
+  border-color: var(--gold);
+  color: var(--gold);
+  background-color: rgba(212, 175, 55, 0.12);
+}

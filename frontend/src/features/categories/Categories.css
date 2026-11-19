@@ -1,0 +1,269 @@
+/* ==========================================
+   FRANJA PRINCIPAL BEIGE (Ocupa el 100% del ancho)
+   ========================================== */
+.categories-section {
+  width: 100%;
+  /* Fondo por tema (crema en Light, negro en Dark), reutilizando la misma
+     variable del resto de la página. La regla global `section` de index.css
+     ya aplica var(--bg-main) con !important. */
+  background-color: var(--bg-main);
+  transition: background-color 0.3s ease;
+}
+
+/* ==========================================
+   CONTENEDOR INTERNO CENTRADO
+   ========================================== */
+.categories {
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+  padding: 80px 20px 64px;
+}
+
+.categories__title {
+  text-align: center;
+  font-family: var(--font-display, "Inter", sans-serif);
+  font-size: 2.2rem;
+  color: var(--ink, #1a1a1a);
+  margin-bottom: 40px;
+  font-weight: 600;
+}
+
+/* Aviso discreto mientras se confirma la lista real de la base de datos */
+.categories__notice {
+  margin: -24px 0 24px;
+  text-align: center;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--ink, #1a1a1a);
+  opacity: 0.55;
+}
+
+.categories__empty {
+  text-align: center;
+  font-family: var(--font-body, "Inter", sans-serif);
+  color: var(--ink, #1a1a1a);
+  opacity: 0.6;
+  padding: 32px 0;
+}
+
+/* ==========================================
+   CARRUSEL HORIZONTAL (scroll-snap, sin librerías)
+   ========================================== */
+.categories__carousel {
+  position: relative;
+}
+
+.categories__track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  /* Relleno vertical para que el halo dorado y el realce no se recorten */
+  padding: 16px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Transición suave al pasar del respaldo local a los datos reales */
+  transition: opacity 0.35s ease;
+}
+
+.categories__track--respaldo {
+  opacity: 0.85;
+}
+
+.categories__track::-webkit-scrollbar {
+  display: none;
+}
+
+.categories__track:focus-visible {
+  outline: 2px solid var(--gold, #d8b438);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Tarjeta individual */
+.categories__item {
+  position: relative;
+  /* 4 tarjetas visibles en escritorio (3 separaciones de 16px) */
+  flex: 0 0 calc((100% - 48px) / 4);
+  aspect-ratio: 4 / 5;
+  scroll-snap-align: start;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  isolation: isolate;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  display: block;
+  padding: 0;
+  text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+/* Brillo dorado tipo boutique: halo de luz detrás de la tarjeta */
+.categories__item::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    rgba(201, 162, 39, 0.35) 0%,
+    rgba(201, 162, 39, 0) 70%
+  );
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--gold) 35%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(6px);
+  transition: opacity 0.4s ease;
+}
+
+.categories__item:hover::after {
+  opacity: 1;
+}
+
+.categories__item:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201, 162, 39, 0.6);
+  border-color: color-mix(in srgb, var(--gold) 60%, transparent);
+  box-shadow: 0 12px 32px rgba(201, 162, 39, 0.35),
+    0 0 0 1px rgba(201, 162, 39, 0.25);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--gold) 35%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--gold) 25%, transparent);
+}
+
+/* Degradado oscuro en la parte inferior para legibilidad del texto */
+.categories__item-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.35) 38%,
+    rgba(0, 0, 0, 0) 68%
+  );
+  transition: background 0.3s ease;
+}
+
+.categories__item:hover .categories__item-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.42) 40%,
+    rgba(0, 0, 0, 0) 70%
+  );
+}
+
+/* Bloque de texto: abajo a la izquierda */
+.categories__item-body {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.categories__item-name {
+  color: #ffffff;
+  font-family: var(--font-display, "Inter", sans-serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.categories__item-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold, #d8b438);
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ==========================================
+   BOTONES DE FLECHA
+   ========================================== */
+.categories__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  color: #1a1a1a;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  transition: background 0.25s ease, color 0.25s ease,
+    opacity 0.25s ease, transform 0.25s ease;
+}
+
+.categories__arrow:hover:not(:disabled) {
+  background: var(--gold, #d8b438);
+  color: #1a1a1a;
+}
+
+.categories__arrow:focus-visible {
+  outline: 2px solid var(--gold, #d8b438);
+  outline-offset: 2px;
+}
+
+.categories__arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mitad dentro, mitad fuera del carrusel */
+.categories__arrow--prev {
+  left: -22px;
+}
+
+.categories__arrow--next {
+  right: -22px;
+}
+
+/* ==========================================
+   ADAPTABILIDAD
+   ========================================== */
+/* Tablet: 2 tarjetas visibles */
+@media (max-width: 1024px) {
+  .categories__item {
+    flex-basis: calc((100% - 16px) / 2);
+  }
+}
+
+/* Celular: 1.5 tarjetas visibles y se desliza con el dedo */
+@media (max-width: 640px) {
+  .categories__item {
+    flex-basis: calc((100% - 16px) / 1.5);
+  }
+
+  .categories__arrow {
+    display: none;
+  }
+}

@@ -1,16 +1,74 @@
-# React + Vite
+# Store La Mansión
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Monorepositorio con el **frontend** (React + Vite) y el **backend** (Node.js + Express) de Store La Mansión.
 
-Currently, two official plugins are available:
+## Estructura
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+storemansion-1/
+├── frontend/          # React + Vite (interfaz de la tienda y panel admin)
+├── backend/           # Node.js + Express (API)
+│   ├── src/
+│   │   ├── config/        # Variables de entorno y conexión a BD (futuro)
+│   │   ├── controllers/   # Lógica de cada endpoint
+│   │   ├── routes/        # Definición de rutas
+│   │   ├── models/        # Modelos/entidades de la BD
+│   │   ├── middlewares/   # Autenticación, validaciones, errores
+│   │   ├── services/      # Lógica de negocio
+│   │   ├── utils/         # Utilidades
+│   │   └── app.js         # Crea la app de Express
+│   ├── server.js          # Arranca el servidor
+│   ├── .env.example       # Variables de entorno de ejemplo
+│   └── package.json
+├── .gitignore
+├── package.json       # Solo scripts de ayuda
+└── README.md
+```
 
-## React Compiler
+## Instalación
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Desde la raíz del repositorio:
 
-## Expanding the ESLint configuration
+```powershell
+npm run install:all
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Esto instala las dependencias tanto de `frontend/` como de `backend/`.
+
+Para el backend, copia además `.env.example` a `.env` (ya se incluye un `.env` local):
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+```
+
+## Cómo correr el proyecto
+
+Se necesitan **dos terminales**.
+
+**Terminal 1 — Frontend** (puerto 5173):
+
+```powershell
+npm run dev:frontend
+```
+
+Abre http://localhost:5173
+
+**Terminal 2 — Backend** (puerto 3000):
+
+```powershell
+npm run dev:backend
+```
+
+Verifica el health check en http://localhost:3000/api/health — debe responder:
+
+```json
+{ "status": "ok", "app": "Store La Mansión API" }
+```
+
+Ambos servidores pueden correr a la vez porque usan puertos distintos (5173 el frontend, 3000 el backend).
+
+## Build del frontend
+
+```powershell
+npm run build:frontend
+```

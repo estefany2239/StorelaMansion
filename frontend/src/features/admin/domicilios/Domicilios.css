@@ -1,0 +1,1392 @@
+/* =========================================================
+   DOMICILIOS - STORE LA MANSIÓN
+   ========================================================= */
+
+.domicilios-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.domicilios-header {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 25px;
+
+  margin-bottom: 30px;
+}
+
+
+.domicilios-title h2 {
+  margin: 0;
+
+  font-family: var(--font-display);
+
+  font-size: 38px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  color:
+    var(--admin-text);
+}
+
+
+.domicilios-title p {
+  margin: 14px 0 0;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+
+  font-size: 15px;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.domicilios-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   BUSCADOR
+   ========================================================= */
+
+.domicilios-search {
+  width: 265px;
+
+  height: 45px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 13px;
+
+  box-sizing: border-box;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid #d8dce2;
+
+  border-radius: 9px;
+
+  color:
+    #718096;
+}
+
+
+.domicilios-search input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-family:
+    var(--font-body,
+    "Inter",
+    sans-serif);
+
+  font-size: 14px;
+
+  color:
+    #333333;
+}
+
+
+.domicilios-search input::placeholder {
+  color:
+    #a5acb8;
+}
+
+
+.domicilios-search:focus-within {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(153, 101, 21, 0.10);
+}
+
+
+/* =========================================================
+   BOTÓN AGREGAR DOMICILIO
+   ========================================================= */
+
+.domicilios-add-button {
+  height: 45px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 20px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background:
+    var(--admin-cta-gold);
+
+  color:
+    #111111;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.domicilios-add-button:hover {
+  background:
+    var(--admin-btn-primary-hover);
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.domicilios-table-container {
+  width: 100%;
+
+  overflow-x: auto;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    rgba(153, 101, 21, 0.14);
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+.domicilios-table {
+  width: 100%;
+
+  min-width: 1240px;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+/* DISTRIBUCIÓN: ID | PEDIDO | CLIENTE | DIRECCIÓN | TELÉFONO |
+   RESPONSABLE | COSTO | FECHA | ESTADO | ACCIONES */
+.domicilios-table th:nth-child(1) { width: 9%; }
+.domicilios-table th:nth-child(2) { width: 9%; }
+.domicilios-table th:nth-child(3) { width: 11%; }
+.domicilios-table th:nth-child(4) { width: 14%; }
+.domicilios-table th:nth-child(5) { width: 9%; }
+.domicilios-table th:nth-child(6) { width: 11%; }
+.domicilios-table th:nth-child(7) { width: 10%; }
+.domicilios-table th:nth-child(8) { width: 9%; }
+.domicilios-table th:nth-child(9) { width: 10%; }
+.domicilios-table th:nth-child(10) { width: 8%; }
+
+.domicilios-table th:nth-child(9),
+.domicilios-table td:nth-child(9) { text-align: center; }
+
+.domicilios-table th:nth-child(10),
+.domicilios-table td:nth-child(10) { text-align: center; }
+
+
+.domicilios-table th {
+  height: 44px;
+
+  padding: 0 16px;
+
+  text-align: left;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+
+  border-bottom:
+    1px solid #e2e2e2;
+
+  white-space: nowrap;
+}
+
+
+.domicilios-table td {
+  height: 72px;
+
+  padding: 0 16px;
+
+  vertical-align: middle;
+
+  border-bottom:
+    1px solid #e8e8e8;
+
+  font-size: 14px;
+}
+
+
+.domicilios-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   DATOS
+   ========================================================= */
+
+.domicilio-id {
+  color:
+    var(--admin-gold);
+
+  font-size: 13px;
+}
+
+
+.domicilio-id-relacion {
+  color:
+    #738096;
+
+  font-size: 13px;
+}
+
+
+.domicilios-table .domicilio-cliente {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domicilio-cliente {
+  color:
+    #111111;
+
+  font-size: 15px;
+
+  font-weight: 500;
+}
+
+
+.domicilio-entrega {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.domicilio-telefono,
+.domicilio-responsable,
+.domicilio-costo {
+  color:
+    #333333;
+
+  font-size: 13px;
+}
+
+
+.domicilio-costo-pendiente {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 3px 9px;
+
+  border-radius: 20px;
+
+  background:
+    #fff2d2;
+
+  color:
+    #c68a00;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
+.domicilio-direccion,
+.domicilio-ciudad,
+.domicilio-fecha {
+  color:
+    #738096;
+
+  font-size: 14px;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   ESTADOS
+   ========================================================= */
+
+.domicilio-estado {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 82px;
+
+  min-height: 26px;
+
+  padding: 0 11px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
+.domicilio-estado.entregado {
+  background:
+    #dff5e8;
+
+  color:
+    #0ca653;
+}
+
+
+.domicilio-estado.camino {
+  background:
+    #e1ebff;
+
+  color:
+    #2867d8;
+}
+
+
+.domicilio-estado.pendiente {
+  background:
+    #fff2d2;
+
+  color:
+    #c68a00;
+}
+
+
+.domicilio-estado.cancelado {
+  background:
+    #fde5e5;
+
+  color:
+    #e53935;
+}
+
+
+/* =========================================================
+   AVANZAR ESTADO (flecha junto a la píldora)
+   ========================================================= */
+
+.domicilio-estado-cell {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 5px;
+}
+
+
+.domicilio-estado-toggle {
+  width: 24px;
+  height: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: transparent;
+
+  color:
+    #8a94a6;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.domicilio-estado-toggle:hover:not(:disabled) {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(153, 101, 21, 0.08);
+}
+
+
+.domicilio-estado-toggle:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SPINNER DE CARGA
+   ========================================================= */
+
+.domicilio-spinner {
+  animation:
+    domicilio-giro 1s linear infinite;
+}
+
+
+@keyframes domicilio-giro {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   CARGA DEL DETALLE
+   ========================================================= */
+
+.domicilio-detalle-cargando {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 30px 10px;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   AVISOS (costo de envío pendiente, errores)
+   ========================================================= */
+
+.domicilio-aviso-costo,
+.domicilio-aviso-cargando {
+  margin-top: 4px;
+
+  margin-bottom: 12px;
+
+  padding: 11px 13px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(198, 138, 0, 0.10);
+
+  border:
+    1px solid
+    rgba(198, 138, 0, 0.25);
+
+  color:
+    #a06e00;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+.domicilio-costo-bloque {
+  margin-bottom: 14px;
+}
+
+
+/* =========================================================
+   PRODUCTOS DEL DETALLE
+   ========================================================= */
+
+.domicilio-productos {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  background:
+    #f7f7f7;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+}
+
+
+.domicilio-producto-fila {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+
+.domicilio-producto-datos {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  min-width: 0;
+}
+
+
+.domicilio-producto-nombre {
+  color:
+    #222222;
+
+  font-size: 14px;
+
+  font-weight: 500;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+.domicilio-producto-meta {
+  color:
+    #738096;
+
+  font-size: 12px;
+}
+
+
+.domicilio-producto-precio {
+  color:
+    #222222;
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+.domicilio-info-value.multilinea {
+  min-height: 48px;
+
+  padding: 12px 14px;
+
+  line-height: 1.5;
+
+  align-items: flex-start;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.domicilio-actions {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 5px;
+}
+
+
+.domicilio-actions button {
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background:
+    transparent;
+
+  color:
+    #70798a;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+}
+
+
+.domicilio-actions button:hover {
+  color:
+    var(--admin-gold);
+
+  background:
+    rgba(153, 101, 21, 0.08);
+}
+
+
+.domicilio-actions button:last-child:hover {
+  color:
+    #e53935;
+
+  background:
+    rgba(229, 57, 53, 0.08);
+}
+
+
+.domicilio-actions button.disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   VACÍO
+   ========================================================= */
+
+.domicilios-empty {
+  height: 100px !important;
+
+  text-align: center;
+
+  color:
+    var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.domicilio-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 5000;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 25px;
+
+  box-sizing: border-box;
+
+  background:
+    rgba(0, 0, 0, 0.48);
+
+  backdrop-filter:
+    blur(3px);
+}
+
+
+.domicilio-modal {
+  width: 100%;
+
+  max-width: 768px;
+
+  max-height:
+    calc(100vh - 50px);
+
+  overflow-y: auto;
+
+  background:
+    #ffffff;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 25px 70px
+    rgba(0, 0, 0, 0.25);
+}
+
+
+/* =========================================================
+   HEADER MODAL
+   ========================================================= */
+
+.domicilio-modal-header {
+  min-height: 66px;
+
+  padding: 0 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  border-bottom:
+    1px solid #e2e2e2;
+}
+
+
+.domicilio-modal-header h3 {
+  margin: 0;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+
+  font-size: 22px;
+
+  font-weight: 500;
+
+  color:
+    #1a1a1a;
+}
+
+
+.domicilio-modal-close {
+  width: 36px;
+
+  height: 36px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  color:
+    #697386;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+
+.domicilio-modal-close:hover {
+  background:
+    #f3f3f3;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.domicilio-modal-body {
+  padding:
+    22px;
+}
+
+
+/* =========================================================
+   FORMULARIO
+   ========================================================= */
+
+.domicilio-form-row {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+
+.domicilio-form-group,
+.domicilio-info-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.domicilio-form-group label,
+.domicilio-info-group label {
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1px;
+
+  color:
+    #667085;
+}
+
+
+.domicilio-form-group input,
+.domicilio-form-group select,
+.domicilio-form-group textarea {
+  width: 100%;
+
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background:
+    #ffffff;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+
+  font-size: 14px;
+
+  color:
+    #222222;
+}
+
+
+.domicilio-form-group input,
+.domicilio-form-group select {
+  height: 42px;
+}
+
+
+.domicilio-form-group textarea {
+  min-height: 96px;
+
+  padding: 10px 12px;
+
+  resize: vertical;
+
+  line-height: 1.5;
+}
+
+
+.domicilio-form-group input:focus,
+.domicilio-form-group select:focus,
+.domicilio-form-group textarea:focus {
+  border-color:
+    var(--admin-gold);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(153, 101, 21, 0.10);
+}
+
+
+.domicilio-form-group input:disabled,
+.domicilio-form-group select:disabled,
+.domicilio-form-group input:read-only {
+  background:
+    #f5f5f5;
+
+  color:
+    #777777;
+}
+
+
+/* Estados de error (401/400 con campo) igual que el resto del panel */
+
+.input.input-error {
+  border-color:
+    #e53935;
+}
+
+
+.error-text {
+  color:
+    #e53935;
+
+  font-size: 12px;
+}
+
+
+.domicilio-create-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+}
+
+
+.domicilio-create-button:disabled {
+  opacity: 1;
+
+  cursor: not-allowed;
+
+  background:
+    var(--admin-btn-primary);
+
+  color:
+    #111111;
+}
+
+
+.domicilio-cancel-button:disabled {
+  opacity: 0.6;
+
+  cursor: wait;
+}
+
+
+/* =========================================================
+   DETALLE
+   ========================================================= */
+
+.domicilio-info-value {
+  min-height: 48px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  background:
+    #f7f7f7;
+
+  border:
+    1px solid #d7d7d7;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  color:
+    #222222;
+}
+
+
+/* =========================================================
+   REGLA DE NEGOCIO
+   ========================================================= */
+
+.domicilio-delivered-info {
+  margin-top: 14px;
+
+  padding: 11px 13px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(12, 166, 83, 0.08);
+
+  color:
+    #0b9150;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.domicilio-modal-footer {
+  min-height: 72px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 14px;
+
+  padding: 0 30px;
+
+  border-top:
+    1px solid #e2e2e2;
+}
+
+
+.domicilio-cancel-button {
+  height: 42px;
+
+  padding: 0 24px;
+
+  border:
+    1px solid #dedede;
+
+  border-radius: 9px;
+
+  background:
+    #ffffff;
+
+  color:
+    #697386;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.domicilio-cancel-button:hover {
+  background:
+    #f7f7f7;
+}
+
+
+.domicilio-create-button {
+  height: 42px;
+
+  padding: 0 24px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  background:
+    var(--admin-cta-gold);
+
+  color:
+    #111111;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.domicilio-create-button:hover {
+  background:
+    var(--admin-btn-primary-hover);
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+.admin-container.admin-dark .domicilios-search {
+  background:
+    var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.20);
+}
+
+
+.admin-container.admin-dark .domicilios-search input {
+  color:
+    var(--admin-text);
+}
+
+
+.admin-container.admin-dark .domicilios-table-container {
+  background:
+    var(--admin-card);
+
+  border-color:
+    rgba(212, 175, 55, 0.18);
+}
+
+
+.admin-container.admin-dark .domicilios-table th {
+  color:
+    var(--admin-text-secondary);
+
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+.admin-container.admin-dark .domicilios-table td {
+  border-color:
+    rgba(255, 255, 255, 0.08);
+}
+
+
+.admin-container.admin-dark .domicilio-cliente {
+  color:
+    var(--admin-text);
+}
+
+
+.admin-container.admin-dark .domicilio-direccion,
+.admin-container.admin-dark .domicilio-ciudad,
+.admin-container.admin-dark .domicilio-fecha,
+.admin-container.admin-dark .domicilio-telefono,
+.admin-container.admin-dark .domicilio-responsable,
+.admin-container.admin-dark .domicilio-costo,
+.admin-container.admin-dark .domicilio-id-relacion {
+  color:
+    var(--admin-text-secondary);
+}
+
+
+.admin-container.admin-dark .domicilio-modal {
+  background:
+    #1e1e1e;
+}
+
+
+.admin-container.admin-dark .domicilio-modal-header {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+.admin-container.admin-dark .domicilio-modal-header h3 {
+  color:
+    #ffffff;
+}
+
+
+.admin-container.admin-dark .domicilio-form-group label,
+.admin-container.admin-dark .domicilio-info-group label {
+  color:
+    #b0b0b0;
+}
+
+
+.admin-container.admin-dark .domicilio-form-group input,
+.admin-container.admin-dark .domicilio-form-group select,
+.admin-container.admin-dark .domicilio-form-group textarea {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+.admin-container.admin-dark .domicilio-productos {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+}
+
+
+.admin-container.admin-dark .domicilio-producto-nombre,
+.admin-container.admin-dark .domicilio-producto-precio {
+  color:
+    #ffffff;
+}
+
+
+.admin-container.admin-dark .domicilio-producto-meta {
+  color:
+    #b0b0b0;
+}
+
+
+.admin-container.admin-dark .domicilio-aviso-costo {
+  background:
+    rgba(198, 138, 0, 0.15);
+
+  border-color:
+    rgba(198, 138, 0, 0.35);
+
+  color:
+    #e8b64c;
+}
+
+
+.admin-container.admin-dark .domicilio-info-value {
+  background:
+    #181818;
+
+  border-color:
+    rgba(255, 255, 255, 0.15);
+
+  color:
+    #ffffff;
+}
+
+
+.admin-container.admin-dark .domicilio-modal-footer {
+  border-color:
+    rgba(255, 255, 255, 0.10);
+}
+
+
+.admin-container.admin-dark .domicilio-cancel-button {
+  background:
+    transparent;
+
+  border-color:
+    rgba(255, 255, 255, 0.18);
+
+  color:
+    #b0b0b0;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .domicilios-header {
+    flex-direction: column;
+  }
+
+  .domicilios-actions {
+    width: 100%;
+
+    justify-content: flex-end;
+  }
+
+}
+
+
+@media (max-width: 850px) {
+
+  .domicilios-actions {
+    flex-wrap: wrap;
+  }
+
+  .domicilios-search {
+    flex: 1;
+
+    min-width: 220px;
+  }
+
+  .domicilio-form-row {
+    grid-template-columns:
+      1fr;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .domicilios-title h2 {
+    font-size: 32px;
+  }
+
+  .domicilios-actions {
+    width: 100%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .domicilios-search,
+  .domicilios-add-button {
+    width: 100%;
+  }
+
+  .domicilio-modal-overlay {
+    padding: 12px;
+  }
+
+  .domicilio-modal {
+    max-height:
+      calc(100vh - 24px);
+  }
+
+  .domicilio-modal-header {
+    min-height: 70px;
+
+    padding: 0 20px;
+  }
+
+  .domicilio-modal-body {
+    padding: 22px 20px;
+  }
+
+  .domicilio-modal-footer {
+    min-height: 82px;
+
+    padding: 0 20px;
+  }
+
+}

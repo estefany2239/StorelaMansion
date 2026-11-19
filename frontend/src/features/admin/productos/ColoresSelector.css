@@ -1,0 +1,75 @@
+.colores-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 44px);
+  justify-content: start;
+  gap: 8px;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.colores-selector-tarjeta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 4px;
+  border: 1px solid #e4e9f1;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.colores-selector-tarjeta:has(input:checked) {
+  border-color: #D4AF37;
+  background: #fffaf0;
+}
+
+.colores-selector-casilla {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: #D4AF37;
+  z-index: 1;
+}
+
+.colores-selector-muestra {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #d7dde7;
+  flex: 0 0 auto;
+  margin: auto;
+}
+
+.colores-selector-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #ffffff;
+  background: #3d4a5c;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 2;
+}
+
+.colores-selector-tarjeta:hover .colores-selector-tooltip {
+  opacity: 1;
+}
+PY
