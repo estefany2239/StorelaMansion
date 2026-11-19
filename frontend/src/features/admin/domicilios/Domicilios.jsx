@@ -1201,12 +1201,12 @@ export default function Domicilios({ user }) {
 
       {mostrarModal && (
 
-        <div className="domicilio-modal-overlay">
+        <div className="domicilio-modal-overlay am-overlay">
 
-          <div className="domicilio-modal">
+          <div className="domicilio-modal am-modal am-modal--lg">
 
 
-            <div className="domicilio-modal-header">
+            <div className="domicilio-modal-header am-header">
 
               <h3>
 
@@ -1219,7 +1219,7 @@ export default function Domicilios({ user }) {
 
               <button
                 type="button"
-                className="domicilio-modal-close"
+                className="domicilio-modal-close am-close"
                 onClick={cerrarModal}
               >
 
@@ -1230,7 +1230,8 @@ export default function Domicilios({ user }) {
             </div>
 
 
-            <div className="domicilio-modal-body">
+            <form className="am-form-wrap">
+            <div className="domicilio-modal-body am-body">
 
 
               {modoEdicion ? (
@@ -1243,9 +1244,11 @@ export default function Domicilios({ user }) {
 
                 <>
 
+                  <h4 className="am-section-title">Responsable y fecha</h4>
+
                   {/* RESPONSABLE */}
 
-                  <div className="domicilio-form-group">
+                  <div className="domicilio-form-group am-field">
 
                     <label>
                       RESPONSABLE DE LA ENTREGA
@@ -1259,7 +1262,7 @@ export default function Domicilios({ user }) {
                       value={
                         formulario.responsable
                       }
-                      className={`input ${errores.responsable ? "input-error" : ""}`}
+                      className={`am-input input ${errores.responsable ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "responsable",
@@ -1279,7 +1282,7 @@ export default function Domicilios({ user }) {
                     />
 
                     {errores.responsable && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.responsable}
                       </span>
                     )}
@@ -1289,7 +1292,7 @@ export default function Domicilios({ user }) {
 
                   {/* FECHA PROGRAMADA */}
 
-                  <div className="domicilio-form-group">
+                  <div className="domicilio-form-group am-field">
 
                     <label>
                       FECHA PROGRAMADA
@@ -1301,7 +1304,7 @@ export default function Domicilios({ user }) {
                       value={
                         formulario.fechaProgramada
                       }
-                      className={`input ${errores.fechaProgramada ? "input-error" : ""}`}
+                      className={`am-input input ${errores.fechaProgramada ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "fechaProgramada",
@@ -1318,7 +1321,7 @@ export default function Domicilios({ user }) {
                     />
 
                     {errores.fechaProgramada && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.fechaProgramada}
                       </span>
                     )}
@@ -1332,10 +1335,12 @@ export default function Domicilios({ user }) {
 
                     <div className="domicilio-costo-bloque">
 
-                      <div className="domicilio-form-group">
+                      <h4 className="am-section-title">Envío</h4>
+
+                      <div className="domicilio-form-group am-field">
 
                         <label>
-                          COSTO DE ENVÍO (PENDIENTE)
+                          COSTO DE ENV�?O (PENDIENTE)
                         </label>
 
                         <input
@@ -1347,7 +1352,7 @@ export default function Domicilios({ user }) {
                           value={
                             formulario.costoEnvio
                           }
-                          className={`input ${errores.costoEnvio ? "input-error" : ""}`}
+                          className={`am-input input ${errores.costoEnvio ? "input-error" : ""}`}
                           onChange={(e) =>
                             cambiarCampo(
                               "costoEnvio",
@@ -1367,7 +1372,7 @@ export default function Domicilios({ user }) {
                         />
 
                         {errores.costoEnvio && (
-                          <span className="error-text">
+                          <span className="error-text am-error">
                             {errores.costoEnvio}
                           </span>
                         )}
@@ -1395,7 +1400,9 @@ export default function Domicilios({ user }) {
 
                   {/* OBSERVACIONES */}
 
-                  <div className="domicilio-form-group">
+                  <h4 className="am-section-title">Observaciones</h4>
+
+                  <div className="domicilio-form-group am-field">
 
                     <label>
                       OBSERVACIONES
@@ -1409,7 +1416,7 @@ export default function Domicilios({ user }) {
                       value={
                         formulario.observaciones
                       }
-                      className={`input ${errores.observaciones ? "input-error" : ""}`}
+                      className={`am-textarea input ${errores.observaciones ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "observaciones",
@@ -1426,7 +1433,7 @@ export default function Domicilios({ user }) {
                     />
 
                     {errores.observaciones && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.observaciones}
                       </span>
                     )}
@@ -1446,9 +1453,11 @@ export default function Domicilios({ user }) {
 
                 <>
 
+                  <h4 className="am-section-title">Pedido y destinatario</h4>
+
                   {/* PEDIDO */}
 
-                  <div className="domicilio-form-group">
+                  <div className="domicilio-form-group am-field">
 
                     <label>
                       PEDIDO SIN DOMICILIO
@@ -1462,7 +1471,7 @@ export default function Domicilios({ user }) {
                       disabled={
                         cargandoPedidos
                       }
-                      className={`input ${errores.idPedido ? "input-error" : ""}`}
+                      className={`am-select ${errores.idPedido ? "input-error" : ""}`}
                       onChange={(e) =>
                         seleccionarPedido(
                           e.target.value
@@ -1501,13 +1510,13 @@ export default function Domicilios({ user }) {
                     </select>
 
                     {errores.idPedido && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.idPedido}
                       </span>
                     )}
 
                     {errorPedidos && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errorPedidos}
                       </span>
                     )}
@@ -1519,43 +1528,30 @@ export default function Domicilios({ user }) {
 
                   {formulario.pedidoSeleccionado && (
 
-                    <div className="domicilio-form-row">
+                    <div className="domicilio-form-row am-form-grid">
 
-                      <div className="domicilio-info-group">
-
-                        <label>
-                          CLIENTE
-                        </label>
-
-                        <div className="domicilio-info-value">
-                          {formulario.pedidoSeleccionado.cliente}
-                        </div>
-
-                      </div>
+                      <div className="am-data-pill">
+  <span className="am-data-label">CLIENTE</span>
+  <span className="am-data-value">{formulario.pedidoSeleccionado.cliente}</span>
+</div>
 
 
-                      <div className="domicilio-info-group">
-
-                        <label>
-                          TELÉFONO
-                        </label>
-
-                        <div className="domicilio-info-value">
-                          {formulario.pedidoSeleccionado.telefono || "—"}
-                        </div>
-
-                      </div>
+                      <div className="am-data-pill">
+  <span className="am-data-label">TELÉFONO</span>
+  <span className="am-data-value">{formulario.pedidoSeleccionado.telefono || "—"}</span>
+</div>
 
                     </div>
 
                   )}
 
+                  <h4 className="am-section-title">Dirección de entrega</h4>
 
-                  {/* MÉTODO + DIRECCIÓN */}
+                  {/* M�%TODO + DIRECCI�"N */}
 
-                  <div className="domicilio-form-row">
+                  <div className="domicilio-form-row am-form-grid">
 
-                    <div className="domicilio-form-group">
+                    <div className="domicilio-form-group am-field">
 
                       <label>
                         MÉTODO DE ENVÍO
@@ -1566,7 +1562,7 @@ export default function Domicilios({ user }) {
                         value={
                           formulario.metodoEnvio
                         }
-                        className={`input ${errores.metodoEnvio ? "input-error" : ""}`}
+                        className={`am-select ${errores.metodoEnvio ? "input-error" : ""}`}
                         onChange={(e) =>
                           cambiarCampoRegistrar(
                             "metodoEnvio",
@@ -1600,7 +1596,7 @@ export default function Domicilios({ user }) {
                       </select>
 
                       {errores.metodoEnvio && (
-                        <span className="error-text">
+                        <span className="error-text am-error">
                           {errores.metodoEnvio}
                         </span>
                       )}
@@ -1611,7 +1607,7 @@ export default function Domicilios({ user }) {
                     {formulario.metodoEnvio !==
                       "Recoger en tienda" && (
 
-                      <div className="domicilio-form-group">
+                      <div className="domicilio-form-group am-field">
 
                         <label>
                           DIRECCIÓN DE ENTREGA
@@ -1624,7 +1620,7 @@ export default function Domicilios({ user }) {
                           value={
                             formulario.direccion
                           }
-                          className={`input ${errores.direccion ? "input-error" : ""}`}
+                          className={`am-input input ${errores.direccion ? "input-error" : ""}`}
                           onChange={(e) =>
                             cambiarCampoRegistrar(
                               "direccion",
@@ -1641,7 +1637,7 @@ export default function Domicilios({ user }) {
                         />
 
                         {errores.direccion && (
-                          <span className="error-text">
+                          <span className="error-text am-error">
                             {errores.direccion}
                           </span>
                         )}
@@ -1668,11 +1664,11 @@ export default function Domicilios({ user }) {
 
             {/* FOOTER */}
 
-            <div className="domicilio-modal-footer">
+            <div className="domicilio-modal-footer am-footer">
 
               <button
                 type="button"
-                className="domicilio-cancel-button"
+                className="domicilio-cancel-button am-btn-ghost"
                 onClick={cerrarModal}
                 disabled={guardando || creando}
               >
@@ -1684,7 +1680,7 @@ export default function Domicilios({ user }) {
 
               <button
                 type="button"
-                className="domicilio-create-button"
+                className="domicilio-create-button am-btn-gold"
                 onClick={guardarDomicilio}
                 disabled={guardando || creando}
               >
@@ -1706,6 +1702,7 @@ export default function Domicilios({ user }) {
               </button>
 
             </div>
+            </form>
 
           </div>
 
@@ -1721,12 +1718,12 @@ export default function Domicilios({ user }) {
       {mostrarDetalle &&
         domicilioSeleccionado && (
 
-        <div className="domicilio-modal-overlay">
+        <div className="domicilio-modal-overlay am-overlay">
 
-          <div className="domicilio-modal">
+          <div className="domicilio-modal am-modal am-modal--lg">
 
 
-            <div className="domicilio-modal-header">
+            <div className="domicilio-modal-header am-header">
 
               <h3>
                 Detalle del Domicilio
@@ -1735,7 +1732,7 @@ export default function Domicilios({ user }) {
 
               <button
                 type="button"
-                className="domicilio-modal-close"
+                className="domicilio-modal-close am-close"
                 onClick={cerrarDetalle}
               >
 
@@ -1746,7 +1743,7 @@ export default function Domicilios({ user }) {
             </div>
 
 
-            <div className="domicilio-modal-body">
+            <div className="domicilio-modal-body am-body">
 
               {detalleEnProceso && (
 
@@ -1777,217 +1774,148 @@ export default function Domicilios({ user }) {
 
                 <>
 
-                  <div className="domicilio-form-row">
-
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        ID DOMICILIO
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {domicilioSeleccionado.codigo}
+                  <div className="am-summary-grid">
+                    <div className="am-summary-row--3">
+                      <div className="am-summary-card">
+                        <span className="am-summary-label">Pedido</span>
+                        <strong className="am-summary-value">{domicilioSeleccionado.pedido}</strong>
                       </div>
-
+                      <div className="am-summary-card">
+                        <span className="am-summary-label">Cliente</span>
+                        <strong className="am-summary-value">{domicilioSeleccionado.cliente || "—"}</strong>
+                      </div>
+                      <div className="am-summary-card">
+                        <span className="am-summary-label">Estado</span>
+                        <span className="am-summary-value"><span className="am-badge">{domicilioSeleccionado.estado}</span></span>
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="am-divider" />
+
+                  <div className="domicilio-form-row am-form-grid">
+
+                    <div className="am-data-pill">
+  <span className="am-data-label">ID DOMICILIO</span>
+  <span className="am-data-value">{domicilioSeleccionado.codigo}</span>
+</div>
 
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        ESTADO
-                      </label>
-
-                      <div className="domicilio-info-value">
-
-                        <span
+                    <div className="am-data-pill">
+  <span className="am-data-label">ESTADO</span>
+  <span className="am-data-value"><span
                           className={`domicilio-estado ${claseEstado(domicilioSeleccionado.estado)}`}
                         >
 
                           {domicilioSeleccionado.estado}
 
-                        </span>
-
-                      </div>
-
-                    </div>
+                        </span></span>
+</div>
 
                   </div>
 
 
-                  <div className="domicilio-form-row">
+                  <div className="domicilio-form-row am-form-grid">
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        PEDIDO
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {`${domicilioSeleccionado.pedido}${domicilioSeleccionado.estadoPedido ? ` (${domicilioSeleccionado.estadoPedido})` : ""}`}
-                      </div>
-
-                    </div>
+                    <div className="am-data-pill">
+  <span className="am-data-label">PEDIDO</span>
+  <span className="am-data-value">{`${domicilioSeleccionado.pedido}${domicilioSeleccionado.estadoPedido ? ` (${domicilioSeleccionado.estadoPedido})` : ""}`}</span>
+</div>
 
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        CLIENTE
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {domicilioSeleccionado.cliente || "—"}
-                      </div>
-
-                    </div>
+                    <div className="am-data-pill">
+  <span className="am-data-label">CLIENTE</span>
+  <span className="am-data-value">{domicilioSeleccionado.cliente || "—"}</span>
+</div>
 
                   </div>
 
 
-                  <div className="domicilio-form-row">
+                  <div className="domicilio-form-row am-form-grid">
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        DIRECCIÓN COMPLETA
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {[
+                    <div className="am-data-pill">
+  <span className="am-data-label">DIRECCIÓN COMPLETA</span>
+  <span className="am-data-value">{[
                           domicilioSeleccionado.direccion,
                           domicilioSeleccionado.barrio,
                           domicilioSeleccionado.municipio,
                           domicilioSeleccionado.departamento
                         ]
                           .filter(Boolean)
-                          .join(" — ") || "—"}
-                      </div>
-
-                    </div>
+                          .join(" — ") || "—"}</span>
+</div>
 
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        TELÉFONO
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {domicilioSeleccionado.telefono || "—"}
-                      </div>
-
-                    </div>
+                    <div className="am-data-pill">
+  <span className="am-data-label">TELÉFONO</span>
+  <span className="am-data-value">{domicilioSeleccionado.telefono || "—"}</span>
+</div>
 
                   </div>
 
 
-                  <div className="domicilio-form-row">
+                  <div className="domicilio-form-row am-form-grid">
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        COSTO DE ENVÍO
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {domicilioSeleccionado.costoEnvioPendiente
+                    <div className="am-data-pill">
+  <span className="am-data-label">COSTO DE ENVÍO</span>
+  <span className="am-data-value">{domicilioSeleccionado.costoEnvioPendiente
                           ? "Por definir"
                           : formatearPrecio(
                               domicilioSeleccionado.costoEnvio
-                            )}
-                      </div>
-
-                    </div>
+                            )}</span>
+</div>
 
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        TOTAL DEL PEDIDO
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {formatearPrecio(
+                    <div className="am-data-pill">
+  <span className="am-data-label">TOTAL DEL PEDIDO</span>
+  <span className="am-data-value">{formatearPrecio(
                           domicilioSeleccionado.totalPedido
-                        )}
-                      </div>
-
-                    </div>
+                        )}</span>
+</div>
 
                   </div>
 
 
-                  <div className="domicilio-form-row">
+                  <div className="domicilio-form-row am-form-grid">
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        RESPONSABLE DE LA ENTREGA
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {domicilioSeleccionado.responsable ||
-                          "Sin asignar"}
-                      </div>
-
-                    </div>
+                    <div className="am-data-pill">
+  <span className="am-data-label">RESPONSABLE DE LA ENTREGA</span>
+  <span className="am-data-value">{domicilioSeleccionado.responsable ||
+                          "Sin asignar"}</span>
+</div>
 
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        FECHA PROGRAMADA
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {formatearFecha(
+                    <div className="am-data-pill">
+  <span className="am-data-label">FECHA PROGRAMADA</span>
+  <span className="am-data-value">{formatearFecha(
                           domicilioSeleccionado.fechaProgramada
-                        ) || "—"}
-                      </div>
-
-                    </div>
+                        ) || "—"}</span>
+</div>
 
                   </div>
 
 
-                  <div className="domicilio-form-row">
+                  <div className="domicilio-form-row am-form-grid">
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        MÉTODO DE ENVÍO
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {domicilioSeleccionado.metodoEnvio || "—"}
-                      </div>
-
-                    </div>
+                    <div className="am-data-pill">
+  <span className="am-data-label">MÉTODO DE ENVÍO</span>
+  <span className="am-data-value">{domicilioSeleccionado.metodoEnvio || "—"}</span>
+</div>
 
 
-                    <div className="domicilio-info-group">
-
-                      <label>
-                        FECHA DE ENTREGA
-                      </label>
-
-                      <div className="domicilio-info-value">
-                        {formatearFecha(
+                    <div className="am-data-pill">
+  <span className="am-data-label">FECHA DE ENTREGA</span>
+  <span className="am-data-value">{formatearFecha(
                           domicilioSeleccionado.fechaEntrega
-                        ) || "—"}
-                      </div>
-
-                    </div>
+                        ) || "—"}</span>
+</div>
 
                   </div>
 
 
-                  <div className="domicilio-info-group">
+                  <div className="domicilio-productos-card">
 
-                    <label>
-                      PRODUCTOS DEL PEDIDO
-                    </label>
+                    <span className="am-data-label">PRODUCTOS DEL PEDIDO</span>
 
                     <div className="domicilio-productos">
 
@@ -2037,16 +1965,11 @@ export default function Domicilios({ user }) {
                   </div>
 
 
-                  <div className="domicilio-info-group">
+                  <div className="am-data-pill">
 
-                    <label>
-                      OBSERVACIONES
-                    </label>
-
-                    <div className="domicilio-info-value multilinea">
-                      {domicilioSeleccionado.observaciones ||
-                        "Sin observaciones para esta entrega."}
-                    </div>
+                    <span className="am-data-label">OBSERVACIONES</span>
+                    <span className="am-data-value">{domicilioSeleccionado.observaciones ||
+                        "Sin observaciones para esta entrega."}</span>
 
                   </div>
 
@@ -2073,11 +1996,11 @@ export default function Domicilios({ user }) {
             </div>
 
 
-            <div className="domicilio-modal-footer">
+            <div className="domicilio-modal-footer am-footer">
 
               <button
                 type="button"
-                className="domicilio-cancel-button detail-cerrar-button"
+                className="domicilio-cancel-button detail-cerrar-button am-btn-gold"
                 onClick={cerrarDetalle}
               >
 

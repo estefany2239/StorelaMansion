@@ -20,14 +20,25 @@ import { useNotify } from "../../../shared/components/notifications/useNotify.js
 import useValidacionFormulario from "../../../shared/hooks/useValidacionFormulario";
 import { obtenerPerfil, actualizarMiPerfil } from "../../../shared/services/api";
 import { REGLAS as REGLAS_REGISTRO } from "../../../shared/utils/validacionesRegistro";
+import NavbarCategoria from "../../categories/NavbarCategoria";
+import Footer from "../../../shared/components/footer/Footer";
 
 import "./Configuracion.css";
 
 export default function Configuracion({
   theme,
+  tema = theme === "dark" ? "oscuro" : "claro",
   onToggleTheme,
+  onAlternarTema = onToggleTheme,
   onLogout,
   onBack,
+  onIrALogin,
+  onNavigate,
+  onNavigateSection,
+  onVerCategoria,
+  cartCount = 0,
+  onCartClick,
+  user,
   perfilCliente,
   setPerfilCliente,
   onPerfilActualizado,
@@ -284,7 +295,20 @@ export default function Configuracion({
   };
 
   return (
-    <section className="configuracion-section">
+    <div className="landing categoria-pagina" data-tema={tema}>
+      <NavbarCategoria
+        tema={tema}
+        user={user}
+        onAlternarTema={onAlternarTema}
+        onIrALogin={onIrALogin}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        onNavigateSection={onNavigateSection}
+        onVerCategoria={onVerCategoria}
+        cartCount={cartCount}
+        onCartClick={onCartClick}
+      />
+    <section className="configuracion-section" style={{ paddingTop: 110 }}>
       <div className="configuracion-wrap">
 
         <div className="configuracion-topbar">
@@ -757,5 +781,8 @@ export default function Configuracion({
         </div>
       )}
     </section>
+
+    <Footer tema={tema} onNavigateSection={onNavigateSection} onVerCategoria={onVerCategoria} />
+    </div>
   );
 }

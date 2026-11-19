@@ -2,8 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: var(--bg-header);
-  border-bottom: 1px solid var(--border-soft);
+  background: var(--site-bg);
+  border-bottom: 1px solid var(--site-border);
   transition: background-color 0.3s ease;
 }
 

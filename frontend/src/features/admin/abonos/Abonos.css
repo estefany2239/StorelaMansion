@@ -321,8 +321,22 @@
 .abonos-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-family: var(--font-body, "Inter", sans-serif);
 }
+
+.abonos-table th:nth-child(1) { width: 16%; }
+.abonos-table th:nth-child(2) { width: 9%; }
+.abonos-table th:nth-child(3) { width: 10%; }
+.abonos-table th:nth-child(4) { width: 8%; }
+.abonos-table th:nth-child(5) { width: 9%; }
+.abonos-table th:nth-child(6) { width: 11%; }
+.abonos-table th:nth-child(7) { width: 8%; }
+.abonos-table th:nth-child(8) { width: 8%; }
+.abonos-table th:nth-child(9) { width: 11%; }
+
+.abonos-table th:nth-child(10),
+.abonos-table td:nth-child(10) { width: 10%; text-align: center; }
 
 .abonos-table th {
   padding: 15px 12px;
@@ -402,7 +416,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  min-width: 130px;
+  min-width: 0;
   max-width: 190px;
 }
 
@@ -510,7 +524,9 @@
 .abonos-acciones {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .abonos-acciones button {

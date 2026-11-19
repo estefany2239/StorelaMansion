@@ -6,7 +6,15 @@ import {
   LogOut,
   Pencil,
   X,
-  Camera
+  Camera,
+  ShieldCheck,
+  Info,
+  Star,
+  Mail,
+  Phone,
+  CircleDot,
+  CalendarDays,
+  MapPin
 } from "lucide-react";
 
 import ConfirmDialog from "../shared/ConfirmDialog";
@@ -45,36 +53,84 @@ export default function Perfil({
     useState(false);
 
   const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [fotoError, setFotoError] = useState("");
   const inputFotoRef = useRef(null);
 
   const manejarCambioFoto = async (e) => {
     const archivo = e.target.files?.[0];
     if (!archivo) return;
 
+    setFotoError("");
+
     if (!archivo.type.startsWith("image/")) {
+      setFotoError("Selecciona un archivo de imagen válido.");
+      setTimeout(() => setFotoError(""), 4000);
+      e.target.value = "";
       return;
     }
 
-    if (archivo.size > 2 * 1024 * 1024) {
+    if (archivo.size > 10 * 1024 * 1024) {
+      setFotoError("La imagen no puede superar 10 MB.");
+      setTimeout(() => setFotoError(""), 4000);
+      e.target.value = "";
       return;
     }
 
     const lector = new FileReader();
-    lector.onload = async () => {
-      const dataUrl = String(lector.result || "");
-      setSubiendoFoto(true);
-      try {
-        await actualizarFotoPerfil(dataUrl);
+    lector.onload = () => {
+      const dataUrlOriginal = String(lector.result || "");
+      const img = new Image();
+      img.onload = async () => {
+        const max = 512;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > max) {
+            height = Math.round((height * max) / width);
+            width = max;
+          }
+        } else {
+          if (height > max) {
+            width = Math.round((width * max) / height);
+            height = max;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
         if (onFotoActualizada) onFotoActualizada(dataUrl);
-      } catch {
-        // ignore
-      } finally {
-        setSubiendoFoto(false);
-      }
+
+        setSubiendoFoto(true);
+        try {
+          await actualizarFotoPerfil(dataUrl);
+        } catch (error) {
+          console.error(error);
+          setFotoError(
+            "No se pudo guardar la foto en el servidor. Se verá solo hasta que recargues."
+          );
+          setTimeout(() => setFotoError(""), 4000);
+        } finally {
+          setSubiendoFoto(false);
+          e.target.value = "";
+        }
+      };
+      img.onerror = () => {
+        setFotoError("No se pudo leer la imagen.");
+        setTimeout(() => setFotoError(""), 4000);
+        e.target.value = "";
+      };
+      img.src = dataUrlOriginal;
+    };
+    lector.onerror = () => {
+      setFotoError("No se pudo leer el archivo.");
+      setTimeout(() => setFotoError(""), 4000);
+      e.target.value = "";
     };
     lector.readAsDataURL(archivo);
-
-    e.target.value = "";
   };
 
   /* =====================================================
@@ -157,38 +213,28 @@ export default function Perfil({
   return (
     <div className="perfil-page">
 
-      {/* =====================================================
-          ENCABEZADO
-          ===================================================== */}
+      <header className="perfil-header">
+        <div className="perfil-header-left">
+          <UserRound size={44} strokeWidth={1.5} className="perfil-header-icon" />
+          <div className="perfil-header-text">
+            <h1>Mi Perfil</h1>
+            <p>Información de tu cuenta</p>
+          </div>
+        </div>
 
-      <div className="perfil-header">
+        <div className="perfil-header-line" />
 
-        <h1>
-          Mi Perfil
-        </h1>
-
-        <p>
-          Información de tu cuenta
-        </p>
-
-      </div>
-
-
-      {/* =====================================================
-          CONTENIDO
-          ===================================================== */}
+        <div className="perfil-role-pill">
+          <ShieldCheck size={14} strokeWidth={2} />
+          {perfil.rol}
+        </div>
+      </header>
 
       <div className="perfil-content">
-
-
-        {/* ===================================================
-            TARJETA IZQUIERDA
-            =================================================== */}
 
         <div className="perfil-user-card">
 
           <div className="perfil-avatar">
-
             {foto ? (
               <img
                 src={foto}
@@ -196,9 +242,17 @@ export default function Perfil({
                 className="perfil-avatar-img"
               />
             ) : (
-              <UserRound size={52} />
+              <UserRound size={52} strokeWidth={1.5} />
             )}
-
+            <button
+              type="button"
+              className="perfil-avatar-edit"
+              onClick={() => inputFotoRef.current?.click()}
+              disabled={subiendoFoto}
+              aria-label="Cambiar foto"
+            >
+              <Pencil size={14} strokeWidth={2} />
+            </button>
           </div>
 
           <input
@@ -215,215 +269,149 @@ export default function Perfil({
             onClick={() => inputFotoRef.current?.click()}
             disabled={subiendoFoto}
           >
-            <Camera size={16} />
+            <Camera size={16} strokeWidth={2} />
             {subiendoFoto ? "Subiendo..." : "Cambiar foto"}
           </button>
+          {fotoError && (
+            <span className="perfil-foto-error">{fotoError}</span>
+          )}
 
+          <h2>{perfil.nombre}</h2>
 
-          <h2>
-            {perfil.nombre}
-          </h2>
+          <p className="perfil-email">{perfil.correo}</p>
 
-
-          <p className="perfil-email">
-            {perfil.correo}
-          </p>
-
-
-          <p className="perfil-role">
+          <div className="perfil-role-pill perfil-role-pill--inline">
+            <ShieldCheck size={14} strokeWidth={2} />
             {perfil.rol}
-          </p>
+          </div>
 
-
-          {/* EDITAR PERFIL */}
+          <div className="perfil-divider" />
 
           <button
             type="button"
             className="perfil-edit-button"
             onClick={abrirEditar}
           >
-
-            <Pencil size={17} />
-
+            <Pencil size={17} strokeWidth={2} />
             Actualizar perfil
-
           </button>
-
-
-          {/* MODO OSCURO */}
 
           <button
             type="button"
             className="perfil-secondary-button"
             onClick={onToggleTheme}
           >
-
-            <Moon size={18} />
-
+            <Moon size={18} strokeWidth={2} />
             Modo oscuro
-
           </button>
-
-
-          {/* CERRAR SESIÓN */}
 
           <button
             type="button"
             className="perfil-secondary-button"
             onClick={onLogout}
           >
-
-            <LogOut size={18} />
-
+            <LogOut size={18} strokeWidth={2} />
             Cerrar sesión
-
           </button>
 
         </div>
 
-
-        {/* ===================================================
-            INFORMACIÓN DE CUENTA
-            =================================================== */}
-
         <div className="perfil-account-card">
 
           <div className="perfil-account-header">
-
-            <h2>
-              Información de cuenta
-            </h2>
-
-            <span>
-              ADMINISTRADOR
-            </span>
-
+            <div className="perfil-account-icon">
+              <Info size={18} strokeWidth={2} />
+            </div>
+            <h2>Información de cuenta</h2>
           </div>
 
-
-          <div className="perfil-line"></div>
-
+          <div className="perfil-line" />
 
           <div className="perfil-form-grid">
 
-
-            {/* ID USUARIO */}
-
             <div className="perfil-field">
-
-              <label>
-                ID USUARIO
-              </label>
-
-              <div className="perfil-input perfil-input-bold">
-                {perfil.id}
+              <div className="perfil-field-icon">
+                <UserRound size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>ID USUARIO</label>
+                <div className="perfil-input perfil-input-bold">{perfil.id}</div>
+              </div>
             </div>
 
-
-            {/* NOMBRE */}
-
             <div className="perfil-field">
-
-              <label>
-                NOMBRE COMPLETO
-              </label>
-
-              <div className="perfil-input">
-                {perfil.nombre}
+              <div className="perfil-field-icon">
+                <Star size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>NOMBRE COMPLETO</label>
+                <div className="perfil-input">{perfil.nombre}</div>
+              </div>
             </div>
 
-
-            {/* CORREO */}
-
             <div className="perfil-field">
-
-              <label>
-                CORREO ELECTRÓNICO
-              </label>
-
-              <div className="perfil-input">
-                {perfil.correo}
+              <div className="perfil-field-icon">
+                <Mail size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>CORREO ELECTRÓNICO</label>
+                <div className="perfil-input">{perfil.correo}</div>
+              </div>
             </div>
 
-
-            {/* TELÉFONO */}
-
             <div className="perfil-field">
-
-              <label>
-                TELÉFONO
-              </label>
-
-              <div className="perfil-input">
-                {perfil.telefono}
+              <div className="perfil-field-icon">
+                <Phone size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>TELÉFONO</label>
+                <div className="perfil-input">{perfil.telefono}</div>
+              </div>
             </div>
 
-
-            {/* ROL */}
-
             <div className="perfil-field">
-
-              <label>
-                ROL
-              </label>
-
-              <div className="perfil-input">
-                {perfil.rol}
+              <div className="perfil-field-icon">
+                <ShieldCheck size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>ROL</label>
+                <div className="perfil-input">{perfil.rol}</div>
+              </div>
             </div>
 
-
-            {/* ESTADO */}
-
             <div className="perfil-field">
-
-              <label>
-                ESTADO
-              </label>
-
-              <div className="perfil-input">
-                Activo
+              <div className="perfil-field-icon">
+                <CircleDot size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>ESTADO</label>
+                <div className="perfil-input">
+                  <span className="perfil-estado-pill">
+                    <span className="perfil-estado-dot" />
+                    Activo
+                  </span>
+                </div>
+              </div>
             </div>
 
-
-            {/* FECHA */}
-
             <div className="perfil-field">
-
-              <label>
-                FECHA DE REGISTRO
-              </label>
-
-              <div className="perfil-input">
-                2024-01-15
+              <div className="perfil-field-icon">
+                <CalendarDays size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>FECHA DE REGISTRO</label>
+                <div className="perfil-input">2024-01-15</div>
+              </div>
             </div>
-
-
-            {/* DIRECCIÓN */}
 
             <div className="perfil-field perfil-field-full">
-
-              <label>
-                DIRECCIÓN
-              </label>
-
-              <div className="perfil-input">
-                {perfil.direccion}
+              <div className="perfil-field-icon">
+                <MapPin size={22} strokeWidth={1.5} />
               </div>
-
+              <div className="perfil-field-body">
+                <label>DIRECCIÓN</label>
+                <div className="perfil-input">{perfil.direccion}</div>
+              </div>
             </div>
 
           </div>
@@ -432,154 +420,122 @@ export default function Perfil({
 
       </div>
 
-      {/* =====================================================
-          MODAL EDITAR PERFIL
-          ===================================================== */}
-
       {modalAbierto && (
-
         <div
-          className="rol-modal-overlay"
+          className="rol-modal-overlay am-overlay"
           onClick={cerrarModal}
         >
-
           <div
-            className="rol-modal"
+            className="rol-modal am-modal am-modal--md"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
-
-            <div className="rol-modal-header">
-
+            <div className="rol-modal-header am-header">
               <h3>
                 Actualizar perfil
               </h3>
-
               <button
                 type="button"
-                className="rol-modal-close"
+                className="rol-modal-close am-close"
                 onClick={cerrarModal}
               >
                 <X size={20} />
               </button>
-
             </div>
 
-            <form onSubmit={guardarPerfil}>
-
-              <div className="rol-modal-body">
-
-                <div className="rol-form-row">
-
-                  <div className="rol-form-group">
-
+            <form className="am-form-wrap" onSubmit={guardarPerfil}>
+              <div className="rol-modal-body am-body">
+                <div className="rol-form-row am-form-grid">
+                  <div className="rol-form-group am-field">
                     <label>
                       NOMBRE COMPLETO
                     </label>
-
                     <input
                       type="text"
                       name="nombre"
                       placeholder="Tu nombre completo"
                       value={form.nombre}
                       onChange={manejarCambio}
-                      className={`input ${errores.nombre ? "input-error" : ""}`}
+                      className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                       required
                     />
-
                     {errores.nombre && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.nombre}
                       </span>
                     )}
-
                   </div>
-
                 </div>
 
-                <div className="rol-form-row">
-
-                  <div className="rol-form-group">
-
+                <div className="rol-form-row am-form-grid">
+                  <div className="rol-form-group am-field">
                     <label>
                       CORREO ELECTRÓNICO
                     </label>
-
                     <input
                       type="email"
+                      className="am-input"
                       name="correo"
                       placeholder="tu@correo.com"
                       value={form.correo}
                       onChange={manejarCambio}
                       required
                     />
-
                   </div>
 
-                  <div className="rol-form-group">
-
+                  <div className="rol-form-group am-field">
                     <label>
                       TELÉFONO
                     </label>
-
                     <input
                       type="text"
+                      className="am-input"
                       name="telefono"
                       placeholder="+57 300 000 0000"
                       value={form.telefono}
                       onChange={manejarCambio}
                       required
                     />
-
                   </div>
-
                 </div>
 
-                <div className="rol-form-group">
-
-                  <label>
-                    DIRECCIÓN
-                  </label>
-
-                  <input
-                    type="text"
-                    name="direccion"
-                    placeholder="Tu dirección"
-                    value={form.direccion}
-                    onChange={manejarCambio}
-                    required
-                  />
-
+                <div className="am-form-grid">
+                  <div className="rol-form-group am-field am-field--full">
+                    <label>
+                      DIRECCI�"N
+                    </label>
+                    <input
+                      type="text"
+                      className="am-input"
+                      name="direccion"
+                      placeholder="Tu direcci��n"
+                      value={form.direccion}
+                      onChange={manejarCambio}
+                      required
+                    />
+                  </div>
                 </div>
-
               </div>
 
-              <div className="rol-modal-footer">
-
+              <div className="rol-modal-footer am-footer">
                 <button
                   type="button"
-                  className="rol-cancel-button"
+                  className="rol-cancel-button am-btn-ghost"
                   onClick={cerrarModal}
                 >
                   Cancelar
                 </button>
-
                 <button
                   type="submit"
-                  className="rol-create-button"
+                  className="rol-create-button am-btn-gold"
                 >
                   Guardar cambios
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
       <ConfirmDialog

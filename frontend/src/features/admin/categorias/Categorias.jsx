@@ -503,33 +503,35 @@ export default function Categorias({ user }) {
 
       {mostrarModal && (
 
-        <div className="categoria-modal-overlay" onClick={cerrarModal}>
+        <div className="categoria-modal-overlay am-overlay" onClick={cerrarModal}>
 
-          <div className="categoria-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="categoria-modal am-modal am-modal--sm" onClick={(e) => e.stopPropagation()}>
 
-            <div className="categoria-modal-header">
+            <div className="categoria-modal-header am-header">
               <h3>{modoEdicion ? "Actualizar Categoría" : "Registrar Categoría"}</h3>
-              <button type="button" className="categoria-modal-close" onClick={cerrarModal}>
+              <button type="button" className="categoria-modal-close am-close" onClick={cerrarModal}>
                 <X size={19} />
               </button>
             </div>
 
-            <div className="categoria-modal-body">
+            <div className="categoria-modal-body am-body">
 
               <div className="categoria-form-row">
 
-                <div className="categoria-form-group">
+                <div className="categoria-form-group am-field">
                   <label>IDENTIFICADOR</label>
                   <input
                     type="text"
-                    value={formulario.id || "Se genera automáticamente"}
+                    className="am-input"
+                    value={formulario.id || "Se genera automǭticamente"}
                     disabled
                   />
                 </div>
 
-                <div className="categoria-form-group">
+                <div className="categoria-form-group am-field">
                   <label>ESTADO</label>
                   <select
+                    className="am-select"
                     value={formulario.estado}
                     onChange={(e) => cambiarCampo("estado", e.target.value)}
                   >
@@ -540,7 +542,7 @@ export default function Categorias({ user }) {
 
               </div>
 
-              <div className="categoria-form-group">
+              <div className="categoria-form-group am-field">
                 <label>NOMBRE</label>
                 <input
                   type="text"
@@ -548,7 +550,7 @@ export default function Categorias({ user }) {
                   placeholder="Ej: Camisetas"
                   maxLength={20}
                   value={formulario.nombre}
-                  className={`input ${errores.nombre ? "input-error" : ""}`}
+                  className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "nombre",
@@ -559,18 +561,17 @@ export default function Categorias({ user }) {
                     manejarBlur("nombre", formulario.nombre, formulario)
                   }
                 />
-                {errores.nombre && <span className="error-text">{errores.nombre}</span>}
+                {errores.nombre && <span className="error-text am-error">{errores.nombre}</span>}
               </div>
 
-              <div className="categoria-form-group">
+              <div className="categoria-form-group am-field">
                 <label>DESCRIPCIÓN</label>
-                <input
-                  type="text"
+                <textarea
                   id="campo-descripcion"
                   placeholder="Ej: Todo tipo de camisetas"
                   maxLength={200}
                   value={formulario.descripcion}
-                  className={`input ${errores.descripcion ? "input-error" : ""}`}
+                  className={`am-textarea input ${errores.descripcion ? "input-error" : ""}`}
                   onChange={(e) => cambiarCampo("descripcion", e.target.value)}
                   onBlur={() =>
                     manejarBlur(
@@ -581,11 +582,11 @@ export default function Categorias({ user }) {
                   }
                 />
                 {errores.descripcion && (
-                  <span className="error-text">{errores.descripcion}</span>
+                  <span className="error-text am-error">{errores.descripcion}</span>
                 )}
               </div>
 
-              <div className="categoria-form-group">
+              <div className="categoria-form-group am-field">
                 <label>GÉNEROS PERMITIDOS</label>
                 <div className="categoria-generos-checks">
                   {GENEROS.map((genero) => (
@@ -599,24 +600,24 @@ export default function Categorias({ user }) {
                     </label>
                   ))}
                 </div>
-                {errores.generos && <span className="error-text">{errores.generos}</span>}
+                {errores.generos && <span className="error-text am-error">{errores.generos}</span>}
               </div>
 
-              <div className="categoria-form-group">
+              <div className="categoria-form-group am-field">
                 <label>IMAGEN</label>
                 <input
                   type="text"
                   id="campo-imagen"
                   placeholder="camisa.png o https://..."
                   value={formulario.imagen}
-                  className={`input ${errores.imagen ? "input-error" : ""}`}
+                  className={`am-input input ${errores.imagen ? "input-error" : ""}`}
                   onChange={(e) => cambiarCampo("imagen", e.target.value)}
                   onBlur={() =>
                     manejarBlur("imagen", formulario.imagen, formulario)
                   }
                 />
                 {errores.imagen && (
-                  <span className="error-text">{errores.imagen}</span>
+                  <span className="error-text am-error">{errores.imagen}</span>
                 )}
                 {urlImagen(formulario.imagen) && (
                   <img
@@ -634,11 +635,11 @@ export default function Categorias({ user }) {
 
             </div>
 
-            <div className="categoria-modal-footer">
-              <button type="button" className="categoria-cancel-button" onClick={cerrarModal}>
+            <div className="categoria-modal-footer am-footer">
+              <button type="button" className="categoria-cancel-button am-btn-ghost" onClick={cerrarModal}>
                 Cancelar
               </button>
-              <button type="button" className="categoria-create-button" onClick={guardarCategoria}>
+              <button type="button" className="categoria-create-button am-btn-gold" onClick={guardarCategoria}>
                 {modoEdicion ? "Guardar" : "Crear"}
               </button>
             </div>
@@ -653,18 +654,18 @@ export default function Categorias({ user }) {
 
       {categoriaSeleccionada && (
 
-        <div className="categoria-modal-overlay" onClick={cerrarDetalle}>
+        <div className="categoria-modal-overlay am-overlay" onClick={cerrarDetalle}>
 
-          <div className="categoria-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="categoria-modal am-modal am-modal--sm" onClick={(e) => e.stopPropagation()}>
 
-            <div className="categoria-modal-header">
+            <div className="categoria-modal-header am-header">
               <h3>Detalle de la Categoría</h3>
-              <button type="button" className="categoria-modal-close" onClick={cerrarDetalle}>
+              <button type="button" className="categoria-modal-close am-close" onClick={cerrarDetalle}>
                 <X size={19} />
               </button>
             </div>
 
-            <div className="categoria-modal-body">
+            <div className="categoria-modal-body am-body">
 
               <div className="categoria-detail-top">
                 <div className="categoria-detail-avatar">
@@ -748,7 +749,7 @@ export default function Categorias({ user }) {
 
             </div>
 
-            <div className="categoria-modal-footer">
+            <div className="categoria-modal-footer am-footer">
               <button
                 type="button"
                 className="categoria-cancel-button detail-cerrar-button"

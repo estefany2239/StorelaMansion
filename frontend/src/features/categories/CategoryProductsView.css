@@ -1,16 +1,44 @@
 /* ==========================================
-   CATALOGO DE PRODUCTOS Y SELECTOR DE GÉNERO
+   LISTADO DE PRODUCTOS DE LA CATEGORÍA
+   Banner compacto (BannerCategoria/CurvaCategoria
+   en variante compacta) + contador + panel de filtros
+   + cuadrícula de tarjetas. Acento dorado #d4af37;
+   claro y oscuro vía tokens propios de la vista.
    ========================================== */
 
+/* ---------- TOKENS DE LA VISTA ---------- */
+
 .category-catalog-section {
+  --dorado: #d4af37;
+  --fondo: #fffaf0;
+  --superficie: #ffffff;
+  --texto: #1a1a1a;
+  --texto-suave: #5c564d;
+
   width: 100%;
   min-height: 100vh;
   margin: 0;
-  padding: 40px 20px;
-  background-color: var(--bg-main, #f5ead6) !important;
-  color: var(--text-main, #1a1a1a) !important;
+  /* El banner compacto lleva el aire superior (navbar flotante) */
+  padding: 0 0 56px;
+  background-color: var(--fondo) !important;
+  color: var(--texto) !important;
   box-sizing: border-box;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* La vista es la página completa: ni el banner compacto ni la curva
+   pueden quedar encerrados en la columna de 1280px que las reglas
+   globales de index.css (div[class*="category"]) le imponen con
+   !important. Doble clase para ganarle seguro. El contenido real del
+   listado (.catalog__page) conserva su ancho y centrado, así que el
+   panel de filtros y la cuadrícula no cambian. */
+.category-catalog-section.category-catalog-section {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* MODO OSCURO */
@@ -20,382 +48,145 @@ body.dark .category-catalog-section,
 .dark-mode .category-catalog-section,
 .dark .category-catalog-section,
 .category-catalog-section.dark-mode-active {
-  background-color: var(--bg-main) !important;
-  color: var(--text-main) !important;
+  --dorado: #d4af37;
+  --fondo: #121212;
+  --superficie: #1e1e1e;
+  --texto: #f5f2ea;
+  --texto-suave: #b8b2a7;
+
+  background-color: var(--fondo) !important;
+  color: var(--texto) !important;
 }
 
-.category-catalog-container {
-  max-width: 1300px;
+/* ---------- PÁGINA: CONTENEDOR + CONTADOR ---------- */
+
+.catalog__page {
+  width: min(1200px, 100%);
   margin: 0 auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: none;
+  box-shadow: none;
 }
 
-/* Botón de volver */
-.catalog__back-btn {
-  background: transparent;
-  border: 1px solid rgba(216, 180, 56, 0.4);
-  color: inherit;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  transition: all 0.3s ease;
-  font-weight: 500;
+/* Contador alineado a la derecha del contenido */
+.catalog__contador {
+  margin: 24px 4px 16px;
+  text-align: right;
+  font-size: 1rem;
+  line-height: 1.4;
 }
 
-.catalog__back-btn:hover {
-  background: rgba(216, 180, 56, 0.2);
-  border-color: #d8b438;
+.catalog__contador strong:first-child {
+  color: var(--dorado);
+  font-size: 1.15rem;
 }
 
-/* Cabecera */
-.catalog__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 30px;
-  border-bottom: 1px solid rgba(216, 180, 56, 0.4);
-  padding-bottom: 15px;
-}
-
-.catalog__header h2 {
-  font-size: 2.2rem;
-  font-weight: 700;
-  text-transform: capitalize;
-  color: inherit;
-}
-
-.catalog__count {
-  opacity: 0.7;
-  font-size: 0.95rem;
-}
+/* ---------- LAYOUT: FILTROS + CUADRÍCULA ---------- */
 
 .catalog__layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 30px;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
-/* ==========================================
-   SIDEBAR DE FILTROS
-   ========================================== */
+/* Tarjeta del panel de filtros */
 .catalog__sidebar {
-  background: var(--bg-main, #f5ead6);
-  border: 1px solid rgba(216, 180, 56, 0.4);
-  padding: 20px;
-  border-radius: 12px;
-  height: fit-content;
+  position: sticky;
+  top: 96px;
+  background: var(--superficie);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.1);
 }
 
-[data-theme="dark"] .catalog__sidebar,
-body.dark-mode .catalog__sidebar,
-body.dark .catalog__sidebar,
-.dark-mode .catalog__sidebar,
-.dark-mode-active .catalog__sidebar {
-  background: var(--card-bg) !important;
-}
-
-.sidebar__title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-  border-bottom: 2px solid rgba(216, 180, 56, 0.45);
-  padding-bottom: 10px;
-  color: #d8b438;
-}
-
-.filter__group {
-  margin-bottom: 20px;
-}
-
-.filter__group h4 {
-  font-size: 0.95rem;
-  color: inherit;
-  margin-bottom: 10px;
-}
-
-.filter__checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin-bottom: 8px;
-  cursor: pointer;
-}
-
-.filter__checkbox-label input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(216, 180, 56, 0.4);
-  border-radius: 4px;
-  outline: none;
-  cursor: pointer;
-  background: transparent;
-  display: grid;
-  place-content: center;
-  transition: all 0.2s ease;
-}
-
-.filter__checkbox-label input[type="checkbox"]:checked {
-  background-color: #d8b438;
-  border-color: #d8b438;
-}
-
-.filter__checkbox-label input[type="checkbox"]:checked::before {
-  content: "";
-  width: 10px;
-  height: 6px;
-  border-left: 2px solid #121212;
-  border-bottom: 2px solid #121212;
-  transform: rotate(-45deg) translate(1px, -1px);
-}
-
-.filter__sizes-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.filter__size-btn {
-  background: transparent;
-  border: 1px solid rgba(216, 180, 56, 0.4);
-  color: inherit;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
-}
-
-.filter__size-btn:hover {
-  border-color: #d8b438;
-}
-
-.filter__size-btn.active {
-  background: #d8b438;
-  border-color: #d8b438;
-  color: #121212;
-  font-weight: bold;
-}
-
-.filter__colors-grid {
-  display: flex;
-  gap: 10px;
-}
-
-.filter__color-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.filter__color-dot.active {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 2px #d8b438;
-}
-
-/* Checklist de colores (nombre + checkbox + punto de color) */
-.filter__colors-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filter__colors-list .filter__checkbox-label {
-  margin-bottom: 0;
-}
-
-.filter__color-swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
-}
-
-.filter__color-name {
-  flex: 1;
-}
-
-/* Color sin productos para los filtros actuales: gris claro y deshabilitado */
-.filter__checkbox-label.is-disabled {
-  cursor: not-allowed;
-  color: #b0b0b0;
-}
-
-.filter__checkbox-label.is-disabled input[type="checkbox"] {
-  cursor: not-allowed;
-  border-color: rgba(160, 160, 160, 0.5);
-  background: rgba(128, 128, 128, 0.12);
-}
-
-.filter__checkbox-label.is-disabled input[type="checkbox"]:checked {
-  background-color: #c8c8c8;
-  border-color: #c8c8c8;
-}
-
-.filter__checkbox-label.is-disabled input[type="checkbox"]:checked::before {
-  border-color: #6f6f6f;
-}
-
-.filter__checkbox-label.is-disabled .filter__color-swatch {
-  opacity: 0.4;
-  filter: grayscale(0.7);
-}
-
-.filter__show-more {
-  margin-top: 8px;
-  background: transparent;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 0.85rem;
-  text-decoration: underline;
-}
-
-[data-theme="dark"] .filter__show-more,
-body.dark-mode .filter__show-more,
-body.dark .filter__show-more,
-.dark-mode .filter__show-more,
-.dark-mode-active .filter__show-more {
-  color: inherit;
-}
-
-/* ==========================================
-   GRILLA Y TARJETAS DE PRODUCTOS
-   ========================================== */
+/* Cuadrícula de productos: 4 columnas en escritorio */
 .catalog__products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
   width: 100%;
-  background-color: transparent !important;
+  min-width: 0;
+  align-items: stretch;
 }
 
+/* ---------- TARJETA DE PRODUCTO ---------- */
+
 .catalog__product-card {
-  background-color: var(--card-bg, #ffffff);
-  border: 1px solid rgba(216, 180, 56, 0.25);
-  border-radius: 16px;
+  background: var(--superficie);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-[data-theme="dark"] .catalog__product-card,
-body.dark-mode .catalog__product-card,
-body.dark .catalog__product-card,
-.dark-mode .catalog__product-card,
-.dark-mode-active .catalog__product-card {
-  background-color: var(--card-bg) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  height: 100%;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.1);
+  transition: transform 0.25s ease, border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .catalog__product-card:hover {
-  transform: translateY(-4px);
-  border-color: #d8b438;
-  box-shadow: 0 12px 28px rgba(216, 180, 56, 0.18);
+  transform: translateY(-3px);
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 12px 28px rgba(70, 45, 10, 0.14);
 }
 
+/* Imagen: fondo neutro mientras carga */
 .product__img-wrap {
   width: 100%;
-  aspect-ratio: 4 / 4.2;
-  background-size: cover;
-  background-position: center;
+  height: 200px;
+  background-color: #efe9dd;
   position: relative;
-  background-color: rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
-/* Prendas (camisas/camisetas): la foto llena el contenedor (cover) */
-.product__img-wrap--camisas {
-  aspect-ratio: auto;
-  height: 280px;
-  background-size: cover;
-  background-position: center;
-  background-color: #ffffff;
+[data-theme="dark"] .product__img-wrap,
+.category-catalog-section.dark-mode-active .product__img-wrap {
+  background-color: #262626;
 }
 
-[data-theme="dark"] .product__img-wrap--camisas,
-body.dark-mode .product__img-wrap--camisas,
-body.dark .product__img-wrap--camisas,
-.dark-mode .product__img-wrap--camisas,
-.dark-mode-active .product__img-wrap--camisas {
-  background-color: #1e1e1e;
-}
-
-.product__brand-tag {
+.product__img {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #ffffff;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 1;
 }
 
-.product__like-btn {
+.product__img-placeholder {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--dorado);
+  background: var(--superficie, #efe9dd);
+  z-index: 0;
+}
+
+/* Corazón flotado (BotonFavorito variante chip): círculo
+   oscuro de 34px con corazón dorado. Selectores reforzados
+   para ganarle a cualquier reset global de botones. */
+.catalog__product-card .product__img-wrap .btn-favorito.btn-favorito--chip {
+  width: 34px;
+  height: 34px;
+  padding: 0;
   border: none;
-  color: #d8b438;
-  padding: 8px;
   border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #d4af37;
 }
 
-.product__like-btn:hover,
-.product__like-btn.active {
-  color: #d8b438;
-  background: rgba(0, 0, 0, 0.85);
+.catalog__product-card .product__img-wrap .btn-favorito.btn-favorito--chip:hover,
+.catalog__product-card .product__img-wrap .btn-favorito.btn-favorito--chip.isActive {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #d4af37;
 }
 
-/* Puntos de color de los colores disponibles del grupoId */
-.product__color-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  margin-bottom: 6px;
-}
-
-.product__color-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.35);
-}
-
-.product__color-dots-more {
-  font-size: 0.7rem;
-  opacity: 0.75;
-}
-
-/* Overlay "Elige una talla" (solo cuando el grupo tiene más de una talla real) */
+/* Selector de talla ("Elige una talla") */
 .product__size-overlay {
   position: absolute;
   left: 0;
@@ -440,7 +231,7 @@ body.dark .product__img-wrap--camisas,
 
 .product__size-btn {
   padding: 5px 9px;
-  border-radius: 6px;
+  border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   background: transparent;
   color: #ffffff;
@@ -450,10 +241,10 @@ body.dark .product__img-wrap--camisas,
 }
 
 .product__size-btn.active {
-  background: #d8b438;
-  color: #121212;
-  border-color: #d8b438;
-  font-weight: 600;
+  background: #d4af37;
+  color: #1a1400;
+  border-color: #d4af37;
+  font-weight: 700;
 }
 
 .product__size-btn.disabled,
@@ -482,93 +273,66 @@ body.dark .product__img-wrap--camisas,
   cursor: pointer;
 }
 
-.product__btn-pair {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
-
-.product__view-btn,
-.product__add-btn {
-  flex: 1;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-.product__view-btn {
-  background: var(--card-bg);
-  color: var(--ink);
-  border: 2px solid var(--gold);
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.product__view-btn:hover {
-  border-color: var(--gold-dark, #b19128);
-  background: rgba(216, 180, 56, 0.12);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 480px) {
-  .product__footer {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .product__btn-pair {
-    width: 100%;
-  }
-
-  .product__btn-pair > button {
-    flex: 1;
-    justify-content: center;
-  }
-}
+/* ---------- INFO DE LA TARJETA ---------- */
 
 .product__info {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .product__info h4 {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--texto);
   font-family: var(--font-display);
+  margin: 0;
 }
 
 .product__details {
   font-size: 0.85rem;
-  color: var(--text-secondary, #555555);
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+/* Puntos de color de los colores disponibles del grupoId */
+.product__color-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.product__color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.product__color-dots-more {
+  font-size: 0.7rem;
+  opacity: 0.75;
 }
 
 .product__details-divider {
   display: block;
   height: 1px;
-  background: var(--border-soft, rgba(26, 26, 26, 0.08));
-  margin: 4px 0 10px;
+  background: rgba(212, 175, 55, 0.25);
+  margin: 2px 0 8px;
 }
 
 .product__card-price {
   font-family: var(--font-display);
   font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 800;
+  color: var(--texto);
   display: block;
 }
 
@@ -576,38 +340,85 @@ body.dark .product__img-wrap--camisas,
   display: flex;
   align-items: center;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 12px;
 }
 
-.product__price {
-  font-weight: 700;
-  font-size: 1rem;
-  color: inherit;
-}
-
-.product__add-btn {
-  background: var(--gold);
-  color: #121212;
-  border: 2px solid transparent;
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-weight: 600;
-  cursor: pointer;
+.product__btn-pair {
   display: flex;
   align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* "Ver": píldora de contorno dorado */
+.landing .catalog__product-card .product__view-btn,
+.category-catalog-section .catalog__product-card .product__view-btn,
+.todos-productos .catalog__product-card .product__view-btn,
+.catalog__product-card .product__view-btn {
+  flex: 1 1 0;
+  width: 50%;
+  height: 44px;
+  min-width: 0;
   justify-content: center;
+  align-items: center;
+  display: inline-flex;
   gap: 6px;
-  font-size: 12px;
-  transition: all 0.2s ease;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px solid #d4af37;
+  border-radius: 999px;
+  color: #8a6d0b;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-[data-theme="dark"] .product__add-btn {
-  color: #121212;
+.landing .catalog__product-card .product__view-btn:hover,
+.category-catalog-section .catalog__product-card .product__view-btn:hover,
+.todos-productos .catalog__product-card .product__view-btn:hover,
+.catalog__product-card .product__view-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: #8a6d0b;
 }
 
-.product__add-btn:hover {
-  background: #b58f1f;
-  transform: translateY(-1px);
+/* "Comprar": píldora dorada sólida */
+.landing .catalog__product-card .product__add-btn,
+.category-catalog-section .catalog__product-card .product__add-btn,
+.todos-productos .catalog__product-card .product__add-btn,
+.catalog__product-card .product__add-btn {
+  flex: 1 1 0;
+  width: 50%;
+  height: 44px;
+  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  box-sizing: border-box;
+  background: #d4af37;
+  border: 1.5px solid #d4af37;
+  border-radius: 999px;
+  color: #1a1407;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.landing .catalog__product-card .product__add-btn:hover:not(:disabled),
+.category-catalog-section .catalog__product-card .product__add-btn:hover:not(:disabled),
+.todos-productos .catalog__product-card .product__add-btn:hover:not(:disabled),
+.catalog__product-card .product__add-btn:hover:not(:disabled) {
+  background: #c29d2c;
+  border-color: #c29d2c;
 }
 
 /* Variante sin unidades: el botón de compra queda deshabilitado */
@@ -615,205 +426,193 @@ body.dark .product__img-wrap--camisas,
 .product__add-btn:disabled {
   background: rgba(224, 82, 82, 0.12);
   color: #e05252;
-  border: 2px solid rgba(224, 82, 82, 0.55);
+  border: 1.5px solid rgba(224, 82, 82, 0.55);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
 .product__add-btn.is-agotado:hover,
 .product__add-btn:disabled:hover {
   background: rgba(224, 82, 82, 0.12);
-  transform: none;
+  border-color: rgba(224, 82, 82, 0.55);
 }
+
+/* Modo oscuro: contraste dorado en botones */
+[data-theme="dark"] .catalog__product-card .product__view-btn,
+.landing[data-tema='oscuro'] .catalog__product-card .product__view-btn,
+.category-catalog-section.dark-mode-active .catalog__product-card .product__view-btn,
+.todos-productos--oscuro .catalog__product-card .product__view-btn {
+  background: transparent;
+  border-color: #d4af37;
+  color: #f0d06a;
+}
+
+[data-theme="dark"] .catalog__product-card .product__view-btn:hover,
+.landing[data-tema='oscuro'] .catalog__product-card .product__view-btn:hover,
+.category-catalog-section.dark-mode-active .catalog__product-card .product__view-btn:hover,
+.todos-productos--oscuro .catalog__product-card .product__view-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: #f0d06a;
+}
+
+[data-theme="dark"] .catalog__product-card .product__add-btn,
+.landing[data-tema='oscuro'] .catalog__product-card .product__add-btn,
+.category-catalog-section.dark-mode-active .catalog__product-card .product__add-btn,
+.todos-productos--oscuro .catalog__product-card .product__add-btn {
+  background: #d4af37;
+  border-color: #d4af37;
+  color: #1a1407;
+}
+
+[data-theme="dark"] .catalog__product-card .product__add-btn:hover:not(:disabled),
+.landing[data-tema='oscuro'] .catalog__product-card .product__add-btn:hover:not(:disabled),
+.category-catalog-section.dark-mode-active .catalog__product-card .product__add-btn:hover:not(:disabled),
+.todos-productos--oscuro .catalog__product-card .product__add-btn:hover:not(:disabled) {
+  background: #c29d2c;
+  border-color: #c29d2c;
+}
+
+/* ---------- ESTADO VACÍO ---------- */
 
 .catalog__no-products {
   grid-column: 1 / -1;
-  text-align: center;
-  padding: 50px;
-  opacity: 0.7;
-}
-
-/* ==========================================
-   SELECTOR DE GÉNERO (REDISEÑO PREMIUM)
-   ========================================== */
-.gender-selector-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: var(--max-width, 1280px);
-  min-height: calc(80vh - 100px);
-  margin: 0 auto;
-  padding: 20px 0 40px;
-  box-sizing: border-box;
+  gap: 14px;
   text-align: center;
-  background-color: transparent !important;
-}
-
-.gender-selector-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 44px;
-  width: 100%;
-}
-
-.gender-selector-kicker {
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  color: var(--gold);
-  font-weight: 600;
-}
-
-.gender-selector-wrapper h3 {
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 2.6vw, 2.3rem);
-  color: var(--text-main);
+  padding: 48px 24px;
+  background: var(--superficie);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.1);
   margin: 0;
+}
+
+.catalog__no-products p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.catalog__no-products-corona {
+  width: 56px;
+  color: #d4af37;
+  opacity: 0.85;
+  filter: drop-shadow(0 4px 14px rgba(212, 175, 55, 0.4));
+}
+
+.catalog__no-products-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 24px;
+  background: linear-gradient(135deg, #b8860b 0%, #f5d36b 50%, #d4af37 100%);
+  border: none;
+  border-radius: 999px;
+  color: #1a1400;
+  font: inherit;
+  font-size: 0.9rem;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  width: 100%;
-  text-align: center;
-}
-
-.gender-cards-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
-  justify-content: center;
-  align-items: stretch;
-  width: 100%;
-  max-width: 1080px;
-  margin: 0 auto;
-}
-
-.gender-card {
-  position: relative;
-  min-height: 480px;
-  border-radius: 20px;
-  border: 1px solid rgba(216, 180, 56, 0.25);
   cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 36px 30px;
-  background-color: var(--bg-dark, #0a0a0a);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
-  transition: transform 0.45s cubic-bezier(0.165, 0.84, 0.44, 1),
-              border-color 0.3s ease,
-              box-shadow 0.4s ease;
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: filter 0.2s ease, transform 0.2s ease;
 }
 
-.gender-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: inherit;
-  background-size: cover;
-  background-position: center;
-  transition: transform 0.6s ease;
-  z-index: 1;
+.catalog__no-products-volver:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
 }
 
-.gender-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.12) 0%,
-    rgba(0, 0, 0, 0.38) 48%,
-    rgba(0, 0, 0, 0.86) 100%
-  );
-  z-index: 2;
+/* ---------- RESPONSIVE ---------- */
+
+/* 900-1099px: 3 columnas de producto */
+@media (max-width: 1099px) {
+  .catalog__products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.gender-card:hover {
-  transform: translateY(-8px);
-  border-color: var(--gold);
-  box-shadow: 0 22px 50px rgba(216, 180, 56, 0.22);
+/* 640-899px: el panel de filtros pasa ARRIBA de la cuadrícula
+   a ancho completo (plegable con su chevron, cerrado por
+   defecto) y la cuadrícula queda en 2 columnas */
+@media (max-width: 899px) {
+  .catalog__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog__sidebar {
+    position: static;
+  }
+
+  .catalog__products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.gender-card:hover::before {
-  transform: scale(1.06);
+@media (max-width: 640px) {
+  .category-catalog-section {
+    padding-bottom: 40px;
+  }
+
+  .catalog__page {
+    padding: 0 16px;
+  }
+
+  .catalog__contador {
+    text-align: right;
+    margin-top: 24px;
+    margin-bottom: 16px;
+  }
+
+  .catalog__layout {
+    gap: 16px;
+  }
+
+  .catalog__sidebar {
+    padding: 14px;
+  }
+
+  .catalog__products-grid {
+    gap: 14px;
+  }
+
+  .product__img-wrap {
+    height: 160px;
+  }
+
+  .product__view-btn,
+  .product__add-btn {
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+  }
 }
 
-.gender-card-content {
-  position: relative;
-  z-index: 3;
+/* Sin scroll horizontal en pantallas muy angostas (360px) */
+@media (max-width: 380px) {
+  .catalog__page {
+    padding: 0 12px;
+  }
+
+  .product__btn-pair {
+    gap: 8px;
+  }
+}
+
+/* =========================================================
+   FOOTER COMPARTIDO AL FONDO
+   La vista es columna flex de 100vh: el footer compartido
+   queda pegado al fondo aunque haya pocos productos.
+   ========================================================= */
+
+.category-catalog-section {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 8px 0 4px;
 }
 
-.gender-card-title {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 2vw, 1.85rem);
-  font-weight: 600;
-  color: #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-  line-height: 1.15;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-}
-
-.gender-card-divider {
-  display: block;
-  width: 42px;
-  height: 2px;
-  border-radius: 10px;
-  background: var(--gold);
-  transition: width 0.35s ease;
-}
-
-.gender-card:hover .gender-card-divider {
-  width: 68px;
-}
-
-.gender-card-caption {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.88);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-/* Tablet: siguen lado a lado con gap menor */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .gender-cards-container {
-    gap: 22px;
-  }
-
-  .gender-card {
-    min-height: 440px;
-  }
-}
-
-/* Móvil: se apilan en una columna */
-@media (max-width: 768px) {
-  .gender-cards-container {
-    grid-template-columns: 1fr;
-    gap: 22px;
-    max-width: 440px;
-  }
-
-  .gender-card {
-    min-height: 360px;
-  }
-
-  .gender-selector-wrapper h3 {
-    font-size: 1.5rem;
-  }
+.category-catalog-section > .sitio-footer {
+  margin-top: auto;
 }

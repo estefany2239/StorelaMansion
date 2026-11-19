@@ -92,7 +92,7 @@ export default function ProfileMenu({
               onClick={() => navegar("configuracion")}
             >
               <Settings size={16} />
-              <span>Configuración</span>
+              <span>Mi perfil / Configuración</span>
             </li>
 
             <li className="logout-option" onClick={cerrarSesion}>

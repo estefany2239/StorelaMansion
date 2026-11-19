@@ -31,7 +31,7 @@ const PLACEHOLDERS_TALLA = new Set([
   "no aplica",
 ]);
 
-const normalizarTalla = (talla) => String(talla ?? "").trim().toUpperCase();
+export const normalizarTalla = (talla) => String(talla ?? "").trim().toUpperCase();
 
 // Devuelve la talla solo cuando es un valor real. Un producto sin talla
 // (gorras, relojes, perfumes) no debe mostrar "Sin talla" ni un guion.
@@ -81,7 +81,28 @@ const stockNumerico = (stock) =>
       ? Number(stock)
       : null;
 
-export const getFilteredProducts = (category, gender, brands, sizes, colors, catalogo) => {
+// Límite de precio válido. OJO: Number(null) es 0 en JavaScript, así que
+// null/undefined/'' NUNCA deben interpretarse como filtro ($0 a $0 dejaba
+// el catálogo vacío); solo un número real activa el filtro de precio.
+export const esLimitePrecio = (valor) =>
+  valor !== null &&
+  valor !== undefined &&
+  valor !== "" &&
+  Number.isFinite(Number(valor));
+
+// Filtro público del catálogo. La categoría puede ser un objeto {id, title},
+// un string con el id, o 'todos'/null para "Todas las categorías" (ignora la
+// categoría y respeta el género). `precioMin`/`precioMax` filtran por el
+// precio numérico (`precio`) de las variantes del grupo, ambos incluyentes.
+export const getFilteredProducts = (
+  category,
+  gender,
+  sizes,
+  colors,
+  precioMin = null,
+  precioMax = null,
+  catalogo = []
+) => {
   const tipoKeywords = {
     gorras: 'gorra',
     perfumes: 'perfume',
@@ -89,6 +110,9 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors, cat
   };
 
   const fuente = Array.isArray(catalogo) ? catalogo : [];
+
+  const tieneFiltroPrecio =
+    esLimitePrecio(precioMin) || esLimitePrecio(precioMax);
 
   return fuente.filter(product => {
     const prodCat = (product.categoryId || "").toLowerCase().trim();
@@ -121,13 +145,6 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors, cat
       product.gender === 'unisex';
 
     if (!matchCategory || !matchGender) return false;
-
-    // Filtro por marca (solo filtra si el usuario seleccionó alguna marca en el aside)
-    if (brands && brands.length > 0) {
-      if (!product.brand || !brands.includes(product.brand)) {
-        return false;
-      }
-    }
 
     const variantes = variantesDe(product, fuente);
     const tallasProducto = variantes
@@ -165,8 +182,87 @@ export const getFilteredProducts = (category, gender, brands, sizes, colors, cat
       if (!coincideColor) return false;
     }
 
+    // Filtro de precio: el producto pasa si ALGUNA de sus variantes tiene un
+    // precio numérico dentro del rango (ambos extremos incluyentes). Un
+    // producto sin precios numéricos queda fuera cuando hay filtro activo.
+    if (tieneFiltroPrecio) {
+      const min = esLimitePrecio(precioMin) ? Number(precioMin) : -Infinity;
+      const max = esLimitePrecio(precioMax) ? Number(precioMax) : Infinity;
+      const coincidePrecio = variantes.some(
+        (v) =>
+          Number.isFinite(Number(v?.precio)) &&
+          Number(v.precio) >= min &&
+          Number(v.precio) <= max
+      );
+      if (!coincidePrecio) return false;
+    }
+
     return true;
   });
+};
+
+// =========================================================
+// SWATCHES DE COLOR (compartidos por panel de filtros y tarjetas)
+// =========================================================
+// Hex de apoyo para los swatches. Los colores únicos se arman con los
+// colores REALES del catálogo (campo `color` de cada variante), no con
+// esta paleta fija: por eso un color combinado como "Blanco / Azul"
+// aparece tal cual en cuanto algún producto lo tenga.
+export const PALETA_COLORES = [
+  { nombre: 'Negro', hex: '#000000' },
+  { nombre: 'Blanco', hex: '#ffffff', borde: true },
+  { nombre: 'Café', hex: '#8a5a44' },
+  { nombre: 'Beige', hex: '#dcc8a2' },
+  { nombre: 'Gris', hex: '#808080' },
+  { nombre: 'Azul', hex: '#2b5fa8' },
+  { nombre: 'Rojo', hex: '#e74c3c' },
+  { nombre: 'Dorado', hex: '#c9a227' },
+  { nombre: 'Plateado', hex: '#c0c0c0' },
+  { nombre: 'Transparente', hex: '#ffffff', borde: true },
+  { nombre: 'Rosado', hex: '#e8a0b4' },
+  { nombre: 'Rosa palo', hex: '#d9a9a3' },
+  { nombre: 'Azul claro', hex: '#8ab4e8' },
+  { nombre: 'Azul marino', hex: '#1f2a44' },
+  { nombre: 'Azul rey', hex: '#1f3fbf' },
+  { nombre: 'Gris oscuro', hex: '#4a4c50' },
+  { nombre: 'Gris jaspeado', hex: '#b5b5b5' }
+];
+
+export const ORDEN_COLORES = ['negro', 'blanco', 'gris', 'gris oscuro', 'gris jaspeado', 'azul', 'azul claro', 'azul marino', 'azul rey', 'rojo', 'dorado', 'plateado', 'transparente', 'cafe', 'beige', 'rosado', 'rosa palo'];
+
+export const normalizarColorNombre = (nombre) =>
+  String(nombre || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+const getColorHex = (nombre) => {
+  const clave = normalizarColorNombre(nombre);
+  const conocido = PALETA_COLORES.find((c) => normalizarColorNombre(c.nombre) === clave);
+  if (conocido) return conocido.hex;
+  return '#9aa0a6';
+};
+
+// Estilo del swatch: sólido, bicolor (linear-gradient al 50%) o
+// multicolor para los colores compuestos del catálogo.
+export const getColorStyle = (nombre) => {
+  const partes = String(nombre || '')
+    .split('/')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (partes.length >= 2) {
+    const hexes = partes.map((p) => getColorHex(p));
+    return {
+      background: `linear-gradient(135deg, ${hexes[0]} 0%, ${hexes[0]} 50%, ${hexes[1]} 50%, ${hexes[1]} 100%)`
+    };
+  }
+  if (partes.length === 1 && /multicolor/i.test(partes[0])) {
+    return {
+      background: 'linear-gradient(90deg, #e74c3c 0%, #c9a227 25%, #2b5fa8 50%, #000000 75%, #ffffff 100%)'
+    };
+  }
+  return { backgroundColor: getColorHex(nombre) };
 };
 
 // 6. Variantes por color

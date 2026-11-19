@@ -37,6 +37,8 @@ import { calcularCostoEnvio, esValleAburra } from "../../../shared/utils/envio";
 import DIVIPOLA from "../../../shared/data/divipola.json";
 import { combinarDatosEntrega } from "../perfilEntrega";
 import QR_PAGO from "../../../assets/img/QR.jpeg";
+import NavbarCategoria from "../../categories/NavbarCategoria";
+import Footer from "../../../shared/components/footer/Footer";
 
 import "./PaymentView.css";
 
@@ -116,6 +118,15 @@ export default function PaymentView({
   onIrAMisPedidos,
   onStockActualizado,
   darkMode,
+  tema = darkMode ? "oscuro" : "claro",
+  onAlternarTema,
+  onIrALogin,
+  onNavigate,
+  onLogout,
+  onNavigateSection,
+  onVerCategoria,
+  cartCount = 0,
+  onCartClick,
 }) {
   const notify = useNotify();
   const [enviando, setEnviando] = useState(false);
@@ -668,7 +679,41 @@ export default function PaymentView({
     : "payment-light";
 
   return (
-    <div className={`payment-page ${themeClass}`}>
+    <div className={`payment-view-root landing ${themeClass}`} data-tema={tema}>
+      <div className="payment-bg" aria-hidden="true">
+        <svg
+          className="payment-bg-svg"
+          viewBox="0 0 1440 220"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="payment-oro" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b8860b" />
+              <stop offset="45%" stopColor="#f5d36b" />
+              <stop offset="75%" stopColor="#d4af37" />
+              <stop offset="100%" stopColor="#e9c96a" />
+            </linearGradient>
+          </defs>
+          <path d="M0 90C240 130 520 40 820 80S1260 60 1440 10V0H0Z" fill="#f3e8d0" opacity="0.7" />
+          <path d="M0 78C260 120 540 30 840 70S1270 52 1440 6C1280 60 1000 88 800 86C540 84 280 140 0 92Z" fill="url(#payment-oro)" />
+          <path d="M0 100C260 140 540 52 840 90S1270 70 1440 24" fill="none" stroke="#d4af37" strokeWidth="1.5" opacity="0.7" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </div>
+      <NavbarCategoria
+        tema={tema}
+        user={user}
+        onAlternarTema={onAlternarTema}
+        onIrALogin={onIrALogin}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        onNavigateSection={onNavigateSection}
+        onVerCategoria={onVerCategoria}
+        cartCount={cartCount}
+        onCartClick={onCartClick}
+      />
+
+      <div className={`payment-page ${themeClass}`} style={{ paddingTop: "calc(clamp(170px, 14vw, 230px) + 24px)" }}>
 
       {/* =====================================================
           VOLVER
@@ -1829,6 +1874,10 @@ export default function PaymentView({
 
         Volver a la tienda
       </button>
+
+      </div>
+
+      <Footer tema={tema} onNavigateSection={onNavigateSection} onVerCategoria={onVerCategoria} />
 
     </div>
   );

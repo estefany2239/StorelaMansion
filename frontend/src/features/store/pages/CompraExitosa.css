@@ -3,10 +3,10 @@
 ============================================================ */
 
 .compra-exitosa-section {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 70vh;
   padding: 60px 20px;
   background-color: var(--bg-color);
 }

@@ -4,8 +4,8 @@
 
 .configuracion-section {
   width: 100%;
-  min-height: calc(100vh - 84px);
-  padding: 40px 30px 80px;
+  flex: 1;
+  padding: 40px 30px 56px;
   background-color: var(--bg-main);
   color: var(--text-primary);
   transition:

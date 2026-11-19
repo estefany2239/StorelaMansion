@@ -442,8 +442,15 @@ export async function quitarFavorito(idProducto) {
   })
 }
 
-export async function obtenerPedidos() {
-  const respuesta = await fetch(`${API_URL}/api/pedidos`, {
+export async function obtenerPedidos(filtros = {}) {
+  const params = new URLSearchParams()
+  Object.entries(filtros || {}).forEach(([clave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') params.append(clave, valor)
+  })
+  const url = params.toString()
+    ? `${API_URL}/api/pedidos?${params}`
+    : `${API_URL}/api/pedidos`
+  const respuesta = await fetch(url, {
     headers: authHeaders()
   })
   return procesarRespuesta(respuesta, 'No se pudieron cargar los pedidos')
