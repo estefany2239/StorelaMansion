@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, SlidersHorizontal, ShoppingBag, Eye, ChevronDown, X } from "lucide-react";
-import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, getVariantePorTalla, tallaVisible, TALLAS_ESTANDAR } from '../../shared/utils/catalogo';
+import { getFilteredProducts as filtrarProductos, getVariantesPorColor, getTallasDisponibles, getVariantePorTalla, tallaVisible } from '../../shared/utils/catalogo';
 import { esAgotado } from '../../shared/components/cart/cantidad';
 import { useCatalogo } from '../../shared/hooks/useCatalogo';
 import ProductDetailPage from '../product/ProductDetailPage';
@@ -36,10 +36,16 @@ const ORDEN_COLORES = ['negro', 'blanco', 'gris', 'gris oscuro', 'gris jaspeado'
 const MAX_MARCAS_VISIBLES = 5;
 
 const normalizarTalla = (t) => String(t).trim().toUpperCase();
-const tallasVisiblesPara = (tallas) => [
-  ...TALLAS_ESTANDAR,
-  ...tallas.filter((t) => !TALLAS_ESTANDAR.includes(normalizarTalla(t)))
-];
+const ORDEN_TALLAS_LETRA = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const ordenTallaCatalogo = (nombre) => {
+  const valor = String(nombre || '').trim().toUpperCase();
+  if (/^\d+(\.\d+)?$/.test(valor)) return Number(valor);
+  const indice = ORDEN_TALLAS_LETRA.indexOf(valor);
+  return indice >= 0 ? 1000 + indice : 2000;
+};
+const ordenarTallas = (tallas) =>
+  [...tallas].sort((a, b) => ordenTallaCatalogo(a) - ordenTallaCatalogo(b));
+const tallasVisiblesPara = (tallas) => ordenarTallas(tallas);
 const normalizarColorNombre = (nombre) =>
   String(nombre || '')
     .trim()
@@ -577,7 +583,7 @@ const isPerfumes = category?.title?.toLowerCase().includes('perfume') || categor
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(product => {
                   // Tallas reales del grupoId: si hay más de una se muestra el selector
-                  const tallas = getTallasDisponibles(product, allProducts);
+                  const tallas = ordenarTallas(getTallasDisponibles(product, allProducts));
                   const tallaUnica = tallas.length <= 1;
                   const overlayAbierto = overlayComprar === String(product.id);
                   const tallasNorm = new Set(tallas.map(normalizarTalla));

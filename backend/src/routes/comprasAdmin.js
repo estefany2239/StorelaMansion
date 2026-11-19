@@ -12,6 +12,7 @@ import {
   ESTADO_CONFIRMADA,
   ESTADO_PARCIAL,
   ESTADO_RECIBIDA,
+  ESTADO_CERRADA,
   ESTADO_CERRADA_FALTANTES,
   ESTADO_ANULADA,
   ESTADOS_TERMINALES,
@@ -862,7 +863,9 @@ router.post('/:id/cerrar', requierePrivilegio('Compras', 'Cerrar'), async (req, 
     await db.query('BEGIN')
 
     const { rows: compras } = await db.query(
-      `SELECT id_compra, id_proveedor, codigo, estado
+      `SELECT id_compra, id_proveedor, codigo, estado,
+              costo_final::float8 AS costo_final,
+              valor_pagado::float8 AS valor_pagado
          FROM compra
         WHERE id_compra = $1
         FOR UPDATE`,
@@ -872,10 +875,42 @@ router.post('/:id/cerrar', requierePrivilegio('Compras', 'Cerrar'), async (req, 
       await db.query('ROLLBACK')
       return res.status(404).json({ error: 'Compra no encontrada' })
     }
-    if (!ESTADOS_CON_RECEPCION.includes(compras[0].estado)) {
+
+    const compra = compras[0]
+
+    if (compra.estado === ESTADO_RECIBIDA) {
+      const resumen = await resumenPagoCompra(db, compra)
+      if (Number(resumen.saldo_pendiente) > 0) {
+        await db.query('ROLLBACK')
+        return res.status(409).json({
+          error:
+            'La compra tiene saldo pendiente. Debes registrar el pago antes de cerrarla.',
+        })
+      }
+
+      await db.query(
+        `UPDATE compra
+            SET estado = $1,
+                cerrado_en = COALESCE(cerrado_en, now()),
+                actualizado_en = now()
+          WHERE id_compra = $2`,
+        [ESTADO_CERRADA, id]
+      )
+      const excedente = await generarExcedenteCompra(db, id, req.usuario.id)
+      await db.query('COMMIT')
+
+      const detalle = await obtenerCompraDetallada(pool, id)
+      return res.json({
+        ...detalle,
+        excedente_generado: excedente,
+        mensaje: 'La compra fue cerrada correctamente',
+      })
+    }
+
+    if (!ESTADOS_CON_RECEPCION.includes(compra.estado)) {
       await db.query('ROLLBACK')
       return res.status(409).json({
-        error: `La compra está en estado "${compras[0].estado}" y no se puede cerrar`,
+        error: `La compra está en estado "${compra.estado}" y no se puede cerrar`,
       })
     }
 
@@ -893,8 +928,7 @@ router.post('/:id/cerrar', requierePrivilegio('Compras', 'Cerrar'), async (req, 
     const pendientes = await calcularPendientes(db, id)
     const conPendiente = pendientes.filter((d) => Number(d.cantidad_pendiente) > 0)
 
-    // Si ya no hay faltantes, el estado correcto es Recibida, no "Cerrada
-    // con faltantes".
+    // Si ya no hay faltantes, al cerrar la compra queda en estado Cerrada.
     if (conPendiente.length === 0) {
       await db.query(
         `UPDATE compra
@@ -902,7 +936,7 @@ router.post('/:id/cerrar', requierePrivilegio('Compras', 'Cerrar'), async (req, 
                 cerrado_en = COALESCE(cerrado_en, now()),
                 actualizado_en = now()
           WHERE id_compra = $2`,
-        [ESTADO_RECIBIDA, id]
+        [ESTADO_CERRADA, id]
       )
       const excedente = await generarExcedenteCompra(db, id, req.usuario.id)
       await db.query('COMMIT')
@@ -911,7 +945,7 @@ router.post('/:id/cerrar', requierePrivilegio('Compras', 'Cerrar'), async (req, 
       return res.json({
         ...detalle,
         excedente_generado: excedente,
-        mensaje: 'Todas las unidades fueron recibidas: la compra quedó en Recibida',
+        mensaje: 'Todas las unidades fueron recibidas: la compra quedó en Cerrada',
       })
     }
 
@@ -1026,10 +1060,18 @@ router.post('/:id/anular', requierePrivilegio('Compras', 'Anular'), async (req, 
       await db.query('ROLLBACK')
       return res.status(404).json({ error: 'Compra no encontrada' })
     }
-    if (!ESTADOS_ANULABLES.includes(rows[0].estado)) {
+    const estado = rows[0].estado
+
+    if (estado === ESTADO_CERRADA_FALTANTES) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ error: 'No se puede anular una compra cerrada' })
+    }
+
+    // Protección de dinero: si ya hay pagos, no se anula.
+    if (Number(rows[0].valor_pagado) > 0) {
       await db.query('ROLLBACK')
       return res.status(409).json({
-        error: 'Solo se puede anular una compra en Borrador o Confirmada',
+        error: 'No se puede anular una compra con pagos registrados.',
       })
     }
 
@@ -1039,35 +1081,31 @@ router.post('/:id/anular', requierePrivilegio('Compras', 'Anular'), async (req, 
         WHERE id_compra = $1`,
       [id]
     )
-    if (recibidas[0].total > 0) {
-      await db.query('ROLLBACK')
-      return res.status(409).json({
-        error: 'No se puede anular una compra con mercancía recibida',
-      })
-    }
+    const huboRecepcion = recibidas[0].total > 0
 
-    // Protección de dinero: si ya hay pagos o saldo aplicado, anular dejaría
-    // esos valores sin destino. Se rechaza y se conserva el historial.
-    if (Number(rows[0].valor_pagado) > 0) {
-      await db.query('ROLLBACK')
-      return res.status(409).json({
-        error: 'No se puede anular una compra con pagos registrados',
-      })
+    if (huboRecepcion) {
+      const { rows: porVariante } = await db.query(
+        `SELECT dr.id_variante, COALESCE(SUM(dr.cantidad_recibida), 0)::int AS cantidad
+           FROM detalle_recepcion dr
+          WHERE dr.id_compra = $1
+          GROUP BY dr.id_variante`,
+        [id]
+      )
+      for (const r of porVariante) {
+        const { rows: stockRows } = await db.query(
+          'SELECT stock FROM producto_variante WHERE id_variante = $1 FOR UPDATE',
+          [r.id_variante]
+        )
+        const stockActual = stockRows[0]?.stock ?? 0
+        if (stockActual < r.cantidad) {
+          await db.query('ROLLBACK')
+          return res.status(409).json({ error: 'No se puede anular: parte de este stock ya fue vendido.' })
+        }
+      }
+      for (const r of porVariante) {
+        await db.query('UPDATE producto_variante SET stock = stock - $1 WHERE id_variante = $2', [r.cantidad, r.id_variante])
+      }
     }
-
-    const { rows: aplicados } = await db.query(
-      `SELECT COALESCE(SUM(monto), 0)::float8 AS total
-         FROM movimiento_saldo_proveedor
-        WHERE tipo = 'APLICADO' AND id_compra_destino = $1`,
-      [id]
-    )
-    if (Number(aplicados[0].total) > 0) {
-      await db.query('ROLLBACK')
-      return res.status(409).json({
-        error: 'No se puede anular una compra con saldo a favor aplicado',
-      })
-    }
-
     await db.query(
       `UPDATE compra
           SET estado = $1, actualizado_en = now()
@@ -1088,7 +1126,7 @@ router.post('/:id/anular', requierePrivilegio('Compras', 'Anular'), async (req, 
 })
 
 // ------------------------------------------------------------------
-// POST /:id/pago -> acumula valor_pagado. No hay tabla de pagos.
+// POST /:id/pago -> registra pago en pago_compra y acumula valor_pagado.
 // ------------------------------------------------------------------
 router.post(
   '/:id/pago',
@@ -1098,7 +1136,51 @@ router.post(
     try {
       const id = idPositivo(req.params.id, 'El id de la compra')
       const monto = montoPositivo(req.body.monto, 'El monto del pago')
+      const clave =
+        req.body.clave_idempotencia !== undefined && req.body.clave_idempotencia !== null && String(req.body.clave_idempotencia).trim() !== ''
+          ? normalizarClaveIdempotencia(req.body.clave_idempotencia, 'La clave de idempotencia', false)
+          : null
+      const observaciones = textoLargoOpcional(req.body.observaciones, 500, 'Las observaciones')
+
       await db.query('BEGIN')
+
+      if (clave) {
+        await db.query('SELECT pg_advisory_xact_lock(hashtext($1::text)::bigint)', [clave])
+        const { rows: existentes } = await db.query(
+          `SELECT id_pago, id_compra, monto::float8 AS monto
+             FROM pago_compra
+            WHERE clave_idempotencia = $1`,
+          [clave]
+        )
+        if (existentes.length > 0) {
+          if (existentes[0].id_compra !== id) {
+            await db.query('ROLLBACK')
+            return res.status(409).json({ error: 'La clave de idempotencia ya fue usada en otra compra' })
+          }
+          const { rows: compraRows } = await db.query(
+            `SELECT id_compra, id_proveedor, estado,
+                    costo_original::float8 AS costo_original,
+                    costo_final::float8 AS costo_final,
+                    valor_pagado::float8 AS valor_pagado
+               FROM compra
+              WHERE id_compra = $1`,
+            [id]
+          )
+          const resumen = compraRows[0] ? await resumenPagoCompra(db, compraRows[0]) : null
+          const saldoProveedor = compraRows[0]
+            ? await saldoDisponibleProveedor(db, compraRows[0].id_proveedor)
+            : 0
+          await db.query('COMMIT')
+          return res.status(201).json({
+            id_compra: id,
+            monto_registrado: redondear(existentes[0].monto),
+            ...(resumen || {}),
+            saldo_disponible_proveedor: saldoProveedor,
+            excedente_generado: 0,
+            idempotente: true,
+          })
+        }
+      }
 
       const { rows } = await db.query(
         `SELECT id_compra, id_proveedor, estado,
@@ -1119,13 +1201,31 @@ router.post(
         return res.status(409).json({ error: 'Una compra anulada no admite pagos' })
       }
 
-      const nuevoValorPagado = redondear(Number(rows[0].valor_pagado || 0) + monto)
+      const valorPagadoActual = redondear(Number(rows[0].valor_pagado || 0))
+      const costoFinal = redondear(Number(rows[0].costo_final || 0))
+      const saldoPendiente = redondear(costoFinal - valorPagadoActual)
+      if (saldoPendiente <= 0) {
+        await db.query('ROLLBACK')
+        return res.status(409).json({ error: 'La compra no tiene saldo pendiente por pagar' })
+      }
+      if (redondear(monto) > saldoPendiente) {
+        await db.query('ROLLBACK')
+        return res.status(409).json({ error: 'El monto supera el saldo pendiente de la compra' })
+      }
+
+      const nuevoValorPagado = redondear(valorPagadoActual + monto)
       if (nuevoValorPagado > 9999999999.99) {
         await db.query('ROLLBACK')
         return res.status(400).json({
           error: 'El valor pagado acumulado excede el máximo permitido',
         })
       }
+
+      await db.query(
+        `INSERT INTO pago_compra (id_compra, monto, registrado_por, observaciones, clave_idempotencia)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [id, monto, req.usuario.id, observaciones, clave]
+      )
 
       const { rows: actualizada } = await db.query(
         `UPDATE compra

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from "react";
 
 import {
@@ -73,6 +74,7 @@ const crearFormularioVacio = () => ({
   categoria: "",
   genero: "",
   color: "",
+  colores: [],
   precio: 0,
   stock: 0,
   idVarianteGeneral: null,
@@ -171,8 +173,7 @@ export default function Productos({ user }) {
     },
     categoria: (valor) =>
       valor ? "" : "Selecciona una categoría.",
-    color: (valor) =>
-      valor ? "" : "Selecciona un color.",
+    color: () => "",
     precio: (valor) => {
       const precio = Number(valor);
       if (!Number.isFinite(precio) || precio < 0) {
@@ -240,18 +241,12 @@ export default function Productos({ user }) {
     return talla.tipo === tipo;
   });
 
-  const tipoTallaActual = tipoTallaCategoria(
-    formulario.categoria
-  );
+  const tipoTallaActual = tipoTallaCategoria(formulario.categoria);
 
-  const totalUnidades =
-    tipoTallaActual === "ninguna"
-      ? Number(formulario.stock) || 0
-      : formulario.variantes.reduce(
-          (total, variante) =>
-            total + (Number(variante.stock) || 0),
-          0
-        );
+  const totalUnidades = (formulario.variantes || []).reduce(
+    (total, variante) => total + (Number(variante.stock) || 0),
+    0
+  );
 
   const recargarProductos = async () => {
     const filas = await obtenerProductosAdmin();
@@ -385,6 +380,7 @@ export default function Productos({ user }) {
         id_variante:
           variante.id_variante ?? variante.id ?? null,
         talla: variante.talla || "",
+        color: variante.color || "",
         stock: Number(variante.stock) || 0
       })
     );
@@ -395,26 +391,26 @@ export default function Productos({ user }) {
     );
 
     const primeraVariante = variantes[0];
+    const variantesCargadas =
+      tipo === "ninguna"
+        ? variantes.length > 0
+          ? variantes.map((v) => ({ ...v, talla: "" }))
+          : [{ clave: `existente-${Date.now()}`, id_variante: null, talla: "", color: datos.color || "", stock: Number(primeraVariante?.stock) || 0 }]
+        : variantes;
 
     setFormulario({
       idProducto: datos.id_producto,
       nombre: datos.nombre || "",
       categoria: datos.categoria || "",
-      genero:
-        datos.genero || generoFijo(datos.categoria) || "",
+      genero: datos.genero || generoFijo(datos.categoria) || "",
       color: datos.color || "",
+      colores: Array.isArray(datos.colores) ? datos.colores : (datos.color ? [datos.color] : []),
       precio: Number(datos.precio) || 0,
-      stock:
-        tipo === "ninguna"
-          ? Number(primeraVariante?.stock) || 0
-          : 0,
-      idVarianteGeneral:
-        tipo === "ninguna"
-          ? primeraVariante?.id_variante ?? null
-          : null,
+      stock: tipo === "ninguna" ? Number(primeraVariante?.stock) || 0 : 0,
+      idVarianteGeneral: tipo === "ninguna" ? (primeraVariante?.id_variante ?? null) : null,
       estado: datos.estado || "Activo",
       imagen: datos.imagen || "",
-      variantes: tipo === "ninguna" ? [] : variantes
+      variantes: variantesCargadas
     });
 
     setNombreOriginal(datos.nombre || "");
@@ -487,32 +483,24 @@ export default function Productos({ user }) {
       siguiente.idVarianteGeneral = null;
     } else if (tipoNuevo === "ninguna") {
       if (tipoAnterior !== "ninguna") {
-        const [primeraVariante, ...resto] =
-          formulario.variantes;
-
-        registrarVariantesEliminar(resto);
-
-        siguiente.variantes = [];
-        siguiente.stock =
-          Number(primeraVariante?.stock) || 0;
-        siguiente.idVarianteGeneral =
-          primeraVariante?.id_variante ?? null;
+        const base = (formulario.variantes || []).length > 0 ? formulario.variantes : [];
+        const [primera, ...resto] = base;
+        if (resto.length > 0) registrarVariantesEliminar(resto);
+        siguiente.variantes = primera
+          ? [{ ...primera, talla: "" }]
+          : [{ clave: `nueva-${Date.now()}-${Math.random()}`, id_variante: null, talla: "", color: "", stock: 0 }];
+        siguiente.stock = Number(primera?.stock) || 0;
+        siguiente.idVarianteGeneral = primera?.id_variante ?? null;
+      } else {
+        siguiente.variantes = (formulario.variantes || []).map((v) => ({ ...v, talla: "" }));
       }
     } else if (tipoAnterior === "ninguna") {
-      const idGeneral = formulario.idVarianteGeneral;
-
       siguiente.stock = 0;
       siguiente.idVarianteGeneral = null;
-      siguiente.variantes = idGeneral
-        ? [
-            {
-              clave: `existente-${idGeneral}`,
-              id_variante: idGeneral,
-              talla: "",
-              stock: Number(formulario.stock) || 0
-            }
-          ]
-        : [];
+      siguiente.variantes = (formulario.variantes || []).map((v) => ({ ...v, talla: "" }));
+      if (siguiente.variantes.length === 0) {
+        siguiente.variantes = [{ clave: `nueva-${Date.now()}-${Math.random()}`, id_variante: null, talla: "", color: "", stock: 0 }];
+      }
     } else if (tipoAnterior && tipoAnterior !== tipoNuevo) {
       registrarVariantesEliminar(formulario.variantes);
       siguiente.variantes = [];
@@ -555,118 +543,18 @@ export default function Productos({ user }) {
     revisarCampo(campo, valor, siguiente);
   };
 
-  const agregarTalla = () => {
-    const disponible = tallasVisibles.some(
-      (talla) =>
-        !formulario.variantes.some(
-          (variante) => variante.talla === talla.nombre
-        )
-    );
-
-    if (!disponible) {
-      mostrarToast(
-        "Ya agregaste todas las tallas disponibles",
-        "error"
-      );
-      return;
-    }
-
-    setFormulario((actual) => ({
-      ...actual,
-      variantes: [
-        ...actual.variantes,
-        crearVarianteVacia()
-      ]
-    }));
-    setSeccionTallasAbierta(true);
-  };
-
-  const cambiarVariante = (clave, campo, valor) => {
-    const valorLimpio =
-      campo === "stock"
-        ? Math.max(
-            0,
-            Number(
-              String(valor).replace(/[^0-9]/g, "")
-            )
-          )
-        : valor;
-
-    setFormulario((actual) => ({
-      ...actual,
-      variantes: actual.variantes.map((variante) =>
-        variante.clave === clave
-          ? { ...variante, [campo]: valorLimpio }
-          : variante
-      )
-    }));
-
-    setErroresVariantes((actuales) => {
-      if (!actuales[clave]) return actuales;
-
-      const siguientes = {
-        ...actuales,
-        [clave]: {
-          ...actuales[clave],
-          [campo]: ""
-        }
-      };
-
-      if (
-        !siguientes[clave].talla &&
-        !siguientes[clave].stock
-      ) {
-        delete siguientes[clave];
-      }
-
-      return siguientes;
-    });
-
-    setErrorTallasGeneral("");
-  };
-
-  const eliminarVariante = (variante) => {
-    if (variante.id_variante && !puedeEliminar) {
-      mostrarToast(
-        "No tienes permiso para eliminar tallas existentes",
-        "error"
-      );
-      return;
-    }
-
-    if (variante.id_variante) {
-      registrarVariantesEliminar([variante]);
-    }
-
-    setFormulario((actual) => ({
-      ...actual,
-      variantes: actual.variantes.filter(
-        (item) => item.clave !== variante.clave
-      )
-    }));
-
-    setErroresVariantes((actuales) => {
-      const siguientes = { ...actuales };
-      delete siguientes[variante.clave];
-      return siguientes;
-    });
-    setErrorTallasGeneral("");
-  };
-
   // =====================================================
   // VALIDAR VARIANTES
   // =====================================================
 
   const validarVariantes = () => {
-    if (tipoTallaActual === "ninguna") {
-      setErroresVariantes({});
-      setErrorTallasGeneral("");
-      return true;
-    }
-
     if (formulario.variantes.length === 0) {
       setErroresVariantes({});
-      setErrorTallasGeneral("Agrega al menos una talla.");
+      setErrorTallasGeneral(
+        tipoTallaActual === "ninguna"
+          ? "Agrega al menos una variante."
+          : "Agrega al menos una talla."
+      );
       return false;
     }
 
@@ -677,31 +565,47 @@ export default function Productos({ user }) {
       const talla = String(variante.talla || "").trim();
       let errorTalla = "";
 
-      if (!talla) {
-        errorTalla = "Selecciona una talla.";
-      } else if (tallasVistas.has(talla)) {
-        errorTalla = "Esta talla ya está agregada.";
-      } else if (
-        tipoTallaActual === "numerica" &&
-        !esTallaNumerica(talla)
-      ) {
-        errorTalla =
-          "Esta categoría usa tallas numéricas (por ejemplo 36 o 38.5).";
-      } else if (
-        tipoTallaActual === "letra" &&
-        !esTallaDeLetra(talla)
-      ) {
-        errorTalla =
-          "Esta categoría usa tallas de letra (XS, S, M, L, XL o XXL).";
+      if (tipoTallaActual !== "ninguna") {
+        if (!talla) {
+          errorTalla = "Selecciona una talla.";
+        } else if (tallasVistas.has(talla)) {
+          errorTalla = "Esta talla ya está agregada.";
+        } else if (
+          tipoTallaActual === "numerica" &&
+          !esTallaNumerica(talla)
+        ) {
+          errorTalla =
+            "Esta categoría usa tallas numéricas (por ejemplo 36 o 38.5).";
+        } else if (
+          tipoTallaActual === "letra" &&
+          !esTallaDeLetra(talla)
+        ) {
+          errorTalla =
+            "Esta categoría usa tallas de letra (XS, S, M, L, XL o XXL).";
+        }
+
+        if (talla) tallasVistas.add(talla);
       }
 
-      if (talla) tallasVistas.add(talla);
+      let errorStock = "";
+      if (!modoEdicion) {
+        const stockTexto = String(
+          variante.stock ?? ""
+        ).trim();
 
-      const stock = Number(variante.stock);
-      const errorStock =
-        Number.isInteger(stock) && stock >= 0
-          ? ""
-          : "El stock no puede ser negativo.";
+        if (stockTexto === "") {
+          errorStock = "Ingresa el stock.";
+        } else if (!/^\d+$/.test(stockTexto)) {
+          errorStock =
+            "El stock debe ser un número entero mayor o igual a 0.";
+        } else {
+          const stock = Number(stockTexto);
+          if (!Number.isInteger(stock) || stock < 0) {
+            errorStock =
+              "El stock debe ser un número entero mayor o igual a 0.";
+          }
+        }
+      }
 
       if (errorTalla || errorStock) {
         nuevosErrores[variante.clave] = {
@@ -760,11 +664,13 @@ export default function Productos({ user }) {
   };
 
   const construirPayload = () => {
+    const coloresUnicos = [...new Set((formulario.variantes || []).map((v) => String(v.color || "").trim()).filter(Boolean))];
     const datos = {
       nombre: formulario.nombre.trim(),
       categoria: formulario.categoria,
       genero: formulario.genero,
-      color: formulario.color,
+      color: coloresUnicos[0] || formulario.color || "",
+      colores: coloresUnicos,
       precio: Number(formulario.precio),
       estado: formulario.estado,
       imagen: formulario.imagen.trim()
@@ -773,27 +679,21 @@ export default function Productos({ user }) {
     if (tipoTallaActual === "ninguna") {
       return {
         ...datos,
-        variantes: [
-          {
-            ...(formulario.idVarianteGeneral
-              ? {
-                  id_variante:
-                    formulario.idVarianteGeneral
-                }
-              : {}),
-            stock: Number(formulario.stock)
-          }
-        ]
+        variantes: (formulario.variantes || []).map((variante) => ({
+          ...(variante.id_variante ? { id_variante: variante.id_variante } : {}),
+          talla: "",
+          color: String(variante.color || "").trim(),
+          stock: Number(variante.stock)
+        }))
       };
     }
 
     return {
       ...datos,
-      variantes: formulario.variantes.map((variante) => ({
-        ...(variante.id_variante
-          ? { id_variante: variante.id_variante }
-          : {}),
-        talla: variante.talla,
+      variantes: (formulario.variantes || []).map((variante) => ({
+        ...(variante.id_variante ? { id_variante: variante.id_variante } : {}),
+        talla: String(variante.talla || "").trim(),
+        color: String(variante.color || "").trim(),
         stock: Number(variante.stock)
       }))
     };
@@ -970,9 +870,28 @@ export default function Productos({ user }) {
   // VER DETALLE
   // =====================================================
 
-  const verDetalle = (producto) => {
-    setProductoSeleccionado(producto);
-    setMostrarDetalle(true);
+  const verDetalle = async (producto) => {
+    if (!producto?.id_producto) {
+      mostrarToast("No se pudo cargar el producto", "error");
+      return;
+    }
+
+    try {
+      const datos = await obtenerProductoAdmin(producto.id_producto);
+      const stockTotal = (datos.variantes || []).reduce(
+        (total, variante) => total + (Number(variante.stock) || 0),
+        0
+      );
+
+      setProductoSeleccionado({
+        ...datos,
+        id: producto.id,
+        stock: stockTotal
+      });
+      setMostrarDetalle(true);
+    } catch (error) {
+      mostrarToast(error.message, "error");
+    }
   };
 
   // =====================================================
@@ -1291,11 +1210,8 @@ export default function Productos({ user }) {
             <div className="producto-modal-body">
 
               <div className="producto-form-group producto-estado-group">
-
                 <label>ESTADO</label>
-
                 <div className="producto-estado-select-wrap">
-
                   <span
                     className={
                       formulario.estado === "Activo"
@@ -1303,36 +1219,19 @@ export default function Productos({ user }) {
                         : "producto-estado-dot inactivo"
                     }
                   />
-
                   <select
                     value={formulario.estado}
                     disabled={guardando}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "estado",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => cambiarCampo("estado", e.target.value)}
                   >
-                    <option value="Activo">
-                      Activo
-                    </option>
-
-                    <option value="Inactivo">
-                      Inactivo
-                    </option>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
                   </select>
-
                 </div>
-
               </div>
 
               <div className="producto-form-group">
-
-                <label>
-                  NOMBRE DEL PRODUCTO
-                </label>
-
+                <label>NOMBRE DEL PRODUCTO *</label>
                 <input
                   type="text"
                   id="campo-nombre"
@@ -1344,178 +1243,61 @@ export default function Productos({ user }) {
                   onChange={(e) =>
                     cambiarCampo(
                       "nombre",
-                      e.target.value.replace(
-                        /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s0-9]/g,
-                        ""
-                      )
+                      e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ'\s0-9]/g, "")
                     )
                   }
-                  onBlur={() =>
-                    manejarBlur(
-                      "nombre",
-                      formulario.nombre,
-                      formulario
-                    )
-                  }
+                  onBlur={() => manejarBlur("nombre", formulario.nombre, formulario)}
                 />
-
-                {errores.nombre && (
-                  <span className="error-text">
-                    {errores.nombre}
-                  </span>
-                )}
-
+                {errores.nombre && <span className="error-text">{errores.nombre}</span>}
               </div>
 
               <div className="producto-form-row">
-
                 <div className="producto-form-group">
-
-                  <label>CATEGORÍA</label>
-
+                  <label>CATEGORÍA *</label>
                   <select
                     id="campo-categoria"
                     value={formulario.categoria}
                     disabled={guardando}
                     className={`input ${errores.categoria ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "categoria",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      manejarBlur(
-                        "categoria",
-                        formulario.categoria,
-                        formulario
-                      )
-                    }
+                    onChange={(e) => cambiarCampo("categoria", e.target.value)}
+                    onBlur={() => manejarBlur("categoria", formulario.categoria, formulario)}
                   >
-                    <option value="">
-                      Seleccionar categoría
-                    </option>
-
+                    <option value="">Seleccionar categoría</option>
                     {categorias.map((categoria) => (
-                      <option
-                        key={categoria.id}
-                        value={categoria.nombre}
-                      >
+                      <option key={categoria.id} value={categoria.nombre}>
                         {categoria.nombre}
                       </option>
                     ))}
                   </select>
-
-                  {errores.categoria && (
-                    <span className="error-text">
-                      {errores.categoria}
-                    </span>
-                  )}
-
+                  {errores.categoria && <span className="error-text">{errores.categoria}</span>}
                 </div>
 
                 <div className="producto-form-group">
-
                   <label>GÉNERO</label>
-
                   <select
                     value={formulario.genero}
-                    disabled={
-                      guardando ||
-                      Boolean(
-                        generoFijo(formulario.categoria)
-                      )
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "genero",
-                        e.target.value
-                      )
-                    }
+                    disabled={guardando || Boolean(generoFijo(formulario.categoria))}
+                    onChange={(e) => cambiarCampo("genero", e.target.value)}
                   >
-                    <option value="">
-                      Seleccionar género
-                    </option>
-
+                    <option value="">Seleccionar género</option>
                     {opcionesGenero
                       .filter(
                         (genero) =>
-                          !generoFijo(
-                            formulario.categoria
-                          ) ||
-                          genero ===
-                            generoFijo(
-                              formulario.categoria
-                            )
+                          !generoFijo(formulario.categoria) ||
+                          genero === generoFijo(formulario.categoria)
                       )
                       .map((genero) => (
-                        <option
-                          key={genero}
-                          value={genero}
-                        >
-                          {genero.charAt(0).toUpperCase() +
-                            genero.slice(1)}
+                        <option key={genero} value={genero}>
+                          {genero.charAt(0).toUpperCase() + genero.slice(1)}
                         </option>
                       ))}
                   </select>
-
                 </div>
-
               </div>
 
               <div className="producto-form-row">
-
                 <div className="producto-form-group">
-
-                  <label>COLOR</label>
-
-                  <select
-                    id="campo-color"
-                    value={formulario.color}
-                    disabled={guardando}
-                    className={`input ${errores.color ? "input-error" : ""}`}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "color",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      manejarBlur(
-                        "color",
-                        formulario.color,
-                        formulario
-                      )
-                    }
-                  >
-                    <option value="">
-                      Seleccionar color
-                    </option>
-
-                    {colores.map((color) => (
-                      <option
-                        key={color}
-                        value={color}
-                      >
-                        {color}
-                      </option>
-                    ))}
-                  </select>
-
-                  {errores.color && (
-                    <span className="error-text">
-                      {errores.color}
-                    </span>
-                  )}
-
-                </div>
-
-                <div className="producto-form-group">
-
-                  <label>
-                    PRECIO DE VENTA (COP)
-                  </label>
-
+                  <label>PRECIO DE VENTA (COP)</label>
                   <input
                     type="number"
                     id="campo-precio"
@@ -1526,49 +1308,23 @@ export default function Productos({ user }) {
                     onChange={(e) =>
                       cambiarCampo(
                         "precio",
-                        e.target.value
-                          .replace(/[^0-9.]/g, "")
-                          .replace(
-                            /(\..*)\./g,
-                            "$1"
-                          )
+                        e.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1")
                       )
                     }
-                    onBlur={() =>
-                      manejarBlur(
-                        "precio",
-                        formulario.precio,
-                        formulario
-                      )
-                    }
+                    onBlur={() => manejarBlur("precio", formulario.precio, formulario)}
                   />
-
-                  {errores.precio && (
-                    <span className="error-text">
-                      {errores.precio}
-                    </span>
-                  )}
-
+                  {errores.precio && <span className="error-text">{errores.precio}</span>}
                 </div>
-
+                <div className="producto-form-group" />
               </div>
 
               <div className="producto-form-group producto-imagen-group">
-
                 <label>IMAGEN</label>
-
                 <div className="producto-imagen-dropzone">
-
-                  <span className="producto-imagen-titulo">
-                    Copia aquí el enlace de la imagen
-                  </span>
-
+                  <span className="producto-imagen-titulo">Copia aquí el enlace de la imagen</span>
                   <span className="producto-imagen-ayuda">
-                    Pega la dirección de una imagen (.jpg, .png o .webp) o el
-                    nombre exacto del archivo guardado en src/assets/img, por
-                    ejemplo camiseta-blanca.jpg. Abajo verás la vista previa.
+                    Pega el enlace o nombre del archivo de imagen (.jpg, .png, .webp).
                   </span>
-
                   <input
                     type="text"
                     className="producto-imagen-input"
@@ -1577,29 +1333,17 @@ export default function Productos({ user }) {
                     aria-label="Enlace o nombre del archivo de la imagen"
                     value={formulario.imagen}
                     disabled={guardando}
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "imagen",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => cambiarCampo("imagen", e.target.value)}
                   />
-
                 </div>
 
                 {urlImagen(formulario.imagen) && (
                   <img
                     className="producto-imagen-preview"
-                    src={urlImagen(
-                      formulario.imagen
-                    )}
+                    src={urlImagen(formulario.imagen)}
                     alt="Vista previa de la imagen"
-                    onLoad={() =>
-                      setErrorVistaPreviaImagen(false)
-                    }
-                    onError={() =>
-                      setErrorVistaPreviaImagen(true)
-                    }
+                    onLoad={() => setErrorVistaPreviaImagen(false)}
+                    onError={() => setErrorVistaPreviaImagen(true)}
                   />
                 )}
 
@@ -1608,289 +1352,201 @@ export default function Productos({ user }) {
                     No se pudo cargar la imagen. Revisa el enlace o el nombre.
                   </span>
                 )}
-
               </div>
 
-              {tipoTallaActual === "ninguna" ? (
-                <div className="producto-stock-general">
+              <div className="producto-tallas-card">
+                <button
+                  type="button"
+                  className="producto-tallas-toggle"
+                  onClick={() => setSeccionTallasAbierta((v) => !v)}
+                >
+                  <span className="producto-tallas-icon"><Shirt size={16} /></span>
+                  <span className="producto-tallas-heading">
+                    <strong>Tallas y variantes</strong>
+                    <span>Define las combinaciones de talla y color del producto</span>
+                  </span>
+                  <span className="producto-tallas-chevron">
+                    {seccionTallasAbierta ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </span>
+                </button>
 
-                  <div className="producto-form-group producto-stock-group">
+                {seccionTallasAbierta && (
+                  <div className="producto-tallas-content">
+                    {formulario.variantes.map((variante) => {
+                      const err = erroresVariantes[variante.clave] || {};
+                      const colorObj = colores.find((c) => (typeof c === "string" ? c : c?.nombre) === variante.color);
+                      const colorHex = typeof colorObj === "string" ? null : (colorObj?.hex || null);
+                      return (
+                        <div key={variante.clave}>
+                          <div className="producto-talla-row">
+                            <div className="producto-talla-control producto-talla-select-control">
+                              <select
+                                id={`campo-variante-${variante.clave}-talla`}
+                                value={tipoTallaActual === "ninguna" ? "" : (variante.talla || "")}
+                                disabled={guardando || tipoTallaActual === "ninguna"}
+                                onChange={(e) => {
+                                  const talla = e.target.value;
+                                  setFormulario((actual) => ({
+                                    ...actual,
+                                    variantes: actual.variantes.map((v) =>
+                                      v.clave === variante.clave ? { ...v, talla } : v
+                                    ),
+                                  }));
+                                }}
+                              >
+                                <option value="">{tipoTallaActual === "ninguna" ? "Sin talla" : "Talla *"}</option>
+                                {tipoTallaActual !== "ninguna" && tallasVisibles.map((t) => (
+                                  <option key={t.nombre} value={t.nombre}>{t.nombre}</option>
+                                ))}
+                              </select>
+                              {err.talla && <span className="error-text">{err.talla}</span>}
+                            </div>
 
-                    <label>STOCK</label>
+                            <div className="producto-talla-control producto-talla-color-control">
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span
+                                  aria-hidden="true"
+                                  style={{
+                                    width: "18px",
+                                    height: "18px",
+                                    borderRadius: "999px",
+                                    border: "1px solid #d1d5db",
+                                    background: colorHex || "#f3f4f6",
+                                    flex: "0 0 18px",
+                                  }}
+                                />
+                                <select
+                                  id={`campo-variante-${variante.clave}-color`}
+                                  value={variante.color || ""}
+                                  disabled={guardando}
+                                  onChange={(e) => {
+                                    const color = e.target.value;
+                                    setFormulario((actual) => ({
+                                      ...actual,
+                                      variantes: actual.variantes.map((v) =>
+                                        v.clave === variante.clave ? { ...v, color } : v
+                                      ),
+                                    }));
+                                  }}
+                                  style={{ flex: 1 }}
+                                >
+                                  <option value="">Color *</option>
+                                  {colores.map((c) => {
+                                    const nombre = typeof c === "string" ? c : c?.nombre;
+                                    return <option key={nombre} value={nombre}>{nombre}</option>;
+                                  })}
+                                </select>
+                              </div>
+                              {err.color && <span className="error-text">{err.color}</span>}
+                            </div>
 
-                    <input
-                      type="number"
-                      id="campo-stock"
-                      min="0"
-                      inputMode="numeric"
-                      placeholder="Stock"
-                      value={formulario.stock}
-                      disabled={guardando}
-                      className={`input ${errores.stock ? "input-error" : ""}`}
-                      onChange={(e) => {
-                        const soloDigitos =
-                          e.target.value.replace(
-                            /[^0-9]/g,
-                            ""
-                          );
+                            <div className="producto-talla-control producto-talla-stock-control">
+                              {modoEdicion ? (
+                                <div
+                                  className="producto-stock-readonly"
+                                  aria-label="Stock"
+                                >
+                                  {Number.isInteger(Number(variante.stock)) && Number(variante.stock) >= 0
+                                    ? Number(variante.stock)
+                                    : 0}
+                                </div>
+                              ) : (
+                                <input
+                                  id={`campo-variante-${variante.clave}-stock`}
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  inputMode="numeric"
+                                  value={variante.stock ?? 0}
+                                  disabled={guardando}
+                                  className={err.stock ? "input-error" : ""}
+                                  onChange={(e) => {
+                                    const valor = e.target.value;
+                                    setFormulario((actual) => ({
+                                      ...actual,
+                                      variantes: actual.variantes.map((v) =>
+                                        v.clave === variante.clave ? { ...v, stock: valor } : v
+                                      ),
+                                    }));
+                                    setErroresVariantes((actuales) => {
+                                      if (!actuales[variante.clave]?.stock) return actuales;
+                                      return {
+                                        ...actuales,
+                                        [variante.clave]: {
+                                          ...actuales[variante.clave],
+                                          stock: ""
+                                        }
+                                      };
+                                    });
+                                  }}
+                                />
+                              )}
+                              {err.stock && <span className="error-text">{err.stock}</span>}
+                            </div>
 
-                        cambiarCampo(
-                          "stock",
-                          Math.max(
-                            0,
-                            Number(soloDigitos)
-                          )
-                        );
-                      }}
-                      onBlur={() =>
-                        manejarBlur(
-                          "stock",
-                          formulario.stock,
-                          formulario
-                        )
-                      }
-                    />
+                            <button
+                              type="button"
+                              className="producto-talla-delete"
+                              title="Eliminar fila"
+                              aria-label="Eliminar fila"
+                              disabled={guardando}
+                              onClick={() => {
+                                if (variante.id_variante != null) registrarVariantesEliminar([variante]);
+                                setFormulario((actual) => ({
+                                  ...actual,
+                                  variantes: actual.variantes.filter((v) => v.clave !== variante.clave),
+                                }));
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
 
-                    {errores.stock && (
-                      <span className="error-text">
-                        {errores.stock}
-                      </span>
+                    {formulario.variantes.length === 0 && (
+                      <p className="producto-tallas-empty">Agrega al menos una variante.</p>
                     )}
 
-                  </div>
+                    {errorTallasGeneral && <span className="error-text">{errorTallasGeneral}</span>}
 
-                  <span className="producto-stock-total">
+                    <div className="producto-tallas-footer">
+                      <button
+                        type="button"
+                        className="producto-add-talla"
+                        disabled={guardando}
+                        onClick={() => {
+                          setFormulario((actual) => ({
+                            ...actual,
+                            variantes: [
+                              ...actual.variantes,
+                              {
+                                clave: `nueva-${Date.now()}-${Math.random()}`,
+                                id_variante: null,
+                                talla: "",
+                                color: "",
+                                stock: 0,
+                              },
+                            ],
+                          }));
+                          setErrorTallasGeneral("");
+                        }}
+                      >
+                        <Plus size={14} /> Agregar variante
+                      </button>
 
-                    Total:{" "}
-                    <strong>
-                      {totalUnidades}{" "}
-                      {totalUnidades === 1
-                        ? "unidad"
-                        : "unidades"}
-                    </strong>
-
-                  </span>
-
-                </div>
-              ) : tipoTallaActual ? (
-                <div className="producto-tallas-card">
-
-                  <button
-                    type="button"
-                    className="producto-tallas-toggle"
-                    onClick={() =>
-                      setSeccionTallasAbierta(
-                        (abierta) => !abierta
-                      )
-                    }
-                  >
-
-                    <span className="producto-tallas-icon">
-                      <Shirt size={20} />
-                    </span>
-
-                    <span className="producto-tallas-heading">
-
-                      <strong>
-                        Tallas y stock
-                      </strong>
-
-                    </span>
-
-                    <span className="producto-tallas-chevron">
-                      {seccionTallasAbierta ? (
-                        <ChevronUp size={19} />
-                      ) : (
-                        <ChevronDown size={19} />
-                      )}
-                    </span>
-
-                  </button>
-
-                  {seccionTallasAbierta && (
-                    <div className="producto-tallas-content">
-
-                      {formulario.variantes.map(
-                        (variante) => {
-
-                          const errorVariante =
-                            erroresVariantes[
-                              variante.clave
-                            ] || {};
-
-                          return (
-                            <div
-                              className="producto-talla-row"
-                              key={variante.clave}
-                            >
-
-                              <div className="producto-talla-control producto-talla-select-control">
-
-                                <select
-                                  id={`campo-variante-${variante.clave}-talla`}
-                                  aria-label="Talla"
-                                  value={variante.talla}
-                                  disabled={guardando}
-                                  className={`input ${errorVariante.talla ? "input-error" : ""}`}
-                                  onChange={(e) =>
-                                    cambiarVariante(
-                                      variante.clave,
-                                      "talla",
-                                      e.target.value
-                                    )
-                                  }
-                                >
-
-                                  <option value="">
-                                    Talla
-                                  </option>
-
-                                  {tallasVisibles
-                                    .filter(
-                                      (talla) =>
-                                        talla.nombre ===
-                                          variante.talla ||
-                                        !formulario.variantes.some(
-                                          (otra) =>
-                                            otra.clave !==
-                                              variante.clave &&
-                                            otra.talla ===
-                                              talla.nombre
-                                        )
-                                    )
-                                    .map((talla) => (
-                                      <option
-                                        key={talla.nombre}
-                                        value={talla.nombre}
-                                      >
-                                        {talla.nombre}
-                                      </option>
-                                    ))}
-
-                                </select>
-
-                                {errorVariante.talla && (
-                                  <span className="error-text">
-                                    {errorVariante.talla}
-                                  </span>
-                                )}
-
-                              </div>
-
-                              <div className="producto-talla-control producto-talla-stock-control">
-
-                                <input
-                                  type="number"
-                                  id={`campo-variante-${variante.clave}-stock`}
-                                  aria-label="Stock de la talla"
-                                  min="0"
-                                  inputMode="numeric"
-                                  placeholder="Stock"
-                                  value={variante.stock}
-                                  disabled={guardando}
-                                  className={`input ${errorVariante.stock ? "input-error" : ""}`}
-                                  onChange={(e) =>
-                                    cambiarVariante(
-                                      variante.clave,
-                                      "stock",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-
-                                {errorVariante.stock && (
-                                  <span className="error-text">
-                                    {errorVariante.stock}
-                                  </span>
-                                )}
-
-                              </div>
-
-                              {(!variante.id_variante ||
-                                puedeEliminar) && (
-                                <button
-                                  type="button"
-                                  className="producto-talla-delete"
-                                  title="Eliminar talla"
-                                  aria-label="Eliminar talla"
-                                  disabled={guardando}
-                                  onClick={() =>
-                                    eliminarVariante(
-                                      variante
-                                    )
-                                  }
-                                >
-                                  <Trash2 size={15} />
-                                </button>
-                              )}
-
-                            </div>
-                          );
-                        }
-                      )}
-
-                      {formulario.variantes.length === 0 && (
-                        <p className="producto-tallas-empty">
-                          Agrega al menos una talla para
-                          continuar.
-                        </p>
-                      )}
-
-                      {errorTallasGeneral && (
-                        <span className="error-text">
-                          {errorTallasGeneral}
-                        </span>
-                      )}
-
-                      <div className="producto-tallas-footer">
-
-                        <button
-                          type="button"
-                          className="producto-add-talla"
-                          disabled={
-                            guardando ||
-                            tallasVisibles.every(
-                              (talla) =>
-                                formulario.variantes.some(
-                                  (variante) =>
-                                    variante.talla ===
-                                    talla.nombre
-                                )
-                            )
-                          }
-                          onClick={agregarTalla}
-                        >
-
-                          <Plus size={16} />
-
-                          Agregar talla
-
-                        </button>
-
-                        <span className="producto-tallas-total">
-                          Total:{" "}
-                          <strong>
-                            {totalUnidades}{" "}
-                            {totalUnidades === 1
-                              ? "unidad"
-                              : "unidades"}
-                          </strong>
-                        </span>
-
-                      </div>
-
+                      <span className="producto-tallas-total">
+                        Total: <strong>{totalUnidades} {totalUnidades === 1 ? "unidad" : "unidades"}</strong>
+                      </span>
                     </div>
-                  )}
-
-                </div>
-              ) : (
-                <div className="producto-tallas-hint">
-                  Selecciona una categoría para configurar
-                  las tallas y el stock.
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
 
             </div>
+
+
 
             <div className="producto-modal-footer">
 
@@ -2018,28 +1674,56 @@ export default function Productos({ user }) {
 
                 </div>
 
-                <div className="producto-form-row">
+                <div className="producto-info-group">
+                  <label>VARIANTES</label>
 
-                  <div className="producto-info-group">
+                  {Array.isArray(productoSeleccionado.variantes) && productoSeleccionado.variantes.length > 0 ? (
+                    <div className="producto-detalle-variantes-scroll">
+                      <table className="producto-detalle-tabla">
+                        <thead>
+                          <tr>
+                            <th>TALLA</th>
+                            <th>COLOR</th>
+                            <th>STOCK</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {productoSeleccionado.variantes.map((variante) => {
+                            const colorObj = colores.find(
+                              (c) => (typeof c === "string" ? c : c?.nombre) === variante.color
+                            );
+                            const colorHex =
+                              typeof colorObj === "string" ? null : colorObj?.hex || null;
 
-                    <label>TALLA</label>
-
-                    <div className="producto-info-value">
-                      {productoSeleccionado.talla}
+                            return (
+                              <tr key={variante.id_variante ?? `${variante.talla || "sin-talla"}-${variante.color || "sin-color"}`}>
+                                <td>{variante.talla || "—"}</td>
+                                <td>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span
+                                      aria-hidden="true"
+                                      style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "999px",
+                                        border: "1px solid #d1d5db",
+                                        background: colorHex || "#f3f4f6",
+                                        flex: "0 0 14px"
+                                      }}
+                                    />
+                                    <span>{variante.color || "—"}</span>
+                                  </div>
+                                </td>
+                                <td>{Number(variante.stock) || 0}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-
-                  </div>
-
-                  <div className="producto-info-group">
-
-                    <label>COLOR</label>
-
-                    <div className="producto-info-value">
-                      {productoSeleccionado.color}
-                    </div>
-
-                  </div>
-
+                  ) : (
+                    <div className="producto-info-value">Sin variantes</div>
+                  )}
                 </div>
 
                 <div className="producto-form-row">

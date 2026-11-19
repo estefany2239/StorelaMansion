@@ -1,4 +1,4 @@
-import { Router } from 'express'
+﻿import { Router } from 'express'
 import { pool } from '../config/db.js'
 import {
   verificarToken,
@@ -16,7 +16,7 @@ import { TIPOS_DOCUMENTO } from '../utils/documentos.js'
 
 const router = Router()
 
-// Todo el módulo exige sesión y que no haya cambio de contraseña pendiente.
+// Todo el mÃ³dulo exige sesiÃ³n y que no haya cambio de contraseÃ±a pendiente.
 router.use(verificarToken, bloquearCambioPendiente)
 
 const SELECT_PROVEEDOR = `
@@ -65,7 +65,7 @@ const COMPRAS_PROVEEDOR_SQL = `
 
 const normalizarDocumento = (valor) => normalizarNombre(valor).toUpperCase()
 
-// Respeta la grafía canónica del proyecto ('Pasaporte', no 'PASAPORTE') para
+// Respeta la grafÃ­a canÃ³nica del proyecto ('Pasaporte', no 'PASAPORTE') para
 // no chocar con un CHECK del esquema. Un tipo desconocido se conserva tal cual.
 const normalizarTipoDocumento = (valor) => {
   const texto = normalizarNombre(valor)
@@ -77,37 +77,41 @@ const normalizarTipoDocumento = (valor) => {
 const validarCorreo = (correo) => {
   if (!correo) return null
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) {
-    return 'El correo no tiene un formato válido'
+    return 'El correo no tiene un formato vÃ¡lido'
   }
   return null
 }
 
 const validarTelefono = (telefono) => {
-  if (!telefono) return null
-  if (!/^[0-9+()\-\s]{7,25}$/.test(telefono)) {
-    return 'El teléfono no tiene un formato válido'
-  }
+  if (!telefono) return 'El telÃ©fono es obligatorio'
+  const digitos = (telefono.match(/\d/g) || []).length
+  if (digitos < 7 || digitos > 15) return 'El telÃ©fono debe tener entre 7 y 15 dÃ­gitos'
+  if (!/^[0-9+\s]+$/.test(telefono)) return 'El telÃ©fono solo admite nÃºmeros, + y espacios'
   return null
 }
 
-const validarDocumento = (documento) => {
+const validarDocumento = (tipo, documento) => {
   if (!documento) return 'El documento es obligatorio'
-  if (!/^[0-9A-Za-zÁÉÍÓÚÜÑáéíóúüñ.\- ]{3,30}$/.test(documento)) {
-    return 'El documento solo admite letras, números, puntos, guiones y espacios (3 a 30 caracteres)'
+  if (tipo === 'NIT') {
+    if (!/^\d{1,}-?\d$/.test(documento)) return 'El NIT debe ser nÃºmeros con un guion seguido de un dÃ­gito (ej. 900123456-7)'
+    return null
   }
+  if (!/^\d+$/.test(documento)) return 'El documento solo admite nÃºmeros'
+  const min = (tipo === 'CC' || tipo === 'CE') ? 6 : 1
+  if (documento.length < min) return `El documento debe tener al menos ${min} dÃ­gitos`
   return null
 }
 
-// Lee y normaliza el cuerpo de creación. Todos los campos de texto se
+// Lee y normaliza el cuerpo de creaciÃ³n. Todos los campos de texto se
 // recortan y los espacios internos se colapsan.
 const leerProveedor = (body) => {
   const nombre = normalizarNombre(body.nombre)
   const tipoDocumento = normalizarTipoDocumento(body.tipo_documento || 'NIT')
   const documento = normalizarDocumento(body.documento)
   const contacto = textoOpcional(body.contacto, 100, 'El contacto')
-  const telefono = textoOpcional(body.telefono, 25, 'El teléfono')
+  const telefono = textoOpcional(body.telefono, 25, 'El telÃ©fono')
   const correo = textoOpcional(body.correo, 150, 'El correo')
-  const direccion = textoOpcional(body.direccion, 255, 'La dirección')
+  const direccion = textoOpcional(body.direccion, 255, 'La direcciÃ³n')
   const ciudad = textoOpcional(body.ciudad, 100, 'La ciudad')
 
   if (!nombre) throw new ErrorHttp(400, 'El nombre del proveedor es obligatorio')
@@ -118,7 +122,7 @@ const leerProveedor = (body) => {
     throw new ErrorHttp(400, 'El tipo de documento no puede superar los 20 caracteres')
   }
 
-  const errorDocumento = validarDocumento(documento)
+  const errorDocumento = validarDocumento(tipoDocumento, documento)
   if (errorDocumento) throw new ErrorHttp(400, errorDocumento)
 
   const errorCorreo = validarCorreo(correo)
@@ -159,6 +163,20 @@ const existeDocumento = async (db, documento, excluirId = null) => {
   return rows.length > 0
 }
 
+// Nombre repetido sin distinguir mayÃºsculas ni espacios sobrantes.
+// En ediciÃ³n se excluye el propio proveedor (excluirId).
+const existeNombreProveedor = async (db, nombre, excluirId = null) => {
+  const { rows } = await db.query(
+    `SELECT 1
+       FROM proveedor
+      WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))
+        AND ($2::int IS NULL OR id_proveedor <> $2)
+      LIMIT 1`,
+    [nombre, excluirId]
+  )
+  return rows.length > 0
+}
+
 const responderError = (res, error, mensaje) => {
   if (error instanceof ErrorHttp || error.status) {
     return res.status(error.status || 400).json({ error: error.message })
@@ -170,18 +188,18 @@ const responderError = (res, error, mensaje) => {
   }
   if (error.code === '23514') {
     return res.status(400).json({
-      error: 'Uno de los valores enviados no está permitido por el esquema',
+      error: 'Uno de los valores enviados no estÃ¡ permitido por el esquema',
     })
   }
   if (error.code === '22P02') {
-    return res.status(400).json({ error: 'Uno de los datos tiene un formato inválido' })
+    return res.status(400).json({ error: 'Uno de los datos tiene un formato invÃ¡lido' })
   }
   console.error(mensaje, error.message)
   return res.status(500).json({ error: mensaje })
 }
 
 // ------------------------------------------------------------------
-// GET / -> lista paginada con búsqueda y filtro por estado
+// GET / -> lista paginada con bÃºsqueda y filtro por estado
 // ------------------------------------------------------------------
 router.get('/', requierePrivilegio('Proveedores', 'Consultar'), async (req, res) => {
   try {
@@ -347,7 +365,12 @@ router.post('/', requierePrivilegio('Proveedores', 'Crear'), async (req, res) =>
 
     if (await existeDocumento(db, datos.documento)) {
       await db.query('ROLLBACK')
-      return res.status(409).json({ error: 'Ya existe un proveedor con ese documento' })
+      return res.status(409).json({ campo: 'documento', error: 'Ya existe un proveedor con ese documento' })
+    }
+
+    if (await existeNombreProveedor(db, datos.nombre)) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ campo: 'nombre', error: 'Ya existe un proveedor con ese nombre' })
     }
 
     const { rows } = await db.query(
@@ -418,7 +441,7 @@ router.put('/:id', requierePrivilegio('Proveedores', 'Actualizar'), async (req, 
     }
     const actual = actuales[0]
 
-    // PUT admite actualización parcial: lo omitido conserva su valor.
+    // PUT admite actualizaciÃ³n parcial: lo omitido conserva su valor.
     const nombre =
       req.body.nombre === undefined ? actual.nombre : normalizarNombre(req.body.nombre)
     const tipoDocumento =
@@ -436,7 +459,7 @@ router.put('/:id', requierePrivilegio('Proveedores', 'Actualizar'), async (req, 
     const telefono =
       req.body.telefono === undefined
         ? actual.telefono
-        : textoOpcional(req.body.telefono, 25, 'El teléfono')
+        : textoOpcional(req.body.telefono, 25, 'El telÃ©fono')
     const correo =
       req.body.correo === undefined
         ? actual.correo
@@ -444,7 +467,7 @@ router.put('/:id', requierePrivilegio('Proveedores', 'Actualizar'), async (req, 
     const direccion =
       req.body.direccion === undefined
         ? actual.direccion
-        : textoOpcional(req.body.direccion, 255, 'La dirección')
+        : textoOpcional(req.body.direccion, 255, 'La direcciÃ³n')
     const ciudad =
       req.body.ciudad === undefined
         ? actual.ciudad
@@ -460,7 +483,7 @@ router.put('/:id', requierePrivilegio('Proveedores', 'Actualizar'), async (req, 
       throw new ErrorHttp(400, 'El tipo de documento no puede superar los 20 caracteres')
     }
 
-    const errorDocumento = validarDocumento(documento)
+    const errorDocumento = validarDocumento(tipoDocumento, documento)
     if (errorDocumento) throw new ErrorHttp(400, errorDocumento)
     const errorCorreo = validarCorreo(correo)
     if (errorCorreo) throw new ErrorHttp(400, errorCorreo)
@@ -469,7 +492,12 @@ router.put('/:id', requierePrivilegio('Proveedores', 'Actualizar'), async (req, 
 
     if (documento !== actual.documento && (await existeDocumento(db, documento, id))) {
       await db.query('ROLLBACK')
-      return res.status(409).json({ error: 'Ya existe un proveedor con ese documento' })
+      return res.status(409).json({ campo: 'documento', error: 'Ya existe un proveedor con ese documento' })
+    }
+
+    if (await existeNombreProveedor(db, nombre, id)) {
+      await db.query('ROLLBACK')
+      return res.status(409).json({ campo: 'nombre', error: 'Ya existe un proveedor con ese nombre' })
     }
 
     // El estado no se cambia por PUT: tiene su propio PATCH /:id/estado.
@@ -507,7 +535,7 @@ router.put('/:id', requierePrivilegio('Proveedores', 'Actualizar'), async (req, 
 })
 
 // ------------------------------------------------------------------
-// PATCH /:id/estado -> activar o inactivar. No se elimina físicamente.
+// PATCH /:id/estado -> activar o inactivar. No se elimina fÃ­sicamente.
 // ------------------------------------------------------------------
 router.patch(
   '/:id/estado',

@@ -1,7 +1,77 @@
+/* =========================================================
+   SERVICIO API - STORE LA MANSIÓN
+   Organizado por secciones. Las funciones de cada módulo
+   están juntas; los helpers van al inicio.
+   ========================================================= */
+
+/* =========================================================
+   1. CONFIGURACIÓN Y HELPERS
+   ========================================================= */
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 const MENSAJE_DEMASIADOS_INTENTOS =
   'Demasiados intentos, intenta de nuevo en unos minutos.'
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token')}`
+})
+
+const procesarRespuesta = async (respuesta, mensajeError) => {
+  if (respuesta.status === 401) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('usuario')
+    window.location.href = '/'
+    throw new Error('Sesión expirada')
+  }
+
+  if (!respuesta.ok) {
+    const data = await respuesta.json().catch(() => ({}))
+    const error = new Error(data.error || mensajeError)
+    // Código HTTP del backend: 409 se usa para conflictos de stock y
+    // permite refrescar las cantidades permitidas en el carrito.
+    error.status = respuesta.status
+    // El backend indica el campo inválido/duplicado para que el
+    // formulario lo muestre debajo del input correcto.
+    if (data.campo) error.campo = data.campo
+    throw error
+  }
+
+  return respuesta.json()
+}
+
+const peticionAdmin = async (ruta, { metodo = 'GET', cuerpo, mensajeError } = {}) => {
+  let respuesta
+  try {
+    respuesta = await fetch(`${API_URL}${ruta}`, {
+      method: metodo,
+      headers: {
+        ...(cuerpo ? { 'Content-Type': 'application/json' } : {}),
+        ...authHeaders()
+      },
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+  return procesarRespuesta(respuesta, mensajeError)
+}
+
+// Arma la query string omitiendo los valores vacíos.
+const construirQuery = (params) => {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([clave, valor]) => {
+    if (valor !== undefined && valor !== null && String(valor).trim() !== '') {
+      query.append(clave, String(valor))
+    }
+  })
+  const texto = query.toString()
+  return texto ? `?${texto}` : ''
+}
+
+/* =========================================================
+   2. CATÁLOGO PÚBLICO (productos y categorías)
+   ========================================================= */
 
 export async function obtenerProductos(filtros = {}) {
   const params = new URLSearchParams()
@@ -24,6 +94,10 @@ export async function obtenerCategorias() {
   if (!respuesta.ok) throw new Error('No se pudieron cargar las categorías')
   return respuesta.json()
 }
+
+/* =========================================================
+   3. AUTENTICACIÓN Y CUENTA PROPIA
+   ========================================================= */
 
 // identificacion: tipoDocumento ('CC' | 'CE' | 'NIT' | 'Pasaporte'),
 // documento y fechaNacimiento ('YYYY-MM-DD'); en el registro público son
@@ -223,6 +297,10 @@ export async function actualizarFotoPerfil(foto) {
   })
 }
 
+/* =========================================================
+   4. CLIENTES, PEDIDOS, COMPROBANTES Y FAVORITOS
+   ========================================================= */
+
 export async function obtenerClientes() {
   const respuesta = await fetch(`${API_URL}/api/clientes`, {
     headers: {
@@ -231,50 +309,6 @@ export async function obtenerClientes() {
   })
   if (!respuesta.ok) throw new Error('No se pudieron cargar los clientes')
   return respuesta.json()
-}
-
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('token')}`
-})
-
-const procesarRespuesta = async (respuesta, mensajeError) => {
-  if (respuesta.status === 401) {
-    localStorage.removeItem('token')
-    localStorage.removeItem('usuario')
-    window.location.href = '/'
-    throw new Error('Sesión expirada')
-  }
-
-  if (!respuesta.ok) {
-    const data = await respuesta.json().catch(() => ({}))
-    const error = new Error(data.error || mensajeError)
-    // Código HTTP del backend: 409 se usa para conflictos de stock y
-    // permite refrescar las cantidades permitidas en el carrito.
-    error.status = respuesta.status
-    // El backend indica el campo inválido/duplicado para que el
-    // formulario lo muestre debajo del input correcto.
-    if (data.campo) error.campo = data.campo
-    throw error
-  }
-
-  return respuesta.json()
-}
-
-const peticionAdmin = async (ruta, { metodo = 'GET', cuerpo, mensajeError } = {}) => {
-  let respuesta
-  try {
-    respuesta = await fetch(`${API_URL}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(cuerpo ? { 'Content-Type': 'application/json' } : {}),
-        ...authHeaders()
-      },
-      body: cuerpo ? JSON.stringify(cuerpo) : undefined
-    })
-  } catch {
-    throw new Error('No se pudo conectar con el servidor')
-  }
-  return procesarRespuesta(respuesta, mensajeError)
 }
 
 export async function crearCliente(datos) {
@@ -323,6 +357,50 @@ export async function crearPedido(pedido) {
     throw new Error('No se pudo conectar con el servidor')
   }
   return procesarRespuesta(respuesta, 'No se pudo crear el pedido')
+}
+
+export async function obtenerMisPedidos() {
+  const respuesta = await fetch(`${API_URL}/api/pedidos/mis`, {
+    headers: authHeaders()
+  })
+  return procesarRespuesta(respuesta, 'No se pudieron cargar tus pedidos')
+}
+
+export async function obtenerPedidos() {
+  const respuesta = await fetch(`${API_URL}/api/pedidos`, {
+    headers: authHeaders()
+  })
+  return procesarRespuesta(respuesta, 'No se pudieron cargar los pedidos')
+}
+
+export async function obtenerPedido(id) {
+  const respuesta = await fetch(`${API_URL}/api/pedidos/${id}`, {
+    headers: authHeaders()
+  })
+  return procesarRespuesta(respuesta, 'No se pudo cargar el pedido')
+}
+
+export async function cambiarEstadoPedido(id, estado) {
+  const respuesta = await fetch(`${API_URL}/api/pedidos/${id}/estado`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ estado })
+  })
+  return procesarRespuesta(respuesta, 'No se pudo cambiar el estado del pedido')
+}
+
+export async function confirmarPagoPedido(id) {
+  return peticionAdmin(`/api/pedidos/${id}/pago/confirmar`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo confirmar el pago'
+  })
+}
+
+export async function rechazarPagoPedido(id) {
+  return peticionAdmin(`/api/pedidos/${id}/pago/rechazar`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo rechazar el pago'
+  })
 }
 
 // Sube el comprobante de pago de un pedido. El FormData fija el
@@ -402,14 +480,7 @@ export async function rechazarComprobantePedido(id, idComprobante, motivo) {
   )
 }
 
-export async function obtenerMisPedidos() {
-  const respuesta = await fetch(`${API_URL}/api/pedidos/mis`, {
-    headers: authHeaders()
-  })
-  return procesarRespuesta(respuesta, 'No se pudieron cargar tus pedidos')
-}
-
-// ===== FAVORITOS (Mis favoritos del cliente) =====
+// ----- Favoritos (Mis favoritos del cliente) -----
 
 // Lista completa de favoritos: id_producto, nombre, precio, imagen,
 // categoría y si tiene stock disponible (más reciente primero).
@@ -442,44 +513,11 @@ export async function quitarFavorito(idProducto) {
   })
 }
 
-export async function obtenerPedidos() {
-  const respuesta = await fetch(`${API_URL}/api/pedidos`, {
-    headers: authHeaders()
-  })
-  return procesarRespuesta(respuesta, 'No se pudieron cargar los pedidos')
-}
+/* =========================================================
+   5. ABONOS Y CONFIGURACIÓN DEL NEGOCIO
+   ========================================================= */
 
-export async function obtenerPedido(id) {
-  const respuesta = await fetch(`${API_URL}/api/pedidos/${id}`, {
-    headers: authHeaders()
-  })
-  return procesarRespuesta(respuesta, 'No se pudo cargar el pedido')
-}
-
-export async function cambiarEstadoPedido(id, estado) {
-  const respuesta = await fetch(`${API_URL}/api/pedidos/${id}/estado`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ estado })
-  })
-  return procesarRespuesta(respuesta, 'No se pudo cambiar el estado del pedido')
-}
-
-export async function confirmarPagoPedido(id) {
-  return peticionAdmin(`/api/pedidos/${id}/pago/confirmar`, {
-    metodo: 'POST',
-    mensajeError: 'No se pudo confirmar el pago'
-  })
-}
-
-export async function rechazarPagoPedido(id) {
-  return peticionAdmin(`/api/pedidos/${id}/pago/rechazar`, {
-    metodo: 'POST',
-    mensajeError: 'No se pudo rechazar el pago'
-  })
-}
-
-// ===== ABONOS (pedidos de contra entrega con pagos parciales) =====
+// ----- Abonos (pedidos de contra entrega con pagos parciales) -----
 
 // Lista desde la vista pedido_abonos: filas paginadas, resumen de cifras y
 // paginación. pestana "saldo" devuelve solo los que deben dinero; "todos" el
@@ -541,7 +579,7 @@ export async function registrarAbonoPedido(id, { monto, metodo, referencia, obse
   })
 }
 
-// ===== CONFIGURACIÓN DEL NEGOCIO =====
+// ----- Configuración del negocio -----
 
 // Datos opcionales que aparecen en el comprobante de venta. Si la tabla aún
 // no existe, la llamada falla y el PDF usa solo el nombre por defecto.
@@ -551,7 +589,9 @@ export async function obtenerConfiguracionNegocio() {
   })
 }
 
-// ===== VENTAS (módulo Ventas del panel) =====
+/* =========================================================
+   6. VENTAS (módulo Ventas del panel)
+   ========================================================= */
 
 export async function obtenerVentas() {
   return peticionAdmin('/api/ventas', {
@@ -631,6 +671,10 @@ export async function crearVenta(datos) {
   })
 }
 
+/* =========================================================
+   7. ADMIN: PRODUCTOS Y CATEGORÍAS
+   ========================================================= */
+
 export async function obtenerProductosAdmin() {
   return peticionAdmin('/api/admin/productos', {
     mensajeError: 'No se pudieron cargar los productos'
@@ -678,6 +722,15 @@ export async function actualizarProductoCompletoAdmin(idProducto, datos) {
     metodo: 'PUT',
     cuerpo: datos,
     mensajeError: 'No se pudo actualizar el producto'
+  })
+}
+
+// Elimina el producto completo (todas sus variantes). El backend responde
+// 409 si alguna variante tiene pedidos o ventas.
+export async function eliminarProductoCompletoAdmin(idProducto) {
+  return peticionAdmin(`/api/admin/productos/producto/${idProducto}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar el producto'
   })
 }
 
@@ -733,6 +786,10 @@ export async function eliminarCategoriaAdmin(id) {
   })
 }
 
+/* =========================================================
+   8. ADMIN: USUARIOS Y ROLES
+   ========================================================= */
+
 export async function obtenerUsuariosAdmin() {
   return peticionAdmin('/api/admin/usuarios', {
     mensajeError: 'No se pudieron cargar los usuarios'
@@ -745,7 +802,45 @@ export async function obtenerRolesAdmin() {
   })
 }
 
-// ===== ROLES (CRUD del módulo Roles) =====
+export async function crearUsuarioAdmin(datos) {
+  return peticionAdmin('/api/admin/usuarios', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el usuario'
+  })
+}
+
+export async function actualizarUsuarioAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/usuarios/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el usuario'
+  })
+}
+
+export async function cambiarEstadoUsuarioAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/usuarios/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado del usuario'
+  })
+}
+
+export async function reenviarInvitacionUsuarioAdmin(id) {
+  return peticionAdmin(`/api/admin/usuarios/${id}/reenviar-invitacion`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo reenviar la invitación'
+  })
+}
+
+export async function eliminarUsuarioAdmin(id) {
+  return peticionAdmin(`/api/admin/usuarios/${id}`, {
+    metodo: 'DELETE',
+    mensajeError: 'No se pudo eliminar el usuario'
+  })
+}
+
+// ----- Roles (CRUD del módulo Roles) -----
 
 export async function listarRolesAdmin() {
   return peticionAdmin('/api/admin/roles', {
@@ -790,45 +885,11 @@ export async function eliminarRolAdmin(id) {
   })
 }
 
-export async function crearUsuarioAdmin(datos) {
-  return peticionAdmin('/api/admin/usuarios', {
-    metodo: 'POST',
-    cuerpo: datos,
-    mensajeError: 'No se pudo crear el usuario'
-  })
-}
+/* =========================================================
+   9. ADMIN: TALLAS, COLORES, DOMICILIOS Y DASHBOARD
+   ========================================================= */
 
-export async function actualizarUsuarioAdmin(id, datos) {
-  return peticionAdmin(`/api/admin/usuarios/${id}`, {
-    metodo: 'PUT',
-    cuerpo: datos,
-    mensajeError: 'No se pudo actualizar el usuario'
-  })
-}
-
-export async function cambiarEstadoUsuarioAdmin(id, estado) {
-  return peticionAdmin(`/api/admin/usuarios/${id}/estado`, {
-    metodo: 'PATCH',
-    cuerpo: { estado },
-    mensajeError: 'No se pudo cambiar el estado del usuario'
-  })
-}
-
-export async function reenviarInvitacionUsuarioAdmin(id) {
-  return peticionAdmin(`/api/admin/usuarios/${id}/reenviar-invitacion`, {
-    metodo: 'POST',
-    mensajeError: 'No se pudo reenviar la invitación'
-  })
-}
-
-export async function eliminarUsuarioAdmin(id) {
-  return peticionAdmin(`/api/admin/usuarios/${id}`, {
-    metodo: 'DELETE',
-    mensajeError: 'No se pudo eliminar el usuario'
-  })
-}
-
-// ===== TALLAS (CRUD del módulo Tallas) =====
+// ----- Tallas (CRUD del módulo Tallas) -----
 
 export async function obtenerTallasAdmin() {
   return peticionAdmin('/api/admin/tallas', {
@@ -867,7 +928,7 @@ export async function eliminarTallaAdmin(id) {
   })
 }
 
-// ===== COLORES (CRUD del módulo Colores) =====
+// ----- Colores (CRUD del módulo Colores) -----
 
 export async function obtenerColoresAdmin() {
   return peticionAdmin('/api/admin/colores', {
@@ -906,7 +967,7 @@ export async function eliminarColorAdmin(id) {
   })
 }
 
-// ===== DOMICILIOS (módulo Domicilios del panel) =====
+// ----- Domicilios (módulo Domicilios del panel) -----
 
 // Lista paginada de domicilios (lo nuevo primero). `q` busca por código,
 // pedido, cliente, dirección, municipio o teléfono; el backend responde con
@@ -974,7 +1035,7 @@ export async function definirCostoEnvioDomicilio(id, costo) {
   })
 }
 
-// ===== DASHBOARD (módulo Dashboard del panel) =====
+// ----- Dashboard (módulo Dashboard del panel) -----
 
 // Resumen general del panel entre dos fechas (YYYY-MM-DD). El backend
 // responde con ingresos, ventas por día, pedidos por estado, saldo
@@ -988,4 +1049,104 @@ export async function obtenerDashboard(desde, hasta) {
   return peticionAdmin(`/api/admin/dashboard${query ? `?${query}` : ''}`, {
     mensajeError: 'No se pudo cargar el dashboard'
   })
+}
+
+/* =========================================================
+   10. PROVEEDORES
+   ========================================================= */
+
+export async function listarProveedoresAdmin(filtros = {}) {
+  return peticionAdmin(`/api/admin/proveedores${construirQuery(filtros)}`, {
+    mensajeError: 'No se pudieron cargar los proveedores'
+  })
+}
+
+export async function obtenerProveedorAdmin(id) {
+  return peticionAdmin(`/api/admin/proveedores/${id}`, {
+    mensajeError: 'No se pudo cargar el proveedor'
+  })
+}
+
+export async function crearProveedorAdmin(datos) {
+  return peticionAdmin('/api/admin/proveedores', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo crear el proveedor'
+  })
+}
+
+export async function actualizarProveedorAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/proveedores/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar el proveedor'
+  })
+}
+
+export async function cambiarEstadoProveedorAdmin(id, estado) {
+  return peticionAdmin(`/api/admin/proveedores/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado },
+    mensajeError: 'No se pudo cambiar el estado del proveedor'
+  })
+}
+
+/* =========================================================
+   11. COMPRAS (fase de lectura)
+   ========================================================= */
+
+export async function listarComprasAdmin(filtros = {}) {
+  return peticionAdmin(`/api/admin/compras${construirQuery(filtros)}`, {
+    mensajeError: 'No se pudieron cargar las compras'
+  })
+}
+
+export async function obtenerCompraAdmin(id) {
+  return peticionAdmin(`/api/admin/compras/${id}`, {
+    mensajeError: 'No se pudo cargar la compra'
+  })
+}
+
+export async function buscarVariantesCompraAdmin(q = '') {
+  return peticionAdmin(`/api/admin/compras/variantes${construirQuery({ q, limite: 50 })}`, {
+    mensajeError: 'No se pudieron buscar los productos'
+  })
+}
+
+export async function crearCompraAdmin(datos) {
+  return peticionAdmin('/api/admin/compras', {
+    metodo: 'POST',
+    cuerpo: datos,
+    mensajeError: 'No se pudo registrar la compra'
+  })
+}
+
+export async function actualizarCompraAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/compras/${id}`, {
+    metodo: 'PUT',
+    cuerpo: datos,
+    mensajeError: 'No se pudo actualizar la compra'
+  })
+}
+
+export async function anularCompraAdmin(id) {
+  return peticionAdmin(`/api/admin/compras/${id}/anular`, {
+    metodo: 'POST',
+    mensajeError: 'No se pudo anular la compra'
+  })
+}
+export async function confirmarCompraAdmin(id) {
+  return peticionAdmin(`/api/admin/compras/${id}/confirmar`, { metodo: 'POST', mensajeError: 'No se pudo confirmar la compra' })
+}
+export async function registrarRecepcionCompraAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/compras/${id}/recepciones`, { metodo: 'POST', cuerpo: datos, mensajeError: 'No se pudo registrar la recepción' })
+}
+export async function cerrarCompraAdmin(id) {
+  return peticionAdmin(`/api/admin/compras/${id}/cerrar`, { metodo: 'POST', mensajeError: 'No se pudo cerrar la compra' })
+}
+export async function registrarPagoCompraAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/compras/${id}/pago`, { metodo: 'POST', cuerpo: datos, mensajeError: 'No se pudo registrar el pago' })
+}
+export async function aplicarSaldoCompraAdmin(id, datos) {
+  return peticionAdmin(`/api/admin/compras/${id}/aplicar-saldo`, { metodo: 'POST', cuerpo: datos, mensajeError: 'No se pudo aplicar el saldo' })
 }

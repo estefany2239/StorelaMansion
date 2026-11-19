@@ -26,6 +26,7 @@ export const ESTADO_BORRADOR = 'Borrador'
 export const ESTADO_CONFIRMADA = 'Confirmada'
 export const ESTADO_PARCIAL = 'Parcialmente recibida'
 export const ESTADO_RECIBIDA = 'Recibida'
+export const ESTADO_CERRADA = 'Cerrada'
 export const ESTADO_CERRADA_FALTANTES = 'Cerrada con faltantes'
 export const ESTADO_ANULADA = 'Anulada'
 
@@ -34,12 +35,13 @@ export const ESTADOS_COMPRA = [
   ESTADO_CONFIRMADA,
   ESTADO_PARCIAL,
   ESTADO_RECIBIDA,
+  ESTADO_CERRADA,
   ESTADO_CERRADA_FALTANTES,
   ESTADO_ANULADA,
 ]
 
 // Estados terminales: ya no admiten recepciones ni nuevas cancelaciones.
-export const ESTADOS_TERMINALES = [ESTADO_RECIBIDA, ESTADO_CERRADA_FALTANTES]
+export const ESTADOS_TERMINALES = [ESTADO_RECIBIDA, ESTADO_CERRADA, ESTADO_CERRADA_FALTANTES]
 
 // Estados que admiten una recepción parcial.
 export const ESTADOS_CON_RECEPCION = [ESTADO_CONFIRMADA, ESTADO_PARCIAL]
@@ -344,7 +346,8 @@ export const generarExcedenteCompra = async (db, idCompra, registradoPor = null)
        (id_proveedor, id_compra_origen, id_compra_destino,
         id_movimiento_origen, tipo, monto, registrado_por,
         clave_idempotencia, observaciones, creado_en)
-     VALUES ($1, $2, NULL, NULL, 'GENERADO', $3, $4, $5, $6, now())`,
+     VALUES ($1, $2, NULL, NULL, 'GENERADO', $3, $4, $5, $6, now())
+     ON CONFLICT (clave_idempotencia) DO NOTHING`,
     [
       compra.id_proveedor,
       idCompra,
@@ -513,6 +516,21 @@ export const obtenerCompraDetallada = async (db, idCompra) => {
     [idCompra]
   )
 
+  const { rows: pagos } = await db.query(
+    `SELECT pc.id_pago,
+            pc.id_compra,
+            pc.monto::float8 AS monto,
+            pc.fecha_pago,
+            pc.registrado_por,
+            pc.observaciones,
+            TRIM(u.nombres || ' ' || u.apellidos) AS registrado_por_nombre
+       FROM pago_compra pc
+       LEFT JOIN usuario u ON u.id_usuario = pc.registrado_por
+      WHERE pc.id_compra = $1
+      ORDER BY pc.fecha_pago, pc.id_pago`,
+    [idCompra]
+  )
+
   const saldoAplicado = await saldoAplicadoCompra(db, idCompra)
   const valorPagado = redondear(compra.valor_pagado)
   const costoFinal = redondear(compra.costo_final)
@@ -559,6 +577,7 @@ export const obtenerCompraDetallada = async (db, idCompra) => {
       detalles: porRecepcion.get(recepcion.id_recepcion) || [],
     })),
     movimientos_saldo: movimientos,
+    pagos,
     resumen: {
       costo_original: redondear(compra.costo_original),
       costo_final: costoFinal,
