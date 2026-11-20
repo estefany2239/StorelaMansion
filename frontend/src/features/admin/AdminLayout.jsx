@@ -18,6 +18,8 @@ import {
   Tags,
   Ruler,
   Palette,
+  Building2,
+  Receipt,
   Scale
 } from "lucide-react";
 
@@ -34,6 +36,8 @@ import Pedidos from "./pedidos/Pedidos";
 import Domicilios from "./domicilios/Domicilios";
 import Abonos from "./abonos/Abonos";
 import Perfil from "./perfil/Perfil";
+import Proveedores from "./proveedores/Proveedores";
+import Compras from "./compras/Compras";
 
 import { tienePermiso } from "./utils/permisos";
 
@@ -126,10 +130,30 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
     tienePermiso(user, item.nombre, "Consultar")
   );
 
+  /* =====================================================
+     SUBMENÚ GESTIÓN DE COMPRAS
+     ===================================================== */
+
+  const menuCompras = [
+    {
+      nombre: "Proveedores",
+      vista: "proveedores",
+      icono: Building2
+    },
+    {
+      nombre: "Compras",
+      vista: "compras",
+      icono: Receipt
+    }
+  ].filter((item) =>
+    tienePermiso(user, item.nombre, "Consultar")
+  );
+
   const modulosDisponibles = [
     ...menu.map((item) => ({ nombre: item.nombre, vista: item.vista })),
     ...menuProductos.map((item) => ({ nombre: item.nombre, vista: item.vista })),
     ...menuVentas.map((item) => ({ nombre: item.nombre, vista: item.vista })),
+    ...menuCompras.map((item) => ({ nombre: item.nombre, vista: item.vista })),
     { nombre: "Perfil", vista: "perfil" }
   ].filter(
     (item, index, lista) =>
@@ -171,6 +195,9 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
     : [];
 
   const [gestionProductosAbierto, setGestionProductosAbierto] =
+    useState(false);
+
+  const [gestionComprasAbierto, setGestionComprasAbierto] =
     useState(false);
 
   const [gestionVentasAbierto, setGestionVentasAbierto] =
@@ -285,6 +312,12 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
 
       case "abonos":
         return <Abonos user={user} />;
+
+      case "proveedores":
+        return <Proveedores user={user} />;
+
+      case "compras":
+        return <Compras user={user} />;
 
       case "perfil":
         return (
@@ -588,6 +621,97 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
 
           )}
 
+          {/* =================================================
+              ACORDEÓN GESTIÓN DE COMPRAS
+              ================================================= */}
+
+          {menuCompras.length > 0 && (
+
+          <div className="admin-menu-accordion">
+
+            <button
+              type="button"
+              className={
+                gestionComprasAbierto
+                  ? "admin-link admin-accordion-toggle open"
+                  : "admin-link admin-accordion-toggle"
+              }
+              title={
+                sidebarColapsado
+                  ? "Gestión de Compras"
+                  : undefined
+              }
+              onClick={() =>
+                setGestionComprasAbierto(
+                  (actual) => !actual
+                )
+              }
+            >
+
+              <Building2 size={17} />
+
+              <span>
+                Gestión de Compras
+              </span>
+
+              <ChevronDown
+                size={15}
+                className="admin-accordion-arrow"
+              />
+
+            </button>
+
+            {gestionComprasAbierto && (
+
+              <div className="admin-submenu">
+
+                {menuCompras.map((item) => {
+
+                  const Icon = item.icono;
+
+                  const activo =
+                    adminView === item.vista;
+
+                  return (
+
+                    <button
+                      key={item.vista}
+                      type="button"
+                      className={
+                        activo
+                          ? "admin-link admin-submenu-link active"
+                          : "admin-link admin-submenu-link"
+                      }
+                      title={
+                        sidebarColapsado
+                          ? item.nombre
+                          : undefined
+                      }
+                      onClick={() =>
+                        setAdminView(item.vista)
+                      }
+                    >
+
+                      <Icon size={14} />
+
+                      <span>
+                        {item.nombre}
+                      </span>
+
+                    </button>
+
+                  );
+
+                })}
+
+              </div>
+
+            )}
+
+          </div>
+
+          )}
+
         </nav>
 
 
@@ -742,4 +866,3 @@ export default function AdminLayout({ user, onLogout, onUserUpdated }) {
     );
 
 }
-

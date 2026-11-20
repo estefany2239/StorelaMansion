@@ -1,0 +1,954 @@
+/* =========================================================
+   COMPRAS - STORE LA MANSIÓN
+   Diseño de referencia: lista y modal "Registrar Compra".
+   Usa tokens --admin-* del panel.
+   ========================================================= */
+
+.compras-page {
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--admin-text);
+}
+
+/* ENCABEZADO */
+
+.compras-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.compras-title h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--admin-text);
+}
+
+.compras-title p {
+  margin: 14px 0 0;
+  font-size: 15px;
+  color: var(--admin-text-secondary);
+}
+
+.compras-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.compras-search {
+  width: 265px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #d8dce2;
+  border-radius: 9px;
+  color: #718096;
+}
+
+.compras-search input,
+.compras-buscador input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #333333;
+}
+
+.compras-search input::placeholder {
+  color: #a5acb8;
+}
+
+.compras-search:focus-within,
+.compras-buscador:focus-within {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px rgba(153, 101, 21, 0.10);
+}
+
+.compras-select,
+.compras-date,
+.compras-campo select,
+.compras-campo input {
+  height: 45px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid rgba(153, 101, 21, 0.2);
+  border-radius: 9px;
+  background: var(--admin-card);
+  color: var(--admin-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.compras-select:focus,
+.compras-campo select:focus,
+.compras-campo input:focus {
+  outline: none;
+  border-color: var(--admin-gold);
+}
+
+.compras-btn-dorado {
+  height: 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--admin-cta-gold), var(--admin-btn-primary-hover));
+  color: #111111;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.compras-btn-dorado:hover {
+  background: var(--admin-btn-primary-hover);
+}
+
+.compras-btn-dorado:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.compras-btn-secundario {
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compras-btn-secundario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* MENSAJES */
+
+.compras-error {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.compras-vacio {
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+}
+
+.compras-celda-centro {
+  height: 100px !important;
+  text-align: center;
+}
+
+.compras-secundario {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.compras-numero {
+  white-space: nowrap;
+}
+
+/* TABLA DE LA LISTA */
+
+.compras-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--admin-card);
+  border: 1px solid rgba(153, 101, 21, 0.14);
+  border-radius: 15px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.compras-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.compras-table th {
+  height: 44px;
+  padding: 0 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--admin-text-secondary);
+  border-bottom: 1px solid rgba(153, 101, 21, 0.14);
+  white-space: nowrap;
+}
+
+.compras-table td {
+  height: 68px;
+  padding: 0 16px;
+  vertical-align: middle;
+  font-size: 14px;
+  color: var(--admin-text);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+}
+
+.compras-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.compras-table tbody tr:hover {
+  background: rgba(153, 101, 21, 0.04);
+}
+
+.compras-proveedor {
+  display: block;
+  font-weight: 500;
+}
+
+/* Código en píldora dorada, como en el diseño */
+
+.compras-codigo {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(234, 179, 8, 0.18);
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ESTADOS (con icono) */
+
+.compras-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.compras-badge--borrador {
+  background: rgba(128, 128, 128, 0.16);
+  color: var(--admin-text-secondary);
+}
+
+.compras-badge--confirmada,
+.compras-badge--parcialmente-recibida {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.compras-badge--recibida,
+.compras-badge--cerrada {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+
+.compras-badge--cerrada-con-faltantes {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+
+.compras-badge--anulada {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.compras-badge--pago-pendiente {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.compras-badge--pago-parcialmente-pagada {
+  background: rgba(217, 119, 6, 0.15);
+  color: #b45309;
+}
+
+.compras-badge--pago-pagada {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+
+/* ACCIONES DE LA FILA */
+
+.compras-table th.col-acciones,
+.compras-table td.col-acciones {
+  text-align: center;
+}
+
+.compras-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.compras-accion {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+}
+
+.compras-accion:hover:not(:disabled) {
+  color: var(--admin-gold);
+  background: rgba(153, 101, 21, 0.08);
+}
+
+.compras-accion:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.compras-accion--peligro {
+  color: #dc2626;
+}
+
+.compras-accion--peligro:hover:not(:disabled) {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+/* MODAL (mismo patrón que proveedor-modal) */
+
+.compras-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.compras-modal {
+  width: 100%;
+  max-width: 820px;
+  max-height: calc(100vh - 50px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--admin-card);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+}
+
+.compras-modal--formulario {
+  max-width: 920px;
+}
+
+.compras-modal-header {
+  flex-shrink: 0;
+  min-height: 62px;
+  padding: 0 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.compras-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+.compras-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.compras-modal-close:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.compras-modal-body {
+  padding: 22px 26px;
+  overflow-y: auto;
+  color: var(--admin-text);
+}
+
+.compras-form-footer {
+  flex-shrink: 0;
+  min-height: 72px;
+  padding: 0 26px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+/* FORMULARIO DE COMPRA */
+
+.compras-form-campos {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.compras-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.compras-campo > span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: var(--admin-text-secondary);
+}
+
+.compras-campo select,
+.compras-campo input {
+  width: 100%;
+}
+
+.compras-campo-lectura {
+  height: 45px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 9px;
+  background: rgba(128, 128, 128, 0.08);
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+}
+
+.compras-form-productos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.compras-form-productos h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+/* Buscador de variantes */
+
+.compras-buscador-panel {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid rgba(153, 101, 21, 0.2);
+  border-radius: 12px;
+  background: rgba(153, 101, 21, 0.03);
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.compras-buscador {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  background: var(--admin-card);
+  border: 1px solid rgba(153, 101, 21, 0.2);
+  border-radius: 9px;
+  color: var(--admin-text-secondary);
+}
+
+.compras-resultados {
+  max-height: 220px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.compras-resultados button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.compras-resultados button:hover:not(:disabled) {
+  background: rgba(153, 101, 21, 0.08);
+}
+
+.compras-resultados button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compras-resultados .compras-secundario {
+  margin: 2px 0 0;
+}
+
+/* Tabla de líneas del formulario */
+
+.compras-tabla-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.compras-lineas {
+  width: 100%;
+  min-width: 720px;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.compras-lineas th {
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: var(--admin-text-secondary);
+  background: rgba(128, 128, 128, 0.05);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+  white-space: nowrap;
+}
+
+.compras-lineas td {
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--admin-text);
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+}
+
+.compras-lineas tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.compras-producto-nombre {
+  display: block;
+  font-weight: 600;
+}
+
+.compras-input-numero {
+  width: 90px;
+  height: 38px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 8px;
+  background: var(--admin-card);
+  color: var(--admin-text);
+  font-size: 14px;
+  text-align: right;
+}
+
+.compras-input-numero:focus {
+  outline: none;
+  border-color: var(--admin-gold);
+}
+
+.compras-input-moneda {
+  width: 130px;
+}
+
+.compras-quitar {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+}
+
+.compras-quitar:hover:not(:disabled) {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.compras-vacio-celda {
+  height: 80px;
+}
+
+/* Totales */
+
+.compras-totales {
+  width: 340px;
+  max-width: 100%;
+  margin: 16px 0 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.compras-totales > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: rgba(128, 128, 128, 0.06);
+}
+
+.compras-totales > div + div {
+  border-top: 1px solid rgba(128, 128, 128, 0.14);
+}
+
+.compras-totales-total {
+  background: rgba(234, 179, 8, 0.18) !important;
+  font-size: 16px !important;
+  font-weight: 700;
+}
+
+.compras-totales strong {
+  font-weight: 700;
+}
+
+/* DETALLE DE COMPRA */
+
+.compras-detalle-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.compras-seccion-titulo {
+  margin: 22px 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+.compras-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.compras-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.compras-dato > span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: var(--admin-text-secondary);
+}
+
+.compras-dato > strong {
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 14px;
+  box-sizing: border-box;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 9px;
+  background: rgba(128, 128, 128, 0.06);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-text);
+  word-break: break-word;
+}
+
+.compras-dato > strong .compras-secundario {
+  margin-top: 0;
+  font-weight: 400;
+}
+
+.compras-dato > strong .compras-badge {
+  align-self: flex-start;
+}
+
+.compras-detalle-tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.compras-detalle-tabla th,
+.compras-detalle-tabla td {
+  padding: 10px 12px;
+  border: 1px solid rgba(128, 128, 128, 0.18);
+  font-size: 13px;
+  text-align: left;
+  color: var(--admin-text);
+  white-space: nowrap;
+}
+
+.compras-detalle-tabla th {
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  background: rgba(128, 128, 128, 0.06);
+}
+
+.compras-recepcion {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 12px;
+}
+
+.compras-recepcion-cabecera {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.compras-texto-secundario {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+}
+
+.compras-motivo {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+  white-space: normal;
+}
+
+/* MÓVIL */
+
+@media (max-width: 900px) {
+  .compras-form-campos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .compras-search {
+    width: 100%;
+  }
+
+  .compras-form-campos,
+  .compras-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compras-totales {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .compras-modal-overlay {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .compras-modal {
+    max-height: calc(100vh - 24px);
+  }
+
+  .compras-modal-body {
+    padding: 18px;
+  }
+}
+
+/* PRODUCTO NUEVO DESDE LA COMPRA */
+
+.compras-link-accion {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border: none;
+  background: rgba(153, 101, 21, 0.03);
+  color: var(--admin-gold);
+  z-index: 2;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compras-link-accion:hover {
+  text-decoration: underline;
+}
+
+.compras-link-accion:disabled {
+  color: #9ca3af;
+  text-decoration: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.compras-producto-nuevo {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px dashed rgba(153, 101, 21, 0.35);
+  border-radius: 12px;
+  background: var(--admin-card);
+}
+
+.compras-producto-nuevo h5 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+.compras-producto-nuevo-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.compras-producto-nuevo-campos .compras-campo select,
+.compras-producto-nuevo-campos .compras-campo input {
+  height: 40px;
+}
+
+.compras-producto-nuevo-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .compras-producto-nuevo-campos {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.compras-recepcion-fila {
+  display: grid;
+  grid-template-columns: 1fr auto auto 90px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(153, 101, 21, 0.12);
+}
+
+.compras-recepcion-fila:last-child {
+  border-bottom: none;
+}
+
+.compras-recepcion-producto {
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+/* Modales compactos: Registrar pago / Aplicar saldo */
+.compras-modal.compras-modal--pago {
+  max-width: 420px;
+}
+
+.compras-modal--pago .compras-modal-header {
+  min-height: 52px;
+  padding: 12px 20px;
+}
+
+.compras-modal--pago .compras-modal-header h3 {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.compras-modal--pago .compras-modal-body {
+  padding: 16px 20px;
+}
+
+.compras-modal--pago .compras-form-footer {
+  min-height: auto;
+  padding: 0 20px 16px;
+  gap: 12px;
+}
+
+.compras-modal--pago .compras-campo {
+  gap: 6px;
+}
+
+.compras-modal--pago .compras-campo > span,
+.compras-modal--pago .compras-campo > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.compras-modal--pago .compras-input-numero {
+  height: 42px;
+}
+
+.compras-modal--pago .compras-btn-secundario,
+.compras-modal--pago .compras-btn-dorado {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}

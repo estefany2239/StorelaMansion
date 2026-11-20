@@ -31,3 +31,5 @@ INFORME-*.md
 # Scripts de revisión y pruebas que se conectan a la base de datos
 backend/_*.mjs
 backend/test-*.mjs
+# Cache de Vite
+.vite/
