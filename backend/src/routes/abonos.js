@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { pool } from '../config/db.js'
+import { traducirEstadoMonto } from '../services/abonos.js'
 import {
   verificarToken,
   bloquearCambioPendiente,
@@ -106,8 +107,12 @@ router.get('/', requierePrivilegio('Abonos', 'Consultar'), async (req, res) => {
       valores
     )
 
+    const dataTraducida = (data || []).map((fila) => ({
+      ...fila,
+      estado_monto: traducirEstadoMonto(fila.estado_monto),
+    }))
     res.json({
-      data,
+      data: dataTraducida,
       resumen: resumenRows[0],
       paginacion: {
         pagina,

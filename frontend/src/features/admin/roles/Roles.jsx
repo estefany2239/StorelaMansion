@@ -1052,18 +1052,18 @@ export default function Roles({ user }) {
         modal === "editar") && (
 
         <div
-          className="rol-modal-overlay"
+          className="rol-modal-overlay am-overlay"
           onClick={cerrarModal}
         >
 
           <div
-            className="rol-modal"
+            className="rol-modal am-modal am-modal--lg"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
 
-            <div className="rol-modal-header">
+            <div className="rol-modal-header am-header">
 
               <h3>
                 {modal === "crear"
@@ -1073,7 +1073,7 @@ export default function Roles({ user }) {
 
               <button
                 type="button"
-                className="rol-modal-close"
+                className="rol-modal-close am-close"
                 onClick={cerrarModal}
               >
                 <X size={20} />
@@ -1081,13 +1081,13 @@ export default function Roles({ user }) {
 
             </div>
 
-            <form onSubmit={guardarRol}>
+            <form className="am-form-wrap" onSubmit={guardarRol}>
 
-              <div className="rol-modal-body">
+              <div className="rol-modal-body am-body">
 
                 <div className="rol-form-row">
 
-                  <div className="rol-form-group">
+                  <div className="rol-form-group am-field">
 
                     <label>
                       NOMBRE DEL ROL
@@ -1104,11 +1104,11 @@ export default function Roles({ user }) {
                       onBlur={() =>
                         manejarBlur("nombre", rolForm.nombre, rolForm)
                       }
-                      className={`input ${errores.nombre ? "input-error" : ""}`}
+                      className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                     />
 
                     {errores.nombre && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.nombre}
                       </span>
                     )}
@@ -1214,7 +1214,7 @@ export default function Roles({ user }) {
                    </div>
 
                    {errores.permisos && (
-                     <span className="error-text">
+                     <span className="error-text am-error">
                        {errores.permisos}
                      </span>
                    )}
@@ -1224,11 +1224,11 @@ export default function Roles({ user }) {
 
               </div>
 
-              <div className="rol-modal-footer">
+              <div className="rol-modal-footer am-footer">
 
                 <button
                   type="button"
-                  className="rol-cancel-button"
+                  className="rol-cancel-button am-btn-ghost"
                   onClick={cerrarModal}
                 >
                   Cancelar
@@ -1236,7 +1236,7 @@ export default function Roles({ user }) {
 
                 <button
                   type="submit"
-                  className="rol-create-button"
+                  className="rol-create-button am-btn-gold"
                 >
                   {modal === "crear"
                     ? "Crear rol"
@@ -1260,18 +1260,18 @@ export default function Roles({ user }) {
       {modal?.tipo === "detalle" && (
 
         <div
-          className="rol-modal-overlay"
+          className="rol-modal-overlay am-overlay"
           onClick={cerrarModal}
         >
 
           <div
-            className="rol-modal"
+            className="rol-modal am-modal am-modal--lg"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
 
-            <div className="rol-modal-header">
+            <div className="rol-modal-header am-header">
 
               <h3>
                 Detalle del rol
@@ -1279,7 +1279,7 @@ export default function Roles({ user }) {
 
               <button
                 type="button"
-                className="rol-modal-close"
+                className="rol-modal-close am-close"
                 onClick={cerrarModal}
               >
                 <X size={20} />
@@ -1287,7 +1287,7 @@ export default function Roles({ user }) {
 
             </div>
 
-            <div className="rol-modal-body">
+            <div className="rol-modal-body am-body">
 
               <div className="rol-detail-header">
 
@@ -1445,11 +1445,11 @@ export default function Roles({ user }) {
 
             </div>
 
-            <div className="rol-modal-footer">
+            <div className="rol-modal-footer am-footer">
 
               <button
                 type="button"
-                className="rol-cancel-button detail-cerrar-button"
+                className="rol-cancel-button detail-cerrar-button am-btn-gold"
                 onClick={cerrarModal}
               >
                 Cerrar

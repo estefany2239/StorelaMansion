@@ -6,9 +6,13 @@
 /* 1. MODO CLARO (Colores Beige/Crema) */
 :root {
   /* Fondos y superficies */
-  --bg-main: #f5ead6;          /* Cream claro del fondo base */
+  --site-bg: #fffaf0;
+  --site-border: #f1e5c3;
+  --site-card: #ffffff;
+  --site-surface-2: #fdf6e3;
+  --bg-main: var(--site-bg);          /* Cream claro del fondo base */
   --bg-card: #ebdcc3;          /* Beige más cálido para secciones/tarjetas */
-  --bg-header: #f5ead6;
+  --bg-header: var(--site-bg);
   --card-bg: #ffffff;           /* Superficie de tarjetas */
   --white: #ffffff;            /* Blanco puro para intercalar secciones */
 
@@ -68,6 +72,10 @@
 :root[data-theme="dark"],
 [data-theme="dark"] {
   /* Fondos y superficies */
+  --site-bg: #0a0a0a;
+  --site-border: var(--border-soft, rgba(255, 255, 255, 0.12));
+  --site-card: var(--card-bg, #141414);
+  --site-surface-2: var(--bg-card, #141414);
   --bg-main: #0a0a0a;          /* Fondo negro unificado para todas las secciones */
   --bg-dark: #0a0a0a;          /* Negro base para secciones oscuras */
   --bg-card: #141414;          /* Superficie oscura para tarjetas (sutil contraste) */

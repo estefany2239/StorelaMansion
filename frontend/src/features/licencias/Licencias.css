@@ -1,0 +1,663 @@
+/* ==========================================
+   LICENCIAS Y DERECHOS DE AUTOR (/licencias)
+   Identidad STORE LA MANSIÓN: fondo crema #fffaf0,
+   dorado #d4af37, acento de texto #b8860b, sans serif,
+   tarjetas blancas con radio 16px. Sin café/marrón.
+   ========================================== */
+
+.lic-page {
+  --lic-fondo: #fffaf0;
+  --lic-superficie: #ffffff;
+  --lic-borde: rgba(26, 26, 26, 0.09);
+  --lic-dorado: #d4af37;
+  --lic-acento: #b8860b;
+  --lic-texto: #111111;
+  --lic-texto-suave: #555555;
+  --lic-verde-fondo: #e6f4ea;
+  --lic-verde-texto: #1e7b34;
+  --lic-ambar-fondo: #fff6e0;
+  --lic-ambar-texto: #8a6d00;
+  --lic-gris-fondo: #f1f1f1;
+  --lic-gris-texto: #5f5f5f;
+  --lic-foco: #d4af37;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--lic-fondo);
+  color: var(--lic-texto);
+  font-family: "Inter", sans-serif;
+  line-height: 1.6;
+}
+
+/* Foco visible en toda la página */
+.lic-page a:focus-visible,
+.lic-page button:focus-visible,
+.lic-page input:focus-visible {
+  outline: 2px solid var(--lic-foco);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Footer compartido pegado al fondo (la raíz ya es flex column) */
+.lic-page > .sitio-footer {
+  margin-top: auto;
+}
+
+/* ---------- ENCABEZADO ---------- */
+
+.lic-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--lic-borde);
+}
+
+.lic-header-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lic-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 1rem;
+  color: var(--lic-texto);
+  text-decoration: none;
+}
+
+.lic-marca-icono {
+  color: var(--lic-dorado);
+}
+
+.lic-btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lic-acento);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 999px;
+  background: var(--lic-superficie);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lic-btn-volver:hover {
+  background: #fdf3d7;
+  border-color: var(--lic-dorado);
+}
+
+/* ---------- HERO ---------- */
+
+.lic-main {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 34px 20px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  flex: 1;
+}
+
+.lic-hero {
+  text-align: center;
+  padding: 10px 0 6px;
+}
+
+.lic-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  font-weight: 800;
+  color: var(--lic-texto);
+}
+
+.lic-titulo-icono {
+  color: var(--lic-dorado);
+  flex-shrink: 0;
+}
+
+.lic-hero-frase {
+  margin-top: 10px;
+  color: var(--lic-texto-suave);
+  font-size: 1rem;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- TARJETAS ---------- */
+
+.lic-card {
+  background: var(--lic-superficie);
+  border: 1px solid var(--lic-borde);
+  border-radius: 16px;
+  padding: 24px 26px;
+  box-shadow: 0 8px 24px rgba(70, 45, 10, 0.06);
+}
+
+.lic-card--aviso {
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.lic-card-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--lic-texto);
+}
+
+.lic-card-sub {
+  color: var(--lic-texto-suave);
+  font-size: 0.92rem;
+  margin-bottom: 16px;
+}
+
+.lic-resaltado {
+  font-weight: 600;
+  color: var(--lic-acento);
+  margin-bottom: 12px;
+}
+
+.lic-grande {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--lic-acento);
+}
+
+/* Datos generales (dl) */
+.lic-datos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 28px;
+  margin: 0;
+}
+
+.lic-datos div {
+  min-width: 0;
+}
+
+.lic-datos dt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lic-acento);
+}
+
+.lic-datos dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* Listas */
+.lic-lista {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lic-lista strong {
+  color: var(--lic-acento);
+}
+
+/* Aviso de transferencia pendiente */
+.lic-aviso-texto {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--lic-ambar-fondo);
+  color: var(--lic-ambar-texto);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.lic-aviso-icono {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+/* ---------- BADGES DE ESTADO ---------- */
+
+.lic-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lic-badge--verificada {
+  background: var(--lic-verde-fondo);
+  color: var(--lic-verde-texto);
+}
+
+.lic-badge--declarada-sin-texto {
+  background: var(--lic-ambar-fondo);
+  color: var(--lic-ambar-texto);
+}
+
+.lic-badge--pendiente {
+  background: var(--lic-gris-fondo);
+  color: var(--lic-gris-texto);
+}
+
+.lic-badge--servicio {
+  margin-left: auto;
+}
+
+/* ---------- ENLACES ---------- */
+
+.lic-link,
+.lic-link-spdx {
+  color: var(--lic-acento);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(184, 134, 11, 0.4);
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.lic-link:hover,
+.lic-link-spdx:hover {
+  color: var(--lic-dorado);
+  text-decoration-color: var(--lic-dorado);
+}
+
+.lic-licencia {
+  overflow-wrap: anywhere;
+}
+
+.lic-licencia-nota {
+  color: var(--lic-texto-suave);
+  font-size: 0.85rem;
+}
+
+/* ---------- PESTAÑAS Y BUSCADOR ---------- */
+
+.lic-pestanas {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--lic-borde);
+  border-radius: 999px;
+  background: #f7f2e4;
+  margin-bottom: 14px;
+}
+
+.lic-pestaña {
+  border: 0;
+  background: transparent;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--lic-texto-suave);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.lic-pestaña.activa {
+  background: var(--lic-dorado);
+  color: #111111;
+}
+
+.lic-buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--lic-borde);
+  border-radius: 12px;
+  background: var(--lic-superficie);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  color: var(--lic-texto-suave);
+}
+
+.lic-buscador input {
+  border: 0;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--lic-texto);
+}
+
+/* ---------- TABLAS ---------- */
+
+.lic-tabla-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--lic-borde);
+  border-radius: 12px;
+}
+
+.lic-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.lic-tabla th,
+.lic-tabla td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--lic-borde);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.lic-tabla thead th {
+  background: #fdf8ea;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lic-acento);
+  position: sticky;
+  top: 0;
+}
+
+.lic-tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.lic-celda-nombre {
+  font-weight: 700;
+}
+
+.lic-enlaces {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Botones y estados auxiliares */
+.lic-btn-primario,
+.lic-btn-secundario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.lic-btn-primario {
+  border: 0;
+  background: var(--lic-dorado);
+  color: #111111;
+}
+
+.lic-btn-primario:hover {
+  background: #c9a52f;
+  transform: translateY(-1px);
+}
+
+.lic-btn-secundario {
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  background: var(--lic-superficie);
+  color: var(--lic-acento);
+}
+
+.lic-btn-secundario:hover {
+  background: #fdf3d7;
+}
+
+.lic-vacio,
+.lic-cargando {
+  color: var(--lic-texto-suave);
+  font-size: 0.92rem;
+  padding: 10px 0;
+}
+
+/* ---------- SERVICIOS (tarjetas) ---------- */
+
+.lic-servicios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.lic-servicio {
+  border: 1px solid var(--lic-borde);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fffdf6;
+}
+
+.lic-servicio-nombre {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.lic-servicio-tipo {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lic-acento);
+}
+
+.lic-servicio-uso,
+.lic-servicio-licencia {
+  font-size: 0.86rem;
+  color: var(--lic-texto-suave);
+  overflow-wrap: anywhere;
+}
+
+.lic-servicio-pies {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.lic-pendiente-mini {
+  font-size: 0.8rem;
+  color: var(--lic-gris-texto);
+  font-weight: 600;
+}
+
+/* ---------- INVENTARIO COMPLETO ---------- */
+
+.lic-inventario-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lic-texto);
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.lic-inventario-cuerpo {
+  margin-top: 16px;
+}
+
+/* ---------- DESCARGAS ---------- */
+
+.lic-descargas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+/* ---------- LEYENDA ---------- */
+
+.lic-leyenda {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--lic-texto-suave);
+}
+
+.lic-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lic-leyenda li svg {
+  color: var(--lic-dorado);
+  flex-shrink: 0;
+}
+
+/* ---------- PIE ---------- */
+
+.lic-footer {
+  border-top: 1px solid var(--lic-borde);
+  background: #fbf3e4;
+  padding: 22px 20px 26px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--lic-texto-suave);
+}
+
+.lic-footer p {
+  max-width: 720px;
+  margin: 0 auto 8px;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 720px) {
+  .lic-datos {
+    grid-template-columns: 1fr;
+  }
+
+  .lic-servicios-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lic-card {
+    padding: 18px;
+  }
+}
+
+/* Móvil: tablas -> tarjetas apiladas, sin scroll horizontal de página */
+@media (max-width: 640px) {
+  .lic-main {
+    padding: 22px 14px 40px;
+  }
+
+  .lic-pestanas,
+  .lic-buscador {
+    width: 100%;
+  }
+
+  .lic-pestanas {
+    display: flex;
+    justify-content: stretch;
+  }
+
+  .lic-pestaña {
+    flex: 1;
+    padding: 8px 10px;
+  }
+
+  .lic-tabla-wrap {
+    overflow-x: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .lic-tabla thead {
+    display: none;
+  }
+
+  .lic-tabla,
+  .lic-tabla tbody,
+  .lic-tabla tr,
+  .lic-tabla td {
+    display: block;
+    width: 100%;
+  }
+
+  .lic-tabla tr {
+    border: 1px solid var(--lic-borde);
+    border-radius: 14px;
+    background: var(--lic-superficie);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+
+  .lic-tabla td {
+    border-bottom: 0;
+    padding: 4px 0;
+  }
+
+  .lic-tabla td::before {
+    content: attr(data-titulo);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--lic-acento);
+    margin-bottom: 2px;
+  }
+
+  .lic-celda-nombre {
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .lic-btn-primario,
+  .lic-btn-secundario {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lic-descargas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -27,7 +27,9 @@
 
 /* --- Variante CHIP: flotado sobre la imagen de una tarjeta --- */
 
-.btn-favorito--chip {
+/* Doble clase: le gana al reset ".landing button" (0,1,1) de Landing.css */
+
+.btn-favorito.btn-favorito--chip {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -36,8 +38,8 @@
   color: var(--gold);
 }
 
-.btn-favorito--chip:hover,
-.btn-favorito--chip.isActive {
+.btn-favorito.btn-favorito--chip:hover,
+.btn-favorito.btn-favorito--chip.isActive {
   background-color: rgba(0, 0, 0, 0.85);
   color: var(--gold);
   transform: scale(1.06);
@@ -45,7 +47,7 @@
 
 /* --- Variante CONTORNO: junto a textos y precios del detalle --- */
 
-.btn-favorito--contorno {
+.btn-favorito.btn-favorito--contorno {
   flex-shrink: 0;
   width: 38px;
   height: 38px;
@@ -54,13 +56,13 @@
   color: var(--text-primary);
 }
 
-.btn-favorito--contorno:hover {
+.btn-favorito.btn-favorito--contorno:hover {
   border-color: var(--gold);
   color: var(--gold);
   transform: translateY(-1px);
 }
 
-.btn-favorito--contorno.isActive {
+.btn-favorito.btn-favorito--contorno.isActive {
   border-color: var(--gold);
   color: var(--gold);
   background-color: rgba(212, 175, 55, 0.12);

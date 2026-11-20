@@ -507,16 +507,16 @@ export default function Tallas({ user }) {
       {mostrarModal && (
 
         <div
-          className="talla-modal-overlay"
+          className="talla-modal-overlay am-overlay"
           onClick={cerrarModal}
         >
 
           <div
-            className="talla-modal"
+            className="talla-modal am-modal am-modal--sm"
             onClick={(e) => e.stopPropagation()}
           >
 
-            <div className="talla-modal-header">
+            <div className="talla-modal-header am-header">
 
               <h3>
                 {modoEdicion
@@ -526,7 +526,7 @@ export default function Tallas({ user }) {
 
               <button
                 type="button"
-                className="talla-modal-close"
+                className="talla-modal-close am-close"
                 onClick={cerrarModal}
               >
 
@@ -536,9 +536,9 @@ export default function Tallas({ user }) {
 
             </div>
 
-            <div className="talla-modal-body">
+            <div className="talla-modal-body am-body">
 
-              <div className="talla-form-group">
+              <div className="talla-form-group am-field">
 
                 <label>
                   NOMBRE DE LA TALLA
@@ -550,7 +550,7 @@ export default function Tallas({ user }) {
                   placeholder="Ej: M"
                   maxLength={10}
                   value={formulario.nombre}
-                  className={`input ${errores.nombre ? "input-error" : ""}`}
+                  className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "nombre",
@@ -570,7 +570,7 @@ export default function Tallas({ user }) {
                 />
 
                 {errores.nombre && (
-                  <span className="error-text">
+                  <span className="error-text am-error">
                     {errores.nombre}
                   </span>
                 )}
@@ -579,11 +579,11 @@ export default function Tallas({ user }) {
 
             </div>
 
-            <div className="talla-modal-footer">
+            <div className="talla-modal-footer am-footer">
 
               <button
                 type="button"
-                className="talla-cancel-button"
+                className="talla-cancel-button am-btn-ghost"
                 onClick={cerrarModal}
               >
                 Cancelar
@@ -591,7 +591,7 @@ export default function Tallas({ user }) {
 
               <button
                 type="button"
-                className="talla-create-button"
+                className="talla-create-button am-btn-gold"
                 onClick={guardarTalla}
               >
                 {modoEdicion ? "Guardar" : "Crear"}

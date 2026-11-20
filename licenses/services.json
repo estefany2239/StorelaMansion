@@ -1,0 +1,147 @@
+{
+  "_nota": "Lista de herramientas y servicios externos realmente usados en el proyecto STORE LA MANSIÓN. Verificada contra el código fuente, las dependencias (package.json/package-lock.json) y las páginas oficiales consultadas el 2026-11-13. No incluye Bootstrap ni Material UI (no están instalados ni usados). Cloudinary NO se incluyó: no se detectó ningún uso en el código, dependencias ni configuración del proyecto; si se incorpora en el futuro debe documentarse aquí.",
+  "generado": "2026-11-13",
+  "servicios": [
+    {
+      "nombre": "React",
+      "tipo": "biblioteca",
+      "uso": "Interfaz de usuario de la tienda virtual y del panel administrativo (frontend).",
+      "licencia": "MIT",
+      "licencia_fuente": "Declarada por el propio paquete (node_modules/react/LICENSE) y verificada en el Paso 1.",
+      "url_oficial": "https://react.dev/",
+      "texto_licencia_local": "licenses/frontend/react@19.2.8/LICENSE",
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "Node.js",
+      "tipo": "entorno de ejecución",
+      "uso": "Ejecuta el servidor backend (Express) y los scripts del proyecto.",
+      "licencia": "MIT (con componentes incluidos de terceros con sus propias licencias, listados en el archivo LICENSE del proyecto Node.js)",
+      "licencia_fuente": "Documentación y repositorio oficial del proyecto Node.js (github.com/nodejs/node, 'Node.js is licensed under the MIT License').",
+      "url_oficial": "https://nodejs.org/",
+      "texto_licencia_local": null,
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "Express",
+      "tipo": "biblioteca",
+      "uso": "Servidor web y API REST del backend.",
+      "licencia": "MIT",
+      "licencia_fuente": "Declarada por el propio paquete (node_modules/express/LICENSE) y verificada en el Paso 1.",
+      "url_oficial": "https://expressjs.com/",
+      "texto_licencia_local": "licenses/backend/express@4.22.3/LICENSE",
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "Vite",
+      "tipo": "herramienta de desarrollo",
+      "uso": "Empaquetador y servidor de desarrollo del frontend; genera la build de producción.",
+      "licencia": "MIT",
+      "licencia_fuente": "Declarada por el propio paquete (node_modules/vite/LICENSE) y verificada en el Paso 1.",
+      "url_oficial": "https://vite.dev/",
+      "texto_licencia_local": "licenses/frontend/vite@8.2.2/LICENSE",
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "jsPDF",
+      "tipo": "biblioteca",
+      "uso": "Generación de comprobantes de venta en PDF desde el panel administrativo.",
+      "licencia": "MIT",
+      "licencia_fuente": "Declarada por el propio paquete (node_modules/jspdf/LICENSE) y verificada en el Paso 1.",
+      "url_oficial": "https://github.com/parallax/jsPDF",
+      "texto_licencia_local": "licenses/frontend/jspdf@4.2.1/LICENSE",
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "Lucide React (lucide-react)",
+      "tipo": "biblioteca",
+      "uso": "Iconos SVG de la interfaz del panel administrativo y la tienda.",
+      "licencia": "ISC (porciones derivadas del proyecto Feather bajo MIT)",
+      "licencia_fuente": "Página oficial de licencia de Lucide (lucide.dev/license) y texto LICENSE del repositorio oficial.",
+      "url_oficial": "https://lucide.dev/",
+      "texto_licencia_local": "licenses/frontend/lucide-react@1.41.0/LICENSE",
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "React Router DOM",
+      "tipo": "biblioteca",
+      "uso": "Declarada como dependencia de producción en frontend/package.json; no se detectaron imports en el código fuente al 2026-11-13 (usado en: PENDIENTE DE VERIFICACIÓN).",
+      "licencia": "MIT",
+      "licencia_fuente": "Declarada por el propio paquete en package-lock.json (Paso 1).",
+      "url_oficial": "https://reactrouter.com/",
+      "texto_licencia_local": "licenses/frontend/react-router-dom@7.18.3/LICENSE",
+      "estado_verificacion": "verificada (licencia); USO EN EL CÓDIGO: PENDIENTE DE VERIFICACIÓN"
+    },
+    {
+      "nombre": "PostgreSQL",
+      "tipo": "base de datos",
+      "uso": "Sistema gestor de la base de datos de la tienda (se accede desde el backend mediante el paquete pg).",
+      "licencia": "PostgreSQL Licence (tipo BSD, aprobada por la OSI)",
+      "licencia_fuente": "Página oficial de licencia de PostgreSQL (postgresql.org/about/licence).",
+      "url_oficial": "https://www.postgresql.org/",
+      "texto_licencia_local": null,
+      "estado_verificacion": "verificada"
+    },
+    {
+      "nombre": "Neon",
+      "tipo": "servicio en la nube",
+      "uso": "Hospedaje administrado de PostgreSQL serverless donde corre la base de datos del proyecto (referenciado en backend/src/services/comprobantes.js y en la configuración del backend).",
+      "licencia": "Términos de servicio (no es software MIT); Neon opera la base de datos. El software del motor Neon es Apache-2.0, pero lo que se usa aquí es el SERVICIO, regido por sus términos.",
+      "licencia_fuente": "Términos de servicio de Neon (verificados en el sitio oficial).",
+      "url_oficial": "https://neon.tech/",
+      "terminos_url": "https://neon.tech/terms-of-service",
+      "estado_verificacion": "verificada (términos de servicio)"
+    },
+    {
+      "nombre": "Brevo",
+      "tipo": "servicio en la nube",
+      "uso": "Envío de correos transaccionales (invitaciones de usuarios, recuperaciones) mediante su API v3 SMTP: POST https://api.brevo.com/v3/smtp/email (backend/src/services/correos.js).",
+      "licencia": "Términos de servicio (servicio, no software local)",
+      "licencia_fuente": "Términos de servicio de Brevo (verificados en el sitio oficial).",
+      "url_oficial": "https://www.brevo.com/",
+      "terminos_url": "https://www.brevo.com/legal/termsofuse/",
+      "estado_verificacion": "verificada (términos de servicio)"
+    },
+    {
+      "nombre": "Cloudflare Turnstile",
+      "tipo": "servicio en la nube",
+      "uso": "Verificación de captcha en registro, login y recuperación de contraseña (backend/src/middlewares/verificarCaptcha.js, endpoint siteverify de Turnstile).",
+      "licencia": "Términos de servicio de Cloudflare (Servicios de Suscripción Autoservicio); Turnstile es un servicio, no software distribuido.",
+      "licencia_fuente": "Términos de Cloudflare verificados en el sitio oficial (cloudflare.com/terms y documentación oficial de Turnstile).",
+      "url_oficial": "https://developers.cloudflare.com/turnstile/",
+      "terminos_url": "https://www.cloudflare.com/terms/",
+      "estado_verificacion": "verificada (términos de servicio)"
+    },
+    {
+      "nombre": "Cloudinary",
+      "tipo": "servicio en la nube",
+      "uso": "No se detectó uso en el código fuente, dependencias ni configuración del proyecto durante la auditoría del 2026-11-13. Se lista por mención del contexto del proyecto; estado PENDIENTE DE VERIFICACIÓN. Si se incorpora, documentar aquí su uso real.",
+      "licencia": "Términos de servicio (servicio, no software local)",
+      "licencia_fuente": null,
+      "url_oficial": "https://cloudinary.com/",
+      "terminos_url": null,
+      "estado_verificacion": "Pendiente de verificación"
+    },
+    {
+      "nombre": "Git",
+      "tipo": "herramienta de desarrollo",
+      "uso": "Control de versiones del código fuente del proyecto.",
+      "licencia": "GPL-2.0-only (algunas partes incluidas bajo licencias compatibles, según el archivo COPYING del proyecto)",
+      "licencia_fuente": "Sitio oficial de Git (git-scm.com) y archivo COPYING del repositorio oficial.",
+      "url_oficial": "https://git-scm.com/",
+      "texto_licencia_local": null,
+      "estado_verificacion": "verificada",
+      "nota": "Herramienta del entorno de desarrollo, no dependencia del aplicativo. Su licencia GPL-2.0 no afecta el código fuente del proyecto (Git no se distribuye con la aplicación)."
+    },
+    {
+      "nombre": "GitHub",
+      "tipo": "plataforma de código",
+      "uso": "Hospedaje del repositorio de código fuente y control de versiones colaborativo.",
+      "licencia": "Términos de servicio de GitHub (servicio, no software)",
+      "licencia_fuente": "Términos de servicio de GitHub verificados en docs.github.com.",
+      "url_oficial": "https://github.com/",
+      "terminos_url": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+      "estado_verificacion": "verificada (términos de servicio)"
+    }
+  ]
+}

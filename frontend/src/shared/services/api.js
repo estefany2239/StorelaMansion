@@ -366,13 +366,6 @@ export async function obtenerMisPedidos() {
   return procesarRespuesta(respuesta, 'No se pudieron cargar tus pedidos')
 }
 
-export async function obtenerPedidos() {
-  const respuesta = await fetch(`${API_URL}/api/pedidos`, {
-    headers: authHeaders()
-  })
-  return procesarRespuesta(respuesta, 'No se pudieron cargar los pedidos')
-}
-
 export async function obtenerPedido(id) {
   const respuesta = await fetch(`${API_URL}/api/pedidos/${id}`, {
     headers: authHeaders()
@@ -516,6 +509,19 @@ export async function quitarFavorito(idProducto) {
 /* =========================================================
    5. ABONOS Y CONFIGURACIÓN DEL NEGOCIO
    ========================================================= */
+export async function obtenerPedidos(filtros = {}) {
+  const params = new URLSearchParams()
+  Object.entries(filtros || {}).forEach(([clave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') params.append(clave, valor)
+  })
+  const url = params.toString()
+    ? `${API_URL}/api/pedidos?${params}`
+    : `${API_URL}/api/pedidos`
+  const respuesta = await fetch(url, {
+    headers: authHeaders()
+  })
+  return procesarRespuesta(respuesta, 'No se pudieron cargar los pedidos')
+}
 
 // ----- Abonos (pedidos de contra entrega con pagos parciales) -----
 

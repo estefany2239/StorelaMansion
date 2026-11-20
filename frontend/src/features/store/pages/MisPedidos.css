@@ -4,8 +4,8 @@
 
 .mis-pedidos-section {
   width: 100%;
-  min-height: calc(100vh - 84px);
-  padding: 40px 30px 80px;
+  flex: 1;
+  padding: 40px 30px 56px;
   background-color: var(--bg-main);
   color: var(--text-primary);
   transition:
@@ -23,7 +23,10 @@
    VOLVER
    ========================================================= */
 
-.mp-back-btn {
+/* Selectores con doble clase: le ganan al reset ".landing button"
+   (0,1,1) de Landing.css sin depender de ese contenedor. */
+
+.mis-pedidos-wrap .mp-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -40,7 +43,7 @@
     transform 0.2s ease;
 }
 
-.mp-back-btn:hover {
+.mis-pedidos-wrap .mp-back-btn:hover {
   color: var(--gold-light);
   transform: translateX(-3px);
 }
@@ -92,29 +95,31 @@
   margin-bottom: 28px;
 }
 
-.mp-tab {
-  padding: 9px 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 30px;
-  background: transparent;
-  color: var(--text-secondary);
+.mis-pedidos-wrap .mp-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 22px;
+  border: 1.5px solid rgba(212, 175, 55, 0.5);
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #111111;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.mp-tab:hover {
-  border-color: var(--gold);
-  color: var(--gold);
+.mis-pedidos-wrap .mp-tab:hover {
+  background-color: rgba(212, 175, 55, 0.12);
 }
 
-.mp-tab.active {
-  background-color: var(--gold);
-  border-color: var(--gold);
-  color: #000000;
-  font-weight: 700;
+.mis-pedidos-wrap .mp-tab.active {
+  background-color: #d4af37;
+  border-color: transparent;
+  color: #1a1407;
+  font-weight: 600;
 }
 
 /* =========================================================
@@ -328,8 +333,9 @@
    MENSAJE Y ESTIMADO
    ========================================================= */
 
-.mp-msg {
-  margin: 0 0 4px;
+/* Doble clase para vencer a ".landing p { margin: 0 }" de Landing.css */
+.mp-card .mp-msg {
+  margin: 12px 0;
   font-size: 13.5px;
   font-weight: 600;
   line-height: 1.4;
@@ -401,51 +407,61 @@
 .mp-card-btns {
   display: flex;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: auto;
+  padding-top: 16px;
 }
 
-.mp-btn {
-  flex: 1;
+.mis-pedidos-wrap .mp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   box-sizing: border-box;
-  padding: 10px 16px;
+  height: 44px;
+  padding: 0 14px;
   border-radius: 999px;
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.06em;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
 }
 
-.mp-btn-primary {
-  background-color: var(--gold);
-  border: 2px solid transparent;
-  color: #121212;
+.mp-card-btns .mp-btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-.mp-btn-primary:hover {
-  background-color: var(--gold-light);
+.mis-pedidos-wrap .mp-btn-primary {
+  background-color: #d4af37;
+  border: 1.5px solid #d4af37;
+  color: #1a1407;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.28);
+}
+
+.mis-pedidos-wrap .mp-btn-primary:hover {
+  background-color: #c39c2e;
+  border-color: #c39c2e;
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.28);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
 }
 
-.mp-btn-outline {
-  background-color: var(--card-bg);
-  border: 2px solid var(--gold);
-  color: var(--ink);
+.mis-pedidos-wrap .mp-btn-outline {
+  background-color: transparent;
+  border: 1.5px solid #d4af37;
+  color: #8a6d0b;
 }
 
-.mp-btn-outline:hover {
-  border-color: var(--gold-dark, #b19128);
-  background-color: rgba(216, 180, 56, 0.12);
-  color: var(--ink);
-  transform: translateY(-1px);
+.mis-pedidos-wrap .mp-btn-outline:hover {
+  background-color: rgba(212, 175, 55, 0.12);
+  color: #8a6d0b;
+}
+
+:root[data-theme="dark"] .mis-pedidos-wrap .mp-btn-outline {
+  color: var(--gold-dark);
 }
 
 /* =========================================================
@@ -534,7 +550,7 @@
   color: var(--text-primary);
 }
 
-.mp-modal-close {
+.mp-modal-header .mp-modal-close {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -549,7 +565,7 @@
   transition: all 0.2s ease;
 }
 
-.mp-modal-close:hover {
+.mp-modal-header .mp-modal-close:hover {
   background-color: rgba(212, 175, 55, 0.15);
   color: var(--gold);
 }
@@ -1002,7 +1018,7 @@
   color: #a64032;
 }
 
-.mp-btn-reintentar {
+.mis-pedidos-wrap .mp-btn-reintentar {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1018,11 +1034,11 @@
   transition: all 0.2s ease;
 }
 
-.mp-btn-reintentar:hover {
+.mis-pedidos-wrap .mp-btn-reintentar:hover {
   background-color: rgba(216, 180, 56, 0.12);
 }
 
-.mp-btn-reintentar:disabled {
+.mis-pedidos-wrap .mp-btn-reintentar:disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -1087,24 +1103,18 @@
   }
 
   .mp-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
     gap: 8px;
+    padding-bottom: 4px;
   }
 
-  .mp-tab {
-    padding: 8px 15px;
-    font-size: 12.5px;
+  .mis-pedidos-wrap .mp-tab {
+    flex-shrink: 0;
   }
 
   .mp-card {
     padding: 18px;
-  }
-
-  .mp-card-btns {
-    flex-direction: column;
-  }
-
-  .mp-btn {
-    width: 100%;
   }
 
   .mp-modal {

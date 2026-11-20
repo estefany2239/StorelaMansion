@@ -143,27 +143,31 @@
 
 .roles-table {
   width: 100%;
-  min-width: 680px;
   border-collapse: collapse;
   table-layout: fixed;
 }
 
-/* DISTRIBUCIÓN: ID ROL | NOMBRE | USUARIOS | ESTADO | ACCIONES */
-.roles-table th:nth-child(1) { width: 11%; }
-.roles-table th:nth-child(2) { width: 33%; }
-.roles-table th:nth-child(3) { width: 24%; }
+/* DISTRIBUCI�"N: ID ROL | NOMBRE | USUARIOS | ESTADO | ACCIONES */
+.roles-table th:nth-child(1) { width: 12%; }
+.roles-table th:nth-child(2) { width: 28%; }
+.roles-table th:nth-child(3) { width: 20%; }
 .roles-table th:nth-child(4) { width: 18%; }
-.roles-table th:nth-child(5) { width: 14%; }
+
+.roles-table th:nth-child(5),
+.roles-table td:nth-child(5) { width: 22%; min-width: 100px; text-align: center; }
 
 .roles-table th:nth-child(4),
 .roles-table td:nth-child(4) { text-align: center; }
 
-.roles-table th:nth-child(5),
-.roles-table td:nth-child(5) { text-align: center; }
+.roles-table td:nth-child(1),
+.roles-table td:nth-child(2),
+.roles-table td:nth-child(3) {
+  overflow-wrap: anywhere;
+}
 
 .roles-table th {
   height: 44px;
-  padding: 0 16px;
+  padding: 14px 12px;
   text-align: left;
   font-size: 11px;
   font-weight: 600;
@@ -176,7 +180,7 @@
 
 .roles-table td {
   height: 72px;
-  padding: 0 16px;
+  padding: 14px 12px;
   vertical-align: middle;
   border-bottom:
     1px solid #e8e8e8;
@@ -197,7 +201,7 @@
    ========================================================= */
 
 .rol-id {
-  color: var(--admin-gold);
+  color: #b8860b;
   font-size: 13px;
   font-weight: 700;
 }
@@ -426,6 +430,7 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
+  flex-wrap: nowrap;
 }
 
 .rol-actions button {
@@ -662,7 +667,7 @@
   gap: 14px;
   padding: 16px;
   border: 1px solid var(--admin-border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--admin-card);
 }
 
@@ -701,8 +706,8 @@
   justify-content: center;
   padding: 4px 10px;
   border-radius: 20px;
-  background: rgba(153, 101, 21, 0.10);
-  color: var(--admin-gold-dark);
+  background: rgba(212, 175, 55, 0.10);
+  color: #b8860b;
   font-size: 11px;
   font-weight: 600;
 }
@@ -723,8 +728,8 @@
   gap: 8px;
   padding: 0 10px;
   border: 1px solid var(--admin-border);
-  border-radius: 9px;
-  background: #ffffff;
+  border-radius: 10px;
+  background: var(--admin-card);
   cursor: pointer;
   transition:
     border-color 0.2s ease,
@@ -739,8 +744,8 @@
 
 .rol-privilegio-item.activo {
   border-color: var(--admin-gold);
-  background: rgba(153, 101, 21, 0.10);
-  color: var(--admin-gold-dark);
+  background: rgba(212, 175, 55, 0.10);
+  color: #b8860b;
 }
 
 .rol-privilegio-item input {
@@ -759,6 +764,25 @@
 /* =========================================================
    FOOTER MODAL
    ========================================================= */
+
+.rol-permisos-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.rol-permisos-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.rol-permisos-header span {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+}
 
 .rol-modal-footer {
   min-height: 96px;
@@ -1128,3 +1152,8 @@
     grid-template-columns: 1.2fr repeat(5, 0.8fr);
   }
 }
+
+.admin-container.admin-dark .roles-page .rol-id {
+  color: var(--admin-gold) !important;
+}
+

@@ -16,6 +16,8 @@ import {
   FileText
 } from "lucide-react";
 
+import NavbarCategoria from "../../categories/NavbarCategoria";
+import Footer from "../../../shared/components/footer/Footer";
 import {
   CLASES_ESTADO_COMPROBANTE,
   ETIQUETAS_ESTADO_COMPROBANTE,
@@ -429,7 +431,20 @@ function BloqueComprobantes({
   );
 }
 
-export default function MisPedidos({ pedidos = [], onBack }) {
+export default function MisPedidos({
+  pedidos = [],
+  onBack,
+  user,
+  tema = "claro",
+  onAlternarTema,
+  onIrALogin,
+  onNavigate,
+  onLogout,
+  onNavigateSection,
+  onVerCategoria,
+  cartCount = 0,
+  onCartClick,
+}) {
   const { catalogo } = useCatalogo();
   const [filtro, setFiltro] = useState("todos");
   const [modalPedido, setModalPedido] = useState(null);
@@ -618,8 +633,23 @@ export default function MisPedidos({ pedidos = [], onBack }) {
       icono: <Package size={13} />
     };
 
+  const navbarProps = {
+    tema,
+    user,
+    onAlternarTema,
+    onIrALogin,
+    onNavigate,
+    onLogout,
+    onNavigateSection,
+    onVerCategoria,
+    cartCount,
+    onCartClick,
+  };
+
   return (
-    <section className="mis-pedidos-section">
+    <div className="landing categoria-pagina" data-tema={tema}>
+      <NavbarCategoria {...navbarProps} />
+      <section className="mis-pedidos-section" style={{ paddingTop: 110 }}>
       <div className="mis-pedidos-wrap">
 
         <div className="mis-pedidos-topbar">
@@ -1011,6 +1041,9 @@ export default function MisPedidos({ pedidos = [], onBack }) {
           </div>
         </div>
       )}
-    </section>
+      </section>
+
+      <Footer tema={tema} onNavigateSection={onNavigateSection} onVerCategoria={onVerCategoria} />
+    </div>
   );
 }

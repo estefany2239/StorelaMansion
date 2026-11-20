@@ -973,7 +973,7 @@ if (modoEdicion) {
 
                   <td>
 
-                    <span className="cliente-correo">
+                    <span className="cliente-correo" title={cliente.correo}>
                       {cliente.correo}
                     </span>
 
@@ -1061,7 +1061,7 @@ if (modoEdicion) {
                       className={`cliente-invitacion-badge ${estadoInvitacion(cliente).clase}`}
                     >
 
-                      {estadoInvitacion(cliente).texto}
+                      {estadoInvitacion(cliente).texto || "—"}
 
                     </span>
 
@@ -1233,12 +1233,12 @@ if (modoEdicion) {
 
       {mostrarModal && (
 
-        <div className="cliente-modal-overlay">
+        <div className="cliente-modal-overlay am-overlay">
 
-          <div className="cliente-modal">
+          <div className="cliente-modal am-modal am-modal--lg">
 
 
-            <div className="cliente-modal-header">
+            <div className="cliente-modal-header am-header">
 
               <h3>
                 {modoEdicion
@@ -1249,7 +1249,7 @@ if (modoEdicion) {
 
               <button
                 type="button"
-                className="cliente-modal-close"
+                className="cliente-modal-close am-close"
                 onClick={cerrarModal}
               >
 
@@ -1260,7 +1260,8 @@ if (modoEdicion) {
             </div>
 
 
-            <div className="cliente-modal-body">
+            <form className="am-form-wrap">
+            <div className="cliente-modal-body am-body">
 
 
               {/* =================================================
@@ -1269,16 +1270,16 @@ if (modoEdicion) {
 
               <div className="cliente-form-card">
 
-                <h4 className="cliente-form-card-title">
+                <h4 className="cliente-form-card-title am-section-title">
                   Datos personales
                 </h4>
 
 
                 {/* TIPO + NÚMERO DE DOCUMENTO */}
 
-                <div className="cliente-form-row">
+                <div className="cliente-form-row am-form-grid">
 
-                  <div className="cliente-form-group">
+                  <div className="cliente-form-group am-field">
 
                     <label>
                       TIPO DE DOCUMENTO
@@ -1289,7 +1290,7 @@ if (modoEdicion) {
                       value={
                         formulario.tipoDocumento
                       }
-                      className={`input ${errores.tipoDocumento ? "input-error" : ""}`}
+                      className={`am-select ${errores.tipoDocumento ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "tipoDocumento",
@@ -1328,7 +1329,7 @@ if (modoEdicion) {
                     </select>
 
                     {errores.tipoDocumento && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.tipoDocumento}
                       </span>
                     )}
@@ -1336,7 +1337,7 @@ if (modoEdicion) {
                   </div>
 
 
-                  <div className="cliente-form-group">
+                  <div className="cliente-form-group am-field">
 
                     <label>
                       NÚMERO DE DOCUMENTO
@@ -1350,7 +1351,7 @@ if (modoEdicion) {
                       value={
                         formulario.documento
                       }
-                      className={`input ${errores.documento ? "input-error" : ""}`}
+                      className={`am-input input ${errores.documento ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "documento",
@@ -1370,7 +1371,7 @@ if (modoEdicion) {
                     />
 
                     {errores.documento && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.documento}
                       </span>
                     )}
@@ -1382,9 +1383,9 @@ if (modoEdicion) {
 
                 {/* NOMBRE + FECHA DE NACIMIENTO */}
 
-                <div className="cliente-form-row">
+                <div className="cliente-form-row am-form-grid">
 
-                  <div className="cliente-form-group">
+                  <div className="cliente-form-group am-field">
 
                     <label>
                       NOMBRE COMPLETO
@@ -1398,7 +1399,7 @@ if (modoEdicion) {
                       value={
                         formulario.nombre
                       }
-                      className={`input ${errores.nombre ? "input-error" : ""}`}
+                      className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "nombre",
@@ -1418,7 +1419,7 @@ if (modoEdicion) {
                     />
 
                     {errores.nombre && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.nombre}
                       </span>
                     )}
@@ -1426,7 +1427,7 @@ if (modoEdicion) {
                   </div>
 
 
-                  <div className="cliente-form-group">
+                  <div className="cliente-form-group am-field">
 
                     <label>
                       FECHA DE NACIMIENTO
@@ -1438,7 +1439,7 @@ if (modoEdicion) {
                       value={
                         formulario.fechaNacimiento
                       }
-                      className={`input ${errores.fechaNacimiento ? "input-error" : ""}`}
+                      className={`am-input input ${errores.fechaNacimiento ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "fechaNacimiento",
@@ -1455,7 +1456,7 @@ if (modoEdicion) {
                     />
 
                     {errores.fechaNacimiento && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.fechaNacimiento}
                       </span>
                     )}
@@ -1474,16 +1475,16 @@ if (modoEdicion) {
 
               <div className="cliente-form-card">
 
-                <h4 className="cliente-form-card-title">
+                <h4 className="cliente-form-card-title am-section-title">
                   Datos de contacto
                 </h4>
 
 
                 {/* CORREO + TELÉFONO */}
 
-                <div className="cliente-form-row">
+                <div className="cliente-form-row am-form-grid">
 
-                  <div className="cliente-form-group">
+                  <div className="cliente-form-group am-field">
 
                     <label>
                       CORREO ELECTRÓNICO
@@ -1496,7 +1497,7 @@ if (modoEdicion) {
                       value={
                         formulario.correo
                       }
-                      className={`input ${errores.correo ? "input-error" : ""}`}
+                      className={`am-input input ${errores.correo ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "correo",
@@ -1513,7 +1514,7 @@ if (modoEdicion) {
                     />
 
                     {errores.correo && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.correo}
                       </span>
                     )}
@@ -1521,7 +1522,7 @@ if (modoEdicion) {
                   </div>
 
 
-                  <div className="cliente-form-group">
+                  <div className="cliente-form-group am-field">
 
                     <label>
                       TELÉFONO
@@ -1535,7 +1536,7 @@ if (modoEdicion) {
                       value={
                         formulario.telefono
                       }
-                      className={`input ${errores.telefono ? "input-error" : ""}`}
+                      className={`am-input input ${errores.telefono ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "telefono",
@@ -1555,7 +1556,7 @@ if (modoEdicion) {
                     />
 
                     {errores.telefono && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.telefono}
                       </span>
                     )}
@@ -1567,9 +1568,9 @@ if (modoEdicion) {
 
                 {/* DIRECCIÓN */}
 
-                <div className="cliente-form-row">
+                <div className="cliente-form-row am-form-grid">
 
-                  <div className="cliente-form-group cliente-form-group-full">
+                  <div className="cliente-form-group cliente-form-group-full am-field am-field--full">
 
                     <label>
                       DIRECCIÓN
@@ -1582,7 +1583,7 @@ if (modoEdicion) {
                       value={
                         formulario.direccion
                       }
-                      className={`input ${errores.direccion ? "input-error" : ""}`}
+                      className={`am-input input ${errores.direccion ? "input-error" : ""}`}
                       onChange={(e) =>
                         cambiarCampo(
                           "direccion",
@@ -1599,7 +1600,7 @@ if (modoEdicion) {
                     />
 
                     {errores.direccion && (
-                      <span className="error-text">
+                      <span className="error-text am-error">
                         {errores.direccion}
                       </span>
                     )}
@@ -1612,7 +1613,7 @@ if (modoEdicion) {
                 {/* INVITACIÓN POR CORREO (solo al crear) */}
 
                 {!modoEdicion && (
-                  <div className="cliente-form-row">
+                  <div className="cliente-form-row am-form-grid">
 
                     <div className="cliente-invitar-box">
 
@@ -1654,15 +1655,16 @@ if (modoEdicion) {
                 {/* ESTADO (solo al editar) */}
 
                 {modoEdicion && (
-                  <div className="cliente-form-row">
+                  <div className="cliente-form-row am-form-grid">
 
-                    <div className="cliente-form-group">
+                    <div className="cliente-form-group am-field">
 
                       <label>
                         ESTADO
                       </label>
 
                       <select
+                        className="am-select"
                         value={
                           formulario.estado
                         }
@@ -1698,11 +1700,11 @@ if (modoEdicion) {
 
             {/* FOOTER */}
 
-            <div className="cliente-modal-footer">
+            <div className="cliente-modal-footer am-footer">
 
               <button
                 type="button"
-                className="cliente-cancel-button"
+                className="cliente-cancel-button am-btn-ghost"
                 onClick={cerrarModal}
               >
 
@@ -1713,7 +1715,7 @@ if (modoEdicion) {
 
               <button
                 type="button"
-                className="cliente-create-button"
+                className="cliente-create-button am-btn-gold"
                 onClick={guardarCliente}
               >
 
@@ -1724,6 +1726,7 @@ if (modoEdicion) {
               </button>
 
             </div>
+            </form>
 
 
           </div>
@@ -1740,12 +1743,12 @@ if (modoEdicion) {
       {mostrarDetalle &&
         clienteSeleccionado && (
 
-        <div className="cliente-modal-overlay">
+        <div className="cliente-modal-overlay am-overlay">
 
-          <div className="cliente-modal">
+          <div className="cliente-modal am-modal am-modal--lg">
 
 
-            <div className="cliente-modal-header">
+            <div className="cliente-modal-header am-header">
 
               <h3>
                 Detalle del Cliente
@@ -1754,7 +1757,7 @@ if (modoEdicion) {
 
               <button
                 type="button"
-                className="cliente-modal-close"
+                className="cliente-modal-close am-close"
                 onClick={cerrarDetalle}
               >
 
@@ -1765,169 +1768,70 @@ if (modoEdicion) {
             </div>
 
 
-            <div className="cliente-modal-body">
+            <div className="cliente-modal-body am-body">
 
-
-              <div className="cliente-form-row">
-
-                <div className="cliente-info-group">
-
-                  <label>
-                    ID CLIENTE
-                  </label>
-
-                  <div className="cliente-info-value">
-                    {clienteSeleccionado.id}
+              <div className="am-summary-grid">
+                <div className="am-summary-row--3">
+                  <div className="am-summary-card">
+                    <span className="am-summary-label">Nombre completo</span>
+                    <strong className="am-summary-value">{clienteSeleccionado.nombre}</strong>
                   </div>
-
-                </div>
-
-
-                <div className="cliente-info-group">
-
-                  <label>
-                    ESTADO
-                  </label>
-
-                  <div className="cliente-info-value">
-
-                    <span
-                      className={
-                        clienteSeleccionado.estado ===
-                        "Activo"
-                          ? "cliente-estado activo"
-                          : "cliente-estado inactivo"
-                      }
-                    >
-                      {clienteSeleccionado.estado}
-                    </span>
-
+                  <div className="am-summary-card">
+                    <span className="am-summary-label">Correo electronico</span>
+                    <strong className="am-summary-value">{clienteSeleccionado.correo}</strong>
                   </div>
-
+                  <div className="am-summary-card">
+                    <span className="am-summary-label">Estado</span>
+                    <span className="am-summary-value"><span className="am-badge">{clienteSeleccionado.estado}</span></span>
+                  </div>
                 </div>
-
               </div>
 
+              <div className="am-divider" />
 
-              <div className="cliente-form-row">
-
-                <div className="cliente-info-group">
-
-                  <label>
-                    NOMBRE COMPLETO
-                  </label>
-
-                  <div className="cliente-info-value">
-                    {clienteSeleccionado.nombre}
+              <div className="am-data-grid">
+                <div className="am-data-col">
+                  <div className="am-data-pill">
+                    <span className="am-data-label">ID Cliente</span>
+                    <span className="am-data-value">{clienteSeleccionado.id}</span>
                   </div>
-
-                </div>
-
-
-                <div className="cliente-info-group">
-
-                  <label>
-                    CORREO ELECTRÓNICO
-                  </label>
-
-                  <div className="cliente-info-value">
-                    {clienteSeleccionado.correo}
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Telefono</span>
+                    <span className="am-data-value">{clienteSeleccionado.telefono}</span>
                   </div>
-
                 </div>
-
+                <div className="am-data-col">
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Fecha de registro</span>
+                    <span className="am-data-value">{formatearFecha(clienteSeleccionado.fecha)}</span>
+                  </div>
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Direccion</span>
+                    <span className="am-data-value">{clienteSeleccionado.direccion}</span>
+                  </div>
+                </div>
               </div>
-
-
-              <div className="cliente-form-row">
-
-                <div className="cliente-info-group">
-
-                  <label>
-                    TELÉFONO
-                  </label>
-
-                  <div className="cliente-info-value">
-                    {clienteSeleccionado.telefono}
-                  </div>
-
-                </div>
-
-
-                <div className="cliente-info-group">
-
-                  <label>
-                    FECHA DE REGISTRO
-                  </label>
-
-                  <div className="cliente-info-value">
-                    {formatearFecha(
-                      clienteSeleccionado.fecha
-                    )}
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              <div className="cliente-info-group">
-
-                <label>
-                  DIRECCIÓN
-                </label>
-
-                <div className="cliente-info-value">
-                  {clienteSeleccionado.direccion}
-                </div>
-
-              </div>
-
-
-              {/* HISTORIAL */}
 
               <div className="cliente-history">
-
                 <div className="cliente-history-header">
-
-                  <label>
-                    HISTORIAL DE PEDIDOS
-                  </label>
-
-                  <span>
-                    {clienteSeleccionado.pedidos} pedidos
-                  </span>
-
+                  <label>HISTORIAL DE PEDIDOS</label>
+                  <span>{clienteSeleccionado.pedidos} pedidos</span>
                 </div>
-
-
                 <div className="cliente-history-item">
-
                   <div>
-
-                    <strong>
-                      Historial de compras
-                    </strong>
-
-                    <span>
-                      Consulta los pedidos realizados por este cliente.
-                    </span>
-
+                    <strong>Historial de compras</strong>
+                    <span>Consulta los pedidos realizados por este cliente.</span>
                   </div>
-
                 </div>
-
               </div>
-
 
             </div>
 
-
-            <div className="cliente-modal-footer">
+            <div className="cliente-modal-footer am-footer">
 
               <button
                 type="button"
-                className="cliente-cancel-button detail-cerrar-button"
+                className="cliente-cancel-button detail-cerrar-button am-btn-gold"
                 onClick={cerrarDetalle}
               >
 

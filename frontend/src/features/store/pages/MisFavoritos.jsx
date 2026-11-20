@@ -3,6 +3,8 @@ import { ArrowLeft, CircleAlert, Eye, Heart, RotateCw } from "lucide-react";
 
 import BotonFavorito from "../../../shared/components/favoritos/BotonFavorito";
 import ProductDetailPage from "../../product/ProductDetailPage";
+import NavbarCategoria from "../../categories/NavbarCategoria";
+import Footer from "../../../shared/components/footer/Footer";
 import { useFavoritos } from "../../../shared/hooks/useFavoritos";
 import { useCatalogo } from "../../../shared/hooks/useCatalogo";
 import { useNotify } from "../../../shared/components/notifications/useNotify.js";
@@ -25,6 +27,16 @@ export default function MisFavoritos({
   onBack,
   onVerProductos,
   addToCart,
+  user,
+  tema = "claro",
+  onAlternarTema,
+  onIrALogin,
+  onNavigate,
+  onLogout,
+  onNavigateSection,
+  onVerCategoria,
+  cartCount = 0,
+  onCartClick,
 }) {
   const notify = useNotify();
   const {
@@ -118,21 +130,51 @@ export default function MisFavoritos({
 
   if (productoAbierto) {
     return (
-      <ProductDetailPage
-        key={productoAbierto.id}
-        product={productoAbierto}
-        catalogoCompleto={catalogo}
-        addToCart={(producto) => addToCart?.(producto)}
-        onBack={() => {
-          setProductoAbierto(null);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-      />
+      <div className="landing categoria-pagina" data-tema={tema}>
+        <NavbarCategoria
+          tema={tema}
+          user={user}
+          onAlternarTema={onAlternarTema}
+          onIrALogin={onIrALogin}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
+          onNavigateSection={onNavigateSection}
+          onVerCategoria={onVerCategoria}
+          cartCount={cartCount}
+          onCartClick={onCartClick}
+        />
+        <div style={{ paddingTop: 110 }}>
+          <ProductDetailPage
+            key={productoAbierto.id}
+            product={productoAbierto}
+            catalogoCompleto={catalogo}
+            addToCart={(producto) => addToCart?.(producto)}
+            onIrALogin={onIrALogin}
+            onBack={() => {
+              setProductoAbierto(null);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </div>
+      </div>
     );
   }
 
   return (
-    <section className="mis-favoritos-section">
+    <div className="landing categoria-pagina" data-tema={tema}>
+      <NavbarCategoria
+        tema={tema}
+        user={user}
+        onAlternarTema={onAlternarTema}
+        onIrALogin={onIrALogin}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        onNavigateSection={onNavigateSection}
+        onVerCategoria={onVerCategoria}
+        cartCount={cartCount}
+        onCartClick={onCartClick}
+      />
+      <section className="mis-favoritos-section" style={{ paddingTop: 110 }}>
       <div className="mis-favoritos-wrap">
         <div className="mis-favoritos-topbar">
           <button className="mf-back-btn" onClick={onBack}>
@@ -257,6 +299,9 @@ export default function MisFavoritos({
           </div>
         ) : null}
       </div>
-    </section>
+      </section>
+
+      <Footer tema={tema} onNavigateSection={onNavigateSection} onVerCategoria={onVerCategoria} />
+    </div>
   );
 }

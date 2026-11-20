@@ -241,6 +241,29 @@
   color: var(--admin-selected-text);
 }
 
+/* Enlace de información del sistema dentro del menú de perfil
+   (Licencias y derechos de autor): mismas líneas que los botones. */
+.admin-navbar-profile-menu a.admin-navbar-profile-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--admin-text);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-navbar-profile-menu a.admin-navbar-profile-link:hover {
+  background: var(--admin-hover);
+  color: var(--admin-selected-text);
+}
+
 .admin-page-header {
   margin-bottom: 24px;
 }

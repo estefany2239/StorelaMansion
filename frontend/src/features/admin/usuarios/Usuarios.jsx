@@ -985,11 +985,11 @@ export default function Usuarios({ user }) {
 
       {mostrarModal && (
 
-        <div className="usuario-modal-overlay">
+        <div className="usuario-modal-overlay am-overlay">
 
-          <div className="usuario-modal">
+          <div className="usuario-modal am-modal am-modal--lg">
 
-            <div className="usuario-modal-header">
+            <div className="usuario-modal-header am-header">
 
               <h3>
 
@@ -1001,7 +1001,7 @@ export default function Usuarios({ user }) {
 
               <button
                 type="button"
-                className="usuario-modal-close"
+                className="usuario-modal-close am-close"
                 onClick={cerrarModal}
               >
 
@@ -1011,49 +1011,16 @@ export default function Usuarios({ user }) {
 
             </div>
 
-            <div className="usuario-modal-body">
+            <form className="am-form-wrap">
+            <div className="usuario-modal-body am-body">
 
-              {/* ESTADO */}
-
-              <div className="usuario-form-row">
-
-                <div className="usuario-form-group">
-
-                  <label>
-                    ESTADO
-                  </label>
-
-                  <select
-                    value={
-                      formulario.estado
-                    }
-                    onChange={(e) =>
-                      cambiarCampo(
-                        "estado",
-                        e.target.value
-                      )
-                    }
-                  >
-
-                    <option value="Activo">
-                      Activo
-                    </option>
-
-                    <option value="Inactivo">
-                      Inactivo
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
+              <h4 className="am-section-title">Datos de la cuenta</h4>
 
               {/* NOMBRE + CORREO */}
 
-              <div className="usuario-form-row">
+              <div className="usuario-form-row am-form-grid">
 
-                <div className="usuario-form-group">
+                <div className="usuario-form-group am-field">
 
                   <label>
                     NOMBRE COMPLETO
@@ -1067,7 +1034,7 @@ export default function Usuarios({ user }) {
                     value={
                       formulario.nombre
                     }
-                    className={`input ${errores.nombre ? "input-error" : ""}`}
+                    className={`am-input input ${errores.nombre ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "nombre",
@@ -1087,14 +1054,14 @@ export default function Usuarios({ user }) {
                   />
 
                   {errores.nombre && (
-                    <span className="error-text">
+                    <span className="error-text am-error">
                       {errores.nombre}
                     </span>
                   )}
 
                 </div>
 
-                <div className="usuario-form-group">
+                <div className="usuario-form-group am-field">
 
                   <label>
                     CORREO ELECTRÓNICO
@@ -1107,7 +1074,7 @@ export default function Usuarios({ user }) {
                     value={
                       formulario.correo
                     }
-                    className={`input ${errores.correo ? "input-error" : ""}`}
+                    className={`am-input input ${errores.correo ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "correo",
@@ -1124,7 +1091,7 @@ export default function Usuarios({ user }) {
                   />
 
                   {errores.correo && (
-                    <span className="error-text">
+                    <span className="error-text am-error">
                       {errores.correo}
                     </span>
                   )}
@@ -1135,9 +1102,9 @@ export default function Usuarios({ user }) {
 
               {/* TELÉFONO + ROL */}
 
-              <div className="usuario-form-row">
+              <div className="usuario-form-row am-form-grid">
 
-                <div className="usuario-form-group">
+                <div className="usuario-form-group am-field">
 
                   <label>
                     TELÉFONO
@@ -1151,7 +1118,7 @@ export default function Usuarios({ user }) {
                     value={
                       formulario.telefono
                     }
-                    className={`input ${errores.telefono ? "input-error" : ""}`}
+                    className={`am-input input ${errores.telefono ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "telefono",
@@ -1171,14 +1138,20 @@ export default function Usuarios({ user }) {
                   />
 
                   {errores.telefono && (
-                    <span className="error-text">
+                    <span className="error-text am-error">
                       {errores.telefono}
                     </span>
                   )}
 
                 </div>
 
-                <div className="usuario-form-group">
+              </div>
+
+              <h4 className="am-section-title">Acceso</h4>
+
+              <div className="usuario-form-row am-form-grid">
+
+                <div className="usuario-form-group am-field">
 
                   <label>
                     ROL
@@ -1189,7 +1162,7 @@ export default function Usuarios({ user }) {
                     value={
                       formulario.rol
                     }
-                    className={`input ${errores.rol ? "input-error" : ""}`}
+                    className={`am-select ${errores.rol ? "input-error" : ""}`}
                     onChange={(e) =>
                       cambiarCampo(
                         "rol",
@@ -1223,7 +1196,7 @@ export default function Usuarios({ user }) {
                   </select>
 
                   {errores.rol && (
-                    <span className="error-text">
+                    <span className="error-text am-error">
                       {errores.rol}
                     </span>
                   )}
@@ -1234,10 +1207,10 @@ export default function Usuarios({ user }) {
 
               {/* CONTRASEÑA (solo nota al crear) + FECHA (solo lectura al editar) */}
 
-              <div className="usuario-form-row">
+              <div className="usuario-form-row am-form-grid">
 
                 {!modoEdicion && (
-                  <div className="usuario-form-group">
+                  <div className="usuario-form-group am-field">
 
                     <label>
                       CONTRASEÑA
@@ -1251,7 +1224,7 @@ export default function Usuarios({ user }) {
                 )}
 
                 {modoEdicion && (
-                  <div className="usuario-form-group">
+                  <div className="usuario-form-group am-field">
 
                     <label>
                       FECHA DE REGISTRO
@@ -1272,7 +1245,7 @@ export default function Usuarios({ user }) {
 
               {/* DIRECCIÓN */}
 
-              <div className="usuario-form-group">
+              <div className="usuario-form-group am-field">
 
                 <label>
                   DIRECCIÓN
@@ -1285,7 +1258,7 @@ export default function Usuarios({ user }) {
                   value={
                     formulario.direccion
                   }
-                  className={`input ${errores.direccion ? "input-error" : ""}`}
+                  className={`am-input input ${errores.direccion ? "input-error" : ""}`}
                   onChange={(e) =>
                     cambiarCampo(
                       "direccion",
@@ -1302,10 +1275,47 @@ export default function Usuarios({ user }) {
                 />
 
                 {errores.direccion && (
-                  <span className="error-text">
+                  <span className="error-text am-error">
                     {errores.direccion}
                   </span>
                 )}
+
+              </div>
+
+              <h4 className="am-section-title">Estado</h4>
+
+              <div className="usuario-form-row am-form-grid">
+
+                <div className="usuario-form-group am-field">
+
+                  <label>
+                    ESTADO
+                  </label>
+
+                  <select
+                    className="am-select"
+                    value={
+                      formulario.estado
+                    }
+                    onChange={(e) =>
+                      cambiarCampo(
+                        "estado",
+                        e.target.value
+                      )
+                    }
+                  >
+
+                    <option value="Activo">
+                      Activo
+                    </option>
+
+                    <option value="Inactivo">
+                      Inactivo
+                    </option>
+
+                  </select>
+
+                </div>
 
               </div>
 
@@ -1313,11 +1323,11 @@ export default function Usuarios({ user }) {
 
             {/* FOOTER */}
 
-            <div className="usuario-modal-footer">
+            <div className="usuario-modal-footer am-footer">
 
               <button
                 type="button"
-                className="usuario-cancel-button"
+                className="usuario-cancel-button am-btn-ghost"
                 onClick={cerrarModal}
               >
 
@@ -1327,7 +1337,7 @@ export default function Usuarios({ user }) {
 
               <button
                 type="button"
-                className="usuario-create-button"
+                className="usuario-create-button am-btn-gold"
                 onClick={guardarUsuario}
               >
 
@@ -1338,6 +1348,7 @@ export default function Usuarios({ user }) {
               </button>
 
             </div>
+            </form>
 
           </div>
 
@@ -1352,11 +1363,11 @@ export default function Usuarios({ user }) {
       {mostrarDetalle &&
         usuarioSeleccionado && (
 
-        <div className="usuario-detail-overlay">
+        <div className="usuario-detail-overlay am-overlay">
 
-          <div className="usuario-detail-modal">
+          <div className="usuario-detail-modal am-modal am-modal--lg">
 
-            <div className="usuario-detail-modal-header">
+            <div className="usuario-detail-modal-header am-header">
 
               <h3>
                 Detalle del Usuario
@@ -1364,7 +1375,7 @@ export default function Usuarios({ user }) {
 
               <button
                 type="button"
-                className="usuario-detail-modal-close"
+                className="usuario-detail-modal-close am-close"
                 onClick={cerrarDetalle}
               >
 
@@ -1374,185 +1385,89 @@ export default function Usuarios({ user }) {
 
             </div>
 
-            <div className="usuario-detail-modal-body">
+            <div className="usuario-detail-modal-body am-body">
 
-              {/* ID + ESTADO */}
-
-              <div className="usuario-detail-row">
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    ID USUARIO
-                  </label>
-
-                    <div className="usuario-info-value">
-                      {formatearIdUsuario(usuarioSeleccionado.id)}
-                    </div>
-
+              <div className="am-summary-grid">
+                <div className="am-summary-row--3">
+                  <div className="am-summary-card">
+                    <span className="am-summary-label">Nombre completo</span>
+                    <strong className="am-summary-value">{usuarioSeleccionado.nombre}</strong>
+                  </div>
+                  <div className="am-summary-card">
+                    <span className="am-summary-label">Correo electronico</span>
+                    <strong className="am-summary-value">{usuarioSeleccionado.correo}</strong>
+                  </div>
+                  <div className="am-summary-card">
+                    <span className="am-summary-label">Estado</span>
+                    <span className="am-summary-value"><span className="am-badge">{usuarioSeleccionado.estado}</span></span>
+                  </div>
                 </div>
+              </div>
 
-                <div className="usuario-info-group">
+              <div className="am-divider" />
 
-                  <label>
-                    ESTADO
-                  </label>
-
-                  <div className="usuario-info-value">
-
-                    <span
-                      className={
-                        usuarioSeleccionado.estado ===
-                        "Activo"
-                          ? "usuario-estado activo"
-                          : "usuario-estado inactivo"
-                      }
-                    >
-
-                      {usuarioSeleccionado.estado}
-
+              <div className="am-data-grid">
+                <div className="am-data-col">
+                  <div className="am-data-pill">
+                    <span className="am-data-label">ID Usuario</span>
+                    <span className="am-data-value">{formatearIdUsuario(usuarioSeleccionado.id)}</span>
+                  </div>
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Rol</span>
+                    <span className="am-data-value">{usuarioSeleccionado.rol}</span>
+                  </div>
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Telefono</span>
+                    <span className="am-data-value">{usuarioSeleccionado.telefono}</span>
+                  </div>
+                </div>
+                <div className="am-data-col">
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Fecha de registro</span>
+                    <span className="am-data-value">{formatearFecha(usuarioSeleccionado.fecha)}</span>
+                  </div>
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Direccion</span>
+                    <span className="am-data-value">{usuarioSeleccionado.direccion}</span>
+                  </div>
+                  <div className="am-data-pill">
+                    <span className="am-data-label">Invitacion</span>
+                    <span className="am-data-value">
+                      {usuarioSeleccionado.cambioContrasenaPendiente ? (
+                        usuarioSeleccionado.invitacionEnviada ? (
+                          <span className="am-badge">Enviada</span>
+                        ) : (
+                          <span className="am-badge">No enviada</span>
+                        )
+                      ) : (
+                        <span className="am-badge">—</span>
+                      )}
                     </span>
-
                   </div>
-
                 </div>
-
               </div>
-
-              {/* NOMBRE + CORREO */}
-
-              <div className="usuario-detail-row">
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    NOMBRE COMPLETO
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.nombre}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    CORREO ELECTRÓNICO
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.correo}
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* TELÉFONO + ROL */}
-
-              <div className="usuario-detail-row">
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    TELÉFONO
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.telefono}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    ROL
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.rol}
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* FECHA + DIRECCIÓN */}
-
-              <div className="usuario-detail-row">
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    FECHA DE REGISTRO
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {formatearFecha(
-                      usuarioSeleccionado.fecha
-                    )}
-                  </div>
-
-                </div>
-
-                <div className="usuario-info-group">
-
-                  <label>
-                    DIRECCIÓN
-                  </label>
-
-                  <div className="usuario-info-value">
-                    {usuarioSeleccionado.direccion}
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* PERMISOS DEL ROL */}
 
               <div className="usuario-permisos">
-
                 <div className="usuario-permisos-title">
-
                   <ShieldCheck size={18} />
-
-                  <span>
-                    Permisos asociados al rol
-                  </span>
-
+                  <span>Permisos asociados al rol</span>
                 </div>
-
                 <div className="usuario-permisos-list">
-
-                  {usuarioSeleccionado.permisos.map(
-                    (permiso) => (
-
-                      <span
-                        key={permiso}
-                        className="usuario-permiso"
-                      >
-
-                        {permiso}
-
-                      </span>
-
-                    )
-                  )}
-
+                  {usuarioSeleccionado.permisos.map((permiso) => (
+                    <span key={permiso} className="usuario-permiso">
+                      {permiso}
+                    </span>
+                  ))}
                 </div>
-
               </div>
 
             </div>
 
-            <div className="usuario-detail-modal-footer">
+            <div className="usuario-detail-modal-footer am-footer">
 
               <button
                 type="button"
-                className="usuario-cancel-button detail-cerrar-button"
+                className="usuario-cancel-button detail-cerrar-button am-btn-gold"
                 onClick={cerrarDetalle}
               >
 

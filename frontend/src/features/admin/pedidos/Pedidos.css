@@ -201,25 +201,32 @@
 .pedidos-table {
   width: 100%;
 
-  min-width: 680px;
+  min-width: 980px;
 
   border-collapse: collapse;
 
   table-layout: fixed;
 }
 
-/* DISTRIBUCIÓN: ID PEDIDO | CLIENTE | TOTAL | ESTADO | ACCIONES */
-.pedidos-table th:nth-child(1) { width: 11%; }
-.pedidos-table th:nth-child(2) { width: 33%; }
-.pedidos-table th:nth-child(3) { width: 24%; }
-.pedidos-table th:nth-child(4) { width: 18%; }
-.pedidos-table th:nth-child(5) { width: 14%; }
+/* DISTRIBUCIÓN: ID | CLIENTE | MODALIDAD | TOTAL | ABONADO | SALDO | ESTADO | ESTADO PAGO | ACCIONES */
+.pedidos-table th:nth-child(1) { width: 8%; }
+.pedidos-table th:nth-child(2) { width: 15%; }
+.pedidos-table th:nth-child(3) { width: 12%; }
+.pedidos-table th:nth-child(4) { width: 11%; }
+.pedidos-table th:nth-child(5) { width: 11%; }
+.pedidos-table th:nth-child(6) { width: 11%; }
+.pedidos-table th:nth-child(7) { width: 10%; }
+.pedidos-table th:nth-child(8) { width: 12%; }
+.pedidos-table th:nth-child(9) { width: 10%; }
 
-.pedidos-table th:nth-child(4),
-.pedidos-table td:nth-child(4) { text-align: center; }
+.pedidos-table th:nth-child(7),
+.pedidos-table td:nth-child(7) { text-align: center; }
 
-.pedidos-table th:nth-child(5),
-.pedidos-table td:nth-child(5) { text-align: center; }
+.pedidos-table th:nth-child(8),
+.pedidos-table td:nth-child(8) { text-align: center; }
+
+.pedidos-table th:nth-child(9),
+.pedidos-table td:nth-child(9) { text-align: center; }
 
 
 .pedidos-table th {
@@ -1543,6 +1550,106 @@
 
 
 /* =========================================================
+   FILTRO CON SALDO
+   ========================================================= */
+
+.pedidos-filter-button {
+  height: 45px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d8dce2;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #333333;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.pedidos-filter-button.activo {
+  background: var(--admin-cta-gold, #d4af37);
+
+  color: #111111;
+
+  border-color: var(--admin-cta-gold, #d4af37);
+}
+
+.pedidos-filter-button:hover {
+  border-color: var(--admin-gold);
+}
+
+/* =========================================================
+   MODALIDAD / ABONADO / SALDO / ESTADO DEL PAGO (LISTA)
+   ========================================================= */
+
+.pedido-modalidad {
+  color: #738096;
+
+  font-size: 13px;
+
+  font-weight: 500;
+}
+
+.pedido-abonado {
+  color: #0ca653;
+
+  font-size: 14px;
+}
+
+.pedido-saldo {
+  color: #c68a00;
+
+  font-size: 14px;
+}
+
+.pedido-estado-pago {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-width: 92px;
+
+  min-height: 26px;
+
+  padding: 0 11px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.pedido-estado-pago.pendiente {
+  background: #fde5e5;
+
+  color: #c62828;
+}
+
+.pedido-estado-pago.parcial {
+  background: #fff2d2;
+
+  color: #c68a00;
+}
+
+.pedido-estado-pago.pagado {
+  background: #dff5e8;
+
+  color: #0ca653;
+}
+
+/* =========================================================
    DARK MODE
    ========================================================= */
 
@@ -1838,6 +1945,54 @@
     #b0b0b0;
 }
 
+
+/* =========================================================
+   DARK MODE - LISTA PAGOS
+   ========================================================= */
+
+.admin-container.admin-dark .pedidos-filter-button {
+  background: var(--admin-card);
+
+  border-color: rgba(212, 175, 55, 0.20);
+
+  color: var(--admin-text);
+}
+
+.admin-container.admin-dark .pedidos-filter-button.activo {
+  background: var(--admin-cta-gold, #d4af37);
+
+  color: #111111;
+}
+
+.admin-container.admin-dark .pedido-modalidad {
+  color: var(--admin-text-secondary);
+}
+
+.admin-container.admin-dark .pedido-abonado {
+  color: #67d99b;
+}
+
+.admin-container.admin-dark .pedido-saldo {
+  color: #e5b84c;
+}
+
+.admin-container.admin-dark .pedido-estado-pago.pendiente {
+  background: rgba(229, 57, 53, 0.16);
+
+  color: #ef8089;
+}
+
+.admin-container.admin-dark .pedido-estado-pago.parcial {
+  background: rgba(212, 175, 55, 0.16);
+
+  color: #e5b84c;
+}
+
+.admin-container.admin-dark .pedido-estado-pago.pagado {
+  background: rgba(12, 166, 83, 0.16);
+
+  color: #67d99b;
+}
 
 /* =========================================================
    RESPONSIVE
@@ -2640,5 +2795,972 @@
 
   .pedido-comprobante-contador {
     margin-right: 0;
+  }
+}
+/* =========================================================
+   DETALLE DEL PEDIDO — rediseño (scoped)
+   ========================================================= */
+
+.pedido-modal--detalle {
+  --detalle-tint: #fdeed8;
+  --detalle-border: #e2e2e2;
+}
+
+.admin-container.admin-dark .pedido-modal--detalle {
+  --detalle-tint: rgba(212, 175, 55, 0.12);
+  --detalle-border: rgba(255, 255, 255, 0.14);
+}
+
+.pedido-modal-overlay--detalle {
+  padding: 24px;
+}
+
+.pedido-modal--detalle {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  max-width: 760px;
+  max-height: calc(100vh - 50px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+}
+
+.pedido-modal--detalle .pedido-modal-header {
+  margin: -20px -24px 0;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--admin-border);
+  box-shadow: none;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.pedido-modal--detalle .pedido-modal-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+.pedido-modal--detalle .pedido-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.pedido-modal--detalle .pedido-modal-close:hover {
+  background: var(--admin-hover) !important;
+  color: var(--admin-gold) !important;
+}
+
+.pedido-modal--detalle .pedido-modal-body {
+  padding: 16px 0 0 0;
+  background: var(--admin-card);
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Resumen */
+.pedido-modal--detalle .detalle-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pedido-modal--detalle .detalle-summary-row {
+  display: grid;
+  gap: 12px;
+}
+
+.pedido-modal--detalle .detalle-summary-row--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.pedido-modal--detalle .detalle-summary-row--2 {
+  grid-template-columns: 1fr 2fr;
+}
+
+.pedido-modal--detalle .detalle-summary-card {
+  background: var(--detalle-tint);
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pedido-modal--detalle .detalle-summary-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--admin-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pedido-modal--detalle .detalle-summary-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--admin-text);
+  line-height: 1.2;
+}
+
+.pedido-modal--detalle .detalle-summary-value--gold {
+  color: #b8860b;
+  font-size: 20px;
+}
+
+.pedido-modal--detalle .detalle-summary-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+}
+
+/* Divisor */
+.pedido-modal--detalle .detalle-divider {
+  height: 2px;
+  background: var(--admin-gold);
+  border: none;
+  margin: 18px 0;
+}
+
+/* Cuadrícula de datos */
+.pedido-modal--detalle .detalle-data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.pedido-modal--detalle .detalle-data-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pedido-modal--detalle .detalle-data-pill {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--admin-card);
+  border: 1px solid var(--detalle-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pedido-modal--detalle .detalle-data-label {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+  text-transform: none;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pedido-modal--detalle .detalle-data-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--admin-text);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.pedido-modal--detalle .detalle-estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--detalle-tint);
+  color: #b8860b;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Ver más datos */
+.pedido-modal--detalle .detalle-ver-mas {
+  background: transparent;
+  border: none;
+  color: #b8860b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 14px 0 10px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pedido-modal--detalle .detalle-ver-mas:hover {
+  text-decoration: underline;
+}
+
+/* Productos */
+.pedido-modal--detalle .detalle-products {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pedido-modal--detalle .detalle-product-card {
+  background: var(--admin-card);
+  border: 1px solid var(--detalle-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pedido-modal--detalle .detalle-product-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pedido-modal--detalle .detalle-product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.pedido-modal--detalle .detalle-product-meta {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--detalle .detalle-product-price {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--detalle .detalle-product-subtotal {
+  border-left: 2px solid var(--admin-gold);
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 110px;
+}
+
+.pedido-modal--detalle .detalle-product-subtotal-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--detalle .detalle-product-subtotal-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+/* Historial de abonos */
+.pedido-modal--detalle .detalle-historial-wrap {
+  margin-top: 18px;
+}
+
+.pedido-modal--detalle .detalle-historial {
+  border: 1px solid var(--detalle-border);
+  border-radius: 10px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.pedido-modal--detalle .detalle-historial .abonos-historial-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pedido-modal--detalle .detalle-historial .abonos-historial-table th {
+  background: var(--detalle-tint);
+  color: var(--admin-text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 8px;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+  border-bottom: 1px solid var(--admin-border);
+  overflow-wrap: anywhere;
+}
+
+.pedido-modal--detalle .detalle-historial .abonos-historial-table td {
+  padding: 10px 8px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.pedido-modal--detalle .detalle-historial .abonos-historial-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pedido-modal--detalle .detalle-historial .abonos-historial-valor {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.pedido-modal--detalle .detalle-historial .abonos-metodo {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(59, 130, 246, .10);
+  color: #2563eb;
+}
+
+/* Verificación del pago */
+.pedido-modal--detalle .detalle-payment-verification {
+  background: var(--detalle-tint);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pedido-modal--detalle .detalle-payment-amount {
+  margin: 0;
+  font-size: 13px;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--detalle .detalle-payment-amount strong {
+  color: var(--admin-text);
+}
+
+.pedido-modal--detalle .detalle-payment-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pedido-modal--detalle .detalle-payment-confirm {
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--admin-grad);
+  color: var(--admin-on-gold);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(212, 160, 23, .30);
+}
+
+.pedido-modal--detalle .detalle-payment-confirm:hover {
+  filter: brightness(1.05);
+}
+
+.pedido-modal--detalle .detalle-payment-reject {
+  height: 40px;
+  padding: 0 16px;
+  border: 1.5px solid #e53935;
+  border-radius: 10px;
+  background: transparent;
+  color: #e53935;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pedido-modal--detalle .detalle-payment-reject:hover {
+  background: rgba(229, 57, 53, .08);
+}
+
+/* Footer */
+.pedido-modal--detalle .pedido-modal-footer {
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 0 0 0;
+  border-top: none;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.pedido-modal--detalle .detalle-registrar-abono-button {
+  height: 44px;
+  padding: 0 28px;
+  border: 1.5px solid #b8860b;
+  border-radius: 999px;
+  background: transparent;
+  color: #b8860b;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pedido-modal--detalle .detalle-registrar-abono-button:hover {
+  background: var(--detalle-tint);
+}
+
+.pedido-modal--detalle .detail-cerrar-button {
+  height: 44px;
+  padding: 0 32px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #b8860b, #e0b13c);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pedido-modal--detalle .detail-cerrar-button:hover {
+  filter: brightness(1.05);
+}
+
+/* Dark mode overrides */
+.admin-container.admin-dark .pedido-modal--detalle .detalle-summary-label,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-data-label,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-product-meta,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-product-price,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-product-subtotal-label,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-payment-amount {
+  color: var(--admin-text-muted) !important;
+}
+
+.admin-container.admin-dark .pedido-modal--detalle .detalle-historial .abonos-historial-valor {
+  color: #34d399 !important;
+}
+
+.admin-container.admin-dark .pedido-modal--detalle .detalle-historial .abonos-metodo {
+  color: #60a5fa;
+}
+
+.admin-container.admin-dark .pedido-modal--detalle .detalle-payment-reject {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.admin-container.admin-dark .pedido-modal--detalle .detalle-summary-value--gold,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-estado-badge,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-ver-mas,
+.admin-container.admin-dark .pedido-modal--detalle .detalle-registrar-abono-button {
+  color: var(--admin-gold);
+}
+
+.admin-container.admin-dark .pedido-modal--detalle .detalle-registrar-abono-button {
+  border-color: var(--admin-gold);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .pedido-modal-overlay--detalle {
+    padding: 12px;
+  }
+  .pedido-modal--detalle {
+    max-width: 100%;
+    max-height: 92vh;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .pedido-modal--detalle .detalle-summary-row--3 {
+    grid-template-columns: 1fr;
+  }
+  .pedido-modal--detalle .detalle-summary-row--2 {
+    grid-template-columns: 1fr;
+  }
+  .pedido-modal--detalle .detalle-data-grid {
+    grid-template-columns: 1fr;
+  }
+  .pedido-modal--detalle .detalle-product-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pedido-modal--detalle .detalle-product-subtotal {
+    border-left: none;
+    border-top: 2px solid var(--admin-gold);
+    padding-left: 0;
+    padding-top: 10px;
+    width: 100%;
+    align-items: flex-start;
+  }
+  .pedido-modal--detalle .detalle-historial {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .pedido-modal--detalle .detalle-data-grid {
+    grid-template-columns: 1fr;
+  }
+  .pedido-modal--detalle .detalle-data-pill {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   REGISTRO / EDICIÓN DE PEDIDO — rediseño (scoped)
+   ========================================================= */
+
+.pedido-modal-overlay--registro {
+  padding: 24px;
+}
+
+.pedido-modal--registro {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  max-width: 960px;
+  max-height: calc(100vh - 50px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pedido-modal--registro .pedido-modal-header {
+  min-height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-card);
+  flex-shrink: 0;
+}
+
+.pedido-modal--registro .pedido-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.pedido-modal--registro .pedido-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.pedido-modal--registro .pedido-modal-close:hover {
+  background: var(--admin-hover) !important;
+  color: var(--admin-gold) !important;
+}
+
+.pedido-modal--registro .pedido-modal-body {
+  padding: 22px 24px;
+  background: var(--admin-card);
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.pedido-modal--registro .pedido-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.pedido-modal--registro .pedido-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pedido-modal--registro .pedido-form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--registro .pedido-form-group input,
+.pedido-modal--registro .pedido-form-group select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  outline: none;
+  background: var(--admin-card);
+  font-size: 14px;
+  color: var(--admin-text);
+}
+
+.pedido-modal--registro .pedido-form-group input:focus,
+.pedido-modal--registro .pedido-form-group select:focus {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px rgba(226, 178, 60, .18);
+}
+
+.pedido-modal--registro .pedido-form-group input:disabled,
+.pedido-modal--registro .pedido-form-group input:read-only,
+.pedido-modal--registro .pedido-form-group select:disabled {
+  background: var(--admin-surface-2);
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--registro .pedido-details-header {
+  margin-top: 18px;
+  margin-bottom: 10px;
+  padding: 12px 16px;
+  background: var(--admin-selection);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pedido-modal--registro .pedido-details-header label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pedido-modal--registro .pedido-add-product {
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--admin-grad) !important;
+  color: var(--admin-on-gold) !important;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(212, 160, 23, .30);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.pedido-modal--registro .pedido-add-product:hover {
+  filter: brightness(1.05);
+}
+
+.pedido-modal--registro .pedido-no-products {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.pedido-modal--registro .pedido-products-list {
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pedido-modal--registro .pedido-product-edit {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: none;
+}
+
+.pedido-modal--registro .pedido-product-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pedido-modal--registro .pedido-product-edit-number {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--registro .pedido-product-delete {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(220, 53, 69, .08) !important;
+  color: #d64550 !important;
+  cursor: pointer;
+  transform: none !important;
+}
+
+.pedido-modal--registro .pedido-product-delete:hover {
+  background: rgba(220, 53, 69, .16) !important;
+  color: #c03845 !important;
+  transform: none !important;
+}
+
+.pedido-modal--registro .pedido-product-edit-fields {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr 0.6fr 0.8fr 0.9fr 0.9fr;
+  gap: 10px 12px;
+  align-items: end;
+}
+
+.pedido-modal--registro .pedido-product-edit-field,
+.pedido-modal--registro .pedido-product-edit-subtotal {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pedido-modal--registro .pedido-product-edit-field label,
+.pedido-modal--registro .pedido-product-edit-subtotal label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+}
+
+.pedido-modal--registro .pedido-product-edit-field input {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  outline: none;
+  background: var(--admin-card);
+  font-size: 13px;
+  color: var(--admin-text);
+}
+
+.pedido-modal--registro .pedido-product-edit-field input:focus {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px rgba(226, 178, 60, .18);
+}
+
+.pedido-modal--registro .pedido-product-edit-subtotal strong {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--admin-selection);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-text);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pedido-modal--registro .pedido-total-box {
+  margin-top: 14px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: var(--admin-selection);
+}
+
+.pedido-modal--registro .pedido-total-box span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pedido-modal--registro .pedido-total-box strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--admin-gold);
+}
+
+.pedido-modal--registro .pedido-modal-footer {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 24px;
+  border-top: 1px solid var(--admin-border);
+  background: var(--admin-card);
+  flex-shrink: 0;
+}
+
+.pedido-modal--registro .pedido-cancel-button {
+  height: 42px;
+  min-width: 140px;
+  padding: 0 20px;
+  border: 1.5px solid var(--admin-gold) !important;
+  border-radius: 10px;
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pedido-modal--registro .pedido-cancel-button:hover {
+  background: var(--admin-hover) !important;
+}
+
+.pedido-modal--registro .pedido-create-button {
+  height: 42px;
+  min-width: 140px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--admin-grad) !important;
+  color: var(--admin-on-gold) !important;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(212, 160, 23, .30);
+  cursor: pointer;
+}
+
+.pedido-modal--registro .pedido-create-button:hover {
+  background: var(--admin-grad) !important;
+  filter: brightness(1.05);
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-form-group label,
+.admin-container.admin-dark .pedido-modal--registro .pedido-product-edit-field label,
+.admin-container.admin-dark .pedido-modal--registro .pedido-product-edit-subtotal label,
+.admin-container.admin-dark .pedido-modal--registro .pedido-details-header label {
+  color: var(--admin-text-muted) !important;
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-details-header {
+  background: var(--admin-selection);
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-product-edit-subtotal strong {
+  background: var(--admin-selection);
+  color: var(--admin-text);
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-total-box {
+  background: var(--admin-selection);
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-total-box strong {
+  color: var(--admin-gold);
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-cancel-button {
+  background: var(--admin-card) !important;
+  color: var(--admin-text) !important;
+  border: 1.5px solid var(--admin-gold) !important;
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-cancel-button:hover {
+  background: var(--admin-hover) !important;
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-create-button {
+  background: var(--admin-grad) !important;
+  color: var(--admin-on-gold) !important;
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-create-button:hover {
+  background: var(--admin-grad) !important;
+  filter: brightness(1.05);
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-product-delete {
+  background: rgba(220, 53, 69, .15) !important;
+  color: #e06a74 !important;
+}
+
+.admin-container.admin-dark .pedido-modal--registro .pedido-product-delete:hover {
+  background: rgba(220, 53, 69, .25) !important;
+  color: #ef8089 !important;
+}
+
+@media (max-width: 900px) {
+  .pedido-modal-overlay--registro {
+    padding: 12px;
+  }
+
+  .pedido-modal--registro {
+    max-width: 100%;
+    max-height: 92vh;
+  }
+}
+
+@media (max-width: 600px) {
+  .pedido-modal--registro .pedido-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pedido-modal--registro .pedido-product-edit-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .pedido-modal--registro .pedido-modal-header {
+    padding: 0 16px;
+  }
+
+  .pedido-modal--registro .pedido-modal-body {
+    padding: 16px;
+  }
+
+  .pedido-modal--registro .pedido-modal-footer {
+    padding: 0 16px;
+    flex-wrap: wrap;
+  }
+
+  .pedido-modal--registro .pedido-cancel-button,
+  .pedido-modal--registro .pedido-create-button {
+    min-width: 100%;
   }
 }
